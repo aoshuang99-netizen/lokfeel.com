@@ -145,6 +145,30 @@ function microToCents(micro: number): string {
   return (micro / 1_000_000).toFixed(4)
 }
 
+/**
+ * 「需要人工介入」的档位 —— 与 `LIVING_AGENT_ATTENTION_STATUSES` 同一口径。
+ *
+ * ⚠️ 本页是 Console 侧（不 import living 的模型层），因此这里显式列出同一组状态；
+ *    两处若分叉，`docs/implementation/v19/52a` 的对照表会先红。这不是权限判定，
+ *    只是**排序/聚合**用的口径 —— 能不能点仍然只读服务端下发的 `canApprove/canReject`。
+ */
+const ATTENTION_STATUSES: readonly string[] = [
+  'AWAITING_APPROVAL',
+  'FAILED',
+  'BLOCKED_QUOTA',
+  'DEGRADED',
+]
+
+interface SkillRollup {
+  skill: string
+  label: string
+  runs: number
+  calls: number
+  microCents: number
+  attention: number
+  lastAt: number | null
+}
+
 export default function ConsoleAgentsPage() {
   const [filter, setFilter] = useState<Filter>('ALL')
   const [actingId, setActingId] = useState<string | null>(null)
@@ -155,18 +179,75 @@ export default function ConsoleAgentsPage() {
     return `/api/v1/agents/runs?${p.toString()}`
   }, [filter])
 
-  const runs = useApiGet<ApiEnvelope<RunListDto>>(url)
+  // 列表按服务端筛选（口径由服务端决定）；名册/关注聚合则**必须**不受筛选影响，
+  // 否则「切到已执行」时"待批准 3 条"会变成"待批准 0 条"——那是筛选副作用，不是事实。
+  // filter=ALL 时两者是同一个请求，不再多发一次。
+  const allRuns = useApiGet<ApiEnvelope<RunListDto>>('/api/v1/agents/runs?limit=50')
+  const filteredRuns = useApiGet<ApiEnvelope<RunListDto>>(filter === 'ALL' ? null : url)
+  const runs = filter === 'ALL' ? allRuns : filteredRuns
   const usage = useApiGet<ApiEnvelope<UsageDto>>('/api/v1/agents/usage')
   const { post, isLoading: isActing, error: actionError } = useApiPost()
 
   const items = useMemo(() => runs.data?.data?.items ?? [], [runs.data])
+  const allItems = useMemo(() => allRuns.data?.data?.items ?? [], [allRuns.data])
   const u = usage.data?.data ?? null
 
+  /** 按技能聚合（运行数 / 调用数 / 成本 / 最近活跃 / 需关注）——全部由既有字段相加得出。 */
+  const rollup = useMemo<SkillRollup[]>(() => {
+    const map = new Map<string, SkillRollup>()
+    for (const r of allItems) {
+      const cur = map.get(r.skill) ?? {
+        skill: r.skill,
+        label: SKILL_LABEL[r.skill] ?? r.skill,
+        runs: 0,
+        calls: 0,
+        microCents: 0,
+        attention: 0,
+        lastAt: null,
+      }
+      cur.runs += 1
+      cur.calls += r.callCount
+      cur.microCents += r.costMicroCents
+      if (ATTENTION_STATUSES.includes(r.status)) cur.attention += 1
+      const at = Date.parse(r.createdAt)
+      if (Number.isFinite(at) && (cur.lastAt === null || at > cur.lastAt)) cur.lastAt = at
+      map.set(r.skill, cur)
+    }
+    return [...map.values()].sort((a, b) => b.runs - a.runs)
+  }, [allItems])
+
+  const maxSkillCost = rollup.reduce((m, r) => Math.max(m, r.microCents), 0)
+
+  const attentionCounts = useMemo(() => {
+    const byStatus: Record<string, number> = {}
+    let injections = 0
+    for (const r of allItems) {
+      if (ATTENTION_STATUSES.includes(r.status)) {
+        byStatus[r.status] = (byStatus[r.status] ?? 0) + 1
+      }
+      if (r.injectionFlagged) injections += 1
+    }
+    return {
+      total: Object.values(byStatus).reduce((a, b) => a + b, 0),
+      byStatus,
+      injections,
+    }
+  }, [allItems])
+
+  const inFlight = allItems.filter(
+    (r) => r.status === 'AWAITING_APPROVAL' || r.status === 'APPROVED',
+  ).length
+
+  const periodCostMicro = u?.totals.microCents ?? 0
+
   const forbidden =
-    /permission|403/i.test(runs.error ?? '') || /permission|403/i.test(usage.error ?? '')
+    /permission|403/i.test(allRuns.error ?? '') ||
+    /permission|403/i.test(runs.error ?? '') ||
+    /permission|403/i.test(usage.error ?? '')
 
   const refreshAll = () => {
-    runs.refetch()
+    allRuns.refetch()
+    if (filter !== 'ALL') filteredRuns.refetch()
     usage.refetch()
   }
 
@@ -201,6 +282,162 @@ export default function ConsoleAgentsPage() {
           刷新
         </button>
       </div>
+
+      {/* ── 概览三卡（参考图①的 Needs Attention 聚合） ── */}
+      <section aria-labelledby="command-summary-heading" className="space-y-2">
+        <h2 id="command-summary-heading" className="text-sm font-medium text-foreground">
+          运行概览
+          <span className="ml-1 font-normal text-[11px] text-foreground-subtle">
+            口径：本社群全部运行（不受下方筛选影响）
+          </span>
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-card-border bg-background-secondary p-3">
+            <p className="text-[11px] text-foreground-subtle">需要人工介入</p>
+            <p
+              className={`mt-1 text-2xl font-semibold tabular-nums ${
+                attentionCounts.total > 0 ? 'text-warning' : 'text-foreground'
+              }`}
+            >
+              {allRuns.isLoading ? '—' : attentionCounts.total}
+            </p>
+            {allRuns.isLoading ? (
+              <p className="mt-1 text-[11px] text-foreground-subtle">正在读取…</p>
+            ) : attentionCounts.total === 0 ? (
+              <p className="mt-1 text-[11px] text-foreground-subtle">
+                当前没有待裁决、失败、额度阻止或降级的运行。
+              </p>
+            ) : (
+              <ul className="mt-1 space-y-0.5 text-[11px] text-foreground-muted">
+                {ATTENTION_STATUSES.filter((s) => (attentionCounts.byStatus[s] ?? 0) > 0).map((s) => (
+                  <li key={s} className="flex items-baseline justify-between gap-2">
+                    <span className="min-w-0 truncate">{STATUS_LABEL[s] ?? s}</span>
+                    <span className="shrink-0 tabular-nums text-foreground">
+                      {attentionCounts.byStatus[s]}
+                    </span>
+                  </li>
+                ))}
+                {attentionCounts.injections > 0 ? (
+                  <li className="flex items-baseline justify-between gap-2">
+                    <span className="min-w-0 truncate">注入信号（旁证）</span>
+                    <span className="shrink-0 tabular-nums text-foreground">
+                      {attentionCounts.injections}
+                    </span>
+                  </li>
+                ) : null}
+              </ul>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-card-border bg-background-secondary p-3">
+            <p className="text-[11px] text-foreground-subtle">进行中</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+              {allRuns.isLoading ? '—' : inFlight}
+            </p>
+            <p className="mt-1 text-[11px] text-foreground-subtle">
+              待批准 + 已批准但尚未执行。批准不等于执行 —— 执行是另一次显式动作。
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-card-border bg-background-secondary p-3">
+            <p className="text-[11px] text-foreground-subtle">本期成本</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+              {u ? microToCents(periodCostMicro) : '—'}
+              <span className="ml-1 text-xs font-normal text-foreground-subtle">分</span>
+            </p>
+            <p className="mt-1 text-[11px] text-foreground-subtle">
+              {u?.provider.realCallsEnabled
+                ? '真实模型调用已开启，以上为真实花费。'
+                : '真实模型调用未开启 —— 0 分不代表模型免费，见下方额度面板。'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 按技能名册 + 成本分解（参考图①的 roster 表 + Cost Breakdown） ── */}
+      <section aria-labelledby="roster-heading" className="space-y-2">
+        <h2 id="roster-heading" className="text-sm font-medium text-foreground">
+          按技能名册
+          <span className="ml-1 font-normal text-[11px] text-foreground-subtle">
+            运行数 / 调用数 / 成本 / 最近活跃 / 需关注
+          </span>
+        </h2>
+        {allRuns.isLoading ? (
+          <div className="flex items-center gap-2 py-4 text-sm text-foreground-muted">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            正在汇总…
+          </div>
+        ) : rollup.length === 0 ? (
+          <div className="rounded-2xl border border-card-border bg-background-secondary p-4">
+            <p className="text-sm text-foreground-muted">
+              还没有可汇总的运行。名册由运行记录聚合而来 —— 没有运行就没有行，这不是读取失败。
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border border-card-border bg-background-secondary">
+            <table className="w-full min-w-[560px] text-left text-xs">
+              <caption className="sr-only">
+                按技能汇总的 Agent 运行名册：运行数、调用数、成本与最近活跃时间
+              </caption>
+              <thead>
+                <tr className="border-b border-card-border text-[10px] uppercase tracking-wide text-foreground-subtle">
+                  <th scope="col" className="px-3 py-2 font-medium">技能</th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">运行</th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">调用</th>
+                  <th scope="col" className="px-3 py-2 font-medium">成本（分）</th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">最近活跃</th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">需关注</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rollup.map((r) => (
+                  <tr key={r.skill} className="border-t border-card-border first:border-t-0">
+                    <th scope="row" className="px-3 py-2 text-left font-normal text-foreground">
+                      {r.label}
+                    </th>
+                    <td className="px-3 py-2 text-right tabular-nums text-foreground">{r.runs}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-foreground-muted">
+                      {r.calls}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-16 shrink-0 text-right tabular-nums text-foreground">
+                          {microToCents(r.microCents)}
+                        </span>
+                        <span
+                          className="h-1.5 min-w-[2px] flex-1 overflow-hidden rounded-full bg-background-tertiary"
+                          aria-hidden="true"
+                        >
+                          <span
+                            className="block h-full bg-primary"
+                            style={{
+                              width: `${maxSkillCost > 0 ? Math.round((r.microCents / maxSkillCost) * 100) : 0}%`,
+                            }}
+                          />
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-right text-foreground-muted">
+                      {r.lastAt === null ? '—' : new Date(r.lastAt).toLocaleDateString()}
+                    </td>
+                    <td
+                      className={`px-3 py-2 text-right tabular-nums ${
+                        r.attention > 0 ? 'text-warning' : 'text-foreground-subtle'
+                      }`}
+                    >
+                      {r.attention}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="text-[11px] text-foreground-subtle">
+          名册只聚合契约里<strong>真实存在</strong>的字段。接口没有「质量分」「趋势」两类数据，
+          因此这里不显示评分与涨跌 —— 要显示它们得先在服务端定义口径，而不是在前端编一个。
+        </p>
+      </section>
 
       {/* ── 额度面板（组织级，按订阅方案派生） ── */}
       {u ? (

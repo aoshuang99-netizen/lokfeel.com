@@ -24,11 +24,12 @@
  */
 
 import { useMemo, useState } from 'react'
-import { GitBranch, ShieldOff, UserCheck } from 'lucide-react'
+import { Check, CircleDashed, Clock, GitBranch, ShieldOff, UserCheck } from 'lucide-react'
 import {
   CONSENT_EXTERNAL_AUDIENCES,
   CONSENT_EXTERNAL_AUDIENCE_LABELS,
   CONSENT_INTENT_STATUS_LABELS,
+  CONSENT_NO_DECISION_LABEL,
   CONSENT_PROPOSAL_ACTION_LABELS,
   actionRequest,
   assembleConsentGate,
@@ -39,6 +40,7 @@ import {
   type ConsentIntentStatus,
   type ConsentProposalAction,
   type ConsentProposalBoard,
+  type ConsentProposalRow,
 } from '@/lib/living/consent'
 import { useApiGet } from '@/hooks/use-api'
 import {
@@ -186,6 +188,11 @@ export default function ConsentGate({
         </p>
       </header>
 
+      {/* ── ⓿ 待你裁决（参考图②的 Human approval required 横幅，前置到第一屏） ──
+          动作仍然**只**来自服务端下发的 `availableActions`；横幅只是把「现在就该我表态」
+          的提案顶到最前面，不新增任何判据。 */}
+      <PendingBanner data={data} />
+
       {/* ── ① 我的意图 ── */}
       <section className="space-y-2">
         <h2 className="text-sm font-medium text-lf-text-muted">选择一条意图</h2>
@@ -295,6 +302,7 @@ export default function ConsentGate({
                   </span>
                 </div>
                 <p className="mt-2 break-words text-xs text-lf-text-muted">提案理由：{p.rationale}</p>
+                <ProposalSteps proposal={p} />
                 <p className="mt-1 break-words text-[11px] text-lf-text-faint">
                   对方在此阶段披露的字段：
                   {p.counterpartFieldKeys.length === 0
@@ -353,9 +361,213 @@ export default function ConsentGate({
             successText="表态已提交。状态以服务端返回为准 —— 单方接受不会进入执行，需要双方都表态。"
           />
         )}
+        <ConsentTimeline board={data.board} />
         <LivingNotes notes={data.board?.notes ?? []} title="提案说明" />
       </section>
     </div>
+  )
+}
+
+/**
+ * 待你裁决横幅（V19.9 T-4 · 参考图②的「Human approval required」前置）
+ *
+ * 🔴 只做**排序与呈现**：把「我还没表态 + 服务端已下发动作」的提案顶到最前。
+ *    动作按钮仍然逐个来自 `availableActions`，横幅**不新增任何判据**，
+ *    因此不会长出第二份权限表。数量为 0 时整块不渲染（不留一个空壳框）。
+ */
+function PendingBanner({ data }: { data: ConsentGateData }) {
+  const pending = (data.board?.rows ?? []).filter(
+    (p) => p.myDecisionLabel === CONSENT_NO_DECISION_LABEL && p.availableActions.length > 0,
+  )
+  if (data.boardLoading || pending.length === 0) return null
+
+  return (
+    <section
+      aria-labelledby="pending-consent-heading"
+      className="rounded-lf border border-lf-warning/45 bg-lf-surface-2 p-3"
+    >
+      <h2
+        id="pending-consent-heading"
+        className="flex items-center gap-1.5 text-sm font-medium text-lf-warning"
+      >
+        <UserCheck className="h-4 w-4" aria-hidden="true" />
+        待你裁决：{pending.length} 条提案在等你表态
+      </h2>
+      <p className="mt-1 text-[11px] text-lf-text-muted">
+        单方接受<strong className="font-medium text-lf-text">不会</strong>进入执行 ——
+        需要双方都表态。下面是服务端判定当前仍可执行的动作。
+      </p>
+      <ul className="mt-2 space-y-2">
+        {pending.map((p) => (
+          <li
+            key={p.id}
+            className="flex flex-wrap items-center gap-2 rounded-lf border border-lf-line bg-lf-surface p-2"
+          >
+            <span className="rounded-lf border border-lf-line px-1.5 py-0.5 text-[11px] text-lf-text-muted">
+              {p.stateLabel}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-xs text-lf-text">
+              {p.myRoleLabel} · {p.rationale}
+            </span>
+            {p.availableActions.map((a) => {
+              const isPending = data.pendingUrl === actionRequest(p.id, a).url
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  disabled={isPending}
+                  aria-disabled={isPending}
+                  onClick={() => data.runAction(p.id, a)}
+                  className={[
+                    'lf-focus-ring inline-flex min-h-6 items-center gap-1 rounded-lf border px-2.5 py-1 text-xs',
+                    isPending
+                      ? 'cursor-wait border-lf-line text-lf-text-faint'
+                      : 'border-lf-line-strong text-lf-text hover:bg-lf-surface-2',
+                  ].join(' ')}
+                >
+                  {a === 'ACCEPT' ? (
+                    <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <ShieldOff className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  {CONSENT_PROPOSAL_ACTION_LABELS[a]}
+                </button>
+              )
+            })}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/**
+ * 提案进度四步（V19.9 T-4 · 参考图②的「Latest actions」勾选清单）
+ *
+ * 四步全部由**服务端下发的文案/时间**判定完成与否：
+ *   ① 提案记录存在（事实：这一行就是从服务端来的）
+ *   ② 我方表态 → `myDecisionLabel !== CONSENT_NO_DECISION_LABEL`
+ *   ③ 对方表态 → `counterpartDecisionLabel !== CONSENT_NO_DECISION_LABEL`
+ *   ④ 已介绍   → `introducedAt !== null`
+ *
+ * ⚠️ 比较的是**服务端文案常量**（`CONSENT_NO_DECISION_LABEL`），不是前端自己拼的字符串；
+ *    前端也**不**用 `state === 'MUTUALLY_ACCEPTED'` 去替代②③ —— 状态是派生的，
+ *    两步各自的实际表态才是事实。
+ */
+function ProposalSteps({ proposal }: { proposal: ConsentProposalRow }) {
+  const mine = proposal.myDecisionLabel !== CONSENT_NO_DECISION_LABEL
+  const theirs = proposal.counterpartDecisionLabel !== CONSENT_NO_DECISION_LABEL
+  const introduced = proposal.introducedAt !== null
+
+  const steps = [
+    { label: '提案已发起', detail: '服务端已存在该提案记录', done: true },
+    { label: '我方表态', detail: proposal.myDecisionLabel, done: mine },
+    { label: '对方表态', detail: proposal.counterpartDecisionLabel, done: theirs },
+    {
+      label: '双方同意并介绍',
+      detail: proposal.introducedAt
+        ? `已介绍 ${proposal.introducedAt.slice(0, 10)}`
+        : '尚未介绍',
+      done: introduced,
+    },
+  ]
+
+  return (
+    <ol className="mt-2 space-y-1" aria-label="提案进度">
+      {steps.map((s) => (
+        <li key={s.label} className="flex items-center gap-1.5 text-[11px]">
+          <span aria-hidden="true" className={s.done ? 'text-lf-success' : 'text-lf-text-faint'}>
+            {s.done ? <Check className="h-3 w-3" /> : <CircleDashed className="h-3 w-3" />}
+          </span>
+          <span className={s.done ? 'text-lf-text' : 'text-lf-text-faint'}>{s.label}</span>
+          <span className="sr-only">{s.done ? '（已完成）' : '（未完成）'}</span>
+          <span className="ml-auto min-w-0 shrink truncate text-lf-text-faint">{s.detail}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/**
+ * 审批时间线（V19.9 T-4 · 参考图②的 Audit log 侧栏）
+ *
+ * 🔴 只画**契约里真实存在**的时间点：`introducedAt`（已介绍）与 `expiresAt`（期限）。
+ *    服务端没有下发逐动作的审计事件流，因此这里**不编造**「谁在几点点了接受」——
+ *    那种时间线看起来最像审计日志，也最容易骗人。每行都标了它的来源字段。
+ */
+function ConsentTimeline({ board }: { board: ConsentProposalBoard | null }) {
+  const rows = board?.rows ?? []
+  if (rows.length === 0) return null
+
+  type Entry = { key: string; at: string; kind: string; text: string; source: string }
+  const entries: Entry[] = []
+  for (const p of rows) {
+    if (p.introducedAt) {
+      entries.push({
+        key: `${p.id}-intro`,
+        at: p.introducedAt,
+        kind: '已介绍',
+        text: p.rationale,
+        source: 'introducedAt',
+      })
+    }
+    if (p.expiresAt) {
+      entries.push({
+        key: `${p.id}-exp`,
+        at: p.expiresAt,
+        kind: '表态期限',
+        text: p.rationale,
+        source: 'expiresAt',
+      })
+    }
+    entries.push({
+      key: `${p.id}-state`,
+      at: '',
+      kind: '当前状态',
+      text: `${p.stateLabel} · 我方${p.myDecisionLabel} · 对方${p.counterpartDecisionLabel}`,
+      source: 'state / decisions',
+    })
+  }
+  entries.sort((a, b) => (b.at || '').localeCompare(a.at || ''))
+
+  return (
+    <section aria-labelledby="consent-timeline-heading" className="space-y-2">
+      <h3
+        id="consent-timeline-heading"
+        className="flex items-center gap-1.5 text-sm font-medium text-lf-text-muted"
+      >
+        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+        审批时间线
+        <span className="font-normal text-[11px] text-lf-text-faint">
+          只包含契约里有的时间点与当前状态
+        </span>
+      </h3>
+      <ol className="relative space-y-2 border-l border-lf-line pl-4">
+        {entries.map((e) => (
+          <li key={e.key} className="relative min-w-0">
+            <span
+              aria-hidden="true"
+              className={[
+                'absolute -left-[21px] top-1.5 h-2 w-2 rounded-full',
+                e.at ? 'bg-lf-line-strong' : 'bg-lf-signal',
+              ].join(' ')}
+            />
+            <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[11px]">
+              <span className="text-lf-text">{e.kind}</span>
+              <span className="tabular-nums text-lf-text-faint">
+                {e.at ? e.at.slice(0, 16).replace('T', ' ') : '现在'}
+              </span>
+              <span className="text-[10px] text-lf-text-faint">来源 {e.source}</span>
+            </p>
+            <p className="mt-0.5 min-w-0 truncate text-[11px] text-lf-text-muted">{e.text}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="text-[11px] text-lf-text-faint">
+        逐动作的审计事件流（谁在几点做了什么）**不在**本接口契约内，
+        所以这里不画那种看起来最像日志、却全靠推断的时间线。
+      </p>
+    </section>
   )
 }
 

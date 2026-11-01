@@ -247,6 +247,9 @@ function TimelineItem({
 
         <p className="mt-2 break-words text-sm text-lf-text">{entry.summary}</p>
 
+        <VerificationFlow entry={entry} />
+        <EvidenceGrid entry={entry} />
+
         <p className="mt-1 text-[11px] text-lf-text-faint">
           发生 {entry.occurredAt.slice(0, 10)} · 上报 {entry.reportedAt.slice(0, 10)}
           {entry.verifications.length > 0
@@ -282,6 +285,118 @@ function TimelineItem({
         )}
       </div>
     </li>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
+// 验证流程与证据分栏（V19.9 T-4 · 参考图③）
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * 三段验证流程条：**自报 → 验证记录 → 服务端判定**
+ *
+ * 🔴 三段各自的判据都来自服务端，且**互不代替**：
+ *   ① 自报 —— `reportedAt` 存在（这一行本身就意味着已上报）
+ *   ② 验证记录 —— `verifications.length > 0`（自报**不产生**记录，这正是"自报不算验证"）
+ *   ③ 已验证 —— 只读 `entry.verified` 布尔。**不**比较 `level` 字面量：T08 的 `isVerified()`
+ *      是唯一实现，散落的比较在新增档位时会静默漏算。
+ *
+ * 参考图③画的是四步（证据 → 待审 → 已验证 → 批准关闭）。本域只有前三段有事实依据，
+ * 「批准关闭」没有对应状态，因此**不画** —— 画一个永远不亮的第 4 步等于骗人。
+ */
+function VerificationFlow({ entry }: { entry: ObservatoryTimelineEntry }) {
+  const hasMarks = entry.verifications.length > 0
+  const steps = [
+    {
+      key: 'self',
+      label: '已自报',
+      detail: entry.reportedAt.slice(0, 10),
+      done: true,
+    },
+    {
+      key: 'marks',
+      label: '验证记录',
+      detail: hasMarks ? `${entry.verifications.length} 条` : '无',
+      done: hasMarks,
+    },
+    {
+      key: 'verified',
+      label: '服务端判定',
+      detail: entry.verified ? '已验证' : '未达验证档位',
+      done: entry.verified,
+    },
+  ]
+
+  return (
+    <ol className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1" aria-label="验证流程">
+      {steps.map((s, i) => (
+        <li key={s.key} className="flex items-center gap-1.5 text-[11px]">
+          {i > 0 && <span aria-hidden="true" className="text-lf-text-faint">→</span>}
+          <span
+            aria-hidden="true"
+            className={[
+              'inline-flex h-4 w-4 items-center justify-center rounded-full border text-[9px]',
+              s.done
+                ? 'border-lf-success/50 bg-lf-success/15 text-lf-success'
+                : 'border-lf-line text-lf-text-faint',
+            ].join(' ')}
+          >
+            {s.done ? '✓' : i + 1}
+          </span>
+          <span className={s.done ? 'text-lf-text' : 'text-lf-text-faint'}>{s.label}</span>
+          <span className="sr-only">{s.done ? '（已完成）' : '（未完成）'}</span>
+          <span className="text-lf-text-faint">{s.detail}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/**
+ * 证据分栏：文字 / 验证记录 / 媒体
+ *
+ * 前两栏是契约里真有的字段；第三栏**如实写"契约未包含"**，而不是摆三个空占位框
+ * 假装"证据待上传"—— 参考图③的照片/音频证据在本项目的 Outcome 契约里并不存在
+ * （服务端刻意不外发拒绝/核验的理由与证据）。摆空框会让人以为"传了就能验证"。
+ */
+function EvidenceGrid({ entry }: { entry: ObservatoryTimelineEntry }) {
+  return (
+    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="min-w-0 rounded-lf border border-lf-line p-2">
+        <p className="text-[10px] uppercase tracking-wide text-lf-text-faint">文字</p>
+        <p className="mt-0.5 break-words text-[11px] text-lf-text-muted">{entry.summary}</p>
+        <p className="mt-1 text-[10px] text-lf-text-faint">
+          发生 {entry.occurredAt.slice(0, 10)} · 上报 {entry.reportedAt.slice(0, 10)}
+        </p>
+      </div>
+
+      <div className="min-w-0 rounded-lf border border-lf-line p-2">
+        <p className="text-[10px] uppercase tracking-wide text-lf-text-faint">验证记录</p>
+        {entry.verifications.length === 0 ? (
+          <p className="mt-0.5 text-[11px] text-lf-text-faint">
+            无 —— 自报本身不产生记录
+          </p>
+        ) : (
+          <ul className="mt-0.5 space-y-0.5 text-[11px] text-lf-text-muted">
+            {entry.verifications.map((v) => (
+              <li key={`${v.level}-${v.at}`} className="truncate">
+                {v.levelLabel} · {v.at.slice(0, 10)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="min-w-0 rounded-lf border border-dashed border-lf-line p-2">
+        <p className="text-[10px] uppercase tracking-wide text-lf-text-faint">媒体证据</p>
+        <p className="mt-0.5 text-[11px] text-lf-text-faint">
+          契约未包含照片/音频证据 —— 服务端不外发核验的证据与理由。
+        </p>
+        <p className="mt-1 text-[10px] text-lf-text-faint">
+          要展示它，得先把它加进 Outcome 契约，而不是在这里摆一个空上传框。
+        </p>
+      </div>
+    </div>
   )
 }
 
