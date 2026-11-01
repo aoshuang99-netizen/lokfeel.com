@@ -124,3 +124,74 @@ NO_PROXY='localhost,127.0.0.1' PW_CHANNEL=chrome node scripts/qa/v198-visual-aud
 # 单测
 node node_modules/.bin/jest tests/workspace-spec/compile.test.ts tests/workspace-spec/assemble.test.ts
 ```
+
+---
+
+## 7. 52a · T-4 三屏视觉升级（V19.9 · 2026-11-01）
+
+- 分支：`t4/v199-visual`（基于 `release/v19.9` = `ff57b53`）· 代码提交：**`5248223`**
+- 参考图映射见 `52_NEXT_CYCLE_DIRECTIVE.md` §T-4；**只做视觉/信息层级升级，不动契约与状态机**
+- 取证环境：本地生产构建（`.next-v206` = Before / `.next-v207` = After，`BUILD_ID=LcNIwG6mFkhqcydIEZo6O`）@ localhost + `file:/tmp/v196-e2e.db`
+- 证据目录（**这次进了仓库**，不再放 /tmp）：
+  - Before：`docs/implementation/v19/screenshots/v199-t4/before/`（104 截图 + `visual-results.json`，**104 PASS / 0 FAIL**）
+  - After：`docs/implementation/v19/screenshots/v199-t4/after/`（104 截图 + 3 张整页补拍，**104 PASS / 0 FAIL**）
+
+### 7.1 改动总览
+
+| # | 屏 | 改动 | 文件 | 参考图要点 |
+|---|---|---|---|---|
+| A-1 | `/console/agents` | 「运行概览」三卡：需要人工介入（含按状态分解 + 注入旁证）/ 进行中 / 本期成本 | `src/app/console/agents/page.tsx` | ① Needs Attention 聚合卡 |
+| A-2 | `/console/agents` | 「按技能名册」表：技能 / 运行 / 调用 / 成本（含条形分解）/ 最近活跃 / 需关注 | 同上 | ① roster 表 + Cost Breakdown |
+| A-3 | `/workspace` Consent | 「待你裁决」横幅前置（动作逐个来自服务端 `availableActions`） | `src/components/living/consent/consent-gate.tsx` | ② Human approval required |
+| A-4 | `/workspace` Consent | 提案四步进度清单（已发起 → 我方 → 对方 → 已介绍，逐步打勾） | 同上 | ② Latest actions 勾选清单 |
+| A-5 | `/workspace` Consent | 审批时间线（`introducedAt` / `expiresAt` / 当前状态，标注来源字段） | 同上 | ② Audit log 时间线 |
+| A-6 | `/workspace` Outcomes | 三段验证流程条：已自报 → 验证记录 → 服务端判定 | `src/components/living/observatory/outcome-observatory.tsx` | ③ 四步流程条（见 7.3 诚实取舍） |
+| A-7 | `/workspace` Outcomes | 三栏证据分栏：文字 / 验证记录 / 媒体证据（如实标注契约未包含） | 同上 | ③ Photo/Notes/Audio 证据 |
+
+### 7.2 诚实性红线（本批刻意"少画"的三处）
+
+1. **名册不显示「质量分 / 趋势」**：接口没有这两类字段，画出来就是前端编数据。
+   页面注明「要显示它们得先在服务端定义口径」。
+2. **审批时间线不画逐动作事件流**：契约只下发 `introducedAt` / `expiresAt` / 当前状态；
+   「谁在几点点了接受」那种最像审计日志的时间线全靠推断，每行反而标注了来源字段。
+3. **验证流程只画三段**：参考图的第 4 步「批准关闭」在本域没有对应状态，
+   画一个永远不亮的步骤等于骗人；`verified` 仍然**只读服务端布尔**，不比较 level 字面量。
+
+### 7.3 聚合口径（A-1/A-2 的一个细节）
+
+名册与「需要关注」聚合**不受列表筛选影响**：列表仍按服务端 `status` 参数过滤；
+聚合走独立的 ALL 请求（`filter=ALL` 时复用同一请求，不多发一次）。
+否则「切到已执行」时"待批准 3 条"会变成 0 —— 那是筛选副作用，不是事实。
+「需要人工介入」的档位口径与 living 侧 `LIVING_AGENT_ATTENTION_STATUSES` 一致
+（`AWAITING_APPROVAL / FAILED / BLOCKED_QUOTA / DEGRADED`），页面内注明"这不是权限判定"。
+
+### 7.4 门禁（全部在 `.next-v207` 上实测）
+
+| 门禁 | 结果 |
+|---|---|
+| `tsc --noEmit` | **0 error** |
+| eslint（3 个改动文件） | **0 条** |
+| 104 格视觉审计（After） | **104 PASS / 0 FAIL**（溢出 ≤1px、360/390 触控 ≥24px、内容非空） |
+| axe 四视口棘轮（`--gate`） | **零新增** |
+| Playwright（`playwright.ci.config.ts`） | **113 / 113 通过**（5.0m） |
+| `v198-agent-consent-outcome.mjs` | **16 PASS / 1 BLOCKED / 0 FAIL**（与基线一致，BLOCKED 仍为 A-03b 需真实 Provider） |
+
+### 7.5 Before/After 观感差异（一句话版）
+
+- `/console/agents`：Before 是「额度面板 + 平铺运行列表」；After 先给**概览三卡 + 名册表**，
+  管理员不滚动就能回答"现在有什么要我处理、钱花在哪"。
+- Consent：Before 顶部是意图选择；After **待裁决横幅前置**，每条提案自带四步进度，
+  底部有时间线（且诚实标注了它不包含什么）。
+- Outcomes：Before 条目只有档位徽章与验证按钮；After 每条先给**自报→记录→判定**流程条
+  与三栏证据，"自报不算验证"从一句口号变成了可见的流程。
+
+### 7.6 复跑命令
+
+```bash
+# Before/After 各一次（改动前后分别跑）
+node scripts/qa/v198-visual-audit.mjs --base=http://127.0.0.1:<port> \
+  --shot-dir=docs/implementation/v19/screenshots/v199-t4/{before|after}
+node scripts/qa/v196-axe-scan.mjs --base=http://127.0.0.1:<port> --gate
+npx playwright test --config=playwright.ci.config.ts
+node scripts/qa/v198-agent-consent-outcome.mjs --base=http://127.0.0.1:<port> --db=file:/tmp/v196-e2e.db
+```
