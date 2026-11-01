@@ -6,7 +6,7 @@
 > 规则：本文件只写**可复现的事实**。取不到的数据写 `UNKNOWN` 并附取证命令，不写估计值。
 > 每条事实后面跟一条能当场跑的命令 —— 与 `07_EVIDENCE_LENS.md` 同一套纪律。
 
-**最后核对**：2026-10-25（V19.4 · 性能优化实施 + PR #32）· 仓库 `nexus-app/` · 分支 `v19/design-exploration`（工作）/ `main`（基线）
+**最后核对**：2026-11-01（V19.9 发布）· 仓库 `nexus-app/` · 分支 `release/v19.9`（= `main`，`ff57b53`）
 
 ---
 
@@ -20,11 +20,8 @@
 | legacy 线 | `/dashboard/*` 交友面 + 匹配引擎 + 3500 bot —— **共用底座，非主线**，不得混入 SaaS 收费 | `ls src/app/dashboard` |
 | 另一条产品线 | **Hlua Pass**（streaming / H-Points 会员），`public/pay.html` 即其页面，CTA 指向 Gumroad | `node -e "console.log(require('fs').readFileSync('public/pay.html','utf8').match(/<title>[^<]*/)[0])"` |
 
-> 🔴 **两条产品线在生产上仍是串的**（2026-10-22 15:05Z 实测）：
-> `GET https://app.lokfeel.com/pricing` → **307 → /pay.html**（Hlua），`/hlua` → **404**。
-> **但 HEAD 已经修好**：`src/app/(public)/pricing/page.tsx` 里没有 `redirect()`，
-> `/hlua` 页面存在，`npm run check:products` 5 条规则全过（R5「/pricing 是真实页面」）。
-> 也就是说这不是待修的缺陷，而是**待发布的修复** —— 生产停在 `dc102cd`（见 §2）。
+> ✅ **已于 2026-11-01 08:49Z 随 `ff57b53` 发布修复**（当时观测：`/pricing` → **307 → /pay.html**、`/hlua` → **404**）。
+> 发布后实测：`/pricing` **200**、`/hlua` **200**、`/pay.html` 200，`prod-smoke` R2/R3 全 PASS。
 > 细节见 `18_COMMERCIAL_CONTRACT.md`。
 
 ---
@@ -37,7 +34,7 @@
 | 分支 | `main`（基线，= `c3213fd`）+ **`v19/design-exploration`**（工作线，= `8720868`，经 **PR #32** 挂 CI；合并需人工批准） | `git branch --show-current` · `curl -s https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/pulls/32` |
 | 基线 commit | `main` = `c3213fd`；工作分支头 = `8720868`（V19 交付 + LazyMotion 下放）；`bba8c36` 为 V18.3 代码冻结点 | `git rev-parse --short origin/main` · `git rev-parse --short HEAD` |
 | CI 现状 | `main` 头提交 = **17 项检查：0 失败**；PR #32 触发 `pull_request` CI（含 E2E 85 条，作为 LazyMotion 迁移零行为变化的证据）。E2E 共 **85 条（结构枚举）**：公开 12 + 认证 18 + `/workspace` 页签 12 + legacy 四视口 27 + 缓存头 10 + 冒烟 6 | `curl -s "https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/pulls/32"` |
-| 生产实际部署 | **`dc102cd`**（2026-10-21T06:41Z，`state=ready`，部署 ID `6ad85eb3122dcb59f86a64c3`）—— 2026-10-25 实测 `/api/health` **仍无 `commit` 字段** = 生产未变 | `curl -s https://app.lokfeel.com/api/health` |
+| 生产实际部署 | **`ff57b53`**（2026-11-01T08:45Z 触发，`state=ready`，部署 ID `6ae6fc1ce2…`，Netlify 站点 `lokfeel`）—— `/api/health.commit` = `ff57b53`，与发布 SHA 一致 | `curl -s https://app.lokfeel.com/api/health \| node -e "…"` |
 | 本地 vs 远端 | **一致**（`ls-remote` 同 SHA） | `git -c http.proxy=http://127.0.0.1:10808 ls-remote origin refs/heads/main` |
 | 栈 | Next 16.4.2（App Router / Turbopack）· React 19.3 · Prisma 7.10.1（libSQL/Turso）· NextAuth v5 beta | `node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react,p.dependencies.prisma)"` |
 | 中间件 | 仓库根 `proxy.ts`（Next 16 要求，不用 `middleware.ts`） | `ls proxy.ts` |

@@ -123,3 +123,48 @@ git push origin release/v19.9:main
 
 > 结论：**`release/v19.9` 的合并后构建 + 浏览器层门禁已补齐（113/113）。**
 > 仍未闭合的只有 **§3 的写权限**，与代码质量无关。
+
+---
+
+## 8. 发布执行完毕（2026-11-01 08:45Z 触发 / 08:49Z 上线）
+
+用户注册 SSH 公钥（`SHA256:6Laz9NvwWsRMz4FMLIPezKKEm6Zy4SdVbyOhjAEZq84`）后，
+`ssh -T git@github.com` → `Hi aoshuang99-netizen!`，写权限解除。执行如下：
+
+### 8.1 推送（`git ls-remote` 核对，非脚本退出码）
+
+| 引用 | 结果 |
+|---|---|
+| `refs/heads/release/v19.9` | `ff57b53826f37cedfd8676c32a3d1ac81424df46`（新建） |
+| `refs/heads/main` | `c3213fd → ff57b53`（**快进**，0 落后 / 52 提交） |
+| `v19/design-exploration` | `3968f8f → 01d7602` |
+| `fix/p2-soft-delete-aggregate` | 新建 |
+
+### 8.2 Netlify
+
+部署 `6ae6fc1ce2…`（`branch=main`，`commit=ff57b538`，`context=production`）：`building → **ready**`。
+
+### 8.3 生产复验（全部对 `https://app.lokfeel.com`）
+
+| 项 | 结果 |
+|---|---|
+| `/api/health.commit` | **`ff57b53`** = 发布 SHA（R-05 关闭证据） |
+| `prod-smoke.mjs --commit=ff57b53` | **15 / 15 PASS**（含 `/pricing` 200、`/hlua` 200、`/refunds`、`/pay.html`、匿名 cancel 401、支付缺口恰 4 键、核心 API 无 500、`/login` 不被公共缓存） |
+| `verify-public-origin.mjs` | **13 通过 / 0 失败**（含 OAuth `redirect_uri` 落在公开域名、0 处部署域名泄漏） |
+| `verify-payment-off.mjs --base=https://app.lokfeel.com` | **18 / 18 通过** |
+
+### 8.4 🔴 本轮新踩的假绿（已修正，写进检查单）
+
+`verify-payment-off.mjs` 的 `BASE` 默认值是 `http://127.0.0.1:3000`。
+本机当时**有进程占着 3000**（早前遗留的服务），于是第一次跑出来的「18/18 通过」
+打的是**本机**，不是生产 —— 报告里只有一个小标题写着 `目标 : http://127.0.0.1:3000`，
+其余 18 条全绿，极易被当成生产通过。
+
+> **规则**：任何 `--base` 可覆盖的复验脚本，对生产跑时**必须显式传 `--base`**，
+> 并在结论里回读被打印的「目标」行。默认值只能用于本地。
+
+### 8.5 收尾事实
+
+- 生产 = `main` = `ff57b53`；后续仅文档提交（带 `[skip netlify]`），不触发重建。
+- 发布**不含** `prisma/` 变更 ⇒ **无需 DB 迁移**（§2 第 5 条复核仍成立）。
+- 未闭合项与 §6 完全一致，不因发布而消失。

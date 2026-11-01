@@ -1,8 +1,15 @@
 # 51 · Release Candidate 裁定（V19.8 · Batch 7 收口）
 
-- 日期：2026-10-31
-- HEAD：`5c96f2c`｜`origin/v19/design-exploration` = `3968f8f`｜`origin/main` = `c3213fd`｜生产 = `dc102cd`
-- 待推送提交：**10 个**（`3968f8f..5c96f2c`，含 Batch 4–7 全部产出）
+- 日期：2026-10-31（**2026-11-01 更新：已发布**）
+- HEAD：`ff57b53`｜`origin/main` = `ff57b53`（`c3213fd` → `ff57b53`，快进 52 提交）｜生产 = **`ff57b53`**
+
+> ## ✅ 发布结果（2026-11-01 08:45Z 触发 / 08:49Z 上线）
+>
+> - 推送：`release/v19.9` 与 `main` 均指向 **`ff57b53`**（`git ls-remote` 核对）
+> - Netlify 部署 `6ae6fc1ce2…`：`building → ready`，`context=production`，`branch=main`
+> - 生产复验：`/api/health.commit` = `ff57b53`｜`prod-smoke` **15/15**｜`verify-public-origin` **13/0**｜
+>   `verify-payment-off --base=https://app.lokfeel.com` **18/18**
+> - 下方「REMOTE_CI = NOT_TESTED / 不得宣称远端验收」的判断**已作废**，保留原文仅作过程记录。
 
 ## 裁定：**RELEASE_CANDIDATE = YES（代码侧）／REMOTE 验收未完成（按执行令不得宣称）**
 
