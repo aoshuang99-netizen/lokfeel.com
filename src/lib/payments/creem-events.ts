@@ -164,6 +164,20 @@ export function transactionIdOf(obj: CreemObject): string | null {
   return str(obj.last_transaction_id) ?? str(obj.transaction_id)
 }
 
+/**
+ * checkout 对象 id（`chk_xxx`）。
+ *
+ * 首购入账的幂等键族是 `creem:checkout:<id>`（见 `idempotencyKeyOf`），
+ * 而 `refund.created` 的对象只带 `last_transaction_id`（`tran_xxx`）。
+ * 两个键族不同 ⇒ 退款单靠 tran 键永远找不到首购那笔账（B-8）。
+ */
+export function checkoutIdOf(obj: CreemObject): string | null {
+  const c = obj.checkout
+  if (typeof c === 'string') return c
+  if (c && typeof c === 'object') return str((c as CreemObject).id)
+  return str(obj.checkout_id)
+}
+
 export function userIdOf(obj: CreemObject): string | null {
   const meta = obj.metadata
   if (!meta || typeof meta !== 'object') return null
@@ -174,6 +188,20 @@ export function planOf(obj: CreemObject): string | null {
   const meta = obj.metadata
   if (!meta || typeof meta !== 'object') return null
   return str((meta as CreemObject).plan)
+}
+
+/**
+ * 商品 id（B-16 修复用）。
+ *
+ * `metadata.plan` 可能是 `"dynamic"` 这类不可判定的占位值（旧版 checkout 写死），
+ * 此时必须能退回商品 id 反查套餐 —— 否则年付会被记成月付。
+ * 三个位置都读：顶层 `productId` / 下划线命名 `product_id` / `metadata.productId`。
+ */
+export function productIdOf(obj: CreemObject): string | null {
+  const meta = obj.metadata
+  const fromMeta =
+    meta && typeof meta === 'object' ? str((meta as CreemObject).productId) : null
+  return str(obj.productId) ?? str(obj.product_id) ?? fromMeta
 }
 
 /**

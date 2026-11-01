@@ -235,6 +235,44 @@ export function getBotEngineTunables(policy: BotPolicy = BOT_POLICY): BotEngineT
 }
 
 // ─────────────────────────────────────────────────────────────
+// Tick 门控（B-6，2026-10-31）
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * 为什么需要**第二道**开关（在 `BOT_ENGINE_ENABLED` 之外）：
+ *
+ *   `BOT_ENGINE_ENABLED=true` 在线上是既有事实（`/api/health` 显示 botModule
+ *   enabled）。但 `/api/cron/bot-tick` 此前从不调用 `loadBotUsers()` / `tick()`，
+ *   只做健康探针 ⇒ 11,338 个 Bot **一次都没动过**。
+ *   一旦把 tick 接回去，这批 Bot 会立刻开始真实发消息 / 建匹配 / 写库。
+ *
+ *   这是产品行为变更（成本 + 对外观感），不是一个可以静默上线的 bugfix。
+ *   因此拆成独立开关：
+ *     · 默认 **false** ⇒ 行为与修复前完全一致（只加载、不 tick），但响应体能
+ *       真实反映 `botCount`，让"到底有没有加载成功"变成可观测的；
+ *     · 显式设 `BOT_ENGINE_TICK_ENABLED=true` 才真正开始跑。
+ *
+ *   这样"修 bug"和"开启 Bot 动作"两件事可以分别审批、分别回滚。
+ */
+export const BOT_TICK_ENABLED: boolean = parseEnabledFlag(
+  process.env.BOT_ENGINE_TICK_ENABLED,
+).value
+
+/** tick 是否被允许真实执行。默认 false（见上方说明）。 */
+export function isBotTickEnabled(): boolean {
+  return BOT_TICK_ENABLED
+}
+
+/** tick 被门控拦住时给运维看的原因（纯函数，便于断言） */
+export function describeTickGate(): string {
+  return (
+    'BOT_ENGINE_TICK_ENABLED 未开启（默认关闭）：已加载 Bot 配置但不执行 tick。' +
+    '开启前请确认 11k+ Bot 开始真实发消息/建匹配是预期行为，再设 BOT_ENGINE_TICK_ENABLED=true。'
+  )
+}
+
+
+// ─────────────────────────────────────────────────────────────
 // 可观测性
 // ─────────────────────────────────────────────────────────────
 

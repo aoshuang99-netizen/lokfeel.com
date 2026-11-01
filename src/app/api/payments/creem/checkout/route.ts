@@ -7,26 +7,33 @@ import { requireAuth } from "@/lib/auth/auth";
 import { success, badRequest, serverError, forbidden } from "@/lib/api-response";
 import {
   getCreemClient,
-  CREEM_PLAN_CONFIG,
-  createCreemCheckout,
-  CreemPlan,
 } from "@/lib/creem";
 import { isFemaleGender } from "@/lib/gender-utils";
 import { isPaymentChannelReady } from "@/lib/payments/availability";
 import { paymentNotConfigured } from "@/lib/payments/not-configured";
+import {
+  checkoutRequestId,
+  resolveCheckoutTarget,
+} from "@/lib/payments/creem-plan-resolve";
 
 // ── Checkout Schema ──────────────────────────────
 // 支持两种方式：plan（兼容旧版）或 productId（动态）
-const checkoutSchema = z.object({
-  plan: z.enum(["PREMIUM_MONTHLY", "PREMIUM_YEARLY"]).optional(),
-  productId: z.string().min(1).optional(),
-}).refine(data => {
-  // 必须有其中一个
-  if (!data.plan && !data.productId) {
-    return { message: "Must provide either 'plan' or 'productId'" };
-  }
-  return true;
-});
+// ⚠️ B-18：原来用 `.refine(d => { if (!...) return { message } })` —— 回调返回真值对象，
+// zod 视为“通过”，该约束**从未生效**（只剩错误信息丢失的副作用）。改用 superRefine。
+const checkoutSchema = z
+  .object({
+    plan: z.enum(["PREMIUM_MONTHLY", "PREMIUM_YEARLY"]).optional(),
+    productId: z.string().min(1).max(200).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.plan && !data.productId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["plan"],
+        message: "Must provide either 'plan' or 'productId'",
+      });
+    }
+  });
 
 // ── POST /api/payments/creem/checkout ──────────────────────
 export async function POST(request: NextRequest) {
@@ -88,27 +95,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ── 5. Resolve productId ──────────────────────────────
-    let resolvedProductId: string;
+    // ── 5. 解析结算目标（B-16：套餐只能由本地 env 决定，前端不得自报）────
+    // 旧实现在 productId 分支直接透传前端字符串 ⇒ 可购买任意商品；
+    // 且只传 productId 时 metadata.plan 写死 `"dynamic"` ⇒ webhook 白名单不认 ⇒ 年付记成月付。
+    const target = resolveCheckoutTarget(
+      { plan, productId },
+      {
+        CREEM_MONTHLY_PRODUCT_ID: process.env.CREEM_MONTHLY_PRODUCT_ID,
+        CREEM_YEARLY_PRODUCT_ID: process.env.CREEM_YEARLY_PRODUCT_ID,
+      },
+    );
 
-    if (productId) {
-      // 方式1：直接使用前端传来的 productId（动态）
-      resolvedProductId = productId;
-    } else if (plan) {
-      // 方式2：根据 plan 从环境变量读取（兼容旧版）
-      resolvedProductId =
-        plan === "PREMIUM_MONTHLY"
-          ? process.env.CREEM_MONTHLY_PRODUCT_ID!
-          : process.env.CREEM_YEARLY_PRODUCT_ID!;
-    } else {
-      return badRequest("Missing plan or productId");
+    if (!target.ok) {
+      console.error(`[Creem Checkout] Rejected (${target.reason}): ${target.message}`);
+      // 配置缺失属服务端问题（503），前端参数问题属 400。
+      if (target.reason === 'unknown_product' && target.message.includes('is not configured')) {
+        return NextResponse.json(
+          { error: "Payment system is not configured. Please try again later." },
+          { status: 503 },
+        );
+      }
+      return badRequest(target.message);
     }
 
-    if (!resolvedProductId) {
-      throw new Error(
-        `CREEM_${plan === "PREMIUM_MONTHLY" ? "MONTHLY" : "YEARLY"}_PRODUCT_ID is not configured`,
-      );
-    }
+    const resolvedProductId = target.productId;
+    const resolvedPlan = target.plan;
 
     // ── 6. Get user email for Creem customer ─────────────
     const userRecord = await db.user.findUnique({
@@ -123,12 +134,15 @@ export async function POST(request: NextRequest) {
     const creem = getCreemClient();
     const checkout = await creem.checkouts.create({
       productId: resolvedProductId,
-      requestId: `order_${user.id}_${Date.now()}`,
+      // B-17：幂等键按 15 分钟窗口分桶 —— 窗口内双击/重试复用同一 checkout，
+      // 跨窗口可新建（放弃支付后仍能重试）。原来裸 `Date.now()` ⇒ 判重永远失效。
+      requestId: checkoutRequestId(user.id, resolvedPlan, Date.now()),
       successUrl: `${appUrl}/dashboard/subscription/success?provider=creem`,
       customer: { email: userRecord.email },
       metadata: {
         userId: user.id,
-        plan: plan ?? "dynamic",
+        // 不再写 "dynamic"：webhook 用真实套餐名，年付不会被记成月付
+        plan: resolvedPlan,
         productId: resolvedProductId,
       },
     });
