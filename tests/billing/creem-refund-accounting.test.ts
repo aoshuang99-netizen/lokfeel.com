@@ -73,7 +73,7 @@ beforeEach(() => {
 
 describe('B-8 首购退款对账', () => {
   it('退款只带 tran 键时，仍能追到 checkout 键的原账单并翻 REFUNDED', async () => {
-    paymentFindFirst.mockImplementation(async ({ where }: { where: Record<string, any> }) => {
+    paymentFindFirst.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       if (where.stripePaymentIntentId === 'creem:refund:ref_9') return null
       if (where.stripePaymentIntentId === 'creem:tran:tran_9') return null // 键族不匹配
       if (where.userId === 'u_1') return CHECKOUT_PAYMENT // 回落命中
@@ -100,7 +100,7 @@ describe('B-8 首购退款对账', () => {
   })
 
   it('退款自身落账：键 creem:refund:<id>、状态 REFUNDED、金额为负', async () => {
-    paymentFindFirst.mockImplementation(async ({ where }: { where: Record<string, any> }) => {
+    paymentFindFirst.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       if (where.stripePaymentIntentId === 'creem:refund:ref_9') return null
       if (where.stripePaymentIntentId === 'creem:tran:tran_9') return CHECKOUT_PAYMENT
       if (where.userId === 'u_1') return CHECKOUT_PAYMENT
@@ -128,7 +128,7 @@ describe('B-8 首购退款对账', () => {
   })
 
   it('同一退款重放：不二次落账、不二次翻单', async () => {
-    paymentFindFirst.mockImplementation(async ({ where }: { where: Record<string, any> }) => {
+    paymentFindFirst.mockImplementation(async ({ where }: { where: Record<string, unknown> }) => {
       if (where.stripePaymentIntentId === 'creem:refund:ref_9') {
         return { id: 'p_refund', status: 'REFUNDED' }
       }

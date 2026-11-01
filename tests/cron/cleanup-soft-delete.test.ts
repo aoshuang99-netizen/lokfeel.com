@@ -20,7 +20,7 @@ function mockMakeDelegate(name: string, total: number) {
     async findMany({ take }: { take: number }) {
       return rows.slice(0, take);
     },
-    async deleteMany({ where }: { where: any }) {
+    async deleteMany({ where }: { where?: { id?: { in?: unknown } } }) {
       mockDeleteCalls.push(name);
       if (Array.isArray(where?.id?.in)) {
         const ids = new Set(where.id.in as string[]);

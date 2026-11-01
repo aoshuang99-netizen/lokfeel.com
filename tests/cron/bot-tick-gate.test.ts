@@ -60,7 +60,7 @@ function makeRequest(auth = true) {
 function loadRoute() {
   let route: typeof import('@/app/api/cron/bot-tick/route');
   jest.isolateModules(() => {
-    route = require('@/app/api/cron/bot-tick/route');
+    route = jest.requireActual('@/app/api/cron/bot-tick/route');
   });
   return route!;
 }
