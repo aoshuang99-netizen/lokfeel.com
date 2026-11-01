@@ -84,3 +84,42 @@ git push origin release/v19.9:main
 - AC-25 / 真实扣款：缺 4 个凭据（H-4）
 - D-01 退款口径、D-02 定价展示、D-03 法律主体
 - gitleaks 历史 55 处形似凭据是否轮换（D-09 / R-15）
+
+---
+
+## 7. 合并后树的 E2E 复核（2026-11-01 增补）
+
+**为什么补这一步**：§2 的门禁跑在 `v19/design-exploration` 上；`release/v19.9` 把 B-5~B-20 修复线
+**合并**了进来（23 文件 / +2565 −246）。合并后只跑了 Jest / tsc / lint，**浏览器层没有任何证据**。
+"Jest 绿" 覆盖不到 "构建产物能不能起来"，更覆盖不到版面与真实登录态。
+
+### 7.1 构建
+
+| 项 | 值 |
+|---|---|
+| 命令 | `env -u NODE_OPTIONS NEXT_DIST_DIR=.next-v206 DATABASE_URL=file:/tmp/v196-e2e.db npx next build` |
+| 结果 | `BUILD_EXIT=0`，`BUILD_ID=KNKU9Q6LoK7nKXQ1Sag4e`（32m30s） |
+| 说明 | `distDir` 用临时补丁注入、**启动读取后立即 `git checkout` 还原**，工作树保持干净 |
+
+### 7.2 E2E（`playwright.ci.config.ts`，113 条，真实 `next start` + 真实登录）
+
+| 轮次 | 环境变量 | 结果 |
+|---|---|---|
+| ① | 缺 `E2E_CHAT_A_*` / `E2E_CHAT_CONV_ID` | **102 passed / 3 failed / 8 skipped** — 3 条失败全部是**入口处的环境变量缺失**（`Error: 缺少 E2E_CHAT_A_* …`），未进入任何断言 |
+| ② | 补齐聊天夹具 5 个变量 + 清掉上一轮 `UserReport` 夹具残留 | **113 passed（4.8m）/ 0 failed** |
+
+**判据口径**：`E2E_BASE_URL=http://127.0.0.1:3100` 指向 `.next-v206` 产物，**不是** dev server、
+**不是**生产站；登录走 `global-setup` 的真实表单（含 `__reactFiber` 水合等待）。
+
+### 7.3 现场教训（写进下次的检查单）
+
+1. **缺环境变量会伪装成用例失败**：3 条用例在 `beforeAll` 就 `throw`，报告里长得像版面回归。
+   先读 `error-context.md` 的第一行，别先看截图。
+2. **夹具库会被上一轮污染**：`UserReport` 24h 去重窗口跨轮残留 ⇒ 第二轮必须按
+   `chatRoomId='e2e_conv_chat' AND reporterId LIKE 'e2e_user_%'` 精确清除，
+   而不是 `--cleanup` 全删（那会把登录夹具一起删掉）。
+3. **`tail` 会吞掉后台进度**：Playwright 输出接到 `| tail -120` 上，整轮结束前一行都看不到；
+   落盘到文件才可观测。
+
+> 结论：**`release/v19.9` 的合并后构建 + 浏览器层门禁已补齐（113/113）。**
+> 仍未闭合的只有 **§3 的写权限**，与代码质量无关。
