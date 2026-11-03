@@ -6,7 +6,7 @@
 > 规则：本文件只写**可复现的事实**。取不到的数据写 `UNKNOWN` 并附取证命令，不写估计值。
 > 每条事实后面跟一条能当场跑的命令 —— 与 `07_EVIDENCE_LENS.md` 同一套纪律。
 
-**最后核对**：2026-11-01（V19.9 发布）· 仓库 `nexus-app/` · 分支 `release/v19.9`（= `main`，`ff57b53`）
+**最后核对**：2026-11-03（V19.9 + T-4 三屏视觉升级已上线）· 仓库 `nexus-app/` · 分支 `main` = `79459d6`（`t4/v199-visual` 已合 main；`release/v19.9` = `0d848bf`）
 
 ---
 
@@ -32,17 +32,16 @@
 |---|---|---|
 | 仓库 | `github.com/aoshuang99-netizen/lokfeel.com`（public） | `git remote -v` |
 | 分支 | `main`（基线，= `c3213fd`）+ **`v19/design-exploration`**（工作线，= `8720868`，经 **PR #32** 挂 CI；合并需人工批准） | `git branch --show-current` · `curl -s https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/pulls/32` |
-| 基线 commit | `main` = `c3213fd`；工作分支头 = `8720868`（V19 交付 + LazyMotion 下放）；`bba8c36` 为 V18.3 代码冻结点 | `git rev-parse --short origin/main` · `git rev-parse --short HEAD` |
+| 基线 commit | `main` = `79459d6`（T-4 三屏视觉升级，2026-11-03 上线）；`release/v19.9` = `0d848bf`；`v19/design-exploration` = `01d7602`；`bba8c36` 为 V18.3 代码冻结点 | `git rev-parse --short origin/main` · `git rev-parse --short HEAD` |
 | CI 现状 | `main` 头提交 = **17 项检查：0 失败**；PR #32 触发 `pull_request` CI（含 E2E 85 条，作为 LazyMotion 迁移零行为变化的证据）。E2E 共 **85 条（结构枚举）**：公开 12 + 认证 18 + `/workspace` 页签 12 + legacy 四视口 27 + 缓存头 10 + 冒烟 6 | `curl -s "https://api.github.com/repos/aoshuang99-netizen/lokfeel.com/pulls/32"` |
-| 生产实际部署 | **`ff57b53`**（2026-11-01T08:45Z 触发，`state=ready`，部署 ID `6ae6fc1ce2…`，Netlify 站点 `lokfeel`）—— `/api/health.commit` = `ff57b53`，与发布 SHA 一致 | `curl -s https://app.lokfeel.com/api/health \| node -e "…"` |
+| 生产实际部署 | **`79459d6`**（2026-11-03T04:22Z 触发，`state=ready`，部署 ID `6ae96193f9…`，Netlify 站点 `lokfeel`）—— `/api/health.commit` = `79459d6`，与发布 SHA 一致；T-4 三屏视觉升级（consent-gate / outcome-observatory / console/agents）已生效 | `curl -s https://app.lokfeel.com/api/health \| node -e "…"` |
 | 本地 vs 远端 | **一致**（`ls-remote` 同 SHA） | `git -c http.proxy=http://127.0.0.1:10808 ls-remote origin refs/heads/main` |
 | 栈 | Next 16.4.2（App Router / Turbopack）· React 19.3 · Prisma 7.10.1（libSQL/Turso）· NextAuth v5 beta | `node -e "const p=require('./package.json');console.log(p.dependencies.next,p.dependencies.react,p.dependencies.prisma)"` |
 | 中间件 | 仓库根 `proxy.ts`（Next 16 要求，不用 `middleware.ts`） | `ls proxy.ts` |
 | 托管 | Netlify 免费计划 + Cloudflare DNS（`app.lokfeel.com` CNAME → `lokfeel.netlify.app`） | `dig +short app.lokfeel.com` |
-| 生产版本可见性 | 🔴 生产 `/api/health` 仍是 `{"status":"healthy","version":"unknown"}`，**没有 commit 字段** ⇒ 线上跑哪个 commit 不可查。**HEAD 已修**：`src/lib/build-info.ts` + `next.config.ts` 构建期内联 `commit/builtAt/version/commitSource`，healthy 与 unhealthy 两个分支都带 ⇒ 发版后一条 `curl` 可证。**未发布前这条能力不存在** | `curl -s https://app.lokfeel.com/api/health`（现状）· `node -e "console.log(require('fs').readFileSync('src/lib/build-info.ts','utf8').length)"` |
+| 生产版本可见性 | ✅ 生产 `/api/health` 已带 `commit` 字段（V19.9 修复：`src/lib/build-info.ts` + `next.config.ts` 内联 `commit/builtAt/version/commitSource`），prod-smoke R1 实测 `commit=79459d6` 与发布 SHA 一致；冷启动 TTFB 仍受图片传输主导（见 §3） | `curl -s https://app.lokfeel.com/api/health` |
 
-> `version: unknown` 不是小瑕疵：V18 要求"当前 HEAD 与生产一致"，而现在**只能靠 Netlify
-> 部署日志间接推断**。已登记为 `MASTER_BACKLOG.md` 的 OPS 项。
+> 生产版本可见性已解决（V19.9 起 `/api/health.commit` 可读），原 `version: unknown` / 无 commit 字段问题已关闭；OPS 项从 `MASTER_BACKLOG.md` 移除。
 
 ---
 
