@@ -17,6 +17,34 @@ import {
 } from '@/lib/agent'
 import { createOpenAIProvider } from './provider-openai'
 import { createWorkBuddyProvider } from './provider-workbuddy'
+import { WORKSPACE_SPEC_VERSION } from '@/lib/workspace-spec'
+
+/**
+ * 沙箱专用假产出：**契约合法的最小 WorkspaceSpec**（#1086）。
+ *
+ * 为什么必须契约合法：编排层在 Provider 返回后立刻做 `outputSchema.safeParse`，
+ * 不合法就走 `degrade()` ⇒ 状态永远停在 DEGRADED ⇒ 审批/审计链路永远没机会被走到。
+ * 沙箱的价值就是"把链路走通"，因此这里给的是**结构正确、内容标识为沙箱**的产出。
+ *
+ * ⚠️ 边界：这不是"模拟模型质量"，只是让 `providerKind='stub'` 的运行能进入待批态。
+ * 版本号从 `WORKSPACE_SPEC_VERSION` 取，避免契约升级后这里悄悄失效。
+ */
+const SANDBOX_WORKSPACE_SPEC = {
+  version: WORKSPACE_SPEC_VERSION,
+  title: 'SANDBOX_PROBE 沙箱草稿',
+  nodes: [
+    {
+      id: 'intent-1',
+      type: 'intent',
+      title: '目标与成功判据',
+      data: { goal: 'SANDBOX_PROBE：沙箱探测目标（非真实模型产出）', constraints: [], successCriteria: [] },
+    },
+    { id: 'candidate-1', type: 'candidate', title: '候选池', data: { candidates: [] } },
+    { id: 'consent-1', type: 'consent', title: '披露与同意', data: { fields: [], status: 'CONSENT_PENDING' } },
+  ],
+  availableActions: [],
+  notes: ['SANDBOX_PROBE：由 stub provider 生成，providerKind=stub，不冒充真实模型输出'],
+} as const
 
 /**
  * 按环境解析出可用的 Provider。判据全部来自内核纯函数，本文件只做"用判据构造实例"。
@@ -32,12 +60,17 @@ export function resolveRuntimeProvider(
   // S1 沙箱装配：能走到这里，说明 `resolveProviderMode` 已确认「非生产 + 隔离」。
   // 生产环境在上一步就抛错了，故本分支**不可能**在生产被加载。
   // `ModelProvider.kind='stub'` 会如实写入 providerKind，不冒充真实调用。
+  //
+  // 🔴 #1086 修正：原载荷是 `{"intent":"SANDBOX_PROBE","tool":null,"args":{}}`，
+  //    对**任何**技能契约都不合法（INTENT_EXTRACTION 要 WorkspaceSpec v${WORKSPACE_SPEC_VERSION}），
+  //    实测必走 OUTPUT_SCHEMA_INVALID → DEGRADED，`providerKind` 落成 `rules`
+  //    ⇒ 沙箱**永远到不了** AWAITING_APPROVAL，等于沙箱不可用于端到端取证。
+  //    现在返回一个**契约合法**的最小 WorkspaceSpec，使编排/审批/审计链路能在沙箱内被真实走完。
+  //    仍带 `SANDBOX_PROBE` 标记：任何下游都能一眼看出「这不是真实模型产出」。
   if (mode === 'stub') {
     return {
       kind: 'ready',
-      provider: createStubProvider(() =>
-        JSON.stringify({ intent: 'SANDBOX_PROBE', tool: null, args: {} }),
-      ),
+      provider: createStubProvider(() => JSON.stringify(SANDBOX_WORKSPACE_SPEC)),
     }
   }
 

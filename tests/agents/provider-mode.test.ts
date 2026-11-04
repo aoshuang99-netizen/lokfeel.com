@@ -20,6 +20,7 @@
 
 import { resolveProviderMode } from '@/lib/agent'
 import { resolveRuntimeProvider } from '@/lib/agents/provider-runtime'
+import { WorkspaceSpecSchema } from '@/lib/workspace-spec'
 
 const STUB_ENV = { AGENT_PROVIDER: 'stub', AGENT_TEST_ISOLATION: 'true' } as const
 
@@ -73,6 +74,12 @@ describe('resolveRuntimeProvider · S1 装配', () => {
     if (!out.ok) throw new Error('unreachable')
     expect(out.text).toContain('SANDBOX_PROBE')
     expect(out.usage.outputTokens).toBeGreaterThan(0)
+
+    // 🔴 #1086：载荷必须**通过 INTENT_EXTRACTION 的输出契约**。
+    // 否则编排层必走 OUTPUT_SCHEMA_INVALID → DEGRADED，沙箱到不了 AWAITING_APPROVAL，
+    // 等于"沙箱装配好了但端到端永远走不通"（旧载荷正是这个下场）。
+    const parsed = WorkspaceSpecSchema.safeParse(JSON.parse(out.text))
+    expect(parsed.success).toBe(true)
   })
 
   it('⑦ 生产环境请求 stub：装配侧同样抛错（守卫不可绕过）', () => {

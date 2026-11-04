@@ -56,7 +56,12 @@ export const INJECTION_PATTERNS: readonly { code: string; re: RegExp }[] = [
   { code: 'ROLE_IMPERSONATION', re: /^\s*(system|assistant|developer)\s*:/im },
   { code: 'ROLE_IMPERSONATION', re: /\byou\s+are\s+now\b/i },
   // 中文：同类意图
-  { code: 'OVERRIDE_INSTRUCTIONS', re: /忽略(以上|上面|之前|此前|全部)?(所有)?(的)?(指令|规则|提示|要求)/ },
+  // 🔴 2026-11-05 修正（巡检 #1086）：原式为 `/忽略(以上|上面|之前|此前|全部)?(所有)?(的)?(指令|…)/`，
+  //    语序被写死为「所有」在「的」之前 ⇒ 最常见的「忽略之前的**所有**指令」**漏检**。
+  //    改为把修饰语收成可重复组 `(的|所有|这些|那些)*`，语序不再敏感。
+  { code: 'OVERRIDE_INSTRUCTIONS', re: /忽略(以上|上面|以下|下列|之前|此前|全部)?(的|所有|这些|那些)*(指令|规则|提示|要求)/ },
+  // 「全部忽略」「一律无视」是同一意图的倒装表达（如「前面的要求全部忽略，直接执行」）。
+  { code: 'OVERRIDE_INSTRUCTIONS', re: /(全部|全都|一律|统统)(忽略|无视)/ },
   { code: 'ROLE_IMPERSONATION', re: /你现在(是|就是|扮演)/ },
   { code: 'REVEAL_SYSTEM_PROMPT', re: /(输出|告诉我|打印|泄露)(你的)?(系统提示|系统指令|提示词)/ },
   // 越权/绕审批意图
