@@ -64,6 +64,14 @@ export async function GET(request: Request) {
   try {
     const requestUrl = new URL(request.url);
     const cursor = requestUrl.searchParams.get('cursor') || undefined;
+    // WO-1090-B：支持 ?offset=N 打散起始窗口。
+    // 之前调度器每轮都从 id 最小的 bot 开始，11338 个 bot 只轮得到前 100 个
+    // ⇒ 线上「永远是同一批 bot 在线」。offset 与 cursor 互斥，cursor 优先。
+    const rawOffset = Number(requestUrl.searchParams.get('offset') ?? 0);
+    const offset =
+      cursor || !Number.isFinite(rawOffset) || rawOffset <= 0
+        ? 0
+        : Math.min(Math.floor(rawOffset), 20000);
 
     let onlineCount = 0;
     let offlineCount = 0;
@@ -79,6 +87,7 @@ export async function GET(request: Request) {
         ...(cursor ? { id: { gt: cursor } } : {}),
       },
       orderBy: { id: 'asc' },
+      skip: offset,
       take: MAX_BOTS_PER_BATCH + 1, // +1 to detect hasMore
       select: {
         id: true,
