@@ -19,7 +19,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { evaluateOnlineTransition, createOnlineState } from '@/lib/bot-engine/modules/online-status';
-import { deserializeBotConfig } from '@/lib/bot-engine/config';
+import { getBotConfig } from '@/lib/bot-engine/default-config';
 import {
   BOT_DISABLED_HTTP_STATUS,
   botDisabledBody,
@@ -42,30 +42,6 @@ interface BotState {
 
 // In-memory state for online status tracking (survives warm starts)
 const botStates = new Map<string, BotState>();
-
-function getBotConfig(botConfig: string | null) {
-  if (botConfig) {
-    try {
-      const parsed = deserializeBotConfig(botConfig);
-      // Defensive: ensure required nested structures exist
-      if (parsed?.online?.avgSessionsPerDay) {
-        return parsed;
-      }
-    } catch { /* ignore */ }
-  }
-  // Return a default passive config
-  return {
-    personalityType: 'passive',
-    seed: 42,
-    online: {
-      avgSessionsPerDay: 1,
-      avgSessionDurationMin: 10,
-      peakHours: [20, 21],
-      offPeakProbability: 0.1,
-      activeDays: [0, 1, 2, 3, 4, 5, 6],
-    },
-  };
-}
 
 // GET /api/cron/bot-online
 export async function GET(request: Request) {
@@ -141,7 +117,7 @@ export async function GET(request: Request) {
 
       if (!state) {
         // Initialize state
-        const config = getBotConfig(bot.botConfig);
+        const config = getBotConfig(bot.botConfig, bot.id);
         // Ensure seed exists (evaluateOnlineTransition requires it)
         if (!config.seed) {
           config.seed = bot.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
