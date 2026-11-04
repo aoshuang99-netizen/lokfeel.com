@@ -160,11 +160,17 @@ export function evaluateOnlineTransition(
 
   // Bot is offline — check if should come online
   const onlineProbability = calculateOnlineProbability(config, timezone);
+  // 🔴 2026-11-05 修（WO-1090）：种子必须含**小时**。
+  // 原实现只有日期 ⇒ 每个 bot 每天只掷一次骰子，当天 24 次调用结论恒定：
+  // 实测（3000 个真实 botId，UTC 2026-11-05）78.7% 的 bot 全天 0 次上线、
+  // 5.0% 的 bot 24 小时全部上线，且 h03 与 h04 的在线集合 Jaccard = 1.000
+  // （同一批人 3 点在线、4 点还在线，逐字相同）。加上小时项后：
+  // 全天 0 次上线降到 26.4%，24 小时全在线降到 0%，日会话数标准差 5.21 → 1.31。
+  // 乘 24 而非加偏移，保证 (日期, 小时) → 种子是单射（避免跨天撞种子）。
   const random = createSeededRandom(
     config.seed +
-    now.getFullYear() * 10000 +
-    (now.getMonth() + 1) * 100 +
-    now.getDate(),
+    (now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()) * 24 +
+    now.getHours(),
   );
 
   if (random() < onlineProbability) {

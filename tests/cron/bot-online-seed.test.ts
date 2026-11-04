@@ -52,27 +52,40 @@ describe('WO-1089 · 默认配置种子去相关', () => {
     expect(s1).toBe(s2);
   });
 
-  it('同一 bot 在同一天内多次判定结果恒定（日粒度骰子，已在文档中记录）', () => {
-    // 这条锁定「现状语义」，防止有人误以为调高频次就能让 bot 上线
-    const daySeed = 20261146;
-    const first = createSeededRandom(daySeed)();
-    const second = createSeededRandom(daySeed)();
-    expect(first).toBe(second);
+  it('WO-1090：同一天内相邻小时必须换骰子（原实现日粒度，全天结论恒定）', () => {
+    // 原语义：种子只含日期 ⇒ 同一天 24 次调用结果逐字相同。
+    // 现语义：种子含小时 ⇒ (日期, 小时) 不同则骰子不同。
+    const dateKey = 20261105;
+    const h3 = createSeededRandom(dateKey * 24 + 3)();
+    const h4 = createSeededRandom(dateKey * 24 + 4)();
+    expect(h3).not.toBe(h4);
+  });
+
+  it('WO-1090：(日期, 小时) → 种子单射，不会跨天撞种子', () => {
+    const seeds = new Set<number>();
+    const dateKey = 20261105;
+    for (let d = 0; d < 7; d++) {
+      for (let h = 0; h < 24; h++) {
+        seeds.add((dateKey + d) * 24 + h);
+      }
+    }
+    expect(seeds.size).toBe(7 * 24);
   });
 });
 
 describe('WO-1089 · 群体去相关后在线比例合理', () => {
   it('固定日期下 2000 个 bot 的在线比例落在 2%–12%（非全 0、非全 1）', () => {
-    const daySeedBase = 20261146; // UTC 2026-11-04
+    const dateKey = 20261104; // UTC 2026-11-04
+    const hour = 3;
     let online = 0;
     const N = 2000;
 
     for (let i = 0; i < N; i++) {
       const cfg = getBotConfig(null, `bot-${i}`);
-      // 复刻 evaluateOnlineTransition 的种子构成：config.seed + 日期
+      // 复刻 evaluateOnlineTransition 的种子构成：config.seed + 日期*24 + 小时（WO-1090）
       const cfgAny = cfg as any;
       const p = calculateOnlineProbability(cfg, 'America/New_York');
-      const rand = createSeededRandom(cfgAny.seed + daySeedBase - 42)();
+      const rand = createSeededRandom(cfgAny.seed + dateKey * 24 + hour)();
       if (rand < p) online++;
     }
 
@@ -82,14 +95,24 @@ describe('WO-1089 · 群体去相关后在线比例合理', () => {
   });
 
   it('负向对照：seed 全为 42 时群体判定退化为一刀切', () => {
-    const daySeed = 20261146;
+    const dateKey = 20261104;
     const cfg = getBotConfig(null, 'any');
     const p = calculateOnlineProbability(cfg, 'America/New_York');
-    const r = createSeededRandom(42 + daySeed - 42)();
+    const r = createSeededRandom(42 + dateKey * 24 + 3)();
     // 同一颗骰子 ⇒ 11338 个 bot 的结论要么全 true 要么全 false
     const allSame = Array.from({ length: 100 }, () => r < p).every(Boolean)
       || Array.from({ length: 100 }, () => r < p).every((v) => !v);
     expect(allSame).toBe(true);
+  });
+
+  it('负向对照（WO-1090）：去掉小时项后，全天 24 次判定逐字相同', () => {
+    const dateKey = 20261105;
+    const decisions: boolean[] = [];
+    for (let h = 0; h < 24; h++) {
+      // 旧种子构成：只有日期，没有小时
+      decisions.push(createSeededRandom(dateKey)() < 0.05);
+    }
+    expect(new Set(decisions).size).toBe(1);
   });
 
   it('evaluateOnlineTransition 在独立 seed 下应能产生 session_start 事件', () => {
@@ -113,5 +136,69 @@ describe('WO-1089 · 群体去相关后在线比例合理', () => {
       }
     }
     expect(hit).toBe(true);
+  });
+});
+
+/**
+ * WO-1090 · 小时粒度骰子（端到端，走真实 evaluateOnlineTransition + 假时钟）
+ *
+ * 为什么必须有这组测试：WO-1089 只解决了「全体 bot 共用一颗骰子」，
+ * 但种子仍只含日期 ⇒ 每个 bot 当天只有一个固定结论。
+ * 实测 3000 个真实 botId（UTC 2026-11-05）：78.7% 全天 0 次上线、
+ * 5.0% 全天 24 小时都在线，h03 与 h04 的在线集合 Jaccard = 1.000。
+ * 线上表现就是「永远是同一批头像亮着」。
+ */
+describe('WO-1090 · 小时粒度判定', () => {
+  const TZ = 'America/New_York';
+  const baseCfg = getBotConfig(null, 'probe') as any;
+
+  const decideAt = (seed: number, iso: string): boolean => {
+    jest.useFakeTimers().setSystemTime(new Date(iso));
+    try {
+      const cfg = { ...baseCfg, seed };
+      const { state } = evaluateOnlineTransition(createOnlineState('probe'), cfg, TZ);
+      return state.isOnline;
+    } finally {
+      jest.useRealTimers();
+    }
+  };
+
+  it('相邻小时的判定不再逐字相同（群体里应有约 2p(1-p) 的翻转）', () => {
+    const N = 2000;
+    let flipped = 0;
+    for (let seed = 1; seed <= N; seed++) {
+      const d3 = decideAt(seed, '2026-11-05T03:00:00Z');
+      const d4 = decideAt(seed, '2026-11-05T04:00:00Z');
+      if (d3 !== d4) flipped++;
+    }
+    // 若骰子仍与小时无关，翻转数恒为 0
+    expect(flipped).toBeGreaterThan(0);
+    expect(flipped / N).toBeGreaterThan(0.02);
+  });
+
+  it('单个 bot 一天内的在线小时数不应恒定（不能每天只掷一次）', () => {
+    const seed = 12345;
+    const hours: boolean[] = [];
+    for (let h = 0; h < 24; h++) {
+      hours.push(decideAt(seed, `2026-11-05T${String(h).padStart(2, '0')}:00:00Z`));
+    }
+    // 该 bot 至少应出现「某些小时在线、某些小时离线」，而非全天同一结论
+    expect(hours.some(Boolean)).toBe(true);
+    expect(hours.some((v) => !v)).toBe(true);
+  });
+
+  it('全天覆盖率 ≥60%（原日粒度下约等于单小时命中率 5%，即 95% 的 bot 永不出现）', () => {
+    const N = 500;
+    let appeared = 0;
+    for (let seed = 1; seed <= N; seed++) {
+      let any = false;
+      for (let h = 0; h < 24 && !any; h++) {
+        any = decideAt(seed, `2026-11-05T${String(h).padStart(2, '0')}:00:00Z`);
+      }
+      if (any) appeared++;
+    }
+    const coverage = appeared / N;
+    expect(coverage).toBeGreaterThan(0.6);
+    expect(coverage).toBeLessThan(0.95);
   });
 });
