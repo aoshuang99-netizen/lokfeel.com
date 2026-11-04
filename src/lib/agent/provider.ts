@@ -207,3 +207,47 @@ export function resolveWorkBuddyConfig(
 
   return { ok: true, config: { endpoint, publishableKey, model, timeoutMs } }
 }
+
+// ═══════════════════════════════════════════════════════════
+// S1 沙箱守卫（V20.0 · 用户安全边界 · R-04）
+//
+// 设计要点（与用户 V20 Batch 3 / 第六节一致）：
+//   · `stub` 是**声明式 S1 沙箱**，**绝不**是「真实能力的替代品」。
+//   · 显式请求 `stub` 时，必须在 **非生产 + `AGENT_TEST_ISOLATION=true`**；
+//     否则**抛错**——禁止 stub 在生产或未经隔离的环境加载，
+//     以防假模型冒充真实调用成功（这正是 A-03b 之外最危险的「假绿」来源）。
+//   · 返回 `unavailable` 不抛错：编排层据此走**明示的规则式降级**，
+//     绝不自动回退到 stub（T08 / provider.ts 文件头同口径）。
+//
+// ⚠️ 本函数**只在生产路径入口**（`../agents/provider-runtime.ts`
+//    的 `resolveRuntimeProvider`）调用断言；诚实上报函数
+//    `providerHonesty` 不调用它，避免上报时抛错。
+//    纯函数、无 IO（受内核 A5 守着）。
+// ═══════════════════════════════════════════════════════════
+
+export type ProviderMode = 'real' | 'stub' | 'unavailable'
+
+/**
+ * 解析 Provider 模式（V20.0 用户安全边界）。
+ *
+ * @throws 当显式请求 `stub` 但不在「非生产 + 隔离」环境时——
+ *   调用方（生产路径入口）会据此拒绝加载 stub。
+ */
+export function resolveProviderMode(env: Record<string, string | undefined>): ProviderMode {
+  const requestedStub = (env.AGENT_PROVIDER ?? '').trim() === 'stub'
+  if (requestedStub) {
+    const isProduction = env.NODE_ENV === 'production'
+    if (isProduction || (env.AGENT_TEST_ISOLATION ?? '') !== 'true') {
+      throw new Error(
+        'Stub provider 仅允许在「非生产 + AGENT_TEST_ISOLATION=true」的隔离环境启用；' +
+          '生产或未经隔离的环境禁止加载 stub，以防假模型冒充真实调用成功（R-04）。',
+      )
+    }
+    return 'stub'
+  }
+
+  const hasWorkBuddy = resolveWorkBuddyConfig(env).ok
+  const hasOpenAI = resolveProviderConfig(env).ok
+  if (hasWorkBuddy || hasOpenAI) return 'real'
+  return 'unavailable'
+}

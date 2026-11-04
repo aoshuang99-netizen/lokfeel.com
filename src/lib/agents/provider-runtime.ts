@@ -9,7 +9,9 @@
  */
 
 import {
+  createStubProvider,
   resolveProviderConfig,
+  resolveProviderMode,
   resolveWorkBuddyConfig,
   type ProviderResolution,
 } from '@/lib/agent'
@@ -22,6 +24,23 @@ import { createWorkBuddyProvider } from './provider-workbuddy'
 export function resolveRuntimeProvider(
   env: Record<string, string | undefined>,
 ): ProviderResolution {
+  // 🔴 S1 沙箱守卫（V20.0 · R-04）：显式 `stub` 仅允许在「非生产 + 隔离」环境；
+  //    否则 **抛错**，生产路径绝不会加载 stub 冒充真实调用成功。
+  //    无凭据时不抛错 —— 下面两条路都缺凭据才返回 `unavailable`，由编排层走规则式降级。
+  const mode = resolveProviderMode(env)
+
+  // S1 沙箱装配：能走到这里，说明 `resolveProviderMode` 已确认「非生产 + 隔离」。
+  // 生产环境在上一步就抛错了，故本分支**不可能**在生产被加载。
+  // `ModelProvider.kind='stub'` 会如实写入 providerKind，不冒充真实调用。
+  if (mode === 'stub') {
+    return {
+      kind: 'ready',
+      provider: createStubProvider(() =>
+        JSON.stringify({ intent: 'SANDBOX_PROBE', tool: null, args: {} }),
+      ),
+    }
+  }
+
   const workbuddy = resolveWorkBuddyConfig(env)
   if (workbuddy.ok) {
     return { kind: 'ready', provider: createWorkBuddyProvider(workbuddy.config) }
