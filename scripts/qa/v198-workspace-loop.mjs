@@ -42,7 +42,9 @@ const FIXTURE = {
 };
 
 if (CLEANUP) {
-  if (!DB_ARG || !/^(file:|\.\/|\/)/.test(DB_ARG) || DB_ARG.includes('libsql://')) {
+  // 与 scripts/qa 其他夹具一致：只拒绝 turso / libsql:// 这类远端库；
+  // 本地 file:、./、/ 及裸相对文件名（如 ci-e2e.db）都视为本地库。
+  if (!DB_ARG || /turso|libsql:\/\//i.test(DB_ARG)) {
     console.error('✗ 清理拒绝远程库');
     process.exit(2);
   }
