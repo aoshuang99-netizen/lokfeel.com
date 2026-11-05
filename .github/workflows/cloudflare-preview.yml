@@ -1,17 +1,16 @@
 name: Cloudflare Preview
 
 # V20.2 P0-01/P0-02：Cloudflare Preview 部署流水线
-# 触发器：针对 main 的 PR / 手动触发。每次 PR 推送到隔离 Preview Worker。
-# 需要仓库 Secrets：CLOUDFLARE_API_TOKEN、CLOUDFLARE_ACCOUNT_ID（最小权限，Preview 作用域）。
-#
-# ⚠️ 设计要点：build 始终运行（CI 的「CF Build」门禁，校验 .open-next/worker.js 产出）；
-#   Deploy 步骤**仅在有 CF 凭据时**运行，无凭据则整步 SKIP（标记 BLOCKED_ACCESS），
-#   不会让 PR 的必需检查硬红。你在 GitHub Secrets 配置令牌后，Preview 自动部署并返回 URL。
+# 触发器：push 到 main / 针对 main 的 PR / 手动触发。
+# 需要仓库 Secrets：CLOUDFLARE_API_TOKEN、CLOUDFLARE_ACCOUNT_ID。
+# 仅在有 CF 凭据时部署 Preview Worker；无凭据时 deploy 步骤 SKIP（不阻塞）。
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 concurrency:
   group: cf-preview-${{ github.workflow }}-${{ github.ref }}
@@ -19,10 +18,8 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
 
 env:
-  # 构建期占位凭证（与 CI 一致），真实密钥经 GitHub Secrets 注入，不写在此处
   DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
   NEXTAUTH_SECRET: ci-placeholder-secret-not-used-in-production
   NEXTAUTH_URL: http://localhost:3000
@@ -33,9 +30,6 @@ jobs:
     name: Build & Deploy Preview (Cloudflare)
     runs-on: ubuntu-latest
     timeout-minutes: 40
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v7
 
@@ -53,23 +47,9 @@ jobs:
         run: test -f .open-next/worker.js
 
       - name: Deploy Preview
-        # 无 CF 凭据时跳过：标记 BLOCKED_ACCESS，不阻塞 PR 合并（build 已通过）
+        # 无 CF 凭据时跳过（不阻塞）；有凭据则部署到隔离 Preview Worker
         if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx opennextjs-cloudflare preview
-
-      - name: Comment Preview URL
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && github.event_name == 'pull_request' }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            try {
-              const url = process.env.PREVIEW_URL || '(查看 Actions 日志获取 Preview URL)';
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: `🚀 Cloudflare Preview 部署完成：\n${url}`
-              });
-            } catch (e) {
-              core.warning('无法写入 Preview URL 评论：' + e.message);
-            }
