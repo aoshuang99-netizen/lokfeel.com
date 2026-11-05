@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: cf-preview-${{ github.workflow }}-${{ github.ref }}
+  group: cf-preview-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -47,8 +47,7 @@ jobs:
         run: test -f .open-next/worker.js
 
       - name: Deploy Preview
-        # 无 CF 凭据时跳过（不阻塞）；有凭据则部署到隔离 Preview Worker
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        # 始终尝试部署（凭据已在 repo Secrets 配置）；若 deploy 失败会暴露为可见的运行时错误
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
