@@ -1044,7 +1044,7 @@ async function selfTest() {
     creem: fs.readFileSync(path.join(ROOT, CREEM_EVENTS_FILE), 'utf8'),
   });
   const events = planEvents(handled);
-  check('Stripe 事件数 = 7（与 route switch 一致）', events.stripe.length === 7, events.stripe.join(','));
+  check('Stripe 事件数 = 9（与 route switch 一致）', events.stripe.length === 9, events.stripe.join(','));
   // 前置非空：0 条会让下面三条断言全部恒真（这正是本案的失效形态）
   check('Creem 提取到 17 个事件（前置非空，否则后续断言恒真）', events.creem.length === 17, String(events.creem.length));
   check('Creem 订阅里剔除了平台不支持的事件', events.creem.every((e) => CREEM_EVENT_ENUM.has(e)), events.creem.join(','));
@@ -1137,7 +1137,7 @@ async function selfTest() {
     allowTestInProd: true,
   });
   check('四个变量全部落到 Netlify', CRED_KEYS.every((k) => fake.state.env[k]), JSON.stringify(Object.keys(fake.state.env)));
-  check('Stripe 端点按源码事件创建（7 条）', fake.state.seenForm?.getAll('enabled_events[0]').length === 1 && [...fake.state.seenForm.keys()].filter((k) => k.startsWith('enabled_events[')).length === 7);
+  check('Stripe 端点按源码事件创建（9 条）', fake.state.seenForm?.getAll('enabled_events[0]').length === 1 && [...fake.state.seenForm.keys()].filter((k) => k.startsWith('enabled_events[')).length === 9);
   check('Stripe 端点带源码钉的 api_version', fake.state.seenForm?.get('api_version') === apiVersion);
   check('触发了一次构建', fake.state.buildCalls === 1);
   check('复验全绿（health/400/401/200）', first.exitCode === 0, JSON.stringify(first.verify));
