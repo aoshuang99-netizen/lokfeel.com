@@ -11,7 +11,7 @@ name: Cloudflare Preview
 on:
   pull_request:
     branches: [main]
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 concurrency:
   group: cf-preview-${{ github.workflow }}-${{ github.ref }}
