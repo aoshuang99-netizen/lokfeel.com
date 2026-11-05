@@ -387,10 +387,12 @@ jobs:
 
       - name: 启动构建产物
         run: |
-          npm run start > "$RUNNER_TEMP/next-start.log" 2>&1 &
+          npx next start --hostname 127.0.0.1 > "$RUNNER_TEMP/next-start.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/next-start.pid"
-          for i in $(seq 1 60); do
-            if curl -sf -o /dev/null http://127.0.0.1:3000/api/health; then
+          for i in $(seq 1 90); do
+            # 就绪探针只判「服务是否在监听」：降级模式下 /api/health 可能回 503，
+            # 用 -s（任意 HTTP 状态码均算成功）而非 -f（503 会被当作失败导致误判启动超时）。
+            if curl -s -o /dev/null http://127.0.0.1:3000/api/health; then
               echo "服务已就绪（${i}s）"
               exit 0
             fi
