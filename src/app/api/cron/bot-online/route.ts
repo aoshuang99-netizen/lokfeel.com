@@ -20,6 +20,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { evaluateOnlineTransition, createOnlineState } from '@/lib/bot-engine/modules/online-status';
 import { getBotConfig } from '@/lib/bot-engine/default-config';
+import type { BotBehaviorConfig } from '@/lib/bot-engine/types';
 import {
   BOT_DISABLED_HTTP_STATUS,
   botDisabledBody,
@@ -34,7 +35,7 @@ const MAX_BOTS_PER_BATCH = 100; // ~100 bots per 10s budget
 
 interface BotState {
   userId: string;
-  config: { seed: number; [key: string]: unknown };
+  config: BotBehaviorConfig;
   timezone: string;
   isOnline: boolean;
   currentSessionStart: Date | null;
@@ -126,7 +127,7 @@ export async function GET(request: Request) {
 
       if (!state) {
         // Initialize state
-        const config = getBotConfig(bot.botConfig, bot.id);
+        const config = getBotConfig(bot.botConfig, bot.id) as BotBehaviorConfig;
         // Ensure seed exists (evaluateOnlineTransition requires it)
         if (!config.seed) {
           config.seed = bot.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
