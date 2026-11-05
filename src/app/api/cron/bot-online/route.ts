@@ -34,7 +34,7 @@ const MAX_BOTS_PER_BATCH = 100; // ~100 bots per 10s budget
 
 interface BotState {
   userId: string;
-  config: any;
+  config: { seed: number; [key: string]: unknown };
   timezone: string;
   isOnline: boolean;
   currentSessionStart: Date | null;

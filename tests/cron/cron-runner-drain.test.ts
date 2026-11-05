@@ -37,9 +37,9 @@ function mockFetch(pages: Page[]) {
         ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}),
         stats: { batchSize: page.batch },
       }),
-    } as any;
+    } as { status: number; json: () => Promise<{ status: string; hasMore: boolean; nextCursor?: string; stats: { batchSize: number } }> };
   });
-  global.fetch = fn as any;
+  global.fetch = fn as unknown as typeof global.fetch;
   return { calls, fn };
 }
 

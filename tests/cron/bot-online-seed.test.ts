@@ -83,9 +83,9 @@ describe('WO-1089 · 群体去相关后在线比例合理', () => {
     for (let i = 0; i < N; i++) {
       const cfg = getBotConfig(null, `bot-${i}`);
       // 复刻 evaluateOnlineTransition 的种子构成：config.seed + 日期*24 + 小时（WO-1090）
-      const cfgAny = cfg as any;
+      const cfgTyped = cfg as { seed: number };
       const p = calculateOnlineProbability(cfg, 'America/New_York');
-      const rand = createSeededRandom(cfgAny.seed + dateKey * 24 + hour)();
+      const rand = createSeededRandom(cfgTyped.seed + dateKey * 24 + hour)();
       if (rand < p) online++;
     }
 
@@ -117,9 +117,7 @@ describe('WO-1089 · 群体去相关后在线比例合理', () => {
 
   it('evaluateOnlineTransition 在独立 seed 下应能产生 session_start 事件', () => {
     // 找出一个当天会命中的 seed，验证转移逻辑本身是通的（排除「引擎完全坏掉」）
-    const now = new Date();
-    const dayBase = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-    const cfg = getBotConfig(null, 'probe') as any;
+    const cfg = getBotConfig(null, 'probe') as { seed: number };
 
     let hit = false;
     for (let i = 1; i <= 500 && !hit; i++) {
@@ -150,7 +148,7 @@ describe('WO-1089 · 群体去相关后在线比例合理', () => {
  */
 describe('WO-1090 · 小时粒度判定', () => {
   const TZ = 'America/New_York';
-  const baseCfg = getBotConfig(null, 'probe') as any;
+  const baseCfg = getBotConfig(null, 'probe') as { seed: number };
 
   const decideAt = (seed: number, iso: string): boolean => {
     jest.useFakeTimers().setSystemTime(new Date(iso));

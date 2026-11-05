@@ -152,7 +152,7 @@ export async function drainPaginated(
       return { status: res.status, pages, processed, complete: false };
     }
 
-    let body: any = null;
+    let body: { stats?: { batchSize?: number }; hasMore?: boolean; nextCursor?: string } | null = null;
     try {
       body = await res.json();
     } catch {
