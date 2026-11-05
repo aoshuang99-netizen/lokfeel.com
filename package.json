@@ -271,6 +271,7 @@
     },
     "nodemailer": "$nodemailer",
     "ws": "$ws",
-    "undici": "^7.30.1"
+    "undici": "^7.30.1",
+    "re2js": "2.8.8"
   }
 }
