@@ -19,7 +19,7 @@
     "bots:train": "npx tsx scripts/matching-engine-training.ts",
     "build": "npx prisma generate && next build",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "cf:build": "opennextjs-cloudflare build",
+    "cf:build": "node scripts/ci/patch-opennext-build.mjs && opennextjs-cloudflare build",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
@@ -215,7 +215,7 @@
     "framer-motion": "^13.4.4",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.57.0",
-    "next": "16.4.2",
+    "next": "16.4.5",
     "next-auth": "^5.0.0-beta.32",
     "nodemailer": "^10.1.2",
     "prisma": "^7.10.1",
@@ -237,7 +237,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "1.20.12",
+    "@opennextjs/cloudflare": "1.20.16",
     "@playwright/test": "^1.64.0",
     "@swc/core": "^1.16.18",
     "@swc/jest": "^0.2.39",

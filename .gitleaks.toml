@@ -70,6 +70,37 @@ description = "Stripe 密钥（live / test）"
 regex = '''(?:sk|rk)_(?:live|test)_[a-zA-Z0-9]{20,}'''
 tags = ["payment", "stripe"]
 
+# ─── D-09 补齐：历史上登记缺失的 4 类前缀（2026-11-05 新增）───
+[[rules]]
+id = "lokfeel-workbuddy-publishable-key"
+description = "WorkBuddy 应用级 publishable key（wbpk_…），见 src/lib/agent/provider.ts"
+regex = '''(?i)wbpk_[A-Za-z0-9_\-]{16,}'''
+tags = ["workbuddy", "publishable-key"]
+
+[[rules]]
+id = "lokfeel-github-pat"
+description = "GitHub Personal Access Token（ghp_/gho_/ghu_/ghs_/ghr_/ghf_）"
+regex = '''gh[pousrf]_[A-Za-z0-9]{36,}'''
+tags = ["github", "token"]
+
+[[rules]]
+id = "lokfeel-nfp-token"
+description = "nfp_ 前缀凭据"
+regex = '''(?i)nfp_[A-Za-z0-9_\-]{16,}'''
+tags = ["token", "nfp"]
+
+[[rules]]
+id = "lokfeel-re-scoped-token"
+description = "re_<scope>_<secret> 形态的定制令牌"
+regex = '''re_[A-Za-z0-9]+_[A-Za-z0-9_\-]{16,}'''
+tags = ["token", "custom"]
+
+[[rules]]
+id = "lokfeel-sk-dash-key"
+description = "sk- 前缀密钥（非 Stripe 的其它服务商形态）"
+regex = '''sk-[A-Za-z0-9]{24,}'''
+tags = ["secret", "sk-dash"]
+
 # ══════════════════════════════════════════════════════════════
 # 白名单：这些路径/模式不是真实凭证，避免误报阻塞 CI
 # ══════════════════════════════════════════════════════════════
