@@ -51,7 +51,7 @@ V20.4 要求 RC 提供 12 项，缺一不可：
 | 8b | OAuth 授权请求 + 回调拒绝（`56` 之外新增） | **PASS 21/21** | `scripts/qa/v204-oauth-shape.mjs`：PKCE S256、`redirect_uri` 指向生产域、三种坏回调均 307 且**零 session**。真实成功回调 NOT_TESTED（`53` §4.4） |
 | 9 | 性能报告 | **FAIL** | LCP 3580ms / TTFB 2060ms（`55`） |
 | 10 | 安全报告 | **FAIL** | gitleaks 1 项 P0 待轮换 + Environment 无审批（`57`） |
-| 11 | 回滚演练 | **NOT_TESTED** | 未发布即无回滚对象 |
+| 11 | 回滚演练 | **就绪性 PASS / 演练 NOT_TESTED** | 就绪：7 个 `ready` 历史 deploy，逐个固定地址实测 200（`6aec8322…--lokfeel.netlify.app/login` → 200），回滚是元数据切换不重建。演练：切换会影响线上用户，未经 D-10 不做（`59` §4） |
 | 12 | 未闭合问题及风险分级 | **PASS** | 见 §4 |
 
 > 第 3 项说明：`42208114349` 的 15 个 job 中 13 个 success（含 `E2E（构建产物 · 浏览器冒烟）`，其内部跑了构建、payment-off、
@@ -160,6 +160,25 @@ V20.4 要求 RC 提供 12 项，缺一不可：
   直接把 `DATABASE_URL` + `NEXTAUTH_SECRET` 注入 `lokfeel-preview` 属于**用发布便利换数据安全**，不建议。
 
 > 这一条不需要用户「点按钮」，只需要一个方向确认：**A 还是 B**。确认后剩余工作都在代码/CI 侧，Agent 可自主推进。
+
+### 5.2 一个必须先纠正的事实：生产落后 RC 12 个提交
+
+用 Netlify API 直查 `published_deploy`（唯一权威来源）后确认：
+
+```
+生产提交    : 305d669fb38dd1337d26fef0ffb2df01a1e3b82b   (deploy 6aec89a8, published 2026-11-05T13:51:52Z)
+RC HEAD     : 5a248b9007c5cf6160130c03a6ea22ee3d2fb90d
+落后        : 12 个提交；src/ 5 个文件有差异
+```
+
+差异里有 **`living-workspace.tsx` + 新增 `workspace-view.ts` + `consent-gate.tsx`** ——
+也就是 G-03 深链接那套实现。**结论：`54` 里 22/22 通过的深链接与连续性能力，生产上还没有。**
+
+这条同时纠正了三个此前的错误认知：① 「生产 = `79459d6`」（陈旧记录）；②
+「`lokfeel-app` worker 的 `modified_on` 代表生产更新」（该 worker 动态路由全 500）；
+③ 「`main` 更新了生产就更新了」（`0617c0e` 带 `[skip netlify]`，没触发构建）。
+
+复核命令：`node scripts/qa/prod-commit-drift.mjs`（只读，退出码 1 表示存在 src 漂移）。
 
 ---
 

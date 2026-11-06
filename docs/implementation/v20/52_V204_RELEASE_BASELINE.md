@@ -120,6 +120,29 @@ lokfeel-app      modified_on 03:26:46Z  （两次均未变 ⇒ 生产 worker 未
 
 **隔离确认 PASS**：preview 部署只更新了 `lokfeel-preview`，生产 `lokfeel-app` 的 `modified_on` 保持前一版本时间戳不变。
 
+### 5.2 生产基线（不是分支基线 —— 这两件事之前被混为一谈）
+
+| 项 | 值 | 来源 |
+|---|---|---|
+| 生产站点 | `app.lokfeel.com`（Netlify 站点 `c46478e9-7ac8-4bcf-9052-7638b04fef83`） | Netlify API |
+| 已发布 deploy | `6aec89a8b1fa5f748c7ae101`，state `ready`，published `2026-11-05T13:51:52Z` | Netlify API `published_deploy` |
+| **生产提交** | **`305d669`** | `published_deploy.commit_ref` |
+| RC HEAD | `5a248b9` | `git rev-parse` |
+| 落后 | **12 提交 / `src/` 5 文件** | `scripts/qa/prod-commit-drift.mjs` |
+
+**RC 与生产之间是有实质代码差的**，不是「只差文档」：
+
+```
+M  src/app/api/webhooks/pingpong/route.ts
+M  src/app/workspace/living-workspace.tsx
+M  src/components/living/consent/consent-gate.tsx
+A  src/lib/living/workspace-view.ts
+M  src/lib/pingpong.ts
+```
+
+> 因此「发布」这个动作在本轮是有意义的、会真实改变用户可见行为的 ——
+> G-03 深链接与 Consent 续接只存在于 RC，不在生产。
+
 ---
 
 ## 6. 阻塞项（如实记录，不隐藏）
