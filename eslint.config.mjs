@@ -39,6 +39,10 @@ const BUILD_ARTIFACTS = [
   ".next-dev-*/**",
   ".next/dev-stale-*/**",
   ".trash-audit/**", // 沙箱 safe-delete 回收站（gitignore 已含，lint 同步排除）
+  // Playwright HTML 报告 / trace 产物（.gitignore:50 `test-results/`）。
+  // 里面是打包后的第三方 JS（monaco/codemirror 等），全仓 lint 会把它们算成
+  // 「新增债务」——实测 +3064 条假红，与源码无关。只排除产物，不降级任何规则。
+  "test-results/**",
 ];
 
 const eslintConfig = defineConfig([
