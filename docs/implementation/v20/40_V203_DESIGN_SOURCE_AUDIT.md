@@ -99,12 +99,19 @@
 | 改动文件 lint | `npx eslint <5 文件>` | **PASS 0** |
 | UI 不变量 | `npm run check:ui-invariants` | **PASS（R1–R11 全通过）** |
 | Lint 棘轮 | `npm run lint:gate` | **PASS（零新增；债务下降 5、清零 17）** |
+| 全量 Jest（CI 命令，修正口径后） | `TZ=UTC npm test -- --ci --reporters=default --silent` | **PASS 128 套件 / 2493 测试**（见 `51`） |
 | `next build` | — | **NOT_TESTED**（本轮未跑） |
 
 > 🔴 **869/869 的口径说明（不虚报）**：jest 的 `testMatch` 是 `**/tests/**/*.test.ts`，
 > 会把构建产物里的同名副本也扫进来。34 套件中约 21 个来自 `.next/standalone/` 与
 > `.open-next/server-functions/default/`，是**同一批源码测试的副本**，不是独立覆盖。
 > 真实源码套件为 `tests/living/` 下 13 个（均 PASS）。此处如实记录，不把副本数当作覆盖率。
+>
+> ✅ **2026-11-06 后续修正（详见 `51`）**：`jest.config.js` 的 `testPathIgnorePatterns`
+> 已补 `<rootDir>/.next/` 与 `<rootDir>/.open-next/`。原配置只有 `<rootDir>/tests/e2e/`
+> 这类绝对前缀，覆盖不到构建产物里的副本，导致本地 build 后跑 `npm test` 会扫进
+> 254 个测试副本与 Playwright 用例（40 个假 FAIL）。修正后本地与 CI 干净 checkout
+> 口径一致：**全量 128 套件 / 2493 测试全 PASS**。上表 869/869 为修正前历史记录，保留不改写。
 
 ### 本轮额外修复的两处既有红灯（均非本轮引入，判定有据）
 

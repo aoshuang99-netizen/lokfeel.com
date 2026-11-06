@@ -30,9 +30,10 @@
 
 | 要求 | 本轮值 |
 |---|---|
-| Git SHA | `064cfe8e4eee85d4ac70f902220d76f2b5f1c08d`（本轮改动**未提交/未推送**，见 §5） |
+| Git SHA | `b5b922d`（V20.3 交付，已推 `t4/v199-visual`）· `a7c1325`（CI 修复，同分支）· `main = 0617c0e`（**仅含 CI 修复**，见 `51` / §5 例外说明） |
 | Figma File URL / Node IDs | **BLOCKED** —— 无文件、无 Node ID（`42`） |
-| PR / CI Run | **BLOCKED** —— PAT 缺 `pull_requests:write` 与 `Workflows:Write`，无法自助开 PR / dispatch |
+| PR | **BLOCKED** —— PAT 缺 `pull_requests:write`（实测 403），无法自助开 PR |
+| CI Run | `42180641094` @ `main = 0617c0e` = **`success`**（13 success / 2 skipped）；由 push 自动触发，非 dispatch，PAT 无 `Workflows:Write` 不构成阻塞。详见 `51` |
 | Preview URL | `https://lokfeel-preview.aoshuang99.workers.dev`（既有，非本轮触发） |
 | 页面验收矩阵 | `43` §7：整体 NOT COMPLETE（② BLOCKED + ⑧ NOT_TESTED） |
 | E2E 结果 | `NOT_TESTED`（本轮）；历史 S1 708/708 PASS（`48`） |
@@ -69,6 +70,20 @@
   提交信息带 `[skip netlify]`，推送后以 `git ls-remote` 权威复核（不信脚本退出码）。
 - 本轮未开 PR：PAT 缺 `pull_requests:write`（实测 403），与 `42` 的写入边界一致。
 - 生产侧零变更：未新增/修改任何 `route.ts`、无 prisma 迁移、未触发 CF Production workflow。
+
+### ⚠️ 例外说明（2026-11-06，`main` 上的纯 CI 修复，详见 `51`）
+
+「只推开发分支、不直推 `main`」约束的是 **V20.3 产品改动**。为让 `main` 上连续两次
+`Test (Jest)` 红灯真正转绿，另用 `git commit-tree` 构造了独立提交 `0617c0e`
+（父 `064cfe8`）推 `main`，该提交**只含 2 个文件**：`jest.config.js` 与
+`tests/cron/bot-online-seed.test.ts`。
+
+- 不含 11 份 V20.3 文档、不含 `G-03` 深链接代码、不含任何 API / Schema / 迁移改动。
+- 头提交带 `[skip netlify]` ⇒ Netlify 不构建；`cloudflare-production.yml` 为
+  `workflow_dispatch` only、`cloudflare-preview.yml` 为 PR-only ⇒ 均不触发。
+- push 到 `main` 自动触发 `ci.yml`（run `42180641094` = **`success`**，13 job 全绿、
+  2 skipped），这是本轮唯一的生产分支事件。
+- **结论：生产部署零变更，RC 判定仍 `NOT READY` / `NO-GO`，V20.3 发布链路未越关。**
 
 ## 6. 纪律声明
 

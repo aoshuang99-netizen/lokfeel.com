@@ -35,7 +35,7 @@
 
 | 项 | 状态 | 证据 |
 |---|---|---|
-| CI 门禁（13 job） | PASS | `620ef6f` 全绿（`v20/33`） |
+| CI 门禁（13 job） | 历史 PASS；本轮修复前**连续两次 FAIL** → 修复后 **`42180641094` = `success`**（13 success / 2 skipped，见 `51`） | `620ef6f` 全绿（`v20/33`）；`03a04a6` / `064cfe8` 两次仅 `Test (Jest)` 红，根因是 `tests/cron/bot-online-seed.test.ts` 读真实系统时钟导致 flaky，**非业务缺陷** |
 | CF Preview 隔离 | PASS | `wrangler.preview.jsonc` → worker `lokfeel-preview`，run `42151427907`；`modified_on=2026-11-06T02:40:32Z` |
 | CF 生产 worker | 已部署 | `lokfeel-app`，`modified_on=2026-11-06T03:26:46Z`，version `0e4cceba-3e34-4b7c-b307-bd311f8b8bef` |
 | 生产隔离门禁 | PASS（配置） | `cloudflare-production.yml` 仅 `workflow_dispatch` + `confirm=DEPLOY` + `environment: production` |
