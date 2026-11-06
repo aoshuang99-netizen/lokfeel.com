@@ -145,7 +145,7 @@ Zone：`lokfeel.com`（`76bdd5ac9efcf5a612ee4b6269b06a2a`）状态 `active`。
 | 8 | 组织租户隔离 | 本地 prod | **PASS** 6/6 | 恶意 `organizationId` 被忽略、列表非空且 `foreign=0`（详见 `57` §3） |
 | 9 | Agent Provider 可用 | 生产 | **PASS** 9/9 | `provider=workbuddy`、真实 token 461/270（详见 `56`） |
 | 10 | Agent Provider 可用 | 本地 | **BLOCKED（诚实降级）** | `provider=none`、run `FAILED/NO_DEGRADE_PATH`、token 0 |
-| 11 | OAuth 回调 | — | **NOT_TESTED** | 需真实第三方授权交互，本轮未做 |
+| 11 | OAuth 授权请求 + 回调失败路径 | 生产 | **PASS 21/21** | 授权请求 8 项参数合规（PKCE S256、`redirect_uri` 指向生产域、state 43 字符）；三种坏回调全部 307 回登录页、**零 session cookie**、零 5xx。`scripts/qa/v204-oauth-shape.mjs`。真实成功回调仍 **NOT_TESTED**（需真人授权），详见 §4.4 |
 | 12 | Preview HTTP 实测 | CF Workers | **FAIL（运行时不可用，非网络）** | 已打通出境通道后实测：`/favicon.ico` **200 / 25931B**（ASSETS 正常）；`/`、`/login`、`/workspace`、`/api/health`、`/robots.txt` **全部 500** `{"message":"Server failed to respond."}` 61B。详见 §4.1 |
 | 13 | 异常日志与追踪 | — | **BLOCKED** | 无 Workers Logs / Tail 访问；Sentry 未在本轮核对 |
 | 14 | 无 Stub Provider 进生产构建 | 生产 | **PASS** | 生产 `provider=workbuddy`（非 `stub`/`none`）；本地缺凭据时诚实降级为 `none` 而非伪造 |
@@ -209,6 +209,46 @@ secrets = 0 / vars = 0     → Prisma 拿不到 DATABASE_URL      → 初始化�
 > 这条结论对发布决策至关重要：所谓「发布到 Cloudflare」目前**没有可用的运行时**；
 > 真实承载面是 Netlify。二者必须先做一次明确选择（见 `58` §5）。
 
+### 4.4 OAuth：不测"能不能登录成功"，只测"拒绝是否彻底"
+
+上一版把第 11 项记为 `NOT_TESTED（需真人授权）`。这个理由只对**成功回调**成立。
+授权请求的形状、坏回调的拒绝行为，都不需要真人 —— 而它们恰恰是最容易出事的地方：
+
+| 风险 | 若出错 | 可自动化验证？ |
+|---|---|---|
+| `redirect_uri` 写错域 / 残留 localhost | 上线后全员登录失败 | 是 |
+| 无 PKCE / 无 state | 授权码拦截、CSRF | 是 |
+| 验签失败仍下发 session | **直接账号接管** | 是 |
+
+`scripts/qa/v204-oauth-shape.mjs`（21 项断言，**21 PASS / 0 FAIL**）：
+
+**① 授权请求形状（8/8 PASS）**
+
+```
+response_type         = code
+client_id             = 185541962106-g…（真实 Google Client ID，非占位符）
+redirect_uri          = https://app.lokfeel.com/api/auth/callback/google   ← 指向生产域，无 localhost
+scope                 = openid email profile
+state                 = 43 字符
+code_challenge        = 43 字符
+code_challenge_method = S256
+access_type / prompt  = offline / consent
+```
+
+**② 坏回调拒绝（3 类 × 4 项 = 12/12 PASS）**
+
+| 场景 | 跳转 | 5xx | session cookie |
+|---|---|---|---|
+| `error=access_denied` | `/login?error=Google authorization failed: access_denied` | 无 | **未下发** |
+| `code=fake-code&state=fake-state` | `/login?error=Security check failed. Please start the sign-in again.` | 无 | **未下发** |
+| 空参数 | `/login?error=Google callback missing authorization code` | 无 | **未下发** |
+
+第二行是重点：**伪造 code 被 state/PKCE 校验直接拦下，且没有建会话**。
+这正是"账号接管"类漏洞的入口，现在有证据它是关着的。
+
+**仍未覆盖**：真实 code 交换（需要真人点一次 Google 授权）。
+这一项如实保留为 `NOT_TESTED`，不用"失败路径通过"冒充"成功路径可用"。
+
 ---
 
 ## 5. 支付状态（与发布边界一致）
@@ -230,7 +270,7 @@ secrets = 0 / vars = 0     → Prisma 拿不到 DATABASE_URL      → 初始化�
 | Preview 动态路由可服务 | **FAIL**（5 条路由全部 500 / 61B） |
 | HTTP 及业务 API 有真实响应 | **PASS**（本地 prod 全链路） |
 | DB / Auth / Cache 必需链路 | **PASS**（本地 prod，真实 Turso + Upstash） |
-| OAuth 回调 | **NOT_TESTED** |
+| OAuth 授权请求 + 回调拒绝 | **PASS 21/21**（真实成功回调 NOT_TESTED） |
 | Provider 可用性 | **PASS**（生产）/ 本地诚实 BLOCKED |
 | Cloudflare Worker 作为运行时 | **FAIL**——零绑定，静态能出、动态全崩（§4.1–4.3） |
 | 无密钥泄漏 | **PASS** |

@@ -48,6 +48,7 @@ V20.4 要求 RC 提供 12 项，缺一不可：
 | 6 | 13 屏视觉回归 | **PASS** | 104/104（`54`），截图 + JSON 齐全 |
 | 7 | 前后端 API 测试 | **PASS（本地 prod）** | 登录/Session/Mission 读写/租户隔离/health（`53` §4） |
 | 8 | S1/S2 Agent E2E | **S1 PASS / S2 PASS（局部）** | S3 BLOCKED（`56`） |
+| 8b | OAuth 授权请求 + 回调拒绝（`56` 之外新增） | **PASS 21/21** | `scripts/qa/v204-oauth-shape.mjs`：PKCE S256、`redirect_uri` 指向生产域、三种坏回调均 307 且**零 session**。真实成功回调 NOT_TESTED（`53` §4.4） |
 | 9 | 性能报告 | **FAIL** | LCP 3580ms / TTFB 2060ms（`55`） |
 | 10 | 安全报告 | **FAIL** | gitleaks 1 项 P0 待轮换 + Environment 无审批（`57`） |
 | 11 | 回滚演练 | **NOT_TESTED** | 未发布即无回滚对象 |
@@ -132,7 +133,12 @@ V20.4 要求 RC 提供 12 项，缺一不可：
 | 4 | 明确发布目标是 Netlify 还是 CF Workers；若后者，先完成绑定注入 | 未定 |
 | 5 | 至少完成一次回滚演练 | 未做 |
 | 6 | PR 可创建（受保护合并）或书面说明为何允许直推 | 403 |
-| 7 | axe + Trace 补齐 | 未跑 |
+| 7 | ~~axe + Trace 补齐~~ → **axe 已 PASS（更正）**；Trace 仍缺 | axe：CI E2E 内 `v196-axe-scan.mjs --gate` 6 页 × 4 视口棘轮，run `42208114349` success；Trace 仅在失败时上传，**本项保留 NOT_TESTED** |
+
+> **更正说明**：上一版把 axe 记为「未跑」，这是错的。CI 的 `E2E` job 里第 21 步就是
+> `axe 四视口棘轮门禁（V19.8）`（`scripts/qa/v196-axe-scan.mjs --gate`，逐 page×viewport×ruleId
+> 比对 `docs/implementation/v19/axe-baseline.json`，只有新增才红），该 job 已 success。
+> **所以 axe 是 PASS，且是棘轮门禁级的 PASS，不是"扫了一次没报错"。**
 
 **其中第 1、3 项完全在代码之外**（PingPong 后台、GitHub 设置），Agent 无法代劳。
 
