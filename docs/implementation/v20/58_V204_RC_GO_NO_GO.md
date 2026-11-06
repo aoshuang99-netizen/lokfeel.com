@@ -12,11 +12,17 @@
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  RELEASE CANDIDATE:  rc/v20.4 @ e1a0dea
+  RELEASE CANDIDATE:  rc/v20.4 @ b610efe
   DECISION:           NO-GO
   阻断项（P0/P1）:     4
+  CI:                 run 42213402954 = success (13/0/2)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
+
+> SHA 说明：**证据取证于 `e1a0dea`，最终候选为 `b610efe`。** 两者之间是
+> `ffaebbf`（webhook 修复）/ `5a248b9`（OAuth 验收）/ `5a98e12`（生产基线更正）/ `b610efe`（发布手册），
+> 其中 `ffaebbf` 含代码改动（已跑绿：`42212287958` 被后续 push 取消，改由 `42213402954` 覆盖同一代码树），
+> 其余为文档与脚本。发布授权请针对 **`b610efe`**。
 
 四条第 1 级阻断（任意一条即足以 NO-GO）：
 
@@ -40,9 +46,9 @@ V20.4 要求 RC 提供 12 项，缺一不可：
 
 | # | 要求 | 状态 | 证据 / 缺失原因 |
 |---|---|---|---|
-| 1 | Git SHA | **PASS** | `e1a0dea3b1540979dc56b474690e4e8bfe49a485` |
+| 1 | Git SHA | **PASS** | `b610efe45eca7cd9020b799111198e613424b027` |
 | 2 | PR URL | **BLOCKED** | PAT 无 `pull_requests:write`（`POST /pulls` → 403）。**无 PR，不以分支链接冒充** |
-| 3 | GitHub CI Run | **PASS** | `42208114349`（`e1a0dea`）：**13 success / 0 fail / 2 skipped**（含 E2E + axe 四视口棘轮） |
+| 3 | GitHub CI Run | **PASS** | `42213402954`（`b610efe`）：**13 success / 0 fail / 2 skipped**（含 E2E + axe 四视口棘轮） |
 | 4 | Cloudflare Preview URL | **部分** | 部署 success（run `42208114255`），URL `https://lokfeel-preview.aoshuang99.workers.dev` **已真实访问**：静态 200、动态 500。URL 可测，但**运行时不可用**（`53` §4.1） |
 | 5 | Cloudflare 部署 ID | **PASS** | deployment `97a3a4de-828d-4cc9-8aa2-67aa592aa83c`，`modified_on=2026-11-06T11:12:23Z` |
 | 6 | 13 屏视觉回归 | **PASS** | 104/104（`54`），截图 + JSON 齐全 |

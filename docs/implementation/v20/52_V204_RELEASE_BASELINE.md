@@ -88,6 +88,16 @@ git diff --name-status 0617c0e..HEAD
 | Cloudflare Preview（同 push） | `42188252454` | **success** |
 | CI（`rc/v20.4` push @ **`e1a0dea`**，含安全修复 + 验收工具） | **`42208114349`** | **success**：13 success / 0 failure / 2 skipped |
 | Cloudflare Preview（同 push） | **`42208114255`** | **success** |
+| CI（`ffaebbf`，webhook 修复） | `42211696083` | 被后续 push 取消（concurrency），代码树由下一轮覆盖 |
+| Cloudflare Preview（`ffaebbf`） | `42211696116` | **success** |
+| CI（`5a248b9`，OAuth 验收脚本） | `42212287958` | 被后续 push 取消（同上） |
+| Cloudflare Preview（`5a248b9`） | `42212287989` | **success** |
+| CI（`5a98e12`，生产基线更正） | `42212996096` | 被后续 push 取消（同上） |
+| **CI（`b610efe`，最终候选）** | **`42213402954`** | **success：13 success / 0 fail / 2 skipped** |
+
+> 关于「取消」：本仓 `ci.yml` 有 `concurrency` 分组，同一分支连续 push 会取消在跑的那轮。
+> 这不是失败，也不能当成功 —— 所以每一轮的**代码树**都必须由最终那一轮重新验证。
+> `b610efe` 与 `ffaebbf` 的 `src/` 完全一致（后续只有文档与脚本），因此 `42213402954` 的绿灯覆盖了 webhook 修复。
 
 ### 5.1 `e1a0dea` 的 CI 逐 job 结论
 
@@ -127,7 +137,7 @@ lokfeel-app      modified_on 03:26:46Z  （两次均未变 ⇒ 生产 worker 未
 | 生产站点 | `app.lokfeel.com`（Netlify 站点 `c46478e9-7ac8-4bcf-9052-7638b04fef83`） | Netlify API |
 | 已发布 deploy | `6aec89a8b1fa5f748c7ae101`，state `ready`，published `2026-11-05T13:51:52Z` | Netlify API `published_deploy` |
 | **生产提交** | **`305d669`** | `published_deploy.commit_ref` |
-| RC HEAD | `5a248b9` | `git rev-parse` |
+| RC HEAD | `b610efe` | `git rev-parse` |
 | 落后 | **12 提交 / `src/` 5 文件** | `scripts/qa/prod-commit-drift.mjs` |
 
 **RC 与生产之间是有实质代码差的**，不是「只差文档」：
