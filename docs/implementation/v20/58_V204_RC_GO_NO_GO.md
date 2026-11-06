@@ -12,7 +12,7 @@
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  RELEASE CANDIDATE:  rc/v20.4 @ e5fa762
+  RELEASE CANDIDATE:  rc/v20.4 @ e1a0dea
   DECISION:           NO-GO
   阻断项（P0/P1）:     4
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -20,14 +20,17 @@
 
 四条第 1 级阻断（任意一条即足以 NO-GO）：
 
-| # | 阻断项 | 级别 | 依据 |
-|---|---|---|---|
-| **B-1** | PingPong 支付凭据明文在 public 仓库 HEAD | **P0** | `57` §2 |
-| **B-2** | 生产登录 LCP 3580ms（阈值 2500ms），TTFB 2060ms（阈值 800ms） | **P1 阻断** | `55` §1–2 |
-| **B-3** | Production Environment 无审批保护（`protection_rules=0`），发布可绕过 D-10 | **P1** | `57` §6 |
-| **B-4** | Cloudflare Worker 零运行时绑定，无法承接业务 | **P1** | `53` §2 |
+| # | 阻断项 | 级别 | 本轮变化 | 依据 |
+|---|---|---|---|---|
+| **B-1** | PingPong 支付凭据曾明文进入 public 仓库；**HEAD 已脱敏，但凭据尚未轮换 ⇒ 仍然有效** | **P0** | 由「明文在 HEAD」→「已脱敏、待轮换」，**级别不降** | `57` §2 |
+| **B-2** | 生产登录 LCP 3580ms（阈值 2500ms），TTFB 2060ms（阈值 800ms） | **P1 阻断** | 新增裸 curl 复测 + 404 反证，**证明结构性不可达** | `55` §1–2、§3.1.1 |
+| **B-3** | Production Environment 无审批保护（`protection_rules=0`），发布可绕过 D-10 | **P1** | 未变 | `57` §6 |
+| **B-4** | Cloudflare Worker 零运行时绑定：静态 200、动态全 500 | **P1** | 由 `BLOCKED（不可达）`→ **`FAIL（实测 500）`**，根因闭合 | `53` §4.1–4.3 |
 
 > B-2 之所以算「阻断」：V20.4 明写「涉及核心登录体验的阻断性性能问题不得直接豁免」。而登录是唯一入口。
+>
+> B-1 为什么脱敏后仍不降级：**密码被删掉不等于密码失效**。仓库是 public，历史里有 653 个 commit，
+> 任何人 clone 都能翻出来。只有轮换才算闭合。
 
 ---
 
@@ -37,18 +40,22 @@ V20.4 要求 RC 提供 12 项，缺一不可：
 
 | # | 要求 | 状态 | 证据 / 缺失原因 |
 |---|---|---|---|
-| 1 | Git SHA | **PASS** | `e5fa76226e1344e28b1206df1354c0d44389d033` |
+| 1 | Git SHA | **PASS** | `e1a0dea3b1540979dc56b474690e4e8bfe49a485` |
 | 2 | PR URL | **BLOCKED** | PAT 无 `pull_requests:write`（`POST /pulls` → 403）。**无 PR，不以分支链接冒充** |
-| 3 | GitHub CI Run | **PASS** | `42188252386`：13 success / 0 fail / 2 skipped |
-| 4 | Cloudflare Preview URL | **部分** | 部署成功（run `42188252454`），但 `*.workers.dev` 从本地网络不可达（代理 502 / 直连超时），**URL 无法实测** |
-| 5 | Cloudflare 部署 ID | **PASS** | version `34eaafc4-682a-4f37-9a1a-f9eb1ac153a2`，`modified_on=2026-11-06T08:34:48Z` |
+| 3 | GitHub CI Run | **PASS** | `42208114349`（`e1a0dea`）：**13 success / 0 fail / 2 skipped**（含 E2E + axe 四视口棘轮） |
+| 4 | Cloudflare Preview URL | **部分** | 部署 success（run `42208114255`），URL `https://lokfeel-preview.aoshuang99.workers.dev` **已真实访问**：静态 200、动态 500。URL 可测，但**运行时不可用**（`53` §4.1） |
+| 5 | Cloudflare 部署 ID | **PASS** | deployment `97a3a4de-828d-4cc9-8aa2-67aa592aa83c`，`modified_on=2026-11-06T11:12:23Z` |
 | 6 | 13 屏视觉回归 | **PASS** | 104/104（`54`），截图 + JSON 齐全 |
 | 7 | 前后端 API 测试 | **PASS（本地 prod）** | 登录/Session/Mission 读写/租户隔离/health（`53` §4） |
 | 8 | S1/S2 Agent E2E | **S1 PASS / S2 PASS（局部）** | S3 BLOCKED（`56`） |
 | 9 | 性能报告 | **FAIL** | LCP 3580ms / TTFB 2060ms（`55`） |
-| 10 | 安全报告 | **FAIL** | gitleaks 1 项 P0 + Environment 无审批（`57`） |
+| 10 | 安全报告 | **FAIL** | gitleaks 1 项 P0 待轮换 + Environment 无审批（`57`） |
 | 11 | 回滚演练 | **NOT_TESTED** | 未发布即无回滚对象 |
 | 12 | 未闭合问题及风险分级 | **PASS** | 见 §4 |
+
+> 第 3 项说明：`42208114349` 的 15 个 job 中 13 个 success（含 `E2E（构建产物 · 浏览器冒烟）`，其内部跑了构建、payment-off、
+> 双组织隔离、Mission 闭环、Workspace 闭环、认证面导航、浏览器冒烟、axe 四视口棘轮、首屏指标采集器自证），2 个按设计 skipped。
+> 上一版本文档写成「12 success，E2E 待定」是因为取证时该长跑 job 尚未结束 —— **现已结束，结论为 success**。
 
 **12 项中：PASS 7 / 部分 1 / FAIL 2 / BLOCKED 1 / NOT_TESTED 1。**
 
@@ -128,6 +135,25 @@ V20.4 要求 RC 提供 12 项，缺一不可：
 | 7 | axe + Trace 补齐 | 未跑 |
 
 **其中第 1、3 项完全在代码之外**（PingPong 后台、GitHub 设置），Agent 无法代劳。
+
+### 5.1 D-11：发布目标必须二选一（本轮已把事实测清，不再是猜测）
+
+这一项之前是「未定」，本轮已经测到可以直接做决策的程度：
+
+| 选项 | 现状（实测） | 代价 | 结论 |
+|---|---|---|---|
+| **A. Netlify 作为发布目标** | `app.lokfeel.com` 已 `200`，`x-nf-request-id` 在，全链路可用；`server: cloudflare` 只是代理 | 无新增工程；但 TTFB 1.2–3.1s 的结构性问题保留 | **唯一当前可用路径** |
+| **B. Cloudflare Workers 作为发布目标** | `lokfeel-app.aoshuang99.workers.dev` **500**；`secrets=0`；动态路由全崩（`53` §4.3） | 需注入全部生产密钥到公网 worker，或先建预览库 + Cloudflare Access | **当前不可用，且带安全代价** |
+
+**所以 D-11 的真正问题不是「选 A 还是 B」，而是「要不要为了 B 去开一个公网无鉴权、可写生产库的入口」。**
+
+工程侧建议（不代替决策）：
+
+- **短期：以 A（Netlify）为发布目标**，把 CF Worker 明确标注为「未启用/实验中」，避免对外宣称「已上 Cloudflare」。
+- **中期：若要用 B**，前置条件是 ① 独立预览库，或 ② Cloudflare Access 强制登录，二者必须先落地其一。
+  直接把 `DATABASE_URL` + `NEXTAUTH_SECRET` 注入 `lokfeel-preview` 属于**用发布便利换数据安全**，不建议。
+
+> 这一条不需要用户「点按钮」，只需要一个方向确认：**A 还是 B**。确认后剩余工作都在代码/CI 侧，Agent 可自主推进。
 
 ---
 

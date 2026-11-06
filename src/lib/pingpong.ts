@@ -220,12 +220,20 @@ export class PingPongClient {
    * 3. Compare with received signature
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
+    const secret = process.env.PINGPONG_WEBHOOK_SECRET;
+
+    // 没有密钥 / 没有签名时直接判定为「验签失败」。
+    // 关键点：`createHmac` 用 `undefined` 当密钥会**同步抛 TypeError**，
+    // 而它在 try 之外 —— 于是异常穿透到调用方，把路由变成 500。
+    // 验签函数不该有「抛异常」这种失败模式：验不过就是 false。
+    if (!secret || !signature) return false;
+
     // TODO: Verify with PingPong docs - may use different algorithm
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.PINGPONG_WEBHOOK_SECRET!)
+      .createHmac("sha256", secret)
       .update(payload)
       .digest("hex");
-    
+
     try {
       return crypto.timingSafeEqual(
         Buffer.from(signature, "hex"),

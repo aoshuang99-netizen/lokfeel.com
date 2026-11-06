@@ -86,12 +86,36 @@ git diff --name-status 0617c0e..HEAD
 |---|---|---|
 | CI（`rc/v20.4` push @ `e5fa762`） | `42188252386` | **success**：13 success / 0 failure / 2 skipped |
 | Cloudflare Preview（同 push） | `42188252454` | **success** |
+| CI（`rc/v20.4` push @ **`e1a0dea`**，含安全修复 + 验收工具） | **`42208114349`** | **success**：13 success / 0 failure / 2 skipped |
+| Cloudflare Preview（同 push） | **`42208114255`** | **success** |
 
-Preview 部署落地核验（Cloudflare API）：
+### 5.1 `e1a0dea` 的 CI 逐 job 结论
+
+| Job | 结论 |
+|---|---|
+| Typecheck (tsc --noEmit) | success |
+| Test (Jest) | **success**（含本轮修好的 `bot-online-seed` 假时钟守卫） |
+| Lint (ESLint · 棘轮) | success |
+| Build (next build) | success |
+| Migration（libSQL 文件库 · 全批次） | success |
+| Secret scan (gitleaks) | **success**（PingPong 脱敏后仍无新增泄漏） |
+| Dependency audit（生产可达 · 棘轮） | success |
+| 租户作用域审计 | success |
+| 支付凭据灌注自证 | success |
+| Perf SLO 对账（AC-24） | success |
+| cron 方法一致性 | success |
+| 上线预检汇总口径自证 | success |
+| E2E（构建产物 · 浏览器冒烟） | **success**（含 axe 四视口棘轮门禁、首屏指标采集器自证） |
+| DCO sign-off / Perf 基线实跑 | skipped（按设计仅手动/PR 触发） |
+
+**合计：13 success / 0 failure / 2 skipped —— 与 `e5fa762` 那轮同口径，绿灯未被安全修复打破。**
+
+Preview 部署落地核验（Cloudflare API，两次部署对照）：
 
 ```
-lokfeel-preview  modified_on 08:34:48Z   version 34eaafc4-682a-4f37-9a1a-f9eb1ac153a2
-lokfeel-app      modified_on 03:26:46Z   （未变 ⇒ 生产 worker 未被波及）
+lokfeel-preview  modified_on 11:12:23Z  deployment 97a3a4de  (e1a0dea)
+lokfeel-preview  modified_on 08:34:47Z  deployment 4d5b274f  (e5fa762)
+lokfeel-app      modified_on 03:26:46Z  （两次均未变 ⇒ 生产 worker 未被波及）
 ```
 
 **隔离确认 PASS**：preview 部署只更新了 `lokfeel-preview`，生产 `lokfeel-app` 的 `modified_on` 保持前一版本时间戳不变。

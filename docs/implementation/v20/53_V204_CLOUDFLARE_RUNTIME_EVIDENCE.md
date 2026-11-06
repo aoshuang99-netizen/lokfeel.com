@@ -107,13 +107,27 @@ CLOUDFLARE_ACCOUNT_ID
 
 ## 3. 部署与隔离证据
 
-| Worker | `modified_on` | 说明 |
-|---|---|---|
-| `lokfeel-preview` | **2026-11-06T08:34:48Z** | 本轮 RC push 触发的新部署，version `34eaafc4-682a-4f37-9a1a-f9eb1ac153a2` |
-| `lokfeel-app` | 2026-11-06T03:26:46Z | **未变** ⇒ 生产 worker 未被 preview 覆盖 |
+| Worker | `modified_on` | `etag` | 说明 |
+|---|---|---|---|
+| `lokfeel-preview` | **2026-11-06T11:12:23Z** | `8104b76d…72c6` | 本轮 `rc/v20.4@e1a0dea` push 触发（run `42208114255`），deployment `97a3a4de-828d-4cc9-8aa2-67aa592aa83c`，author `aoshuang99@gmail.com`，source `wrangler` |
+| `lokfeel-app` | 2026-11-06T03:26:46Z | `c08b5cdc…358f` | **未变** ⇒ 生产 worker 未被 preview 覆盖 |
+
+前一次 preview 部署为 `4d5b274f`（08:34:47Z，对应 `e5fa762`），本次为 `97a3a4de`（11:12:22Z，对应 `e1a0dea`）。
+两次 `modified_on` 都精确落在对应 run 的时窗内，而 `lokfeel-app` 全程停在 `03:26:46Z` —— **隔离是时间戳级的硬证据，不是"配置看起来正确"**。
 
 Zone：`lokfeel.com`（`76bdd5ac9efcf5a612ee4b6269b06a2a`）状态 `active`。
-`workers.dev` 子域：`lokfeel-app` / `lokfeel-preview` 均 `enabled=true`。
+`workers.dev` 子域：`aoshuang99`；`lokfeel-app` / `lokfeel-preview` 均 `enabled=true`。
+
+### 3.1 绑定清单（API 直读，非推断）
+
+| Worker | bindings | secrets 数量 |
+|---|---|---|
+| `lokfeel-preview` | `ASSETS`(assets) + `WORKER_SELF_REFERENCE`(service) | **0** |
+| `lokfeel-app` | `ASSETS`(assets) + `WORKER_SELF_REFERENCE`(service) | **0** |
+
+`GET /accounts/{id}/workers/scripts/lokfeel-preview/secrets` → `count = 0`。
+既没有 `DATABASE_URL`，也没有 `NEXTAUTH_SECRET`、Upstash、Firebase、WorkBuddy LLM 任何一项。
+`compatibility_date = 2025-09-01`。
 
 ---
 
@@ -132,10 +146,68 @@ Zone：`lokfeel.com`（`76bdd5ac9efcf5a612ee4b6269b06a2a`）状态 `active`。
 | 9 | Agent Provider 可用 | 生产 | **PASS** 9/9 | `provider=workbuddy`、真实 token 461/270（详见 `56`） |
 | 10 | Agent Provider 可用 | 本地 | **BLOCKED（诚实降级）** | `provider=none`、run `FAILED/NO_DEGRADE_PATH`、token 0 |
 | 11 | OAuth 回调 | — | **NOT_TESTED** | 需真实第三方授权交互，本轮未做 |
-| 12 | Preview HTTP 实测 | CF Workers | **BLOCKED** | 本地网络无法访问 `*.workers.dev`（代理 502 / 直连超时）；worker 侧 `enabled=true` |
+| 12 | Preview HTTP 实测 | CF Workers | **FAIL（运行时不可用，非网络）** | 已打通出境通道后实测：`/favicon.ico` **200 / 25931B**（ASSETS 正常）；`/`、`/login`、`/workspace`、`/api/health`、`/robots.txt` **全部 500** `{"message":"Server failed to respond."}` 61B。详见 §4.1 |
 | 13 | 异常日志与追踪 | — | **BLOCKED** | 无 Workers Logs / Tail 访问；Sentry 未在本轮核对 |
 | 14 | 无 Stub Provider 进生产构建 | 生产 | **PASS** | 生产 `provider=workbuddy`（非 `stub`/`none`）；本地缺凭据时诚实降级为 `none` 而非伪造 |
 | 15 | 无密钥泄漏 | 仓库 | **PASS** | 全部 `.env*` 均 ignored、历史零提交（详见 `57`） |
+
+---
+
+### 4.1 推翻旧结论：Preview「网络不可达」是错的，真实症状是 500
+
+上一版本文档把第 12 项记为 `BLOCKED（本地网络无法访问 *.workers.dev）`。**这个结论是错的，本轮已推翻。**
+
+| 通道 | 结果 |
+|---|---|
+| 本机默认出口（本地代理，走境内） | `CONNECT tunnel failed, response 502`，`http=000` |
+| 直连（`--noproxy '*'`） | `Connection timed out after 15013ms` |
+| **SOCKS5 `127.0.0.1:10808`（sing-box → Bright Data 美国住宅出口）** | **真实 HTTP 响应** |
+
+也就是说：**不是 worker 不可达，是我之前的测量通道没有出境。** 换成出境通道后立刻拿到真实响应。
+
+实测矩阵（`https://lokfeel-preview.aoshuang99.workers.dev`，出口 `cf-ray: a563b079fc3db341-SJC`）：
+
+| 路径 | 状态 | 字节 | TTFB | 响应体 |
+|---|---|---|---|---|
+| `/favicon.ico` | **200** | 25931 | 2.43s | 二进制 ICO（正常） |
+| `/` | **500** | 61 | 5.38s | `{"message":"Server failed to respond.","details":{}}` |
+| `/login` | **500** | 61 | 1.91s | 同上 |
+| `/workspace` | **500** | 61 | 3.38s | 同上 |
+| `/api/health` | **500** | 61 | 3.75s | 同上 |
+| `/robots.txt` | **500** | 61 | 3.55s | 同上 |
+
+响应头里 **CSP / HSTS / X-Frame-Options / report-to 全部正常下发**，说明 Next 应用与 middleware 确实在跑；
+`cache-control: private, no-cache, no-store` 也符合预期。**唯一出问题的是业务渲染这一步。**
+
+### 4.2 根因闭合：静态能出、动态全崩 ⇒ 缺的是运行时凭据
+
+`/favicon.ico` 走 `ASSETS` 绑定，200；所有需要执行服务端代码的路由，500。
+结合 §3.1 的 `secrets = 0`，因果链完全闭合：
+
+```
+ASSETS 绑定存在            → 静态资源 200
+WORKER_SELF_REFERENCE 存在 → worker 能自调用
+secrets = 0 / vars = 0     → Prisma 拿不到 DATABASE_URL      → 初始化抛错
+                           → NextAuth 拿不到 NEXTAUTH_SECRET  → 同样抛错
+                           → 所有 SSR 路由进入错误分支 → 统一 500 + 61B JSON
+```
+
+这不是「配置写错」，而是**从未注入**。所以判定用 `FAIL`（运行时真的不可用）而不是 `BLOCKED`（说不清原因）——
+原因现在说得清了。
+
+### 4.3 反向交叉验证：`lokfeel-app` 也是 500 ⇒ 生产根本不在 Workers 上
+
+| 目标 | 结果 |
+|---|---|
+| `https://lokfeel-app.aoshuang99.workers.dev/` | **500**，同样 61B JSON |
+| `https://lokfeel-app.aoshuang99.workers.dev/login` | **500**，同样 61B JSON |
+| `https://app.lokfeel.com/login` | **200**，`server: cloudflare` + `x-nf-request-id: 01M6R9996BPDV6BKDB3A3W7CYZ` |
+
+如果生产真的跑在 `lokfeel-app` 这个 worker 上，那么 `app.lokfeel.com` 也该是 500。它不是。
+**两条独立证据（`x-nf-request-id` 与 worker 自身 500）指向同一结论：`app.lokfeel.com` 是 Cloudflare 代理回源 Netlify，Worker 只是挂在旁边、没有承载流量。**
+
+> 这条结论对发布决策至关重要：所谓「发布到 Cloudflare」目前**没有可用的运行时**；
+> 真实承载面是 Netlify。二者必须先做一次明确选择（见 `58` §5）。
 
 ---
 
@@ -151,17 +223,26 @@ Zone：`lokfeel.com`（`76bdd5ac9efcf5a612ee4b6269b06a2a`）状态 `active`。
 
 | 验收项 | 判定 |
 |---|---|
-| Preview 部署成功 | **PASS**（run `42188252454`；worker version `34eaafc4`） |
-| Preview 与候选 SHA 一致 | **PASS**（部署由 `rc/v20.4@e5fa762` 的 push 触发） |
+| Preview 部署成功 | **PASS**（run `42208114255`；deployment `97a3a4de`，`modified_on 11:12:23Z`） |
+| Preview 与候选 SHA 一致 | **PASS**（部署由 `rc/v20.4@e1a0dea` 的 push 触发） |
+| Preview 隔离，不覆盖生产 worker | **PASS**（`lokfeel-app` 全程 `03:26:46Z` 未变） |
+| Preview 静态资源可服务 | **PASS**（`/favicon.ico` 200 / 25931B） |
+| Preview 动态路由可服务 | **FAIL**（5 条路由全部 500 / 61B） |
 | HTTP 及业务 API 有真实响应 | **PASS**（本地 prod 全链路） |
 | DB / Auth / Cache 必需链路 | **PASS**（本地 prod，真实 Turso + Upstash） |
 | OAuth 回调 | **NOT_TESTED** |
 | Provider 可用性 | **PASS**（生产）/ 本地诚实 BLOCKED |
-| Cloudflare Worker 作为运行时 | **BLOCKED**——零绑定，无法承载业务 |
+| Cloudflare Worker 作为运行时 | **FAIL**——零绑定，静态能出、动态全崩（§4.1–4.3） |
 | 无密钥泄漏 | **PASS** |
 
-**Batch 1 判定：本地全栈链路 PASS；「把 Cloudflare 作为统一运行时」这一目标 BLOCKED。**
+**Batch 1 判定：本地全栈链路 PASS；Preview 能部署、能出静态、但动态路由全 500；「把 Cloudflare 作为统一运行时」FAIL。**
 
-**为什么 BLOCKED 而不是 FAIL**：不是配置写错了，而是**从未注入**。要恢复，必须把 §2.2 的变量以 Cloudflare Secrets 形式注入 `lokfeel-app`，并确认 Turso / Upstash 从 CF 边缘可达。这一步需要凭据与一次真实发布授权，属于外部依赖，本轮不动。
+**为什么从 BLOCKED 改判 FAIL**：上一版只能说「访问不到」，那是测量缺陷。现在能访问了，症状明确为 500，且根因已由「静态 200 / 动态 500 / `secrets=0`」三者闭合。**说不清原因的才叫 BLOCKED，说得清的是 FAIL。**
 
-> 边界说明：本轮**没有**为了「让 CF 看起来能用」而往 worker 里塞任何临时凭据。
+**修复路径（未执行，需一次授权）**：把 §2.2 的变量以 Cloudflare Secrets 注入 `lokfeel-preview`，再重跑一次 preview 部署。
+但这里有一个不能绕过的安全问题：**这些是生产数据库与认证签名密钥**，注入到 `lokfeel-preview.aoshuang99.workers.dev` 等于开了一个
+**公网无鉴权入口直连生产库**。因此本项**不能由工程侧单方面执行**，必须同时满足：
+① 提供独立的预览库/预览签名密钥；或 ② 明确接受该风险并给出访问控制（Cloudflare Access）。
+这条转成 `58` 的决策项 D-11。
+
+> 边界说明：本轮**没有**为了「让 CF 看起来能用」而往 worker 里塞任何临时凭据，也没有把生产密钥写进任何 preview 环境。

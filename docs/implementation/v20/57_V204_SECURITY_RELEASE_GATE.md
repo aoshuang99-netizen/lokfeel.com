@@ -184,6 +184,52 @@ x-xss-protection: 1; mode=block
 
 `/api/health`：`payments.configured=false` / `charging=false`。本轮**未做任何真实扣款**。
 
+#### 5.3.1 生产 webhook 端点实测：缺密钥时抛异常 → 500（本轮已修）
+
+对生产发一次**伪造签名**的回调（不会扣款，只是验签）：
+
+```
+POST https://app.lokfeel.com/api/webhooks/pingpong
+X-Signature: deadbeef
+→ 500 {"error":"Webhook processing failed"}   (ttfb 2808ms)
+```
+
+**期望是 401（验签失败），实际是 500。** 根因读代码即可确认：
+
+```ts
+// 修复前
+const expectedSignature = crypto
+  .createHmac("sha256", process.env.PINGPONG_WEBHOOK_SECRET!)   // ← undefined 当密钥
+  .update(payload).digest("hex");
+
+try {
+  return crypto.timingSafeEqual(...);   // ← try 只包住了比较，没包住 createHmac
+} catch { return false; }
+```
+
+`createHmac` 收到 `undefined` 会**同步抛 `TypeError`**，而它在 `try` **外面**，于是异常穿透到路由外层 `catch`，
+被兜成 500。后果有三：
+
+1. 对外把「通道没配」伪装成「服务故障」，误导排障方向；
+2. 任何人构造一个 POST 都能稳定触发 500 + 异常日志（可被用来刷日志/干扰告警）；
+3. 同一行还有一个次要问题：`console.log("[PingPong Webhook] Received:", body)` 把**完整回调报文**写进日志，含金额、交易号、商户单号。
+
+**本轮已修（最小改动，不重构通道）**：
+
+| 改动 | 位置 | 效果 |
+|---|---|---|
+| 缺 secret 时返回 **503 `Payment channel disabled`** | `route.ts` | 语义正确，且不进入解析/验签/写库 |
+| 日志改为「字节数 + 签名是否存在」 | `route.ts` | 敏感字段不再落日志 |
+| `verifyWebhookSignature` 缺密钥/缺签名直接 `false` | `lib/pingpong.ts` | 验签函数不再有「抛异常」这种失败模式 |
+
+新增测试 `tests/webhooks/pingpong-webhook.test.ts`（**9/9 PASS**）钉住四件事，且每条都带反例：
+配了 secret 就不能继续 503、正确签名必须返回 `true`（防止「为了永不抛异常而永远返回 false」）。
+
+**未修且如实登记**：`src/lib/pingpong.ts` 仍有 **12 处 `TODO: Verify ... with PingPong docs`**
+（base URL、签名算法、header 名、各 endpoint 全部未经官方文档核对）。
+**这条通道不能视为已接入**，与 `payments.configured=false` 的现状一致；开启前必须先做一次真实沙箱联调。
+
+
 ---
 
 ## 6. 发布治理缺口（P1）
