@@ -34,12 +34,17 @@
  *     `GET /api/v1/bridges/{bridgeId}/discovery`；写操作 approve / revoke / opt-in / opt-out。
  */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { AlertCircle, Bell, CheckCircle2, Compass, Loader2, MessageSquare, Wand2 } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
 import StageRail from '@/components/living/adaptive/stage-rail'
 import { buildOsStages } from '@/lib/living/adaptive/stages'
+import {
+  resolveWorkspaceView,
+  workspaceViewUrl,
+  WORKSPACE_VIEW_PARAM,
+} from '@/lib/living/workspace-view'
 import LivingCanvas from '@/components/living/living-canvas'
 import FieldCanvas from '@/components/living/field/field-canvas'
 import FieldInspector from '@/components/living/field/field-inspector'
@@ -121,6 +126,12 @@ const NAV: LivingNavItem[] = [
   { key: 'agents', label: 'Agents', hint: 'Agent 运行与审批', ready: true },
   { key: 'missions', label: 'Missions', hint: '连接任务', ready: false, reason: MISSIONS_REASON },
 ]
+
+/**
+ * 深链接白名单：**由 NAV 派生**，不是另抄一份字面量。
+ * `ready:false` 的 `missions` 自动被排除 —— 拼 `?view=missions` 不会绕过「未开放功能不伪装可用」。
+ */
+const READY_VIEW_KEYS: readonly string[] = NAV.filter((item) => item.ready).map((item) => item.key)
 
 /** 已接线到真实端点的动作。其余动作**显式禁用**（不允许"点了没反应"）。 */
 const WIRED_ACTION_KEYS: ReadonlySet<string> = new Set(['create-mission', 'create-mission-2'])
@@ -270,6 +281,46 @@ function ConsentSubTabs({
 export default function LivingWorkspace() {
   const { data: session } = useSession()
   const [activeKey, setActiveKey] = useState('now')
+
+  /**
+   * V20.3 · Continuity（G-03）：把当前屏同步进 URL，使刷新 / 返回 / 分享 / 切端可恢复。
+   *
+   * 🔴 为什么用 `pushState` 而不是 Next router：切视图**不换路由、不重取数据**，
+   * 用 router 会触发 RSC 往返并可能把已加载的业务态冲掉；这里只需要一条可回退的历史记录。
+   * `popstate` 由下方 effect 统一同步回 state，避免两套状态源漂移。
+   */
+  const navigateTo = useCallback((view: string) => {
+    if (!READY_VIEW_KEYS.includes(view)) return
+    setActiveKey(view)
+    if (typeof window === 'undefined') return
+    const url = workspaceViewUrl(
+      window.location.pathname,
+      window.location.search,
+      window.location.hash,
+      view,
+      READY_VIEW_KEYS,
+    )
+    // 只在 URL 真的变化时压栈，避免重复点击同一页签污染历史记录。
+    if (url !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+      window.history.pushState({ lfWorkspaceView: view }, '', url)
+    }
+  }, [])
+
+  /**
+   * 首屏从 URL 恢复 + 浏览器前进/后退同步。
+   * 初始 state 恒为 'now'（与 SSR 输出一致），恢复放在 effect 里 —— 避免水合不一致。
+   */
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const raw = new URLSearchParams(window.location.search).get(WORKSPACE_VIEW_PARAM)
+      const view = resolveWorkspaceView(raw, READY_VIEW_KEYS)
+      setActiveKey(view ?? 'now')
+    }
+    syncFromUrl()
+    window.addEventListener('popstate', syncFromUrl)
+    return () => window.removeEventListener('popstate', syncFromUrl)
+  }, [])
+
   const [draft, setDraft] = useState('')
   const [compiled, setCompiled] = useState<CompileResult | null>(null)
   const [creating, setCreating] = useState(false)
@@ -411,7 +462,7 @@ export default function LivingWorkspace() {
     setCompiled(compileWorkspaceSpec(draft))
     setCreateResult(null)
     setAttempt(null)
-    setActiveKey('studio')
+    navigateTo('studio')
   }
 
   /**
@@ -662,10 +713,10 @@ export default function LivingWorkspace() {
     <LivingShell
       nav={NAV}
       activeKey={activeKey}
-      onNavigate={setActiveKey}
+      onNavigate={navigateTo}
       title="My Workspace"
       dualWorld
-      stageRail={<StageRail stages={stages} activeView={activeKey} onFocusView={setActiveKey} />}
+      stageRail={<StageRail stages={stages} activeView={activeKey} onFocusView={navigateTo} />}
       contextExtra={
         <span className="hidden items-center gap-1 rounded-lf border border-lf-line px-2 py-1 text-xs text-lf-text-muted sm:inline-flex">
           <Bell className="h-3.5 w-3.5" aria-hidden="true" />
