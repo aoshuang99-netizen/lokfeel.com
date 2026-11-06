@@ -46,18 +46,15 @@ jobs:
       - name: Verify build artifact
         run: test -f .open-next/worker.js
 
-      - name: Set preview worker name (隔离生产 worker)
-        run: |
-          CFG=$(find .open-next -maxdepth 2 -name 'wrangler.json' 2>/dev/null | head -1)
-          if [ -n "$CFG" ]; then
-            WRANGLER_CFG="$CFG" node -e "const fs=require('fs');const p=process.env.WRANGLER_CFG;const j=JSON.parse(fs.readFileSync(p,'utf8'));j.name='lokfeel-preview';fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('set',p,'name -> lokfeel-preview')"
-          else
-            echo "warn: .open-next/wrangler.json 未找到，deploy 将使用默认 worker 名"
-          fi
+      - name: Verify preview config
+        # 隔离方案：preview 走独立 wrangler 配置（name=lokfeel-preview），不再覆盖生产 worker。
+        run: test -f wrangler.preview.jsonc
 
       - name: Deploy Preview
-        # 非阻塞部署到 Cloudflare Workers（preview 子命令是本地 wrangler dev，会阻塞 CI，故用 deploy）
+        # 非阻塞部署到 Cloudflare Workers（preview 子命令是本地 wrangler dev，会阻塞 CI，故用 deploy）。
+        # --config 透传给 wrangler deploy，使 preview 部署到独立 worker `lokfeel-preview`，
+        # 其 WORKER_SELF_REFERENCE 也指向自身，避免与生产 `lokfeel-app` 互相串扰。
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx opennextjs-cloudflare deploy
+        run: npx opennextjs-cloudflare deploy --config wrangler.preview.jsonc
