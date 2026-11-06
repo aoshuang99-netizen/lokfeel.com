@@ -128,7 +128,9 @@ async function openCell(theme, viewport) {
       domain: new URL(BASE).hostname,
       path: '/',
       httpOnly: true,
-      secure: false,
+      // 生产 HTTPS 下 NextAuth 下发 __Secure- 前缀 cookie，Playwright 要求
+      // 该前缀必须 secure:true；本地 http 则必须 false。按协议推导，别硬编码。
+      secure: new URL(BASE).protocol === 'https:',
       sameSite: 'Lax',
     },
   ])

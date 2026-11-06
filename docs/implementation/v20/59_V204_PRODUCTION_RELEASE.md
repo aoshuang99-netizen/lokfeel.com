@@ -1,6 +1,7 @@
 # 59 · V20.4 Production Release（Batch 7 正式发布）
 
-> 结论：**本轮未发布生产。**
+> ~~结论：本轮未发布生产。~~
+> **2026-11-06 更新：已发布。D-11 用户选 A（Netlify），D-10 随之放行，按 §6 手册执行，§7 为发布实录。**
 
 ---
 
@@ -134,7 +135,8 @@ src 差异文件  : 5
 | 无新增 P0 | **PASS**（未变更即无新增） |
 | 发布与回滚证据完整 | **N/A（未发布）** / 回滚演练 **未执行** |
 
-**Batch 7 判定：NOT EXECUTED（遵守「未授权不发布」）。**
+**Batch 7 判定（2026-11-06 12:53Z 之前的旧结论）：NOT EXECUTED（遵守「未授权不发布」）。**
+**实际于 2026-11-06 12:53Z 获用户授权（D-11 = A）后执行，见 §7 发布实录。**
 
 ---
 
@@ -211,3 +213,64 @@ curl -X POST -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
 | 开启支付 | 凭据待轮换（P0）+ 通道 12 处 TODO 未核文档（`57` §5.3.1） |
 | 补 PingPong 凭据轮换 | 需 PingPong 后台权限，Agent 无 |
 | 配 Environment required reviewers | 需仓库管理员权限 |
+
+---
+
+## 7. 发布实录（2026-11-06，全为执行时实测，非预写）
+
+### 7.1 授权与决策
+
+| 项 | 值 |
+|---|---|
+| D-11 发布目标 | **A. Netlify**（用户原话「A」，2026-11-06 20:50 CST） |
+| D-10 放行依据 | 用户在我方「回复 A 或 B 后直接推到发布完成并自证」的明确框架下回复 A |
+| 发布提交 | `d845543` = `main` 上 `--no-ff` 合并 `rc/v20.4 @ a42e4b6`（合并提交不带 `[skip netlify]`） |
+| 回滚点 | `305d669`（Netlify deploy `6aec89a8b1fa5f748c7ae101`，构建物实测仍在，`59` §4.1） |
+
+### 7.2 执行时间线（UTC）
+
+| 时刻 | 事件 | 证据 |
+|---|---|---|
+| 12:52 | `git merge --no-ff rc/v20.4` → `d845543`，头提交无 `[skip netlify]` | `git log -1 --format=%B` |
+| 12:53:22 | SSH-over-443 推送成功 `0617c0e..d845543 main -> main` | push 输出 + `ls-remote` 复核 |
+| 12:53:22 | Netlify deploy `6aedcdc2f5b15d9e1f202532` 触发（branch=main, commit=d845543） | Netlify API `GET /deploys` |
+| 12:54:44 | `published_deploy.state = ready`，`deploy_time=80s`，生产切换完成 | Netlify API |
+| 12:54–13:1x | GitHub CI（`42221110401`）+ CodeQL（`42221110421`）在 main 上先后 **success** | GitHub API |
+
+### 7.3 §6.4 验收矩阵 · 执行结果（全部针对发布后的生产）
+
+| # | 项 | 结果 | 实测值 |
+|---|---|---|---|
+| 1 | 生产提交 == 获批 SHA | **PASS** | `prod-commit-drift.mjs`：`src 差异文件: 0`，落后 0 提交，退出码 0 |
+| 2 | **行为级指纹：webhook 500→503** | **PASS** | `POST /api/webhooks/pingpong`（伪造签名）→ **`503 {"error":"Payment channel disabled"}`**（发布前实测为 500） |
+| 3 | 健康检查 | **PASS** | 200，`status=healthy`，`redis(upstash) configured=true`，`botModule.enabled=true` |
+| 4 | 登录可用 | **PASS** | `/login` → 200 |
+| 5 | OAuth 未回归 | **PASS** | `v204-oauth-shape.mjs` 生产 21/21（PKCE S256、坏回调零 session、零 5xx） |
+| 6 | 13 屏 × 4 视口 × 2 主题 | **PASS** | 生产 **104/104**（THEME_PASS 48 · THEME_NA 56 · FAIL 0），`test-results/v204-visual/visual-results.json` |
+| 7 | G-03 深链接 | **PASS** | 生产 22/22（六类 view + 非法回退 + Missions 不可达） |
+| 8 | 公开面冒烟 | **PASS** | `prod-smoke.mjs --commit=d845543`：**15/15**（R1 commit 匹配 + 支付关闭 + 核心 API 无 500 + 缓存头） |
+
+**验收矩阵 8/8 全 PASS，发布成立。**
+
+### 7.4 发布后状态记录
+
+- `main` CI：run `42221110401` = **success**；CodeQL run `42221110421` = **success**。
+- Cloudflare 侧：本次发布**不经由**任何 CF worker（Preview 工作流 PR-only 未触发；`cloudflare-production.yml` 为 `workflow_dispatch`-only 且未 dispatch）。CF API 在发布后核验时本地网络不可达（直连与 SOCKS5 隧道均失败），隔离结论依据工作流触发面而非实时时间戳，**不冒充已实时核验**。
+- 发布后 TTFB 暖态采样（`/login`）：1703 / 2337 / 2495 / 1888 ms —— 与 `55` 结论一致（结构性地板价 ~1.4s+，`LCP ≤ 2500ms` 仍不可达），**不因发布而豁免**。
+
+### 7.5 执行中发现并修复的工具缺陷
+
+`v204-workspace-deeplink.mjs` / `v204-visual-audit.mjs` 硬编码 `secure: false`，
+导致生产 HTTPS 下（NextAuth 下发 `__Secure-` 前缀 cookie）`addCookies` 抛
+`Invalid cookie fields`。已改为按 `BASE` 协议推导（`https → secure:true`），本地行为不变。
+教训：QA 脚本的 cookie 属性不能只按本地 http 环境写死。
+
+### 7.6 发布后仍未闭合（不因发布消失，与 `58` §4 一致）
+
+| 项 | 状态 |
+|---|---|
+| PingPong 凭据轮换（P0） | 仍待 PingPong 后台执行（脱敏 ≠ 失效） |
+| Production Environment required reviewers | 仍待仓库管理员配置 |
+| 生产 LCP ≤ 2500ms | 结构性未达标（`55`），已按用户授权带病发布 |
+| S3 生产业务验证 | 前提（获批生产版本）已成立，但流程含真实外部动作（发信/外部 API），**超出发布授权范围**，需单独授权 |
+| 真实 OAuth 成功回调 | 仍需真人授权 |
