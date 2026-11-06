@@ -564,7 +564,7 @@ function ConsentTimeline({ board }: { board: ConsentProposalBoard | null }) {
         ))}
       </ol>
       <p className="text-[11px] text-lf-text-faint">
-        逐动作的审计事件流（谁在几点做了什么）**不在**本接口契约内，
+        逐动作的审计事件流（谁在几点做了什么）<strong>不在</strong>本接口契约内，
         所以这里不画那种看起来最像日志、却全靠推断的时间线。
       </p>
     </section>

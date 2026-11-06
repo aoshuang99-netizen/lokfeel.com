@@ -371,7 +371,8 @@ async function main() {
   const urls = args.urls ? args.urls.split(',').map((s) => s.trim()).filter(Boolean) : DEFAULT_URLS
   const runs = Math.max(1, Number(args.runs || 3))
   const tap = args.tap === 'true'
-  const browser = await chromium.launch()
+  // PW_EXECUTABLE：本地无对应版本缓存时指定已有 chromium（CI 不设该变量，行为不变）
+  const browser = await chromium.launch({ executablePath: process.env.PW_EXECUTABLE || undefined })
 
   const report = { measuredAt: new Date().toISOString(), profile: 'mobile-4g-4xcpu', runs, budget: BUDGET, pages: [] }
   let anyFail = false

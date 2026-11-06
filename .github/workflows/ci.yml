@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # V20.4：RC 分支 push 也跑全套 CI。PR 创建受 PAT 权限限制时，
+    # 仍可在固定 RC SHA 上拿到与 main 同构的远端门禁证据。
+    branches: [main, 'rc/**']
   pull_request:
     branches: [main]
   workflow_dispatch:

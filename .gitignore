@@ -38,6 +38,18 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 
+# 🔴 2026-11-06（V20.4 安全扫描）：此前只挡了上面几个精确文件名，导致
+#   `.env.check` / `.env.pull` / `.env.vercel` / `.env.creem-check` / `.env.prod`
+#   这类"变体"被一路跟踪进仓库（gitleaks 全历史扫出 55 条命中，其中 8 条是
+#   VERCEL_OIDC_TOKEN 的真实 JWT）。改为通配 + 显式白名单：
+#   · 默认一律忽略 .env.*
+#   · 只放行「模板」与「测试夹具」（后者是 tests/setup.ts 的 dotenv 输入）
+.env.*
+!.env.example
+!.env.local.template
+!.env.pingpong.example
+!.env.test
+
 # vercel
 .vercel
 .env.vercel.local

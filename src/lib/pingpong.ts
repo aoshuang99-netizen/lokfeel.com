@@ -1,9 +1,12 @@
 /**
  * PingPong Checkout Client Library
- * 
- * API Key: sp_d4ec5580a8e0437288fe4caa1e692226 (Public Key)
- * API Secret: b0603d739469443d548a6a63b1bf12a78e9e0da6
- * 
+ *
+ * 凭据一律通过环境变量注入：`PINGPONG_API_KEY` / `PINGPONG_API_SECRET`。
+ *
+ * 🔴 2026-11-06（V20.4 安全扫描）：本注释与 `.env.pingpong.example` 曾**明文**写入
+ *    真实 sandbox 的 API Key / Secret，且仓库是 public ⇒ 视同已泄漏，必须轮换。
+ *    已脱敏，轮换登记见 `docs/SECRET-ROTATION-CHECKLIST.md`。
+ *
  * TODO: Verify all API endpoints with official PingPong documentation at:
  * - https://docs.pingpongx.com/
  * - https://acquirer-api-docs-v4.pingpongx.com/
@@ -217,12 +220,20 @@ export class PingPongClient {
    * 3. Compare with received signature
    */
   verifyWebhookSignature(payload: string, signature: string): boolean {
+    const secret = process.env.PINGPONG_WEBHOOK_SECRET;
+
+    // 没有密钥 / 没有签名时直接判定为「验签失败」。
+    // 关键点：`createHmac` 用 `undefined` 当密钥会**同步抛 TypeError**，
+    // 而它在 try 之外 —— 于是异常穿透到调用方，把路由变成 500。
+    // 验签函数不该有「抛异常」这种失败模式：验不过就是 false。
+    if (!secret || !signature) return false;
+
     // TODO: Verify with PingPong docs - may use different algorithm
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.PINGPONG_WEBHOOK_SECRET!)
+      .createHmac("sha256", secret)
       .update(payload)
       .digest("hex");
-    
+
     try {
       return crypto.timingSafeEqual(
         Buffer.from(signature, "hex"),
