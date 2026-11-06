@@ -74,6 +74,28 @@ describe('WO-1089 · 默认配置种子去相关', () => {
 });
 
 describe('WO-1089 · 群体去相关后在线比例合理', () => {
+  /**
+   * 🔴 2026-11-06 修（CI flaky，非生产 bug）：
+   * calculateOnlineProbability 内部 getCurrentHourInTimezone() 读的是**真实系统时钟**，
+   * 命中 peakHours [20,21] 时 peakMultiplier = 5.0，p 从 ~0.046 抬到 ~0.208。
+   * CI 在 UTC 02:56（纽约 21:56 晚高峰）跑 → ratio 0.2065 > 0.12 ⇒ FAIL；
+   * 本地 GMT+8 下午（纽约凌晨 off-peak）跑 → ratio ~0.046 ⇒ 稳定 PASS。
+   * 用例标题写「固定日期」却只固定了种子里的 dateKey，没固定时钟，属测试自身缺陷。
+   *
+   * 修复：把时钟固定到 2026-11-04T08:00:00Z = 纽约 03:00（off-peak），
+   * 与用例内 dateKey = 20261104 / hour = 3 的语义一致。
+   * 不放宽 0.12 阈值、不改生产算法、不删断言。
+   */
+  const FIXED_ISO = '2026-11-04T08:00:00Z';
+
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date(FIXED_ISO));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('固定日期下 2000 个 bot 的在线比例落在 2%–12%（非全 0、非全 1）', () => {
     const dateKey = 20261104; // UTC 2026-11-04
     const hour = 3;
@@ -198,5 +220,56 @@ describe('WO-1090 · 小时粒度判定', () => {
     const coverage = appeared / N;
     expect(coverage).toBeGreaterThan(0.6);
     expect(coverage).toBeLessThan(0.95);
+  });
+});
+
+/**
+ * 时钟依赖根因守卫（反例组，2026-11-06 新增）
+ *
+ * 为什么必须有「not A」：只测 off-peak 通过，无法证明「固定时钟」这一修复是必要的，
+ * 也无法防止后人误删 beforeEach 后测试重新变 flaky。本组用同一批 2000 个 bot、
+ * 同一颗种子，只切换系统时钟，锁死两种时刻下的比例差异。
+ *
+ * 实测基线（修复前 CI）：run 42153447731 @ 064cfe8，UTC 02:56 → ratio 0.2065，
+ * 断言 toBeLessThan(0.12) 失败；本地 GMT+8 下午（纽约凌晨 off-peak）→ 稳定通过。
+ * 修复后本地用假时钟复现同一批 2000 bot：off-peak 0.0395 / peak 0.2065，
+ * peak 数值与 CI 失败日志逐字一致。
+ */
+describe('WO-1089 · 时钟依赖根因守卫', () => {
+  const N = 2000;
+  const dateKey = 20261104;
+  const hour = 3;
+
+  const ratioAt = (iso: string): number => {
+    jest.useFakeTimers().setSystemTime(new Date(iso));
+    try {
+      let online = 0;
+      for (let i = 0; i < N; i++) {
+        const cfg = getBotConfig(null, `bot-${i}`);
+        const cfgTyped = cfg as { seed: number };
+        const p = calculateOnlineProbability(cfg, 'America/New_York');
+        const rand = createSeededRandom(cfgTyped.seed + dateKey * 24 + hour)();
+        if (rand < p) online++;
+      }
+      return online / N;
+    } finally {
+      jest.useRealTimers();
+    }
+  };
+
+  it('off-peak（纽约 03:00）比例落在 2%–12%', () => {
+    const ratio = ratioAt('2026-11-04T08:00:00Z');
+    expect(ratio).toBeGreaterThan(0.02);
+    expect(ratio).toBeLessThan(0.12);
+  });
+
+  it('peak（纽约 21:00）比例突破 12% —— 复现 CI 失败形态，证明必须固定时钟', () => {
+    // 2026-11-05T02:00:00Z = 纽约 2026-11-04 21:00 EST，命中 peakHours [20,21]
+    const peakRatio = ratioAt('2026-11-05T02:00:00Z');
+    const offPeakRatio = ratioAt('2026-11-04T08:00:00Z');
+    // 实测（TZ=UTC，本地复现）：offPeak = 0.0395、peak = 0.2065。
+    // 后者与 CI 失败日志 `Received: 0.2065` 逐字一致 ⇒ 根因确证，非推断。
+    expect(peakRatio).toBeGreaterThan(0.12);
+    expect(peakRatio).toBeGreaterThan(offPeakRatio * 2);
   });
 });
