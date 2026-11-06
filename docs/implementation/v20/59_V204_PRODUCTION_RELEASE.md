@@ -148,7 +148,7 @@ src 差异文件  : 5
 需要批准的具体对象（**必须点名 SHA，不接受"可以发"这种模糊授权**）：
 
 ```
-批准发布：rc/v20.4 @ 5a98e12
+批准发布：rc/v20.4 @ 31ec23f   （= 审阅时 `git rev-parse rc/v20.4`；若之后仅文档提交，以分支头为准）
 发布目标：A. Netlify（app.lokfeel.com）    ← 建议
 回滚点  ：305d669 (deploy 6aec89a8b1fa5f748c7ae101)
 已知未达标：LCP 3580ms / TTFB 中位 1531ms（结构性，见 55）
