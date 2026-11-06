@@ -62,6 +62,31 @@
 - [ ] 验证回调签名校验仍然生效（用测试事件触发一次）
 - [ ] 检查是否曾把通道密钥写进过任何非 `.env` 文件
 
+#### 2.4.1 🔴 PingPong（2026-11-06 新发现，未在此前任何审计中登记）
+
+**泄漏事实**：真实 sandbox 凭据曾以**明文**同时出现在两处，且仓库是 **public**：
+
+| 文件 | 内容 |
+|---|---|
+| `src/lib/pingpong.ts` L4–L5（注释） | `API Key: sp_d4ec…` / `API Secret: b0603d73…` |
+| `.env.pingpong.example` L7–L10 | 同上，且作为 `PINGPONG_API_KEY` / `PINGPONG_API_SECRET` 的值 |
+
+**本轮已做（仅止血，不等于修复）**：
+
+- [x] 两处均已脱敏为占位符 / 说明文字
+- [x] `.gitignore` 改为 `.env.*` 通配 + 模板白名单，防同类复发
+
+**仍需人工执行（本 Agent 无权操作 PingPong 控制台）**：
+
+- [ ] 在 PingPong 后台**作废**该 API Key 与 Secret，重新签发
+- [ ] 用新值更新 `.env.production` 与部署平台环境变量（Netlify / Cloudflare）
+- [ ] 确认旧 Key 已失效（用旧 Key 发一次请求应返回鉴权失败）
+- [ ] 评估是否曾用于 production：`src/lib/pingpong.ts` 用 `PINGPONG_ENVIRONMENT` 切换
+      gateway 域名，sandbox 凭据若被误配到 production 环境需一并核查
+
+> 风险定级：**P0（公开仓库中的支付通道凭据）**。虽然 `PINGPONG_ENVIRONMENT` 当前为
+> `sandbox`，但凭据本身已公开，且 sandbox 账户可能关联真实结算主体信息。
+
 ### 2.5 部署平台
 
 - [ ] **Vercel** —— 轮换 token；检查项目归属与协作者列表，移除不必要成员
