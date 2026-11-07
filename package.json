@@ -167,6 +167,7 @@
     "verify:no-release": "node scripts/qa/verify-no-release.mjs",
     "verify:oauth": "npx tsx scripts/verify-oauth-redirect-uri.mts",
     "verify:org-admin": "node scripts/qa/org-admin-invariant.mjs --self-test",
+    "verify:member-role:prod": "node scripts/qa/verify-member-role-prod.mjs",
     "verify:p1:e2e": "tsx scripts/qa/verify-p1-workspace-e2e.mts",
     "verify:p2:e2e": "tsx scripts/qa/verify-p2-workspace-e2e.mts",
     "verify:p2:render": "node scripts/qa/verify-p2-render-e2e.mjs",
