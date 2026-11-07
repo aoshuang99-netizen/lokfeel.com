@@ -16,7 +16,13 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth/auth'
-import { capabilitiesOf, listTenants, resolveTenantForUser, type TenantCapability } from '@/lib/tenancy'
+import {
+  capabilitiesOf,
+  listTenants,
+  resolveActiveTenant,
+  type TenantCapability,
+  type TenantSummary,
+} from '@/lib/tenancy'
 import ConsoleShell from './console-shell'
 import ConsoleNoOrg from './no-org'
 
@@ -52,14 +58,20 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
   let organizationName = ''
   let capabilities: readonly TenantCapability[] = []
   let tenantCount = 0
+  let tenants: TenantSummary[] = []
+  let activeOrganizationId = ''
 
   try {
-    const tenant = await resolveTenantForUser(session.user.id)
-    const tenants = await listTenants(session.user.id)
+    // ⚠️ 这里从 `resolveTenantForUser` 换成 `resolveActiveTenant`（V20.5 Batch 3）：
+    //    前者永远返回"最早加入的社群"，导致多社群用户看不到第二个社群。
+    //    后者先读 cookie 软偏好（用户在切换器里选的），失效再回落默认。
+    const tenant = await resolveActiveTenant(session.user.id)
+    tenants = await listTenants(session.user.id)
     organizationName =
       tenants.find((t) => t.organizationId === tenant.organizationId)?.name ?? '你的社群'
     capabilities = capabilitiesOf(tenant.role)
     tenantCount = tenants.length
+    activeOrganizationId = tenant.organizationId
   } catch {
     // 没有 ACTIVE 成员关系（或租户被停用）→ 说明页。
     // ⚠️ 这里**故意不**把异常往上抛：抛出去会变成 Next 的错误页，
@@ -72,6 +84,8 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
       organizationName={organizationName}
       capabilities={capabilities}
       tenantCount={tenantCount}
+      tenants={tenants}
+      activeOrganizationId={activeOrganizationId}
     >
       {children}
     </ConsoleShell>

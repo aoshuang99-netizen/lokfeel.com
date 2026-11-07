@@ -6,7 +6,7 @@
 
 - 分支：`main`（RC 分支 `rc/v20.5-ga`，发布分支 `release/v20.5-ga` 见 Batch 7）
 - 线上当前：`bc46a22`（Netlify deploy `6aeeb9cd`，2026-11-07T05:40:29Z）
-- 台账最后更新：2026-11-07 · `36053fe`
+- 台账最后更新：2026-11-07 · 基线 `3e27f3c` + Batch 3 本轮改动（提交见 `git log --grep=v20.5-b3`）
 
 ---
 
@@ -17,7 +17,7 @@
 | 0 | 事实基线 + 安全应急（明文管理员口令） | **PASS**（1 项 `NOT_TESTED`） | `01_SECURITY_CREDENTIAL_RECOVERY.md` |
 | 1 | 组织 / 成员 / 权限收口 + D-12 回归 | **PASS**（本地生产构建；线上路径待发布后重跑） | `02_ORG_MEMBER_LIFECYCLE.md` |
 | 2 | 世界级 UI/UX（13 屏 × 4 视口 × 2 主题） | **PASS**（视觉 104/104、axe 39/39；Figma 部分 `BLOCKED_FIGMA_WRITE`） | `03_UI_UX_13SCREENS.md` |
-| 3 | 真实 OAuth 回调 / 会话续期 / 登出 / 切租户 | `NOT_TESTED` | 待执行 |
+| 3 | 真实 OAuth 回调 / 会话续期 / 登出 / 切租户 | **PASS**（22 PASS / 0 FAIL / 2 `NOT_TESTED`） | `04_AUTH_SESSION_LIFECYCLE.md` |
 | 4 | Agent → Consent → Action → Outcome（含 Verify 正例） | `NOT_TESTED` | 待执行 |
 | 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | `NOT_TESTED` | 待执行 |
 | 6 | 监控 + 发布治理 + Workers 独立轨道 | `NOT_TESTED` | 待执行 |
@@ -86,9 +86,45 @@
 
 ---
 
+## 三·三、Batch 3 · 会话生命周期与授权边界
+
+- 复验命令：`node scripts/qa/v205-auth-session.mjs --base=<BASE>`（`npm run verify:auth:session`）
+- 结果：**22 PASS / 0 FAIL / 0 SKIP / 2 `NOT_TESTED`**，exit=0
+- 原始日志：`evidence/2026-11-07_auth-session_local.log`
+
+| 验收 | 结论 | 关键证据 |
+| --- | --- | --- |
+| 会话基线（cookie 属性 / 有效期内 / 与库一致） | **PASS** | S01–S05；`HttpOnly=true SameSite=lax`、`Max-Age=604800` |
+| 会话续期（滑动） | `NOT_TESTED` | S06；需跨 `updateAge` 窗口，不伪造时间 |
+| 撤销（tokenVersion） | **PASS** | S08 **失效延迟 61.4s**；上界 90s = 60s TTL + 0–30s 抖动 |
+| 撤销后还原 | **PASS** | S09 DB 已还原，旧 JWT 在 94.5s 后重新被接受（**降版本号会让旧凭据复效**） |
+| 登出 | **PASS** | S10–S12：清了 2 个 `session-token` cookie（含 `__Secure-` 变体）；清后 jar → 401；重放旧 jar → 200（无状态边界） |
+| 组织切换 | **PASS** | S13–S18 + UI 端到端：`preview → default` 头部真的变了；非成员 → 403 且不写 cookie；非法形状 → 400 |
+| 权限变更即时生效 | **PASS** | S19/S20：OPERATOR(19) → MEMBER(9)，失去 10 项运营能力、**新增 0 项**；还原后集合相等 |
+| CSRF（登录 / 登出） | **PASS** | S21–S23：跨源与缺头均 403；登出跨源不下发清 cookie |
+| OAuth 成功回调 | `NOT_TESTED` | S24；需 `GOOGLE_CLIENT_SECRET` + 真人 |
+| OAuth 授权形状（state / PKCE / redirect_uri） | **PASS** | `v204-oauth-shape.mjs` 对生产 **21/21**；坏回调 3 类全部拒绝且不建会话 |
+
+### Batch 3 补上的两个缺失能力（不是"测试没覆盖"，是"用户点不到"）
+
+| # | 缺口 | 用户可感知后果 | 修法 |
+| --- | --- | --- | --- |
+| 1 | 产品**没有登出**（全仓 0 条 `signOut\|登出\|退出登录`；Auth.js 自带端点实测 `302 → MissingCSRF` 且不清 cookie） | 共享设备换人只能清浏览器数据 | 新增 `POST /api/auth/logout`（同源校验 + 两个 cookie 名都清）+ 两套骨架各一个入口 |
+| 2 | 多社群用户**看不到第二个社群**（布局永远取"最早加入"的那个） | 第二/第三个社群在 UI 上不存在 | `lf-active-org` 软偏好 cookie + `POST /api/v1/organizations/active` + Console 切换器 |
+
+### 判据写错的三处（留档，防止下次再用"放宽断言"收场）
+
+| 原断言 | 实测 | 真因 | 改成 |
+| --- | --- | --- | --- |
+| 还原 tokenVersion 后**立即** 200 | 401 | 60s 用户缓存 + 该账号无 ACTIVE 租户（`/api/v1/org` 恒 403） | 换 `/api/v1/organizations` 探针，判据改"401 → 非 401" |
+| `POST /api/auth/signout` 会清 cookie | `302 清cookie=false` | 302 跳的是 `/login?error=MissingCSRF`（假绿） | 测新端点 + 清后 jar → 401 |
+| 降级后失去 `member.invite` | `含invite=false` | `qa.female` 是 OPERATOR，**本来就没有**该能力 | 算实际差集 + 断言"新增为空" |
+
+---
+
 ## 四、待办清单（按阻塞关系排序）
 
-1. **Batch 2 → 5**：无前置阻塞，可并行推进；Batch 2 需先判定 Figma 写权限（不可写则记 `BLOCKED_FIGMA_WRITE`，前端工作照常推进，不得因此停摆）。
+1. **Batch 4 → 5**：无前置阻塞，可并行推进。（Batch 2 已完成：Figma 写权限判定为 `BLOCKED_FIGMA_WRITE`，前端工作照常推进，未因缺 Figma 停摆；Batch 3 已完成。）
 2. **Batch 6**：需要决定监控落地形态（自建 probe / 外部 uptime），并写清 "5xx / p50 / p95 / 登录成功率 / Agent 成功率 / Provider 降级 / Consent 异常 / Outcome 核验失败 / DB 错误 / Secrets 缺失 / 部署漂移" 各自的口径与阈值。
 3. **Batch 7**：GO 需要 Batch 0–6 全绿且 P0=0；`admin 口令风险已消除` 已有证据。
 4. **Batch 8**：发布是**唯一需要人工批准**的动作；发布后必须对 `https://app.lokfeel.com` 重跑

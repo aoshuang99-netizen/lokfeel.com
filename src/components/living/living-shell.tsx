@@ -18,6 +18,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { Contrast, PanelRight, PanelRightClose } from 'lucide-react'
 import { useDialogA11y } from '@/lib/a11y/use-dialog-a11y'
 import { useLivingTheme, type LivingTheme } from '@/components/theme/living-theme'
+import SignOutButton from '@/components/auth/sign-out-button'
 
 export interface LivingNavItem {
   key: string
@@ -103,6 +104,15 @@ export default function LivingShell({
         </div>
         <div className="ml-auto flex min-w-0 items-center gap-2">
           {contextExtra}
+          {/*
+            登出（V20.5 Batch 3）。Workspace 六屏此前和 Console 一样没有登出入口。
+            窄屏只留图标（h-11 w-11 = 44px 触达区），文字在 lg 才出现 ——
+            360px 顶栏要同时容纳"LOKFEEL / 屏名 / 通知数 / 主题 / 证据 / 登出"。
+          */}
+          <SignOutButton
+            hideLabelBelow="lg"
+            className="lf-focus-ring inline-flex h-11 w-11 items-center justify-center gap-1.5 rounded-lf border border-lf-line text-xs text-lf-text-muted transition-colors hover:text-lf-text disabled:opacity-60 lg:w-auto lg:px-3"
+          />
           <button
             type="button"
             onClick={toggleTheme}

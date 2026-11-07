@@ -1,0 +1,43 @@
+
+目标：http://localhost:3111
+数据库直查：启用
+
+[S1] 会话基线
+  ✓ S01 匿名 → 401                                   status=401
+  ✓ S02 登录 → 200 + session cookie                  status=200 cookie=有
+  ✓ S03 cookie 属性（HttpOnly + SameSite=Lax/Strict）  HttpOnly=true SameSite=lax
+  ✓ S04 /api/auth/session 与库一致                     status=200 sessionUser=ca6b5219-8 dbUser=ca6b5219-8
+  ✓ S05 会话有效期有上界（Max-Age ≈ 7 天）                    Max-Age=604800s
+  ? S06 滑动续期（跨 updateAge 窗口重签）                     需真实等待一个 updateAge 窗口（小时级）或改系统时钟；本轮不伪造时间。当前实现是"登录时签发 7 天绝对有效期"，续期语义未启用。
+
+[S2] 撤销 / 还原
+  ✓ S07 有效会话可反复使用                                  status=200
+  ✓ S08 tokenVersion+1 → 旧 JWT 失效（≤120s = 60s TTL + 0–30s 抖动） 失效延迟 ≈ 61.4s
+  ✓ S09 还原 tokenVersion → 缓存换版后旧 JWT 重新被接受         DB还原=true 复效=94.5s —— 判据是"版本不等即拒"，不是黑名单；降版本号会让旧凭据复效
+
+[S3] 登出
+  ✓ S10 登出 → 200 且会话 cookie 被清（含 __Secure- 变体）     status=200 清了 2 个 session-token cookie，Max-Age=0 全部成立=true
+  ✓ S11 登出后（浏览器视角的 cookie jar）→ 401                status=401 cookie=已空
+  ✓ S12 手工重放登出前的 cookie → 仍可用（无状态 JWT 的已知边界）       status=200 —— 登出是"删客户端凭据"；真撤销必须 tokenVersion+1
+
+[S4] 组织切换
+  ✓ S13 列出我的组织（≥2 才能测切换）                           status=200 count=2
+  ✓ S14 显式指定 organizationId → 各自成员目录               preview=200(2) default=200(3)
+  ✓ S15 切换社群 → 无参请求解析到新租户（cookie 软偏好）              POST=200 default=preview → target=default → 实际=default
+  ✓ S16 切回原租户（还原测试痕迹）                              POST=200 slug=preview
+  ✓ S17 切到"我不是成员的租户" → 403 且不写偏好 cookie            status=403 code=PERMISSION_DENIED cookie写入=false
+  ✓ S18 非法 organizationId 形状 → 400（不进查询）           status=400 code=INVALID_ORGANIZATION_ID
+
+[S5] 权限变更是否即时生效
+  ✓ S19 角色降级后同一会话能力立即收缩（差集非空、无新增）                  PATCH=200 before=19 after=9 失去=[member.read,mission.read,mission.create,mission.update,mission.delete,proposal.create,billing.read,workflow.read,agent.run,agent.execute] 新增=[]
+  ✓ S20 还原角色后能力恢复（与降级前集合相等）                        PATCH=200 caps=19/19 集合相等=true
+
+[S6] CSRF
+  ✓ S21 登录：跨源 Origin → 拒绝                          status=403
+  ✓ S22 登录：无 Origin 且无 Referer → 拒绝                status=403
+  ✓ S23 登出：跨源 Origin → 403 且不下发清 cookie            status=403 下发清cookie=false
+
+[S7] OAuth
+  ? S24 Google OAuth 成功回调                          需真实 GOOGLE_CLIENT_SECRET + 真人在 consent 页同意；本地只有 CLIENT_ID。授权请求形状（state/PKCE/redirect_uri）与坏回调拒绝见 v204-oauth-shape.mjs
+
+22 PASS / 0 FAIL / 0 SKIP / 2 NOT_TESTED / 0 BLOCKED

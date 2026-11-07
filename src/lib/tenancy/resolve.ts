@@ -23,6 +23,7 @@ import { requireAuth } from '@/lib/auth/auth'
 import { ForbiddenError } from '@/lib/errors'
 import { parseTenantRole, type TenantRole } from './capabilities'
 import { writeTenantAudit } from './audit'
+import { readActiveOrgId } from './active-org'
 
 /** 已解析、已授权的租户上下文。所有租户作用域操作都必须以它为入参。 */
 export interface TenantContext {
@@ -58,7 +59,7 @@ const MEMBERSHIP_SELECT = {
  */
 export async function resolveTenantForUser(
   userId: string,
-  options: { organizationId?: string } = {}
+  options: { organizationId?: string; auditDenied?: boolean } = {}
 ): Promise<TenantContext> {
   const requested = options.organizationId?.trim()
 
@@ -78,7 +79,10 @@ export async function resolveTenantForUser(
   if (!membership) {
     // 这是**安全事件**：要么用户在猜别家租户 id，要么其成员关系已被撤销。
     // 只在「显式指定了租户」时记录，避免无租户用户的正常 403 造成审计噪音。
-    if (requested) {
+    // `auditDenied === false` 是给**软偏好**（cookie 里的历史选择）用的：
+    // 被移出社群后 cookie 会短暂失效，那不是攻击，是陈旧的用户选择，
+    // 回落到默认租户即可 —— 若在这里记审计，被移出者每刷一页就产生一条假事件。
+    if (requested && options.auditDenied !== false) {
       await writeTenantAudit({
         organizationId: requested,
         actorId: userId,
@@ -117,12 +121,40 @@ export async function resolveTenantForUser(
  *
  * @param options.organizationId 可选的租户选择器（来自路由参数/查询串）。
  *        它只是「用户想看哪个租户」，授权仍由 memberships 表决定。
+ *        **显式指定时是硬选择器**：不是成员就 403，不回落到默认租户 ——
+ *        否则「猜别家租户 id」会得到一个语焉不详的 200。
  */
 export async function resolveTenant(
   options: { organizationId?: string } = {}
 ): Promise<TenantContext> {
   const { user } = await requireAuth() // 匿名 / 游客 / 过期 token 在此被拒（401）
-  return resolveTenantForUser(user.id, options)
+  const explicit = options.organizationId?.trim()
+  if (explicit) return resolveTenantForUser(user.id, { organizationId: explicit })
+  return resolveActiveTenant(user.id)
+}
+
+/**
+ * 解析「用户上次选的那个租户」，失效则回落默认租户。
+ *
+ * 三级优先序（与 V20.5 Batch 3 的「组织切换」一致）：
+ *   1. 查询串 `?organizationId=`  → **硬**（`resolveTenant`，不是本函数）
+ *   2. cookie `lf-active-org`     → **软**（本函数；失效即回落，不记审计）
+ *   3. 最早加入的 ACTIVE 成员关系  → 默认（`resolveTenantForUser` 的原行为）
+ *
+ * 为什么软偏好失败要静默回落：被移出某个社群之后，浏览器里的 cookie 仍然是那个
+ * 社群。若在此处 403，用户会**永久**打不开 Console（除非手动清 cookie）——
+ * 一个陈旧的 UI 偏好不该具备"锁死账号"的权力。
+ */
+export async function resolveActiveTenant(userId: string): Promise<TenantContext> {
+  const preferred = await readActiveOrgId()
+  if (preferred) {
+    try {
+      return await resolveTenantForUser(userId, { organizationId: preferred, auditDenied: false })
+    } catch {
+      /* 偏好已失效（被移出 / 社群停用 / 形状不合法）→ 回落默认租户 */
+    }
+  }
+  return resolveTenantForUser(userId, {})
 }
 
 /** 列出用户可访问的全部租户（租户切换器用）。空数组表示该用户不属于任何租户。 */

@@ -1,0 +1,29 @@
+
+=== 1. 授权请求形状（https://app.lokfeel.com）===
+PASS  最终跳到 accounts.google.com  — https://app.lokfeel.com/api/auth/oauth/google/signin?callbackUrl=%2Fdashboard
+PASS  response_type=code  — code
+PASS  client_id 存在且不是占位符  — 185541962106…
+PASS  redirect_uri 指向 app.lokfeel.com  — https://app.lokfeel.com/api/auth/callback/google
+PASS  redirect_uri 不含 localhost/127.0.0.1  — https://app.lokfeel.com/api/auth/callback/google
+PASS  scope 含 openid  — openid email profile
+PASS  有 state 且长度 ≥ 16  — len=43
+PASS  PKCE: code_challenge_method=S256  — S256
+PASS  PKCE: code_challenge 长度 43–128  — len=43
+
+=== 2. 回调失败路径（必须全部拒绝，不得毛 500、不得下发会话）===
+PASS  [用户拒绝授权] 无 5xx  — 307→307→200
+PASS  [用户拒绝授权] 307 回登录页并带错误  — https://app.lokfeel.com/login?error=Google+authorization+failed%3A+access_denied
+PASS  [用户拒绝授权] 未下发 session cookie  — ok
+PASS  [用户拒绝授权] 错误文案可读  — https://app.lokfeel.com/login?error=Google authorization failed: access_denied
+PASS  [伪造 code + 伪造 state] 无 5xx  — 307→307→200
+PASS  [伪造 code + 伪造 state] 307 回登录页并带错误  — https://app.lokfeel.com/login?error=Security+check+failed.+Please+start+the+sign-in+again.
+PASS  [伪造 code + 伪造 state] 未下发 session cookie  — ok
+PASS  [伪造 code + 伪造 state] 错误文案可读  — https://app.lokfeel.com/login?error=Security check failed. Please start the sign-in again.
+PASS  [空参数] 无 5xx  — 307→307→200
+PASS  [空参数] 307 回登录页并带错误  — https://app.lokfeel.com/login?error=Google+callback+missing+authorization+code
+PASS  [空参数] 未下发 session cookie  — ok
+PASS  [空参数] 错误文案可读  — https://app.lokfeel.com/login?error=Google callback missing authorization code
+
+━━━ 21 PASS / 0 FAIL / 21 total ━━━
+授权请求形状合规；三种坏回调全部被拒且不建会话。
+注：成功回调（真实 code 交换）仍需真人授权，本脚本不覆盖。

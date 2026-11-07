@@ -32,11 +32,21 @@ export {
 export {
   resolveTenant,
   resolveTenantForUser,
+  resolveActiveTenant,
   listTenants,
   isMemberOf,
   type TenantContext,
   type TenantSummary,
 } from './resolve'
+
+// ── V20.5 Batch 3 · 组织切换（软偏好 cookie） ──
+export {
+  ACTIVE_ORG_COOKIE,
+  ACTIVE_ORG_MAX_AGE,
+  activeOrgCookieOptions,
+  normalizeActiveOrgId,
+  readActiveOrgId,
+} from './active-org'
 
 export { assertCapability, hasCapability, withTenant, withTenantAll, withTenantAny } from './guard'
 

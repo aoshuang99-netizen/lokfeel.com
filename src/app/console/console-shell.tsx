@@ -15,6 +15,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useLivingTheme } from '@/components/theme/living-theme'
+import OrgSwitcher from '@/components/console/org-switcher'
+import SignOutButton from '@/components/auth/sign-out-button'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -65,6 +67,10 @@ export interface ConsoleShellProps {
   organizationName: string
   capabilities: readonly string[]
   tenantCount: number
+  /** 我所属的全部社群（切换器数据源）。少于 2 个时切换器不渲染。 */
+  tenants: readonly { organizationId: string; name: string; role: string }[]
+  /** 当前正在看的社群（由 cookie 软偏好解析而来，见 `lib/tenancy/active-org.ts`）。 */
+  activeOrganizationId: string
   children: React.ReactNode
 }
 
@@ -72,6 +78,8 @@ export default function ConsoleShell({
   organizationName,
   capabilities,
   tenantCount,
+  tenants,
+  activeOrganizationId,
   children,
 }: ConsoleShellProps) {
   const pathname = usePathname()
@@ -130,7 +138,28 @@ export default function ConsoleShell({
             <ArrowLeft className="w-3.5 h-3.5" />
             个人模式
           </Link>
+          {/*
+            登出（V20.5 Batch 3）。此前产品里根本没有登出入口 ——
+            共享设备上换人只能清浏览器数据。放在最右：它是"离开"类动作，
+            与左侧"我在哪 / 我是谁"的上下文区离得越远越好。
+          */}
+          <SignOutButton
+            hideLabelBelow="lg"
+            className="shrink-0 inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-card-border text-xs text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors disabled:opacity-60"
+          />
         </div>
+
+        {/*
+          社群切换器（V20.5 Batch 3）。此前多社群用户**只能**看到最早加入的那个，
+          第二个社群在 UI 上不存在。只在真的有 ≥2 个社群时渲染 ——
+          一个只有一项的下拉是"空控件"（与 AC-18 同类）。
+        */}
+        {tenants.length >= 2 && (
+          <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 pb-2">
+            <span className="shrink-0 text-[11px] text-foreground-muted">当前社群</span>
+            <OrgSwitcher tenants={tenants} activeOrganizationId={activeOrganizationId} />
+          </div>
+        )}
       </header>
 
       <div className="mx-auto max-w-6xl px-4 py-5 flex flex-col lg:flex-row gap-6">
