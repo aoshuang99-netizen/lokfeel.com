@@ -1056,6 +1056,22 @@ exports.Prisma.OutcomeVerificationScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.OrganizationInvitationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  email: 'email',
+  role: 'role',
+  tokenHash: 'tokenHash',
+  status: 'status',
+  invitedBy: 'invitedBy',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  acceptedBy: 'acceptedBy',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.OrganizationScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1572,16 +1588,23 @@ exports.OutcomeVerificationLevel = exports.$Enums.OutcomeVerificationLevel = {
   EXTERNALLY_VERIFIED: 'EXTERNALLY_VERIFIED'
 };
 
-exports.OrganizationStatus = exports.$Enums.OrganizationStatus = {
-  ACTIVE: 'ACTIVE',
-  SUSPENDED: 'SUSPENDED'
-};
-
 exports.MembershipRole = exports.$Enums.MembershipRole = {
   OWNER: 'OWNER',
   ADMIN: 'ADMIN',
   OPERATOR: 'OPERATOR',
   MEMBER: 'MEMBER'
+};
+
+exports.InvitationStatus = exports.$Enums.InvitationStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REVOKED: 'REVOKED',
+  EXPIRED: 'EXPIRED'
+};
+
+exports.OrganizationStatus = exports.$Enums.OrganizationStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED'
 };
 
 exports.MembershipStatus = exports.$Enums.MembershipStatus = {
@@ -1650,6 +1673,7 @@ exports.Prisma.ModelName = {
   AnalyticsDailyAgg: 'AnalyticsDailyAgg',
   Outcome: 'Outcome',
   OutcomeVerification: 'OutcomeVerification',
+  OrganizationInvitation: 'OrganizationInvitation',
   Organization: 'Organization',
   Membership: 'Membership',
   TenantAuditEvent: 'TenantAuditEvent'

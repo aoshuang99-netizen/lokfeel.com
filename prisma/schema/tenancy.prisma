@@ -35,6 +35,45 @@ enum MembershipStatus {
   SUSPENDED // 已停用：保留数据，权限立即失效
 }
 
+
+/// 邀请状态。
+enum InvitationStatus {
+  PENDING // 待接受
+  ACCEPTED // 已接受（终态）
+  REVOKED // 已撤销（终态）
+  EXPIRED // 已过期（终态；惰性标记，见 invitations.ts）
+}
+
+/// 成员邀请。
+///
+/// 🔴 库里**只存 token 的哈希**，不存 token 本身。
+///    理由与密码相同：数据库泄露时，明文 token 等于一张可直接使用的入场券。
+///    因此"重发邀请"只能是**换一张新票**（旧 token 立即失效），不能把旧票再读出来。
+model OrganizationInvitation {
+  id             String           @id @default(cuid())
+  organizationId String
+  /// 被邀请人邮箱，**统一小写**存储；接受时须与会话账号一致。
+  email          String
+  role           MembershipRole   @default(MEMBER)
+  /// sha256(token) 的十六进制。唯一 —— 同一 token 不可能属于两条邀请。
+  tokenHash      String           @unique
+  status         InvitationStatus @default(PENDING)
+  /// 邀请人（软引用：用户注销后"谁邀请的"仍须可查，故不建 FK）。
+  invitedBy      String?
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  acceptedBy     String?
+  revokedAt      DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  /// 同一租户下按邮箱查"有没有待接受的邀请"是热路径（防重复邀请）。
+  @@index([organizationId, email, status])
+  @@index([organizationId, status])
+}
+
 /// 租户（组织）。对应契约 organizations 表。
 model Organization {
   id        String             @id @default(cuid())
@@ -47,6 +86,7 @@ model Organization {
 
   memberships Membership[]
   auditEvents TenantAuditEvent[]
+  invitations OrganizationInvitation[]
 
   // ── T02 Connection OS 反向关系（connection.prisma）──
   missions              Mission[]

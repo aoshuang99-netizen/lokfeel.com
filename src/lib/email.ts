@@ -439,3 +439,46 @@ export async function sendPasswordResetEmail(
     `Reset your LokFee! password by clicking this link: ${resetUrl}. This link expires in 30 minutes. If you didn't request this, ignore this email.`
   );
 }
+
+/**
+ * 组织邀请邮件。
+ *
+ * 为什么单独一封而不是复用验证邮件：邀请的收件人**往往还没有账号**，
+ * 他要做的是"点进来 → 注册/登录 → 回到这个邀请"，而不是"验证你的邮箱"。
+ * 把两种语义混用，会让第一次接触产品的人以为自己在注册一个陌生站点。
+ *
+ * 返回值里带 `success: false` 时，调用方**必须**把邀请链接直接给人（复制链接），
+ * 而不是告诉用户"邮件已发送"——后者在邮件服务抖动时是一句谎话。
+ */
+export async function sendOrganizationInviteEmail(params: {
+  to: string
+  organizationName: string
+  inviterName?: string | null
+  inviteUrl: string
+  expiresInDays: number
+}): Promise<{ success: boolean; error?: string }> {
+  const { to, organizationName, inviterName, inviteUrl, expiresInDays } = params
+  const subject = `${inviterName || '一位同事'} 邀请你加入 ${organizationName}`
+  const safeOrg = organizationName.replace(/[<>&]/g, '')
+  const safeInviter = (inviterName || '一位同事').replace(/[<>&]/g, '')
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${subject}</title></head>
+<body style="margin:0;padding:0;background-color:#0d0c11;">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#0d0c11;"><tr><td align="center" style="padding:40px 20px;">
+  <table border="0" cellpadding="0" cellspacing="0" width="480" style="max-width:480px;width:100%;background-color:#1a1a1a;border:1px solid rgba(163,230,53,0.18);border-radius:16px;">
+    <tr><td style="padding:36px 32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#a3e635;margin-bottom:14px;">LokFeel</div>
+      <h1 style="margin:0 0 16px;font-size:22px;line-height:1.35;color:#ffffff;font-weight:600;">${safeInviter} 邀请你加入 ${safeOrg}</h1>
+      <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#b9b9c0;">加入后你可以参与该组织的协作任务、查看 AI 代理的执行过程，并对需要授权的动作做审批。</p>
+      <table border="0" cellpadding="0" cellspacing="0"><tr><td style="border-radius:10px;background-color:#a3e635;">
+        <a href="${inviteUrl}" style="display:inline-block;padding:13px 24px;font-size:15px;font-weight:600;color:#0d0c11;text-decoration:none;">接受邀请</a>
+      </td></tr></table>
+      <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#7c7c85;">链接 ${expiresInDays} 天内有效，只能由被邀请的邮箱使用。若不是你本人，请忽略这封邮件。</p>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`
+
+  const text = `${safeInviter} 邀请你加入 ${safeOrg}\n\n${inviteUrl}\n\n链接 ${expiresInDays} 天内有效。`
+  return sendEmailWithResend(to, subject, html, text)
+}
