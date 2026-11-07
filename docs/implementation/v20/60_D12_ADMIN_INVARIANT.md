@@ -115,9 +115,28 @@ S3 的 B 段之所以能用 `--elevate` 跑通，恰恰是因为它临时提权�
 
 | 方案 | 动作 | 代价 / 风险 |
 |---|---|---|
-| **A（推荐）** | 把 `admin@lokfeel.com` 加入 `default` 并给 ADMIN | 需要一个"新增成员关系"的显式开关（当前脚本拒绝代建）。收益：真实运维账号拿到审批权，QA 账号角色不变 |
+| **A（推荐）** | 把 `admin@lokfeel.com` 加入 `default` 并给 ADMIN | 需要一个"新增成员关系"的显式开关（`--add-membership`，已实现）。收益：真实运维账号拿到审批权，QA 账号角色不变 |
 | B | 把 `qa.male@lokfeel.com` 提升为 ADMIN | 改动最小，但**会破坏 S3 B 段的 403 断言**（OPERATOR 批准必须被拒），且审批权落在一个共享测试账号上 |
 | C | 暂不动生产 | 代码与工具先落地；下次需要审批/核验时继续用 `--elevate` 临时提权并回滚 |
 
 > 我的建议是 A：`default` 是真实客户会进入的租户，它的管理员应当是一个真实运维账号，
 > 而不是 QA 人格；同时保持 `qa.male` 为 OPERATOR，S3 的"同一个人不能既触发又批准"才继续可验证。
+
+已演练（**未写库**）：
+
+```
+$ node scripts/qa/org-admin-invariant.mjs --apply --add-membership --dry-run \
+    --org=default --user=admin@lokfeel.com
+[dry-run] 将新建成员关系：admin@lokfeel.com 加入 default，角色 ADMIN
+```
+
+拒绝路径也已实测（不加 `--add-membership` 时）：
+
+```
+$ node scripts/qa/org-admin-invariant.mjs --apply --org=default --user=admin@lokfeel.com
+拒绝：admin@lokfeel.com 不是组织 default 的成员。…
+EXIT=3
+```
+
+> 脚本不做"猜你要什么"：非成员必须由人显式加 `--add-membership`。这条边界存在的意义
+> 不是防误操作，而是防"运维脚本顺手把人塞进别人的组织"这种**没人会复核**的默认行为。

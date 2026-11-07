@@ -13,6 +13,8 @@
  *   node scripts/qa/org-admin-invariant.mjs --org=default        # 只读体检（单个）
  *   node scripts/qa/org-admin-invariant.mjs --json               # 机器可读输出
  *   node scripts/qa/org-admin-invariant.mjs --apply --org=default --user=a@b.c
+ *   node scripts/qa/org-admin-invariant.mjs --apply --add-membership --org=default --user=a@b.c
+ *   node scripts/qa/org-admin-invariant.mjs --apply ... --dry-run     # 只打印计划，不写库
  *   node scripts/qa/org-admin-invariant.mjs --self-test          # 无数据库的纯逻辑自检
  *
  * 退出码：
@@ -23,7 +25,9 @@
  *   3  --apply 被拒绝（目标是 OWNER 组织 / 用户不是该组织成员 / 用户不存在）
  *
  * 🔴 --apply 的边界（刻意保守）：
- *   - **只提升为该组织已有成员**，绝不代人创建成员关系（那样等于把人塞进别人的组织）。
+ *   - 默认**只提升该组织已有成员**。要把一个**非成员**的运维账号拉进来，必须再加
+ *     `--add-membership` —— 那改变的是"谁能进这个组织"，比"谁有管理权"危险一档，
+ *     因此单独开关、单独判定、单独审计事件（`membership.added`）。
  *   - 只把角色设为 ADMIN，不碰 OWNER（所有权只有组织所有者自己能转移）。
  *   - 写入后**立即回读**校验，不是"UPDATE 没报错就算成功"。
  *   - 同时写一条 TenantAuditEvent，让你事后查得到"这次提权是谁、什么时候、从哪来"。
@@ -84,6 +88,19 @@ export function findViolations(results) {
   return results.filter((r) => r.missingAdmin)
 }
 
+/**
+ * 是否允许把一个**尚不是成员**的运维账号加入组织并授 ADMIN（`--add-membership`）。
+ *
+ * 这条路径比 `--apply` 危险一档：它改变的是"谁能进这个组织"，不只是"谁有管理权"。
+ * 因此单独判定、单独开关、单独审计事件。
+ */
+export function planOperatorGrant({ orgStatus, existingRole, userExists }) {
+  if (!userExists) return { ok: false, code: 'USER_NOT_FOUND' }
+  if (orgStatus !== 'ACTIVE') return { ok: false, code: 'ORG_INACTIVE' }
+  if (existingRole) return { ok: false, code: 'ALREADY_MEMBER' }
+  return { ok: true }
+}
+
 function selfTest() {
   const cases = []
   const org = { id: 'o1', slug: 'default', status: 'ACTIVE' }
@@ -121,6 +138,26 @@ function selfTest() {
       { slug: 'a', missingAdmin: true },
       { slug: 'b', missingAdmin: false },
     ]).length === 1,
+  ])
+
+  cases.push([
+    'planOperatorGrant：非成员 + ACTIVE 组织 ⇒ 允许',
+    planOperatorGrant({ orgStatus: 'ACTIVE', existingRole: null, userExists: true }).ok === true,
+  ])
+  cases.push([
+    'planOperatorGrant：已是成员 ⇒ 拒绝（走 --apply 提权）',
+    planOperatorGrant({ orgStatus: 'ACTIVE', existingRole: 'OPERATOR', userExists: true }).code ===
+      'ALREADY_MEMBER',
+  ])
+  cases.push([
+    'planOperatorGrant：用户不存在 ⇒ 拒绝',
+    planOperatorGrant({ orgStatus: 'ACTIVE', existingRole: null, userExists: false }).code ===
+      'USER_NOT_FOUND',
+  ])
+  cases.push([
+    'planOperatorGrant：停用组织 ⇒ 拒绝',
+    planOperatorGrant({ orgStatus: 'SUSPENDED', existingRole: null, userExists: true }).code ===
+      'ORG_INACTIVE',
   ])
 
   let failed = 0
@@ -243,31 +280,106 @@ async function main() {
     sql: 'SELECT id, role, status FROM "Membership" WHERE organizationId = ? AND userId = ?',
     args: [org.id, user.id],
   })
-  if (memberRes.rows.length === 0) {
+
+  const dryRun = flag('dry-run')
+
+  // ── 路径 A：用户已是成员 → 提权（--apply） ──
+  if (memberRes.rows.length > 0) {
+    const membership = memberRes.rows[0]
+    if (ADMIN_ROLES.includes(membership.role)) {
+      console.log(`已满足：${user.email} 在 ${org.slug} 的角色已是 ${membership.role}`)
+      process.exit(0)
+    }
+
+    if (dryRun) {
+      console.log(
+        `[dry-run] 将把 ${user.email} 在 ${org.slug} 的角色 ${membership.role} → ADMIN（membership ${membership.id}）`
+      )
+      process.exit(0)
+    }
+
+    const now = new Date().toISOString()
+    await db.execute({
+      sql: 'UPDATE "Membership" SET role = ?, updatedAt = ? WHERE id = ?',
+      args: ['ADMIN', now, membership.id],
+    })
+
+    // 回读校验：UPDATE 不报错 ≠ 改成功（触发器/软删除扩展都可能让它静默变成 0 行）。
+    const verify = await db.execute({
+      sql: 'SELECT role FROM "Membership" WHERE id = ?',
+      args: [membership.id],
+    })
+    if (verify.rows[0]?.role !== 'ADMIN') {
+      console.error(`写入后回读失败：期望 ADMIN，实际 ${verify.rows[0]?.role}`)
+      process.exit(3)
+    }
+
+    await db.execute({
+      sql: `INSERT INTO "TenantAuditEvent"
+              (id, organizationId, actorId, eventType, resourceType, resourceId, safeMetadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        crypto.randomUUID(),
+        org.id,
+        null, // 系统触发（运维脚本），不是某个用户的决定
+        'membership.role_changed',
+        'membership',
+        membership.id,
+        JSON.stringify({ from: membership.role, to: 'ADMIN', via: 'ops-script:org-admin-invariant' }),
+      ],
+    })
+
+    console.log(
+      `\n✅ ${user.email} 在 ${org.slug} 的角色 ${membership.role} → ADMIN（membership ${membership.id}）`
+    )
+    console.log('已写审计 membership.role_changed（actorId=null，via=ops-script:org-admin-invariant）')
+
+    const after = evaluateOrg(org, await groupRows(org.id))
+    console.log(`复检：${org.slug} 现有 ${after.activeAdmins} 名 ACTIVE 管理员`)
+    process.exit(after.missingAdmin ? 3 : 0)
+  }
+
+  // ── 路径 B：用户不是成员 → 只有显式 --add-membership 才建关系 ──
+  if (!flag('add-membership')) {
     console.error(
-      `拒绝：${user.email} 不是组织 ${org.slug} 的成员。脚本不会代人创建成员关系（那等于把人塞进别人的组织）。`
+      `拒绝：${user.email} 不是组织 ${org.slug} 的成员。这不等于"危险操作失败" —— 它是一条需要你显式表态的边界。`
+    )
+    console.error(
+      '若确实要把它作为运维账号加入本组织并授 ADMIN，请显式加 --add-membership：\n' +
+        `  node scripts/qa/org-admin-invariant.mjs --apply --add-membership --org=${org.slug} --user=${user.email}`
     )
     process.exit(3)
   }
-  const membership = memberRes.rows[0]
-  if (ADMIN_ROLES.includes(membership.role)) {
-    console.log(`已满足：${user.email} 在 ${org.slug} 的角色已是 ${membership.role}`)
+
+  const plan = planOperatorGrant({
+    orgStatus: org.status,
+    existingRole: null,
+    userExists: true,
+  })
+  if (!plan.ok) {
+    console.error(`拒绝：${plan.code}`)
+    process.exit(3)
+  }
+
+  if (dryRun) {
+    console.log(`[dry-run] 将新建成员关系：${user.email} 加入 ${org.slug}，角色 ADMIN`)
     process.exit(0)
   }
 
+  const membershipId = crypto.randomUUID()
   const now = new Date().toISOString()
   await db.execute({
-    sql: 'UPDATE "Membership" SET role = ?, updatedAt = ? WHERE id = ?',
-    args: ['ADMIN', now, membership.id],
+    sql: `INSERT INTO "Membership" (id, organizationId, userId, role, status, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [membershipId, org.id, user.id, 'ADMIN', 'ACTIVE', now, now],
   })
 
-  // 回读校验：UPDATE 不报错 ≠ 改成功（触发器/软删除扩展都可能让它静默变成 0 行）。
   const verify = await db.execute({
-    sql: 'SELECT role FROM "Membership" WHERE id = ?',
-    args: [membership.id],
+    sql: 'SELECT role, status FROM "Membership" WHERE id = ?',
+    args: [membershipId],
   })
-  if (verify.rows[0]?.role !== 'ADMIN') {
-    console.error(`写入后回读失败：期望 ADMIN，实际 ${verify.rows[0]?.role}`)
+  if (verify.rows[0]?.role !== 'ADMIN' || verify.rows[0]?.status !== 'ACTIVE') {
+    console.error(`写入后回读失败：${JSON.stringify(verify.rows[0] ?? null)}`)
     process.exit(3)
   }
 
@@ -278,18 +390,16 @@ async function main() {
     args: [
       crypto.randomUUID(),
       org.id,
-      null, // 系统触发（运维脚本），不是某个用户的决定
-      'membership.role_changed',
+      null,
+      'membership.added',
       'membership',
-      membership.id,
-      JSON.stringify({ from: membership.role, to: 'ADMIN', via: 'ops-script:org-admin-invariant' }),
+      membershipId,
+      JSON.stringify({ role: 'ADMIN', via: 'ops-script:org-admin-invariant' }),
     ],
   })
 
-  console.log(
-    `\n✅ ${user.email} 在 ${org.slug} 的角色 ${membership.role} → ADMIN（membership ${membership.id}）`
-  )
-  console.log('已写审计 membership.role_changed（actorId=null，via=ops-script:org-admin-invariant）')
+  console.log(`\n✅ 已新建成员关系：${user.email} 加入 ${org.slug}，角色 ADMIN（membership ${membershipId}）`)
+  console.log('已写审计 membership.added（actorId=null，via=ops-script:org-admin-invariant）')
 
   const after = evaluateOrg(org, await groupRows(org.id))
   console.log(`复检：${org.slug} 现有 ${after.activeAdmins} 名 ACTIVE 管理员`)
