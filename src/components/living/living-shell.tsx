@@ -14,9 +14,10 @@
  *   4. `prefers-reduced-motion` 时强制 L0（由 globals.css 的媒体查询兜底，这里同步 data 属性）。
  */
 
-import { useCallback, useRef, useSyncExternalStore, useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Contrast, PanelRight, PanelRightClose } from 'lucide-react'
 import { useDialogA11y } from '@/lib/a11y/use-dialog-a11y'
+import { useLivingTheme, type LivingTheme } from '@/components/theme/living-theme'
 
 export interface LivingNavItem {
   key: string
@@ -28,7 +29,8 @@ export interface LivingNavItem {
   reason?: string
 }
 
-export type LivingTheme = 'field' | 'paper'
+// 类型真值也来自共享模块：Console 与 Workspace 必须认同同一个主题集合。
+export type { LivingTheme }
 
 interface LivingShellProps {
   nav: LivingNavItem[]
@@ -55,37 +57,6 @@ interface LivingShellProps {
   stageRail?: ReactNode
 }
 
-const THEME_KEY = 'lf-theme'
-
-// 主题是"外部系统"状态（localStorage + 系统偏好）——用 useSyncExternalStore 订阅，
-// 而不是在 useEffect 里 setState（后者会触发级联渲染，被 react-hooks/set-state-in-effect 拦）。
-const themeListeners = new Set<() => void>()
-function subscribeTheme(cb: () => void) {
-  themeListeners.add(cb)
-  return () => {
-    themeListeners.delete(cb)
-  }
-}
-function readThemeSnapshot(dualDefault = false): LivingTheme {
-  if (typeof window === 'undefined') return 'field'
-  const saved = window.localStorage.getItem(THEME_KEY)
-  if (saved === 'field' || saved === 'paper') return saved
-  // 🔴 双世界模式下默认必须是 Deep Field（深色画布 + 纸面 Inspector）—— 这是设计 C 的
-  //    品牌识别点。跟随系统偏好的兜底只留给**非**双世界页面；否则浅色系统的用户
-  //    第一次打开 /workspace 看到的是全纸面，双世界根本没出现（改版后截图实证）。
-  //    用户点过 Contrast 按钮后写进 localStorage，此后尊重用户选择。
-  if (dualDefault) return 'field'
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'paper' : 'field'
-}
-function writeTheme(next: LivingTheme) {
-  try {
-    window.localStorage.setItem(THEME_KEY, next)
-  } catch {
-    /* 隐私模式下写不了 localStorage —— 不影响本次会话生效 */
-  }
-  for (const cb of themeListeners) cb()
-}
-
 export default function LivingShell({
   nav,
   activeKey,
@@ -98,9 +69,9 @@ export default function LivingShell({
   dualWorld = false,
   stageRail,
 }: LivingShellProps) {
-  // 服务端快照固定 'field' → 首屏与 SSR 一致，挂载后由 useSyncExternalStore 取真实值，不会 hydration 失配。
-  const getTheme = useCallback(() => readThemeSnapshot(dualWorld), [dualWorld])
-  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'field' as LivingTheme)
+  // 主题真值走共享实现（`@/components/theme/living-theme`）—— 与 Console 七屏同一份真值。
+  // 服务端快照固定 'field' → 首屏与 SSR 一致，挂载后取真实值，不会 hydration 失配。
+  const { theme, toggleTheme } = useLivingTheme(dualWorld)
   const [inspectorOpen, setInspectorOpen] = useState(true)
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false)
   // 移动端证据浮层：真实 div 容器（非动画包装），焦点圈定 / Escape / 焦点恢复 / 滚动锁
@@ -111,10 +82,6 @@ export default function LivingShell({
     onClose: () => setMobileInspectorOpen(false),
     containerRef: mobileInspectorRef,
   })
-
-  const toggleTheme = useCallback(() => {
-    writeTheme(theme === 'field' ? 'paper' : 'field')
-  }, [theme])
 
   const hasInspector = Boolean(inspector)
 
@@ -241,7 +208,7 @@ export default function LivingShell({
           <aside
             aria-label="证据与详情"
             data-lf-world={dualWorld ? 'inspector' : undefined}
-            className="hidden w-[360px] shrink-0 overflow-y-auto border-l border-lf-line bg-lf-surface p-4 lg:block"
+            className="hidden w-[360px] shrink-0 overflow-y-auto border-l border-lf-line bg-lf-surface p-4 text-lf-text lg:block"
           >
             {inspector}
           </aside>
@@ -263,7 +230,7 @@ export default function LivingShell({
             aria-modal="true"
             aria-label="证据与详情"
             data-lf-world={dualWorld ? 'inspector' : undefined}
-            className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-lf-lg border-t border-lf-line bg-lf-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+            className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-lf-lg border-t border-lf-line bg-lf-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-lf-text"
           >
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-medium">证据与详情</h2>

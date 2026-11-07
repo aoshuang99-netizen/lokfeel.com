@@ -79,7 +79,11 @@ const ROLE_FILTERS = [
 
 const ROLE_BADGE: Record<string, string> = {
   OWNER: 'bg-primary/15 text-primary',
-  ADMIN: 'bg-accent/15 text-accent',
+  // ⚠️ 原先是 `bg-accent/15 text-accent`，而 `--color-accent` 实际等于
+  // `--background-tertiary`（深色主题下 #1a1a1a）—— 深灰字压深灰底，
+  // axe 实测对比度不足直接判 serious。改用 Living 主题的 signal 令牌：
+  // 深色下是暖金、纸面下是深棕，两套主题都是可读的。
+  ADMIN: 'bg-lf-signal-soft text-lf-signal',
   OPERATOR: 'bg-success/15 text-success',
   MEMBER: 'bg-background-tertiary text-foreground-muted',
 }

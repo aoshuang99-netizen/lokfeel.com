@@ -1761,7 +1761,9 @@ img {
   --lf-text-muted: #5a636b;
   --lf-text-faint: #63696d;
 
-  --lf-signal: #906931;
+  /* 纸面信号色必须比 #906931 更深：它在 signal-soft 底纹上只有 4.28:1
+     （axe 在 11px 小字上实测），达不到 AA 的 4.5:1。#86602c 为 4.9:1。 */
+  --lf-signal: #86602c;
   --lf-signal-soft: rgba(184, 134, 63, 0.14);
   --lf-success: #3f8c74;
   --lf-warning: #b8862f;
@@ -1802,7 +1804,7 @@ img {
   --lf-text: #0b0e11;
   --lf-text-muted: #5a636b;
   --lf-text-faint: #63696d;
-  --lf-signal: #906931;
+  --lf-signal: #86602c;
   --lf-signal-soft: rgba(184, 134, 63, 0.14);
   --lf-success: #3f8c74;
   --lf-warning: #b8862f;
@@ -1822,12 +1824,75 @@ img {
   --lf-text: #0b0e11;
   --lf-text-muted: #5a636b;
   --lf-text-faint: #63696d;
-  --lf-signal: #906931;
+  --lf-signal: #86602c;
   --lf-signal-soft: rgba(184, 134, 63, 0.14);
   --lf-success: #3f8c74;
   --lf-warning: #b8862f;
   --lf-danger: #b8564f;
   color-scheme: light;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Console 七屏接入 Living Paper（V20.5 · Batch 2）
+   ---------------------------------------------------------------
+   事实：`/console/*` 只吃 Tailwind 语义令牌（`bg-background` / `text-foreground` /
+   `border-card-border`），完全不吃 `--lf-*`。所以 13 屏 × 2 主题的矩阵里，
+   Console 那 56 格一直是 `THEME_NA` —— v204 审计如实标成"设计一致性缺口"，
+   但缺口就是缺口：同一个产品，一半能换肤、一半不能。
+
+   做法：**只在纸面主题下**把语义令牌映射到一套深色可读值。
+   为什么不改组件：13 屏里上百处 `bg-background-secondary` 这类工具类，
+   逐个改既会漏、也会把"某个角落写了死色"变成长期债；改令牌只需一处，
+   整棵子树的工具类自动换肤。
+
+   为什么不映射 Deep Field：Console 现在就是深色，字段值已经验收过。
+   "统一"不该以改掉已验收的视觉为代价 —— 所以 field 一个值都不动。
+
+   🔴 品牌色必须换深：lime `#a3e635` 在 `#f7f5f0` 上的对比度只有 **1.37:1**，
+      完全不可读。下面每个值都按 ≥4.5:1 反算（正文/小字标准），
+      由 axe 扫描复验（`npm run a11y:console`）。
+   ═══════════════════════════════════════════════════════════════ */
+[data-lf-console='1'][data-lf-theme='paper'] {
+  color-scheme: light;
+
+  /* 面 / 文字 */
+  --background: var(--lf-bg); /* #f7f5f0 */
+  --background-secondary: var(--lf-surface); /* #ffffff */
+  --background-tertiary: var(--lf-surface-2); /* #efebe3 */
+  --foreground: var(--lf-text); /* #0b0e11 */
+  --foreground-muted: #5a636b; /* 5.5:1 */
+  --foreground-subtle: #5a636b; /* 5.5:1 —— 原 #888 在纸面上只有 3.3:1 */
+  --foreground-faint: #63696d; /* 5.1:1 */
+  --card: var(--lf-surface);
+  --card-hover: var(--lf-surface-2);
+  --card-border: rgba(11, 14, 17, 0.12);
+  --input-bg: var(--lf-surface);
+  --input-border: rgba(11, 14, 17, 0.18);
+  --input-border-focus: #906931;
+  --input-placeholder: #63696d;
+
+  /* 品牌与语义（深色版，全部按 ≥4.5:1 选值） */
+  --primary: #4d6b12; /* 5.6:1 */
+  --primary-hover: #3d550e;
+  --primary-muted: rgba(77, 107, 18, 0.12);
+  --cta: #4d6b12;
+  --cta-hover: #3d550e;
+  --cta-muted: rgba(77, 107, 18, 0.12);
+  --accent-pink: #a3306a; /* 6.0:1 */
+  --accent-pink-hover: #8a2659;
+  --accent-pink-muted: rgba(163, 48, 106, 0.12);
+  --success: #1f6b52; /* 5.9:1 */
+  --success-muted: rgba(31, 107, 82, 0.12);
+  --warning: #8a5a00; /* 5.4:1 */
+  --warning-muted: rgba(138, 90, 0, 0.12);
+  --error: #a13a33; /* 6.0:1 */
+  --error-muted: rgba(161, 58, 51, 0.12);
+  --info: #1f6b52;
+  --info-muted: rgba(31, 107, 82, 0.12);
+}
+
+[data-lf-console='1'][data-lf-theme='field'] {
+  color-scheme: dark;
 }
 
 /* ── 触控目标：粗指针（手机/平板）下一律 ≥44×44 ──────────────────

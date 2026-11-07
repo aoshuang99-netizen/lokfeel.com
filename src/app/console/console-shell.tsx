@@ -14,9 +14,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useLivingTheme } from '@/components/theme/living-theme'
 import {
   ArrowLeft,
   BadgeCheck,
+  Contrast,
   Bot,
   Building2,
   LayoutDashboard,
@@ -74,12 +76,16 @@ export default function ConsoleShell({
 }: ConsoleShellProps) {
   const pathname = usePathname()
   const held = new Set(capabilities)
+  // 主题真值与 Workspace 六屏共用一份实现（`@/components/theme/living-theme`）。
+  // V20.5 之前 Console 七屏不参与双主题：13 屏 × 2 主题的矩阵里有 56 格是
+  // THEME_NA —— 审计如实记为缺口，现在补上。
+  const { theme, toggleTheme } = useLivingTheme()
 
   const isActive = (href: string) =>
     href === '/console' ? pathname === '/console' : pathname.startsWith(href)
 
   return (
-    <div data-lf-console className="min-h-screen bg-background">
+    <div data-lf-console="1" data-lf-theme={theme} className="min-h-screen bg-background">
       {/* ── 顶部上下文：这是哪个社群 + 唯一的跨态出口 ── */}
       <header className="sticky top-0 z-20 border-b border-card-border bg-background-secondary/95 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
@@ -106,6 +112,17 @@ export default function ConsoleShell({
               社群经营工作台 · 你所属的社群 {tenantCount} 个
             </p>
           </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-pressed={theme === 'paper'}
+            aria-label={theme === 'paper' ? '切换到深色主题（Deep Field）' : '切换到浅色主题（Living Paper）'}
+            title={theme === 'paper' ? '当前：Living Paper · 点击切到 Deep Field' : '当前：Deep Field · 点击切到 Living Paper'}
+            className="shrink-0 inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-card-border text-xs text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
+          >
+            <Contrast className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{theme === 'paper' ? '纸面' : '深色'}</span>
+          </button>
           <Link
             href="/dashboard"
             className="shrink-0 inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-card-border text-xs text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"

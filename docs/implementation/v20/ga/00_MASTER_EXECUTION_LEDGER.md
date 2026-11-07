@@ -16,7 +16,7 @@
 | --- | --- | --- | --- |
 | 0 | 事实基线 + 安全应急（明文管理员口令） | **PASS**（1 项 `NOT_TESTED`） | `01_SECURITY_CREDENTIAL_RECOVERY.md` |
 | 1 | 组织 / 成员 / 权限收口 + D-12 回归 | **PASS**（本地生产构建；线上路径待发布后重跑） | `02_ORG_MEMBER_LIFECYCLE.md` |
-| 2 | 世界级 UI/UX（13 屏 × 4 视口 × 2 主题） | `NOT_TESTED` | 待执行 |
+| 2 | 世界级 UI/UX（13 屏 × 4 视口 × 2 主题） | **PASS**（视觉 104/104、axe 39/39；Figma 部分 `BLOCKED_FIGMA_WRITE`） | `03_UI_UX_13SCREENS.md` |
 | 3 | 真实 OAuth 回调 / 会话续期 / 登出 / 切租户 | `NOT_TESTED` | 待执行 |
 | 4 | Agent → Consent → Action → Outcome（含 Verify 正例） | `NOT_TESTED` | 待执行 |
 | 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | `NOT_TESTED` | 待执行 |
@@ -66,6 +66,23 @@
 | 2 | slug 冲突返回 500 | 用户看到"服务器错误"并反复重试，而正确动作是换标识 |
 | 3 | 过期邀请从未落库 | 同一过期链接被无限次重试，"有人试过"这件事没有任何记录 |
 | 4 | 移出成员 500（`TRANSACTION_CLOSED`） | 网络稍慢时移出/改角色整片失败 |
+
+---
+
+## 三·二、Batch 2 · 13 屏视觉与无障碍
+
+- 视觉审计：`node scripts/qa/v204-visual-audit.mjs` → **104 PASS / 0 FAIL，主题 PASS 104 / N/A 0**
+- 无障碍审计：`node scripts/qa/v205-a11y-13screens.mjs` → **39 PASS / 0 FAIL / 0 NOT_TESTED**，serious 以上归零
+- Before → After：`THEME_NA 56 → 0`；`a11y 28/39 → 39/39`
+
+| 缺陷 | 用户可感知后果 |
+| --- | --- |
+| Console 七屏不参与双主题 | 产品一半能切深色/纸面，另一半连切换入口都没有 |
+| Inspector 标题浅字压白底 1.13:1 | 1440 宽屏下"详情"两个字几乎不可见 |
+| 纸面信号色 4.28:1 | 11px 状态标签在纸面主题下不可读 |
+| 成员屏角色徽章深灰压深灰 | ADMIN 徽章字看不清（本轮新写 UI 引入） |
+| agents 表格不可聚焦 | 键盘用户永远滚不到右侧成本/活跃列 |
+| `BLOCKED_FIGMA_WRITE` | 环境无 Figma 连接器，设计文件交付阻塞（不伪造） |
 
 ---
 

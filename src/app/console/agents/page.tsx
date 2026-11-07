@@ -374,7 +374,19 @@ export default function ConsoleAgentsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-card-border bg-background-secondary">
+          /*
+            `tabIndex={0}` + `role="region"` 不是为了"更规范"，是 WCAG 2.2 的硬性要求：
+            一个可横向滚动的容器如果无法聚焦，键盘用户**永远**滚不到右侧那几列
+            （axe 规则 scrollable-region-focusable，serious）。
+            只在窄视口溢出才需要，但 React 里判断视口要额外的 resize 监听与首次渲染抖动，
+            而给所有视口都加一个可聚焦容器**不产生**副作用（不溢出时 Tab 一下即过）。
+          */
+          <div
+            role="region"
+            aria-label="Agent 运行名册（可横向滚动）"
+            tabIndex={0}
+            className="overflow-x-auto rounded-2xl border border-card-border bg-background-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+          >
             <table className="w-full min-w-[560px] text-left text-xs">
               <caption className="sr-only">
                 按技能汇总的 Agent 运行名册：运行数、调用数、成本与最近活跃时间
