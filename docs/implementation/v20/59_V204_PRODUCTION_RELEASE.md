@@ -272,5 +272,48 @@ curl -X POST -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
 | PingPong 凭据轮换（P0） | 仍待 PingPong 后台执行（脱敏 ≠ 失效） |
 | Production Environment required reviewers | 仍待仓库管理员配置 |
 | 生产 LCP ≤ 2500ms | 结构性未达标（`55`），已按用户授权带病发布 |
-| S3 生产业务验证 | 前提（获批生产版本）已成立，但流程含真实外部动作（发信/外部 API），**超出发布授权范围**，需单独授权 |
+| S3 生产业务验证 | **已闭环（2026-11-07）**：25/25 PASS，见 §8。执行效果为站内回执，无外部动作 |
 | 真实 OAuth 成功回调 | 仍需真人授权 |
+
+---
+
+## 8. 发布后第一次缺陷修复（2026-11-07）—— S3 跑出来的真问题
+
+### 8.1 时间线（UTC）
+
+| 时刻 | 事件 |
+|---|---|
+| 04:29 | 首次跑 S3：A 段（低风险执行链）12/12 通过；B 段**全崩** —— `INTRO_DRAFT` 运行 `status=FAILED` |
+| 04:31 | 查库定性：`degradeCode=OUTPUT_SCHEMA_INVALID`，`reason=模型输出未通过契约校验：counterpartLabel expected string, received undefined` |
+| 04:36 | 定位根因：该技能 `systemPrompt` **没有输出契约骨架**（`INTENT_EXTRACTION` 有）⇒ 该技能无降级路径 ⇒ **审批门在生产永远不可达** |
+| 04:37 | 修复 `skills.ts`（补 `INTRO_OUTPUT_SKELETON`）+ `runtime.ts`（`degrade()` 归因不再谎称 `rules`） |
+| 04:40 | 门禁：tsc 0 · eslint 0 · jest `tests/agent`+`tests/agents` **320/320** · lint 棘轮零新增 |
+| 04:41 | 推送 `ab8b342`（**不带** `[skip netlify]`） |
+| 04:43 | Netlify deploy `6aeeac10459d11557257f437` **ready（82s）** |
+| 04:45 | 重跑 S3：**25 PASS / 0 FAIL / 0 SKIP** |
+
+### 8.2 S3 结果（生产 `ab8b342`）
+
+- **A 段（12/12）**：真实 Provider `workbuddy` → `PROPOSED` → 执行 201 → 重放 200 `replayed=true`
+  → `EXECUTED`；`AgentExecution` 恰 1 条、`deliveryStatus=SENT`、发起人收到站内回执、审计 `agent.run.executed` 1 条。
+- **B 段（10/10）**：`INTRO_DRAFT` → `AWAITING_APPROVAL`；**OPERATOR 批准 403**；
+  ADMIN 批准 200 → `APPROVED`；无目标身份执行 **409**；状态仍 `APPROVED`；**零执行记录**。
+- **B11**：临时提权已回滚（`ADMIN → OPERATOR`）。
+
+> 这组数据的分量在 B5：`agent.approve` 的 ADMIN 门槛**真的在工作**，
+> 不是写在 capabilities.ts 里的一句注释。AC-08「同一个人不能既触发又批准」有了运行时证据。
+
+### 8.3 修复带来的两个副作用（正向）
+
+1. 高风险技能从「100% 失败」变为可用 —— 审批门第一次能被真实走到。
+2. 失败运行的 `providerKind` 不再一律写成 `RULES`：真实调用过模型的失败会如实标 `WORKBUDDY`，
+   「高成本调用次数」与「降级率」两组指标恢复可信。
+
+### 8.4 发布后债务增补（D-12）
+
+| 项 | 事实 | 影响 |
+|---|---|---|
+| **生产组织 `default` 无 ADMIN** | 实测成员只有 `qa.male` / `qa.female`（均 OPERATOR）；ADMIN 只在 `preview` 组织 | 真实客户组织若没有 ADMIN，则**审批与结果核验在生产无人可做**。S3 的 B 段因此使用 `--elevate` + `finally` 回滚，不把提权留在生产 |
+
+> 这不影响本次发布（发布走的是 Netlify，与组织角色无关），但它是**产品可用性**层面的缺口，
+> 必须在开放真实客户前解决：组织创建时必须有且至少一个 ADMIN。

@@ -133,17 +133,66 @@ FAIL  输出 token > 0  — 0
 
 ## 3. S3 · 生产业务验证
 
-**BLOCKED。**
+**PASS（2026-11-07，生产 `ab8b342` 实测 25/25，0 FAIL / 0 SKIP）。**
 
-原因不是技术不可行，而是 S3 的定义前提未满足：S3 要求「**在获批发布的生产版本上**用授权测试账号执行低风险受控流程」。当前：
+> 2026-11-06 判定为 BLOCKED 的两个前提（无获批生产版本、D-10 未批）已在发布后消除；
+> 当时「一旦执行会产生真实外部动作」的顾虑经代码核实**不成立**：
+> `executor.ts` 头注释与 `EXECUTION_PLANS` 双重声明 `recipient: 'REQUESTER'`，
+> 执行的效果是**站内回执给发起人**，不对外送达、不调第三方 API。
 
-1. 生产运行的是旧版本（`79459d6`，T-4 三屏视觉升级），**不是本 RC**（`e5fa762`）；
-2. 本轮 RC 判定为 NO-GO（`58`），未取得 D-10 发布授权；
-3. 因此不存在「RC 版本的生产环境」。
+### 3.1 工具与两条链路
 
-**不做的具体事项**：没有在生产上跑 Consent→Action→Outcome 的完整业务流。这条不动，因为一旦执行会产生真实外部动作（发信、调外部 API），没有授权不能做。
+`scripts/qa/v204-s3-production-flow.mjs`（25 项断言，可复现）：
 
-### S3 判定：**BLOCKED**
+- **A 低风险执行链** `INTENT_EXTRACTION`（`requiresApproval=false`）
+  → 真实 Provider 产出 `PROPOSED` → 执行 → 重放 → 落点 `EXECUTED`
+- **B 高风险审批门** `INTRO_DRAFT`（`requiresApproval=true`, `risk=HIGH`）
+  → 待批 → OPERATOR 批准被拒 → ADMIN 批准 → 执行被投递门拒绝
+
+### 3.2 结果（逐项实测值）
+
+| 组 | 断言 | 结果 |
+|---|---|---|
+| A1–A4 | 运行创建 201；`provider=workbuddy`；`status=PROPOSED`；`requiresApproval=false` | **PASS** |
+| A5–A7 | 首执 201；重放 200 且 `replayed=true`；**不二次投递** | **PASS** |
+| A8 | 落点 `EXECUTED` | **PASS** |
+| A9–A10 | `AgentExecution` 恰 1 条（重放未造第二条）；`deliveryStatus=SENT` | **PASS** |
+| A11–A12 | 发起人收到站内回执（Notification=1）；审计 `agent.run.executed`=1 | **PASS** |
+| B2–B4 | 高风险运行创建 201；`requiresApproval=true`；状态 `AWAITING_APPROVAL` | **PASS** |
+| B5 | **OPERATOR 批准 → 403**（`agent.approve` 的 ADMIN 门槛，AC-08 制度层证据） | **PASS** |
+| B6–B7 | ADMIN 批准 200；状态 → `APPROVED` | **PASS** |
+| B8–B9 | 无目标身份 → 执行 **409**（投递门 `NO_TARGET` 类）；状态仍 `APPROVED` | **PASS** |
+| B10 | **零执行记录落库**（拒绝即无副作用） | **PASS** |
+| B11 | 临时提权已回滚（`ADMIN → OPERATOR`） | **PASS** |
+
+### 3.3 S3 暴露并修复的真缺陷（本次最大收获）
+
+第一次跑 S3 时，B 段直接失败：生产 `INTRO_DRAFT` 运行 `status=FAILED`、
+`degradeCode=OUTPUT_SCHEMA_INVALID`，
+`reason=模型输出未通过契约校验：counterpartLabel expected string, received undefined`。
+
+- **根因**：该技能的 `systemPrompt` 只写了「只使用 allowedFieldKeys」，**没给输出字段形状**。
+  `INTENT_EXTRACTION` 早用 `INTENT_OUTPUT_SKELETON` 规避了同类问题，`INTRO_DRAFT` 漏了。
+  该技能**没有降级路径** ⇒ 每次运行都失败 ⇒ `requiresApproval=true` 的审批门
+  **在生产永远走不到**（`AWAITING_APPROVAL` 从未出现过）。
+- **修复**：`skills.ts` 补 `INTRO_OUTPUT_SKELETON` 并写进提示词；`ab8b342` 已上线（deploy `6aeeac10`）。
+- **附带修复**：`runtime.ts` 的 `degrade()` 原先把 `providerKind` 无条件写成 `'rules'`，
+  真实调用过模型但输出不合契约时也这么写 —— 等于在账本/审计里声称「根本没调模型」，
+  令「高成本调用次数」与「降级率」两组指标同时失真。改为 `cost?.providerKind ?? 'rules'`。
+- **回归守卫**：`tests/agent/skill-prompt-contract.test.ts` 断言必填输出字段必须以
+  **JSON 键形式**出现在提示词骨架里。负控实测：改掉骨架键名 → 用例 FAIL
+  （最初写成 `toContain(field)` 时负控**仍 PASS**，已修正为 `"field":` 正则）。
+
+### 3.4 一条环境事实（不是缺陷，但必须记）
+
+生产组织 `default` **没有任何 ADMIN 成员**（实测只有 `qa.male` / `qa.female` 两个 OPERATOR），
+ADMIN 只存在于 `preview` 组织。因此 B 段用 `--elevate`：把 `qa.female` 临时提到 ADMIN，
+`finally` 里强制回滚并断言回滚成功（B11）。**不加该开关时 B 段记 SKIP，不当通过。**
+
+> 这条同时说明：真实客户组织的 owner 必须是 ADMIN，否则审批与结果核验在生产上无人可做。
+> 当前 `default` 是种子组织，尚未配 owner —— 记为发布后债务（D-12）。
+
+### S3 判定：**PASS（25/25）**
 
 ---
 
@@ -168,11 +217,13 @@ FAIL  输出 token > 0  — 0
 |---|---|---|
 | S1 沙箱集成 | **PASS** | A1–A5 不变量 + HTTP 201 + DB 读回 + 租户归属强制 + 幂等键必需 |
 | S2 真实 Provider | **PASS**（限定段落） | 生产 9/9，真实 token 461/270，`provider=workbuddy` |
-| S3 生产业务验证 | **BLOCKED** | 无获批的 RC 生产版本；D-10 未批 |
-| A-03b HTTP 集成 | **PASS（部分）** | Mission 全链路 HTTP+DB 已验；Agent 审批/执行/Outcome 未验 |
-| 无未授权外部动作 | **PASS** | 除一次真实 LLM run（低风险、被授权范围内的测试调用）外无外部动作 |
-| Verified Outcome 有独立依据 | **NOT_TESTED** | 本轮未产生 Verified Outcome |
+| S3 生产业务验证 | **PASS（25/25）** | 生产 `ab8b342`：执行链 12 项 + 审批门 10 项 + 提权回滚 1 项（见 §3） |
+| A-03b HTTP 集成 | **PASS（部分）** | Mission 全链路 HTTP+DB 已验；**Agent 审批/执行已验**；Outcome 核验仍未验（`outcome.report` 需 `proposalId`，属另一条链路） |
+| 无未授权外部动作 | **PASS** | 执行效果为**站内回执**（`recipient=REQUESTER`）；无对外送达、无第三方 API |
+| Verified Outcome 有独立依据 | **NOT_TESTED** | 本轮未产生 Verified Outcome（仍缺） |
 
-**Batch 4 判定：S1 PASS / S2 PASS（局部）/ S3 BLOCKED。**
+**Batch 4 判定（发布后更新）：S1 PASS / S2 PASS / S3 PASS。审批→执行的尾巴已闭合。**
 
-「核心 AI 执行闭环已能运行」这句话**目前只能说到「模型调用」这一段**。审批→执行→验证的尾巴仍是空的，因此对外不能宣称完整 Connection OS 正式版。
+⚠️ 但「完整闭环」仍差最后一环：**Outcome 的独立核验**（`outcome.report` → `outcome.verify`）
+挂在计费/提案链路上，需要一条真实的 `proposalId`，本轮未构造，不冒充已验证。
+因此对外可以说「审批→执行已闭环」，**不能**说「验证→结算已闭环」。

@@ -273,3 +273,28 @@ try {
 **Batch 5 判定：FAIL。** 两条阻断：① PingPong 凭据需轮换（人做）；② Production Environment 需加审批人（管理员做）。两者都不是 Agent 能自行闭合的。
 
 > 诚实说明：本轮**没有**通过加 allowlist、改配置、或跳过扫描来让 gitleaks 变绿。55 条全部逐条归类并写进本文件。
+
+---
+
+## 9. 发布后补充核查（2026-11-07，只读）
+
+### 9.1 PingPong 凭据：运行时未使用（只读证据）
+
+Netlify 站点环境变量**键名清单**（只列键，不取值）：共 44 个键，
+其中支付相关只有 `CREEM_ENV`、`CREEM_SUCCESS_URL`，**不存在任何 `PINGPONG_*` 键**。
+
+推论（不是推测，是三条实测的合取）：
+
+1. 生产 `POST /api/webhooks/pingpong` 返回 `503 Payment channel disabled`（缺 secret 的正确行为）；
+2. `/api/health` 报 `payments.configured=false`，缺口恰为 4 个键；
+3. 环境变量里没有 PingPong 键。
+
+因此：**泄漏的 PingPong 凭据不在生产运行时里被使用**，风险面是「public 仓库历史 + 可能仍然有效的密钥」，
+而不是「线上正在用一对已泄漏的密钥收款」。**但轮换义务不因此取消** —— 仓库历史里仍有明文。
+
+### 9.2 GitHub Environments：仍是空壳
+
+只读复核：`Production` 与 `Production – nexus-app` 的 `protection_rules` 均为 **0 条**。
+
+本次发布的实际审批是「用户在对话中明确授权 + `59` §8 的可复现证据链」，
+**不是**由环境规则强制的。这条债务（B-3）原样保留，未因发布而消失。
