@@ -649,6 +649,19 @@ jobs:
         with:
           fetch-depth: 0 # 扫描完整历史，防止历史凭证残留
 
+      # 零依赖的确定性门禁。gitleaks-action 依赖默认规则集与远程许可证，
+      # 曾经"跑绿"却漏掉 public 仓库里直接可用的生产管理员口令；
+      # 这里补两条**业务相关**规则（已知泄漏字面量 / 凭据类 env 的回退字面量）。
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: 规则自检（含负控；自检不过说明规则本身坏了）
+        run: node scripts/check-secrets.mjs --self-test
+
+      - name: 确定性密钥门禁（G1 已知泄漏 / G2 env 回退字面量）
+        run: node scripts/check-secrets.mjs
+
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v3
         env:

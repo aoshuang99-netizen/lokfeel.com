@@ -184,4 +184,4 @@ Playwright 缓存中的 headless-shell 版本与依赖不匹配（需要 1248，
 | 组织创建时自动 ADMIN | 无创建入口，规则无处落地；等组织创建接口出现时必须一并做 |
 | 全量视觉/axe 回归 | `v204-visual-audit` 因 Playwright 浏览器缓存版本不匹配无法启动（需 1248，本机最高 1223）；本次以真实浏览器定向抽查（§6.1）代替，全量待补 |
 | UI 的组织切换 | admin 默认租户是 `preview`；在 Console 里操作 `default` 的成员目前要靠显式 `organizationId` 参数，租户切换器对管理员多租户的覆盖待验证 |
-| `ui-gallery.mjs` 里的明文 ADMIN 密码 | 与本文件无关但顺带发现：仓库里有 `LokFeel@Admin2026!` 字面量，应移入环境变量并轮换该密码 |
+| `ui-gallery.mjs` 里的明文 ADMIN 密码 | 与本文件无关但顺带发现：仓库里有 ``LokFeel@<已轮换>`` 字面量，应移入环境变量并轮换该密码 |

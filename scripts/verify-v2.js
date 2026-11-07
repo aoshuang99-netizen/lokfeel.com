@@ -22,7 +22,7 @@ const { chromium } = require('playwright');
     
     if (await emailInput.count() > 0) {
       await emailInput.fill('testlogin2026@lokfeel.com');
-      await passwordInput.fill('Test123456!');
+      await passwordInput.fill(process.env.VERIFY_PASSWORD);
       
       // Click submit
       const submitBtn = page.locator('button[type="submit"]').first();

@@ -27,6 +27,8 @@ const ROOT = path.resolve(__dirname, "../..");
 const OUT = path.join(ROOT, "reports/ui-gallery");
 const SHOTS = path.join(OUT, "shots");
 
+import { ADMIN_EMAIL, getAdminPassword, requireCredential } from "./qa-credentials.mjs";
+
 const argv = process.argv.slice(2);
 const argOf = (k, d) => {
   const hit = argv.find((a) => a.startsWith(`--${k}=`));
@@ -35,10 +37,18 @@ const argOf = (k, d) => {
 const BASE = argOf("base", "https://app.lokfeel.com").replace(/\/$/, "");
 const ONLY = argOf("only", "").split(",").filter(Boolean);
 
+// ⚠️ 本仓库是 public：三个账号的密码都**不在源码里**。
+// 2026-11-07 之前这里写着两个字面量，且那两个账号在生产仍可登录 —— 已轮换。
 const ACCOUNTS = {
-  user: { email: "test.female@lokfeel.com", password: "Test123456!" },
-  male: { email: "test.male@lokfeel.com", password: "Test123456!" },
-  admin: { email: "admin@lokfeel.com", password: "LokFeel@Admin2026!" },
+  user: {
+    email: "test.female@lokfeel.com",
+    password: requireCredential("TEST_FEMALE_PASSWORD", "testfemalePassword", " test.female 账号"),
+  },
+  male: {
+    email: "test.male@lokfeel.com",
+    password: requireCredential("TEST_MALE_PASSWORD", "testmalePassword", " test.male 账号"),
+  },
+  admin: { email: ADMIN_EMAIL, password: getAdminPassword() },
 };
 
 /** 每个页面：slug / 路径 / 分组 / 是否要登录 / 说明 / 是否 fullPage */

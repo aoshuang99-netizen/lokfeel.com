@@ -22,7 +22,7 @@ const { chromium } = require('playwright');
     const passwordInput = page.locator('input[type="password"]').first();
     
     await emailInput.fill('testlogin2026@lokfeel.com');
-    await passwordInput.fill('Test123456!');
+    await passwordInput.fill(process.env.VERIFY_PASSWORD);
     
     // Click login button
     const loginBtn = page.locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Log In"), button:has-text("Login")').first();

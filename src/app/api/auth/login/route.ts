@@ -5,6 +5,7 @@ import { encode } from "next-auth/jwt"
 import { isSafeRedirect } from "@/lib/auth/safe-redirect"
 import { isSameSiteRequest, resolveSiteHosts } from "@/lib/http/public-origin"
 import { sessionCookieForRequest } from "@/lib/auth/session-cookie"
+import { clientIpFrom, recordLoginOutcome } from "@/lib/auth/login-audit"
 
 /**
  * POST /api/auth/login
@@ -94,6 +95,16 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
+      // 未知邮箱不落业务表（没有 userId 可挂），只留服务器日志。
+      // 仍然调用一次：让"所有登录尝试都经过审计入口"成为结构事实，而不是靠记性。
+      await recordLoginOutcome({
+        userId: null,
+        outcome: "failed",
+        reason: "unknown_email",
+        ip: clientIpFrom(request.headers),
+        userAgent: request.headers.get("user-agent"),
+      })
+      console.warn("[Login API] 未知邮箱登录尝试")
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -108,6 +119,13 @@ export async function POST(request: NextRequest) {
         select: { provider: true },
       });
       const providers = oauthAccounts.map(a => a.provider).join(", ");
+      await recordLoginOutcome({
+        userId: user.id,
+        outcome: "failed",
+        reason: "oauth_only",
+        ip: clientIpFrom(request.headers),
+        userAgent: request.headers.get("user-agent"),
+      })
       return NextResponse.json(
         {
           error: "This account uses social login.",
@@ -122,11 +140,28 @@ export async function POST(request: NextRequest) {
     const isValid = await verifyPassword(password, (user as any).password)
 
     if (!isValid) {
+      // 记失败尝试是这次事故后补的关键能力：没有它，事后无法回答
+      // "这个账号有没有被人拿去爆破过"。
+      await recordLoginOutcome({
+        userId: user.id,
+        outcome: "failed",
+        reason: "bad_password",
+        ip: clientIpFrom(request.headers),
+        userAgent: request.headers.get("user-agent"),
+      })
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
       )
     }
+
+    // 成功路径也记：审计的价值在于"有基线"，只有失败记录时无法判断异常。
+    await recordLoginOutcome({
+      userId: user.id,
+      outcome: "succeeded",
+      ip: clientIpFrom(request.headers),
+      userAgent: request.headers.get("user-agent"),
+    })
 
     // ─── 4. Create NextAuth-compatible JWT session token ───
     // This mimics exactly what NextAuth's internal sign-in flow does:

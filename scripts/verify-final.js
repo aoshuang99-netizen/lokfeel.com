@@ -23,7 +23,7 @@ const bcrypt = require('bcryptjs');
     const loginResponse = await page.request.post('https://app.lokfeel.com/api/auth/callback/credentials', {
       form: {
         email: 'testlogin2026@lokfeel.com',
-        password: 'Test123456!',
+        password: process.env.VERIFY_PASSWORD,
         csrfToken,
         callbackUrl: 'https://app.lokfeel.com/dashboard',
         json: 'true',

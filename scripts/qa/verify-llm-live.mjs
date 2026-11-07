@@ -20,6 +20,8 @@
  *   node scripts/qa/verify-llm-live.mjs --email=... --password=...
  */
 
+import { ADMIN_EMAIL, getAdminPassword } from './qa-credentials.mjs'
+
 const argv = process.argv.slice(2)
 const argOf = (k, d) => {
   const hit = argv.find((a) => a.startsWith(`--${k}=`))
@@ -27,8 +29,9 @@ const argOf = (k, d) => {
 }
 
 const BASE = argOf('base', 'https://app.lokfeel.com').replace(/\/$/, '')
-const EMAIL = argOf('email', 'admin@lokfeel.com')
-const PASSWORD = argOf('password', 'LokFeel@Admin2026!')
+// 密码只从环境变量/本地凭据文件取；--password= 会进 shell history，不再支持默认值。
+const EMAIL = argOf('email', ADMIN_EMAIL)
+const PASSWORD = argOf('password', null) || getAdminPassword()
 const GOAL = argOf('goal', 'Connect our founders with 20 manufacturing partners in 30 days')
 
 const results = []

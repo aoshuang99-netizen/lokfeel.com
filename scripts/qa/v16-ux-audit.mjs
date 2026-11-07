@@ -37,13 +37,16 @@ const argOf = (k, d) => {
 }
 // 输出目录可切：`--out=after` 采改版后的对照图，默认仍是改版前的 before。
 const OUT = path.join(ROOT, 'docs/v16/screenshots/' + argOf('out', 'before'))
+import { ADMIN_EMAIL, getAdminPassword } from './qa-credentials.mjs'
+
 const REPORT = path.join(ROOT, 'docs/v16/' + argOf('report', '_audit-raw.json'))
 const BASE = argOf('base', 'https://app.lokfeel.com').replace(/\/$/, '')
 const DEVICE = argOf('only', 'both')
 
+// 密码不设默认值：拿不到就抛。见 scripts/qa/qa-credentials.mjs 顶部注释。
 const ACCOUNT = {
-  email: process.env.QA_ADMIN_EMAIL || 'admin@lokfeel.com',
-  password: process.env.QA_ADMIN_PASSWORD || 'LokFeel@Admin2026!',
+  email: ADMIN_EMAIL,
+  password: getAdminPassword(),
 }
 
 const VIEWPORTS = {

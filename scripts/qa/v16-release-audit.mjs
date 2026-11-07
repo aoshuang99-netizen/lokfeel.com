@@ -32,12 +32,15 @@ const argOf = (k, d) => {
   const hit = argv.find((a) => a.startsWith(`--${k}=`))
   return hit ? hit.slice(k.length + 3) : d
 }
+import { ADMIN_EMAIL, getAdminPassword } from './qa-credentials.mjs'
+
 const BASE = argOf('base', 'https://app.lokfeel.com').replace(/\/$/, '')
 const ONLY = argOf('only', 'both')
 
+// 密码不设默认值：拿不到就抛。见 scripts/qa/qa-credentials.mjs 顶部注释。
 const ACCOUNT = {
-  email: process.env.QA_ADMIN_EMAIL || 'admin@lokfeel.com',
-  password: process.env.QA_ADMIN_PASSWORD || 'LokFeel@Admin2026!',
+  email: ADMIN_EMAIL,
+  password: getAdminPassword(),
 }
 
 const VIEWPORTS = {

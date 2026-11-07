@@ -43,14 +43,28 @@ const prisma = new (PrismaClient as any)({ adapter }) as PrismaClient
 const ADMIN_CONFIG = {
   name: 'LokFeel Admin',
   email: process.env.ADMIN_EMAIL || 'admin@lokfeel.com',
-  // 首次运行时设置的默认密码，之后请立即修改
-  defaultPassword: process.env.ADMIN_PASSWORD || 'LokFeel@Admin2026!',
+  // 首次运行时设置的密码由环境变量提供。
+  // 🔴 这里**没有**默认值：曾经的默认值是一个写进 public 仓库的字面量，任何能看到仓库的人
+  //    都能直接登进生产。宁可让初始化脚本立刻失败，也不要给一个"能跑起来但全世界都知道"的密码。
+  defaultPassword: process.env.ADMIN_PASSWORD || '',
   role: UserRole.SUPER_ADMIN as UserRole,
 }
 // ──────────────────────────────────────────────
 
 async function main() {
   console.log('🔐 初始化生产管理员账号...')
+
+  // 🔴 没有密码就不跑。空密码 bcrypt 之后仍能被空密码登录命中，等于开一个后门。
+  //    这里同时拒绝过短的密码，避免有人为了"先跑通"设一个 6 位。
+  const pw = ADMIN_CONFIG.defaultPassword
+  if (!pw || pw.length < 16) {
+    console.error(
+      '拒绝：ADMIN_PASSWORD 缺失或短于 16 字符。\n' +
+        "  ADMIN_PASSWORD='<强随机密码>' npx tsx prisma/init-admin.ts\n" +
+        '（不要在命令行历史里留密码时，用 env -i 或在本地 .env.local 里设置）',
+    )
+    process.exit(2)
+  }
 
   // 检查是否已存在
   const existing = await prisma.user.findUnique({
@@ -63,11 +77,13 @@ async function main() {
     // 更新角色确保是 SUPER_ADMIN，同时更新密码
     await (prisma.user.update as any)({
       where: { email: ADMIN_CONFIG.email },
-      data: { role: UserRole.SUPER_ADMIN, password: hashedPassword },
+      // 同时推进 tokenVersion：重置密码必须让**已签发的 JWT**失效，
+      // 否则"改了密码"只是让下一个人登不进来，已经进来的人还在。
+      data: { role: UserRole.SUPER_ADMIN, password: hashedPassword, tokenVersion: { increment: 1 } },
     })
     console.log(`✅ 管理员账号已存在，确保角色为 SUPER_ADMIN`)
     console.log(`   Email: ${ADMIN_CONFIG.email}`)
-    console.log(`   Password: 已更新（请登录后立即修改！）`)
+    console.log('   Password: 已更新（不打印明文）')
   } else {
     const admin = await (prisma.user.create as any)({
       data: {
@@ -90,7 +106,7 @@ async function main() {
     console.log(`✅ 管理员账号创建成功`)
     console.log(`   ID:    ${admin.id}`)
     console.log(`   Email: ${admin.email}`)
-    console.log(`   Password: ${ADMIN_CONFIG.defaultPassword} (请登录后立即修改！)`)
+    console.log('   Password: 已设置（不打印明文）')
     console.log(`   Role:  ${admin.role}`)
   }
 

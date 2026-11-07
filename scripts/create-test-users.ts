@@ -17,7 +17,13 @@ import { PrismaPg } from '@prisma/adapter-pg';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
 
-const PASSWORD = 'Test123456!';
+// 🔴 这里曾经写着一个进过 public 仓库的明文密码（已轮换，字面量不再复述）。
+// 测试账号也是真账号：用已知密码批量建号，等于批量开后门。改为必须有环境变量。
+const PASSWORD = process.env.TEST_USER_PASSWORD || ''
+if (!PASSWORD || PASSWORD.length < 16) {
+  console.error('拒绝：缺少 TEST_USER_PASSWORD（≥16 字符）。本脚本不再内置任何默认密码。')
+  process.exit(2)
+}
 
 type Gender = 'MALE' | 'FEMALE' | 'NON_BINARY' | 'OTHER';
 

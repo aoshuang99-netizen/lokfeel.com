@@ -37,6 +37,20 @@ secretGroup = 1
 tags = ["database", "turso"]
 
 [[rules]]
+# 2026-11-07：`'<product-password-literal>'` 在 public 仓库里以字面量存在了 6 个提交，
+# 且生产账号当时**仍可用它登录**。默认规则集抓不到"域名风格的弱口令"，
+# 所以补一条针对本产品命名习惯的规则。
+id = "lokfeel-product-password-literal"
+description = "LokFeel 账号密码字面量（形如 LokFeel@...）"
+regex = '''(?i)["'\s:=]LokFeel@[A-Za-z0-9!@#$%^&*_-]{6,}'''
+tags = ["credential", "lokfeel"]
+
+# 注：曾考虑再加一条通用规则 `password\s*[:=]\s*"字面量"`，实测 30+ 误报
+# （zod 的 `password: 'reg-password'`、`password: 'MAGIC_LINK_AUTH'`、e2e 假账号）。
+# 误报多的门禁会被忽略，所以这条**不进** gitleaks；同一意图由
+# scripts/check-secrets.mjs 的 G2（只认凭据类变量名的 `|| '字面量'`，零误报）覆盖。
+
+[[rules]]
 id = "lokfeel-neon-connection-string"
 description = "含密码的 PostgreSQL 连接串（Neon 等）"
 regex = '''postgres(?:ql)?://[^:]+:([^@\s"']{8,})@[^\s"']+'''
@@ -106,7 +120,28 @@ tags = ["secret", "sk-dash"]
 # ══════════════════════════════════════════════════════════════
 
 [allowlist]
-description = "排除模板、示例、测试夹具与文档中的占位值"
+description = "排除模板、示例、测试夹具与文档中的占位值；以及已轮换的历史泄漏提交"
+
+# ── 历史 commits ───────────────────────────────────────────────────────
+# 2026-11-07 发现两个口令字面量已进入 public 仓库历史。处置是**轮换凭据**，
+# 不是改写历史：public 仓库一旦被 clone/fork/镜像/搜索引擎收录，改写只能让
+# 「本仓库看不到」，不能让「别人手上的副本消失」。凭据已全部失效（见
+# docs/implementation/v20/ga/01_SECURITY_CREDENTIAL_RECOVERY.md），因此这些
+# 提交里的字面量不再是活的秘密，列入 allowlist 以免 CI 永久恒红。
+# 新增提交**不在**此列 —— 新泄漏必须让 CI 红。
+commits = [
+  # 产品管理员口令字面量
+  "56fd575d300eb1000138d98ac000b4b0c89b100e",
+  "57e0b3fca449eb59d906d5d247c150ce92187bb4",
+  "ca9f5c02aa243e80a6802f5f435dead0ad01a733",
+  "e5e884691dfc1c45f32a97194375332440b79c99",
+  "f7f90ba78ac90d25f696079880c774c6f3064c3b",
+  "7f0ff4a01c7d01c7c5637aab2a579edb37cb674b",
+  # 测试账号口令字面量
+  "5639495f9786ab8a3a3c4cdddddfb33c0bd4e4d8",
+  "6660a3315254649dd1490ae984f61a53edcb0548",
+  "f7d889064858f6a7be2b7c4e91de886b9eb78c82",
+]
 
 # 允许整类路径跳过扫描
 paths = [
