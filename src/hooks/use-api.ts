@@ -279,3 +279,61 @@ export function useApiDelete() {
 
   return { delete: deleteRequest, isLoading, error };
 }
+
+/**
+ * 通用「结果即返回值」的变更 hook（POST / DELETE / 其它方法）。
+ *
+ * 为什么再写一个：`useApiPost()` 与 `useApiDelete()` 把失败原因放进 `error` state，
+ * 而 `await` 之后读到的 state 仍是**上一次**渲染的值。于是"删除失败"会被界面显示成
+ * "删除成功"，或显示上一次的错误 —— 这不是细节，是**谎报业务结果**。
+ * `useApiPatch()` 已经踩过这个坑并改为返回结果；这里把同一口径补齐给 POST/DELETE。
+ *
+ * 服务端错误结构：`{ error: { message, details: { code } } }`。
+ */
+export interface MutationResult<T = unknown> {
+  ok: boolean;
+  data?: T;
+  message?: string;
+  code?: string;
+  status?: number;
+}
+
+export function useApiResult() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const send = useCallback(
+    async <T = unknown>(
+      url: string,
+      method: "POST" | "DELETE" | "PUT",
+      body?: unknown
+    ): Promise<MutationResult<T>> => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+          return {
+            ok: false,
+            status: res.status,
+            message: json?.error?.message ?? `请求失败（${res.status}）`,
+            code: json?.error?.details?.code ?? json?.error?.code,
+          };
+        }
+        invalidateCache(url.split("?")[0]);
+        return { ok: true, status: res.status, data: (json?.data ?? json) as T };
+      } catch (err) {
+        console.warn(`API ${method} failed for ${url}:`, err);
+        return { ok: false, message: "服务暂时不可用，请稍后重试" };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  return { send, isLoading };
+}

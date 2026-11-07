@@ -9,9 +9,10 @@
  *   - 角色过滤条、搜索、分页都是真交互（点了真的改查询）；
  *   - **角色调整下拉是真写入**：`PATCH /api/v1/members/[membershipId]`（`member.update_role`
  *     = ADMIN+），并且只在服务端下发的 capabilities 含该能力时渲染；
- *   - **没有「邀请成员」按钮** —— `member.invite` 能力虽已在能力矩阵里，
- *     但邀请流程（发信 + 接受链接 + 幂等）尚未实现。渲染一个点了没反应的
- *     "邀请"是最典型的空按钮，所以这里只陈述事实。
+ *   - **邀请成员是真流程**：`POST /api/v1/invitations`（`member.invite` = ADMIN+），
+ *     发信成功与失败**分开呈现** —— 邮件没发出去时给出可复制的链接，而不是说"已发送"；
+ *   - **移出成员是真写入**：`DELETE /api/v1/members/[membershipId]`（`member.remove`），
+ *     点击后先给影响提示（立即失去访问权、下一次请求即 403、历史保留），确认才执行。
  *
  * 🔴 角色调整为什么必须存在：组织一旦失去最后一名管理员，`agent.approve` 与
  *   `outcome.verify` 就**无人可用**（D-12 的真实现场）。服务端禁止把最后一名管理员
@@ -22,8 +23,8 @@
  */
 
 import { useMemo, useState } from 'react'
-import { Mail, RefreshCw, Search, Users } from 'lucide-react'
-import { useApiGet, useApiPatch } from '@/hooks/use-api'
+import { Clock, Copy, Mail, RefreshCw, Search, Trash2, UserPlus, Users, X } from 'lucide-react'
+import { useApiGet, useApiPatch, useApiResult } from '@/hooks/use-api'
 
 interface ApiEnvelope<T> {
   success: boolean
@@ -48,6 +49,24 @@ interface MemberDto {
   city: string | null
   isBot: boolean
   joinedAt: string
+}
+
+interface InvitationDto {
+  id: string
+  email: string
+  role: string
+  status: 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED'
+  expiresAt: string
+  createdAt: string
+  acceptedAt: string | null
+  revokedAt: string | null
+}
+
+const INVITATION_STATUS: Record<string, { label: string; className: string }> = {
+  PENDING: { label: '待接受', className: 'bg-warning/15 text-warning' },
+  ACCEPTED: { label: '已接受', className: 'bg-success/15 text-success' },
+  REVOKED: { label: '已撤销', className: 'bg-background-tertiary text-foreground-subtle' },
+  EXPIRED: { label: '已过期', className: 'bg-background-tertiary text-foreground-subtle' },
 }
 
 const ROLE_FILTERS = [
@@ -103,6 +122,40 @@ function roleErrorText(code: string | undefined, message: string | undefined): s
   }
 }
 
+/** 邀请被拒绝时的文案。同样以码为准：不同码背后是完全不同的补救动作。 */
+function inviteErrorText(code: string | undefined, message: string | undefined): string {
+  switch (code) {
+    case 'ALREADY_MEMBER':
+      return '该邮箱已经是本组织成员，不需要再邀请。'
+    case 'INVALID_EMAIL':
+      return '邮箱格式不正确，请检查后再发。'
+    case 'OWNER_GRANT_FORBIDDEN':
+      return '不能通过邀请授予所有者身份 —— 所有权转移走单独流程。'
+    case 'CAPABILITY_REQUIRED':
+      return '权限不足：邀请成员需要管理员或所有者。'
+    default:
+      return message || '邀请没有发出去，请重试。'
+  }
+}
+
+/** 移出被拒绝时的文案。这几条都是"看起来能做但服务端不该允许"的动作。 */
+function removeErrorText(code: string | undefined, message: string | undefined, m: MemberDto): string {
+  switch (code) {
+    case 'LAST_ADMIN':
+      return '不能移出最后一名管理员 —— 否则组织将没有人能审批与核验。请先任命另一位管理员。'
+    case 'SELF_REMOVE':
+      return '不能移出自己。退出组织应走单独流程，避免误操作把自己锁在门外。'
+    case 'OWNER_PROTECTED':
+      return '只有所有者本人可以移出所有者。'
+    case 'NOT_ACTIVE':
+      return `${m.displayName} 已经不是在用成员（状态：${STATUS_LABEL[m.status] ?? m.status}）。`
+    case 'CAPABILITY_REQUIRED':
+      return '权限不足：移出成员需要管理员或所有者。'
+    default:
+      return message || '移出没有成功，请重试。'
+  }
+}
+
 export default function ConsoleMembersPage() {
   const [role, setRole] = useState<string>('ALL')
   const [page, setPage] = useState(1)
@@ -143,6 +196,90 @@ export default function ConsoleMembersPage() {
     members.refetch()
   }
 
+  // ── 邀请 ────────────────────────────────────────────────────────────
+  const canInvite = (org.data?.data?.capabilities ?? []).includes('member.invite')
+  const canRemove = (org.data?.data?.capabilities ?? []).includes('member.remove')
+  const invitations = useApiGet<ApiEnvelope<InvitationDto[]>>(canInvite ? '/api/v1/invitations' : null)
+  const { send } = useApiResult()
+
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState('MEMBER')
+  const [inviteBusy, setInviteBusy] = useState(false)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+  const [lastInvite, setLastInvite] = useState<{
+    email: string
+    url: string
+    emailSent: boolean
+    emailError?: string
+  } | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const submitInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInviteBusy(true)
+    setInviteError(null)
+    const r = await send<{ invitation: InvitationDto; inviteUrl: string; emailSent: boolean; emailError?: string }>(
+      '/api/v1/invitations',
+      'POST',
+      { email: inviteEmail.trim(), role: inviteRole }
+    )
+    setInviteBusy(false)
+    if (!r.ok) {
+      setInviteError(inviteErrorText(r.code, r.message))
+      return
+    }
+    setLastInvite({
+      email: r.data!.invitation.email,
+      url: r.data!.inviteUrl,
+      emailSent: r.data!.emailSent,
+      emailError: r.data!.emailError,
+    })
+    setInviteEmail('')
+    setInviteOpen(false)
+    invitations.refetch()
+  }
+
+  const copyInviteLink = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // 剪贴板被拒时不要把链接吞掉 —— 它已经渲染成一个可选中的输入框。
+      setCopied(false)
+    }
+  }
+
+  const revokeInvite = async (inv: InvitationDto) => {
+    const r = await send(`/api/v1/invitations/${inv.id}`, 'DELETE')
+    if (!r.ok) {
+      setNotice({ kind: 'error', text: r.message || '撤销失败，请重试。' })
+      return
+    }
+    setNotice({ kind: 'ok', text: `已撤销对 ${inv.email} 的邀请，链接立即失效。` })
+    invitations.refetch()
+  }
+
+  // ── 移出 ────────────────────────────────────────────────────────────
+  const [confirmRemove, setConfirmRemove] = useState<MemberDto | null>(null)
+  const [removeBusy, setRemoveBusy] = useState(false)
+
+  const doRemove = async () => {
+    if (!confirmRemove) return
+    setRemoveBusy(true)
+    const r = await send(`/api/v1/members/${confirmRemove.membershipId}`, 'DELETE')
+    setRemoveBusy(false)
+    if (!r.ok) {
+      setNotice({ kind: 'error', text: removeErrorText(r.code, r.message, confirmRemove) })
+      setConfirmRemove(null)
+      return
+    }
+    setNotice({ kind: 'ok', text: `${confirmRemove.displayName} 已被移出本社群。` })
+    setConfirmRemove(null)
+    members.refetch()
+  }
+
   const items = members.data?.data ?? []
   const total = members.data?.meta?.total ?? 0
   const totalPages = members.data?.meta?.totalPages ?? 1
@@ -162,6 +299,20 @@ export default function ConsoleMembersPage() {
             本社群的成员目录 —— 谁在这里、担任什么角色。
           </p>
         </div>
+        {canInvite ? (
+          <button
+            type="button"
+            onClick={() => {
+              setInviteOpen((v) => !v)
+              setInviteError(null)
+            }}
+            aria-expanded={inviteOpen}
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 text-primary text-xs font-medium hover:bg-primary/25 transition-colors"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            邀请成员
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => members.refetch()}
@@ -184,6 +335,146 @@ export default function ConsoleMembersPage() {
           }`}
         >
           {notice.text}
+        </div>
+      ) : null}
+
+      {/* ── 邀请表单（只在有 member.invite 时出现） ── */}
+      {canInvite && inviteOpen ? (
+        <form
+          onSubmit={submitInvite}
+          className="rounded-2xl border border-card-border bg-background-secondary p-4 space-y-3"
+        >
+          <div>
+            <p className="text-sm font-medium text-foreground">邀请一位同事</p>
+            <p className="text-xs text-foreground-muted mt-0.5">
+              对方会收到一封邮件。链接 7 天内有效，且只能由这个邮箱接受。
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <label className="flex-1 min-w-0">
+              <span className="sr-only">被邀请人邮箱</span>
+              <input
+                type="email"
+                required
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="name@company.com"
+                className="w-full px-3 py-2 rounded-lg border border-card-border bg-background-secondary text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </label>
+            <label className="sm:w-36">
+              <span className="sr-only">加入后的角色</span>
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-card-border bg-background-secondary text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                {ASSIGNABLE_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABEL[r] ?? r}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="submit"
+              disabled={inviteBusy || !inviteEmail.trim()}
+              className="px-4 py-2 rounded-lg bg-primary text-background text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition"
+            >
+              {inviteBusy ? '发送中…' : '发送邀请'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setInviteOpen(false)}
+              className="px-3 py-2 rounded-lg text-sm text-foreground-muted hover:text-foreground transition-colors"
+            >
+              取消
+            </button>
+          </div>
+          {inviteError ? (
+            <p role="alert" className="text-xs text-warning">
+              {inviteError}
+            </p>
+          ) : null}
+        </form>
+      ) : null}
+
+      {/* ── 刚创建的邀请：**邮件到底发没发出去**必须分开说 ── */}
+      {lastInvite ? (
+        <div className="rounded-2xl border border-card-border bg-background-secondary p-4 space-y-2">
+          <div className="flex items-start gap-2">
+            <p className="text-sm text-foreground flex-1 min-w-0">
+              {lastInvite.emailSent
+                ? `邀请邮件已发送到 ${lastInvite.email}。`
+                : `邀请已创建，但邮件没有发出去（${lastInvite.emailError || '邮件服务未配置'}）。`}
+            </p>
+            <button
+              type="button"
+              onClick={() => setLastInvite(null)}
+              aria-label="关闭邀请结果"
+              className="shrink-0 text-foreground-subtle hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-xs text-foreground-muted">
+            {lastInvite.emailSent
+              ? '对方没收到时，可以把下面的链接直接发给他（同一个链接，7 天内有效）：'
+              : '请把下面的链接直接发给对方 —— 这是它唯一一次出现，关闭后无法再显示。'}
+          </p>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={lastInvite.url}
+              onFocus={(e) => e.currentTarget.select()}
+              aria-label="邀请链接"
+              className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-card-border bg-background-tertiary text-xs text-foreground-muted font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => void copyInviteLink(lastInvite.url)}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-card-border text-xs text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              {copied ? '已复制' : '复制'}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── 邀请状态（可视化：待接受 / 已接受 / 已撤销 / 已过期） ── */}
+      {canInvite && (invitations.data?.data?.length ?? 0) > 0 ? (
+        <div className="rounded-2xl border border-card-border bg-background-secondary p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-3.5 h-3.5 text-foreground-muted" />
+            <p className="text-sm font-medium text-foreground">邀请记录</p>
+            <span className="text-xs text-foreground-subtle">
+              最近 {invitations.data?.data?.length} 条
+            </span>
+          </div>
+          <ul className="divide-y divide-card-border">
+            {(invitations.data?.data ?? []).map((inv) => {
+              const st = INVITATION_STATUS[inv.status] ?? INVITATION_STATUS.EXPIRED
+              return (
+                <li key={inv.id} className="py-2 flex items-center gap-2 text-xs">
+                  <span className="min-w-0 flex-1 truncate text-foreground-muted">{inv.email}</span>
+                  <span className="shrink-0 text-foreground-subtle">{ROLE_LABEL[inv.role] ?? inv.role}</span>
+                  <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium ${st.className}`}>
+                    {st.label}
+                  </span>
+                  {inv.status === 'PENDING' ? (
+                    <button
+                      type="button"
+                      onClick={() => void revokeInvite(inv)}
+                      className="shrink-0 px-2 py-0.5 rounded text-[10px] text-foreground-muted hover:text-warning transition-colors"
+                    >
+                      撤销
+                    </button>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
         </div>
       ) : null}
 
@@ -265,7 +556,11 @@ export default function ConsoleMembersPage() {
             </p>
           </div>
           <p className="text-sm text-foreground-muted">
-            {q || role !== 'ALL' ? '换个条件再试。' : '成员通过接受邀请加入（邀请流程在后续切片）。'}
+            {q || role !== 'ALL'
+              ? '换个条件再试。'
+              : canInvite
+                ? '用右上角的「邀请成员」发一封邀请，对方接受后就会出现在这里。'
+                : '成员通过接受邀请加入 —— 邀请需要管理员或所有者权限。'}
           </p>
         </div>
       ) : (
@@ -340,6 +635,23 @@ export default function ConsoleMembersPage() {
                   </select>
                 </label>
               ) : null}
+
+              {/*
+                ── 移出 ──
+                OWNER 行不渲染：只有所有者能移出所有者（且所有者应先转移所有权）。
+                点击后先弹影响提示，确认才发请求 —— 移出是不可逆的权限变更，
+                不该由"手滑点一下"完成。
+              */}
+              {canRemove && m.role !== 'OWNER' ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmRemove(m)}
+                  aria-label={`移出 ${m.displayName}`}
+                  className="shrink-0 p-1.5 rounded-lg text-foreground-subtle hover:text-warning hover:bg-warning/10 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -369,8 +681,53 @@ export default function ConsoleMembersPage() {
         </div>
       ) : null}
 
+      {/* ── 移出确认：把"会发生什么"说清楚，而不是只问"确定吗" ── */}
+      {confirmRemove ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="remove-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-card-border bg-background-secondary p-5 space-y-3">
+            <h2 id="remove-title" className="text-sm font-semibold text-foreground">
+              移出 {confirmRemove.displayName}？
+            </h2>
+            <ul className="text-xs text-foreground-muted space-y-1 list-disc pl-4">
+              <li>他/她将立即失去本社群的全部访问权限。</li>
+              <li>已登录的会话在下一次请求时即被拒绝（不需要等他重新登录）。</li>
+              <li>任务、成果与审计记录都会保留；重新邀请可恢复成员关系。</li>
+              {confirmRemove.role === 'ADMIN' || confirmRemove.role === 'OWNER' ? (
+                <li className="text-warning">
+                  对方是管理员 —— 若这是最后一名管理员，操作会被拒绝。
+                </li>
+              ) : null}
+            </ul>
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setConfirmRemove(null)}
+                disabled={removeBusy}
+                className="px-3 py-1.5 rounded-lg border border-card-border text-xs text-foreground-muted hover:text-foreground disabled:opacity-40 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={() => void doRemove()}
+                disabled={removeBusy}
+                className="px-3 py-1.5 rounded-lg bg-warning/20 text-warning text-xs font-medium hover:bg-warning/30 disabled:opacity-40 transition-colors"
+              >
+                {removeBusy ? '移出中…' : '确认移出'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <p className="text-[11px] text-foreground-subtle">
-        邀请成员需要 `member.invite`（管理员及以上）—— 邀请流程尚未实现，因此这里没有「邀请」按钮。
+        邀请与移出都需要管理员及以上（`member.invite` / `member.remove`）。
+        没有该能力时，这里的按钮不会出现 —— 而不是「点了没反应」。
       </p>
     </div>
   )
