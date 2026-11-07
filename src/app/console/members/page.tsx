@@ -7,9 +7,15 @@
  *
  * 🔴 「无空按钮」在这里的落实：
  *   - 角色过滤条、搜索、分页都是真交互（点了真的改查询）；
+ *   - **角色调整下拉是真写入**：`PATCH /api/v1/members/[membershipId]`（`member.update_role`
+ *     = ADMIN+），并且只在服务端下发的 capabilities 含该能力时渲染；
  *   - **没有「邀请成员」按钮** —— `member.invite` 能力虽已在能力矩阵里，
  *     但邀请流程（发信 + 接受链接 + 幂等）尚未实现。渲染一个点了没反应的
  *     "邀请"是最典型的空按钮，所以这里只陈述事实。
+ *
+ * 🔴 角色调整为什么必须存在：组织一旦失去最后一名管理员，`agent.approve` 与
+ *   `outcome.verify` 就**无人可用**（D-12 的真实现场）。服务端禁止把最后一名管理员
+ *   降级；这个下拉让"再认命一名管理员"成为组织内**自助**动作，而不是等运维改库。
  *
  * ⚠️ 前端**不做**权限判断，只做降级展示；能力不足时服务端会 403，
  *    这里把 403 渲染成"权限不足"而不是报错。
@@ -17,12 +23,18 @@
 
 import { useMemo, useState } from 'react'
 import { Mail, RefreshCw, Search, Users } from 'lucide-react'
-import { useApiGet } from '@/hooks/use-api'
+import { useApiGet, useApiPatch } from '@/hooks/use-api'
 
 interface ApiEnvelope<T> {
   success: boolean
   data: T
   meta?: { total?: number; page?: number; pageSize?: number; totalPages?: number }
+}
+
+/** `/api/v1/org` 只取判别用的两个字段（能力集合由服务端算，前端不推理）。 */
+interface OrgEnvelope {
+  success: boolean
+  data: { myRole?: string; capabilities?: string[] }
 }
 
 interface MemberDto {
@@ -68,6 +80,29 @@ const STATUS_LABEL: Record<string, string> = {
 
 const PAGE_SIZE = 20
 
+/** 可被本接口授予的角色。`OWNER` 刻意不在列 —— 所有权只能通过 `org.transfer` 转移。 */
+const ASSIGNABLE_ROLES = ['ADMIN', 'OPERATOR', 'MEMBER'] as const
+
+/** 把服务端的拒绝码翻译成一句人能读的话（码优先，文案兜底）。 */
+function roleErrorText(code: string | undefined, message: string | undefined): string {
+  switch (code) {
+    case 'LAST_ADMIN':
+      return '不能把最后一名管理员降级 —— 组织必须保留至少一名在用管理员。'
+    case 'SELF_ROLE_CHANGE':
+      return '不能修改自己的角色。请让另一位管理员来调整。'
+    case 'OWNER_GRANT_FORBIDDEN':
+      return '不能把成员直接设为所有者 —— 所有权转移走单独流程。'
+    case 'OWNER_PROTECTED':
+      return '只有所有者本人可以调整所有者的角色。'
+    case 'NO_CHANGE':
+      return '这个成员已经是该角色，没有需要保存的改动。'
+    case 'CAPABILITY_REQUIRED':
+      return '权限不足：调整角色需要管理员或所有者。'
+    default:
+      return message || '角色没有改成，请重试。'
+  }
+}
+
 export default function ConsoleMembersPage() {
   const [role, setRole] = useState<string>('ALL')
   const [page, setPage] = useState(1)
@@ -82,6 +117,31 @@ export default function ConsoleMembersPage() {
   }, [role, page, q])
 
   const members = useApiGet<ApiEnvelope<MemberDto[]>>(url)
+
+  // 能力判定由服务端给出（`/api/v1/org` 已返回 capabilities）；前端只做显隐。
+  const org = useApiGet<OrgEnvelope>('/api/v1/org')
+  const canUpdateRole = (org.data?.data?.capabilities ?? []).includes('member.update_role')
+
+  const { patch } = useApiPatch()
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
+
+  const changeRole = async (m: MemberDto, next: string) => {
+    if (next === m.role) return
+    setBusyId(m.membershipId)
+    setNotice(null)
+    const r = await patch<MemberDto>(`/api/v1/members/${m.membershipId}`, { role: next })
+    setBusyId(null)
+    if (!r.ok) {
+      setNotice({ kind: 'error', text: roleErrorText(r.code, r.message) })
+      return
+    }
+    setNotice({
+      kind: 'ok',
+      text: `${m.displayName}：${ROLE_LABEL[m.role] ?? m.role} → ${ROLE_LABEL[next] ?? next}`,
+    })
+    members.refetch()
+  }
 
   const items = members.data?.data ?? []
   const total = members.data?.meta?.total ?? 0
@@ -111,6 +171,21 @@ export default function ConsoleMembersPage() {
           刷新
         </button>
       </div>
+
+      {/* ── 变更结果（错误必须看得见：被拒绝时角色没有改，用户不能以为改了） ── */}
+      {notice ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`rounded-xl border px-3 py-2 text-xs ${
+            notice.kind === 'ok'
+              ? 'border-success/40 bg-success/10 text-success'
+              : 'border-warning/40 bg-warning/10 text-warning'
+          }`}
+        >
+          {notice.text}
+        </div>
+      ) : null}
 
       {/* ── 过滤 + 搜索 ── */}
       <div className="flex flex-wrap items-center gap-1.5">
@@ -238,6 +313,33 @@ export default function ConsoleMembersPage() {
                   ) : null}
                 </div>
               </div>
+
+              {/*
+                ── 角色调整 ──
+                只在**有权限**时出现（服务端已给出 capabilities）；没有权限时保留徽章，
+                不渲染一个点了会 403 的控件。
+                OWNER 行不给控件：所有权只能通过 org.transfer 转移。
+                「改自己」不在这里隐藏 —— 服务端会以 409 拒绝并给出明确原因，
+                这比前端猜"哪个是我"更可靠（列表未返回当前登录者身份）。
+              */}
+              {canUpdateRole && m.role !== 'OWNER' ? (
+                <label className="shrink-0">
+                  <span className="sr-only">修改 {m.displayName} 的角色</span>
+                  <select
+                    value={m.role}
+                    disabled={busyId === m.membershipId}
+                    onChange={(e) => void changeRole(m, e.target.value)}
+                    aria-label={`修改 ${m.displayName} 的角色`}
+                    className="px-2 py-1 rounded-lg border border-card-border bg-background-secondary text-xs text-foreground-muted hover:text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-40"
+                  >
+                    {ASSIGNABLE_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {ROLE_LABEL[r] ?? r}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
             </li>
           ))}
         </ul>

@@ -180,6 +180,71 @@ export function useApiPost() {
   return { post, isLoading, error };
 }
 
+/** 服务端错误信封（只声明本 hook 用到的路径，避免把整个响应形状复制一遍）。 */
+interface ErrorEnvelope {
+  error?: { code?: string; message?: string; details?: { code?: string } };
+}
+
+/** `PATCH` 的结果。与 `useApiPost()` 不同：**把结果作为返回值**，而不是只放进 `error` state。 */
+export interface PatchResult<T = unknown> {
+  ok: boolean;
+  data?: T;
+  /** 服务端 `error.message`（人类可读，可直接展示）。 */
+  message?: string;
+  /** 服务端 `error.code`（`ValidationError.details.code` 之类，便于分支）。 */
+  code?: string;
+  status?: number;
+}
+
+/**
+ * PATCH hook。
+ *
+ * 🔴 为什么不直接复用 `useApiPost()`：`useApiPost()` 把失败原因写进 `error` state，
+ *    调用方在 `await` 之后读到的仍是**上一次**渲染的 state（React 批处理），
+ *    于是"改角色失败"会错误地显示成"成功"或上一次的错误。这里把结果**返回**，
+ *    调用方拿到的一定是这次请求的结论。
+ */
+export function useApiPatch() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const patch = useCallback(
+    async <T = unknown>(url: string, body?: unknown): Promise<PatchResult<T>> => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(url, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+
+        const json: unknown = await res.json().catch(() => null);
+        const envelope = (json ?? {}) as ErrorEnvelope & { data?: unknown };
+
+        if (!res.ok) {
+          return {
+            ok: false,
+            status: res.status,
+            message: envelope.error?.message ?? `请求失败（${res.status}）`,
+            code: envelope.error?.details?.code ?? envelope.error?.code,
+          };
+        }
+
+        // 变更成功后让同路径的缓存失效（列表下一次读取能拿到新角色）。
+        invalidateCache(url.split("?")[0]);
+        return { ok: true, status: res.status, data: (envelope.data ?? json) as T };
+      } catch (err) {
+        console.warn(`API patch failed for ${url}:`, err);
+        return { ok: false, message: "服务暂时不可用，请稍后重试" };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  return { patch, isLoading };
+}
+
 export function useApiDelete() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -61,6 +61,22 @@ export {
   type ListMembersOptions,
 } from './members'
 
+// ── T07 · 成员角色变更（写）+ 管理员不变量 ──
+export {
+  ADMIN_EQUIVALENT_ROLES,
+  isAdminEquivalent,
+  planRoleChange,
+  parseMemberRolePatch,
+  updateMemberRole,
+  auditOrganizationAdmins,
+  type RoleChangeDecision,
+  type RoleChangeInput,
+  type RoleChangeRejection,
+  type RoleChangeRejectionCode,
+  type RoleChangeTarget,
+  type OrgAdminAudit,
+} from './member-roles'
+
 // ── T07 · 组织（社群）档案 ──
 export {
   ORG_NAME_MAX,

@@ -72,7 +72,7 @@ export function parseMemberFilters(params: URLSearchParams): MemberFilters {
 }
 
 /** Prisma select —— 这是**唯一**决定哪些字段能被读出来的地方。 */
-const MEMBERSHIP_SELECT = {
+export const MEMBERSHIP_SELECT = {
   id: true,
   userId: true,
   role: true,
@@ -90,7 +90,7 @@ const MEMBERSHIP_SELECT = {
   },
 } as const
 
-interface MembershipRow {
+export interface MembershipRow {
   id: string
   userId: string
   role: string

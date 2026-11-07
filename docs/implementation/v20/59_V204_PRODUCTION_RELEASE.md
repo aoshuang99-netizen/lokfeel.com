@@ -317,3 +317,9 @@ curl -X POST -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
 
 > 这不影响本次发布（发布走的是 Netlify，与组织角色无关），但它是**产品可用性**层面的缺口，
 > 必须在开放真实客户前解决：组织创建时必须有且至少一个 ADMIN。
+>
+> **2026-11-07 收口进展**：根因已定位并修复 —— 产品里**没有任何入口**能行使
+> `member.update_role`（`/api/v1/members` 只有 GET），所以"少一名管理员"无法自助恢复。
+> 已补 `PATCH /api/v1/members/[membershipId]` + 「最后一名管理员不可降级」不变量
+> （同一事务内计数）+ Console 角色下拉 + 体检/修复脚本，证据见 `60`。
+> 生产 `default` 组织本身**仍是 0 管理员**，由谁担任待裁决（`60` §6）。
