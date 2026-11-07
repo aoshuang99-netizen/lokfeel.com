@@ -24,6 +24,7 @@
  */
 
 import { db } from '@/lib/db'
+import { TENANT_TX } from './tx'
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors'
 import { writeTenantAudit } from './audit'
 import { TENANT_ROLES, can, parseTenantRole, type TenantRole } from './capabilities'
@@ -258,7 +259,7 @@ export async function updateMemberRole(
       from: decision.from,
       to: decision.to,
     }
-  })
+  }, TENANT_TX)
 
   await writeTenantAudit({
     organizationId: ctx.organizationId,

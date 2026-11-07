@@ -20,6 +20,7 @@ import { db } from '@/lib/db'
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@/lib/errors'
 import { sendOrganizationInviteEmail } from '@/lib/email'
 import { writeTenantAudit } from './audit'
+import { TENANT_TX } from './tx'
 import { TENANT_ROLES, can, type TenantRole } from './capabilities'
 import type { TenantContext } from './resolve'
 
@@ -231,7 +232,7 @@ export async function createInvitation(
       },
       select: INVITATION_SELECT,
     })
-  })
+  }, TENANT_TX)
 
   const inviteUrl = inviteAcceptUrl(token)
 
@@ -330,6 +331,15 @@ export interface AcceptResult {
  *
  * 全部判定与写入在同一事务里：邀请只能被消费一次，不能出现"两个人同时点同一个链接
  * 都成功"（那时第一条 UPDATE 之后 status 已不是 PENDING，第二条会拿到 NOT_PENDING）。
+ *
+ * 🔴 为什么 reject 分支是 `return` 而不是 `throw`：
+ *   交互事务里 `throw` 会**回滚事务内已执行的全部语句**。过期分支需要在库里留下
+ *   `status='EXPIRED'`（那是"有人拿过期链接来试过"的唯一证据），一旦边写边抛，
+ *   这条写入就永远提交不了 —— 接口一直答 EXPIRED，库里永远还是 PENDING，
+ *   于是"惰性落库"只是注释里的说法。
+ *   改成"事务内正常返回判定结果、事务提交后再抛"，两边都对：
+ *   过期事实落库了，对外仍然是 409 EXPIRED。
+ *   2026-11-07 生产路径 E2E 的 A06 就是这条断言红：接口 409/EXPIRED，DB 仍是 PENDING。
  */
 export async function acceptInvitation(params: {
   userId: string
@@ -341,83 +351,106 @@ export async function acceptInvitation(params: {
 
   const tokenHash = hashInviteToken(token)
 
-  return db.$transaction(async (tx) => {
-    const invitation = await tx.organizationInvitation.findUnique({
-      where: { tokenHash },
-      select: { id: true, organizationId: true, email: true, role: true, status: true, expiresAt: true },
-    })
-    if (!invitation) {
-      throw new NotFoundError('Invitation not found', { code: 'INVALID_TOKEN' })
-    }
-
-    if (invitation.status !== 'PENDING') {
-      throw new ConflictError(`invitation is not pending (status=${invitation.status})`, {
-        code: 'NOT_PENDING',
+  const outcome = await db.$transaction(
+    async (tx) => {
+      const invitation = await tx.organizationInvitation.findUnique({
+        where: { tokenHash },
+        select: { id: true, organizationId: true, email: true, role: true, status: true, expiresAt: true },
       })
-    }
+      if (!invitation) return { kind: 'invalid_token' as const }
 
-    if (invitation.expiresAt.getTime() <= Date.now()) {
-      // 惰性落库：把过期这个事实写下来，审计里才看得到"有人拿过期链接来试过"。
+      if (invitation.status !== 'PENDING') {
+        return { kind: 'not_pending' as const, status: invitation.status }
+      }
+
+      if (invitation.expiresAt.getTime() <= Date.now()) {
+        // 惰性落库：把过期这个事实写下来，审计里才看得到"有人拿过期链接来试过"。
+        await tx.organizationInvitation.update({
+          where: { id: invitation.id },
+          data: { status: 'EXPIRED' },
+        })
+        return { kind: 'expired' as const }
+      }
+
+      // 链接即凭据 ⇒ 必须绑定到被邀请的邮箱，否则转发即越权。
+      if (invitation.email.toLowerCase() !== params.userEmail.trim().toLowerCase()) {
+        return { kind: 'email_mismatch' as const }
+      }
+
+      const existing = await tx.membership.findFirst({
+        where: { organizationId: invitation.organizationId, userId: params.userId },
+        select: { id: true, status: true },
+      })
+      if (existing?.status === 'ACTIVE') {
+        return { kind: 'already_member' as const }
+      }
+
+      // 恢复旧关系而不是新建：@@unique([organizationId, userId]) 决定了只能有一条。
+      const membership = existing
+        ? await tx.membership.update({
+            where: { id: existing.id },
+            data: { status: 'ACTIVE', role: invitation.role as TenantRole },
+            select: { id: true, role: true },
+          })
+        : await tx.membership.create({
+            data: {
+              organizationId: invitation.organizationId,
+              userId: params.userId,
+              role: invitation.role as TenantRole,
+              status: 'ACTIVE',
+            },
+            select: { id: true, role: true },
+          })
+
       await tx.organizationInvitation.update({
         where: { id: invitation.id },
-        data: { status: 'EXPIRED' },
+        data: { status: 'ACCEPTED', acceptedAt: new Date(), acceptedBy: params.userId },
       })
-      throw new ConflictError('invitation has expired', { code: 'EXPIRED' })
-    }
 
-    // 链接即凭据 ⇒ 必须绑定到被邀请的邮箱，否则转发即越权。
-    if (invitation.email.toLowerCase() !== params.userEmail.trim().toLowerCase()) {
+      return {
+        kind: 'accepted' as const,
+        organizationId: invitation.organizationId,
+        role: membership.role as TenantRole,
+        reactivated: Boolean(existing),
+        membershipId: membership.id,
+        invitationId: invitation.id,
+      }
+    },
+    TENANT_TX,
+  )
+
+  // ── 事务已提交，按判定结果向外抛出（副作用已被保留） ──
+  switch (outcome.kind) {
+    case 'invalid_token':
+      throw new NotFoundError('Invitation not found', { code: 'INVALID_TOKEN' })
+    case 'not_pending':
+      throw new ConflictError(`invitation is not pending (status=${outcome.status})`, { code: 'NOT_PENDING' })
+    case 'expired':
+      throw new ConflictError('invitation has expired', { code: 'EXPIRED' })
+    case 'email_mismatch':
       throw new ForbiddenError('This invitation was issued to a different email address', {
         code: 'EMAIL_MISMATCH',
       })
-    }
-
-    const existing = await tx.membership.findFirst({
-      where: { organizationId: invitation.organizationId, userId: params.userId },
-      select: { id: true, status: true },
-    })
-    if (existing?.status === 'ACTIVE') {
+    case 'already_member':
       throw new ConflictError('you are already a member of this organization', { code: 'ALREADY_MEMBER' })
-    }
+  }
 
-    // 恢复旧关系而不是新建：@@unique([organizationId, userId]) 决定了只能有一条。
-    const membership = existing
-      ? await tx.membership.update({
-          where: { id: existing.id },
-          data: { status: 'ACTIVE', role: invitation.role as TenantRole },
-          select: { id: true, role: true },
-        })
-      : await tx.membership.create({
-          data: {
-            organizationId: invitation.organizationId,
-            userId: params.userId,
-            role: invitation.role as TenantRole,
-            status: 'ACTIVE',
-          },
-          select: { id: true, role: true },
-        })
+  await writeTenantAudit({
+    organizationId: outcome.organizationId,
+    actorId: params.userId,
+    eventType: 'invitation.accepted',
+    resourceType: 'membership',
+    resourceId: outcome.membershipId,
+    safeMetadata: {
+      role: outcome.role,
+      reactivated: outcome.reactivated,
+      invitationId: outcome.invitationId,
+    },
+  }).catch(() => {})
 
-    await tx.organizationInvitation.update({
-      where: { id: invitation.id },
-      data: { status: 'ACCEPTED', acceptedAt: new Date(), acceptedBy: params.userId },
-    })
-
-    return {
-      organizationId: invitation.organizationId,
-      role: membership.role as TenantRole,
-      reactivated: Boolean(existing),
-      _membershipId: membership.id,
-      _invitationId: invitation.id,
-    }
-  }).then(async (r) => {
-    await writeTenantAudit({
-      organizationId: r.organizationId,
-      actorId: params.userId,
-      eventType: 'invitation.accepted',
-      resourceType: 'membership',
-      resourceId: r._membershipId,
-      safeMetadata: { role: r.role, reactivated: r.reactivated, invitationId: r._invitationId },
-    }).catch(() => {})
-    return { organizationId: r.organizationId, role: r.role, reactivated: r.reactivated }
-  })
+  return {
+    organizationId: outcome.organizationId,
+    role: outcome.role,
+    reactivated: outcome.reactivated,
+  }
 }

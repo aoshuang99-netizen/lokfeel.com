@@ -99,3 +99,36 @@ export function formatErrorResponse(error: unknown) {
     status: 500,
   }
 }
+
+/**
+ * 唯一约束冲突判定 —— **不能只认 `code === 'P2002'`**。
+ *
+ * 实测（2026-11-07，T07 生产路径 E2E）：在 libSQL/Turso adapter 下，同一个
+ * `Organization.slug` 重复插入抛出的对象是
+ *
+ *   { code: 'N/A', message: 'SQLITE_CONSTRAINT: ... UNIQUE constraint failed: Organization.slug' }
+ *
+ * 也就是说 `code` 根本不等于 `P2002`，真正可判的信号在 message 里。
+ * 只判 `P2002` 的后果不是"少一个分支"，而是把一次**预期内的业务冲突**
+ * （用户填了个已被占用的标识）变成 500「服务器内部错误」：
+ * 用户会以为系统坏了并反复重试，而正确动作明明是"换个标识"。
+ *
+ * @param field 形如 `Organization.slug`；给了就要求命中的是这一列，
+ *              避免把"别的唯一键冲突"误判成本字段的冲突。
+ */
+export function isUniqueViolation(error: unknown, field?: string): boolean {
+  const e = error as { code?: unknown; message?: unknown; meta?: { target?: unknown } } | null
+  const byCode = e?.code === 'P2002'
+  const message = typeof e?.message === 'string' ? e.message : ''
+  const byMessage = /UNIQUE constraint failed/i.test(message)
+  if (!byCode && !byMessage) return false
+  if (!field) return true
+
+  const column = String(field.includes('.') ? field.split('.').pop() : field).toLowerCase()
+  if (byCode) {
+    const target = JSON.stringify(e?.meta?.target ?? '')
+    // meta.target 缺失时不否证（老版本 Prisma 不带 target）；有时才做列名比对。
+    return target === '""' || target === '{}' ? true : target.toLowerCase().includes(column)
+  }
+  return message.toLowerCase().includes(column)
+}

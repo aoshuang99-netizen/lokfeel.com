@@ -117,16 +117,33 @@ export function unauthorized(message: string = "Authentication required"): NextR
   );
 }
 
-export function forbidden(message: string = "You do not have permission to perform this action"): NextResponse<ApiResponse> {
+/**
+ * 403 —— `details` 必须透传，否则**语义码会丢**。
+ *
+ * 这不是格式洁癖：租户层的拒绝码（`OWNER_PROTECTED` / `EMAIL_MISMATCH` /
+ * `OWNER_GRANT_FORBIDDEN` / `CAPABILITY_REQUIRED` …）全部是 403，
+ * 而界面要靠这个码决定显示哪句人话。丢掉 details 之后，前端只能看到
+ * 一个笼统的 `PERMISSION_DENIED`，于是"链接不是发给你的"会被显示成
+ * "你没有权限" —— 用户据此做出的下一步动作完全错了（前者该换账号，后者该找管理员）。
+ * 2026-11-07 由生产路径 E2E 发现：九条断言里三条因此红。
+ */
+export function forbidden(
+  message: string = "You do not have permission to perform this action",
+  details?: unknown
+): NextResponse<ApiResponse> {
   return NextResponse.json(
-    { success: false, data: null, error: { code: ApiErrorCode.PERMISSION_DENIED, message } },
+    { success: false, data: null, error: { code: ApiErrorCode.PERMISSION_DENIED, message, details } },
     { status: 403 }
   );
 }
 
-export function notFound(message: string = "Resource not found"): NextResponse<ApiResponse> {
+/**
+ * 404 —— 同样透传 `details`：`INVALID_TOKEN` 与「资源不存在」是两件事
+ * （前者要提示"链接已失效，请重新索取"，后者是普通找不到）。
+ */
+export function notFound(message: string = "Resource not found", details?: unknown): NextResponse<ApiResponse> {
   return NextResponse.json(
-    { success: false, data: null, error: { code: ApiErrorCode.NOT_FOUND, message } },
+    { success: false, data: null, error: { code: ApiErrorCode.NOT_FOUND, message, details } },
     { status: 404 }
   );
 }
@@ -220,9 +237,9 @@ export function errorResponse(error: unknown): NextResponse<ApiResponse> {
       case 401:
         return unauthorized(error.message);
       case 403:
-        return forbidden(error.message);
+        return forbidden(error.message, error.details);
       case 404:
-        return notFound(error.message);
+        return notFound(error.message, error.details);
       case 409:
         return conflict(error.message, error.details);
       case 429:

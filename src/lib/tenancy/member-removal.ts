@@ -22,6 +22,7 @@ import { writeTenantAudit } from './audit'
 import { can, type TenantRole } from './capabilities'
 import { ADMIN_EQUIVALENT_ROLES, isAdminEquivalent } from './member-roles'
 import { MEMBERSHIP_SELECT, toMemberDto, type MemberDto, type MembershipRow, type MembershipStatusValue } from './members'
+import { TENANT_TX } from './tx'
 import type { TenantContext } from './resolve'
 
 export type MemberRemovalRejectionCode =
@@ -157,7 +158,7 @@ export async function removeMember(ctx: TenantContext, membershipId: string): Pr
     })
 
     return { member: toMemberDto(updated as unknown as MembershipRow), role: decision.role }
-  })
+  }, TENANT_TX)
 
   await writeTenantAudit({
     organizationId: ctx.organizationId,

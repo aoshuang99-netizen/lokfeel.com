@@ -18,8 +18,9 @@
  */
 
 import { db } from '@/lib/db'
-import { ConflictError, ValidationError } from '@/lib/errors'
+import { ConflictError, ValidationError, isUniqueViolation } from '@/lib/errors'
 import { writeTenantAudit } from './audit'
+import { TENANT_TX } from './tx'
 import type { TenantRole } from './capabilities'
 
 export const ORG_NAME_MAX = 80
@@ -162,14 +163,14 @@ export async function createOrganizationWithOwner(input: {
         select: { id: true },
       })
       return { org: created, membership: m }
-    })
+    }, TENANT_TX)
     org = result.org
     membership = result.membership
   } catch (err) {
-    // P2002 = 唯一约束冲突（slug 已被占用）。这是**预期内**的失败，
-    // 说明"同一 slug 只能成功一次"，正是幂等所依赖的那条约束。
-    const code = (err as { code?: string })?.code
-    if (code === 'P2002') {
+    // slug 唯一约束冲突 = **预期内**的失败，说明"同一 slug 只能成功一次"，正是幂等所依赖的那条约束。
+    // 判据必须走 isUniqueViolation()：libSQL adapter 下 `err.code` 不是 'P2002'（见 errors.ts）。
+    // 2026-11-07 生产路径 E2E 前这里只判 P2002，结果重名请求返回 500 而不是 409。
+    if (isUniqueViolation(err, 'Organization.slug')) {
       throw new ConflictError('该标识已被占用，请换一个', { code: 'SLUG_TAKEN', slug: plan.slug })
     }
     throw err
