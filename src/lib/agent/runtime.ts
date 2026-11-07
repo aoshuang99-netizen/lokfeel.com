@@ -201,23 +201,25 @@ function degrade(
         ledger: nextLedger,
         reason: `${reason} 已降级为「规则式」抽取（能力弱于模型路径，结果仍需你确认）。`,
         degradeCode: code,
-        providerKind: 'rules',
-      }
+      // 归因必须是**实际发生的那次调用**的种类：若真的调过模型（cost 非空）却
+      // 在这里写死 'rules'，账本/审计就会声称"根本没调模型"——那是错误归因。
+      providerKind: attribution.providerKind,
     }
-    return {
-      status: 'FAILED',
-      skill: skill.key,
-      risk: skill.risk,
-      requiresApproval,
-      payload: null,
-      rawText: null,
-      injectionSignals: signals,
-      cost,
-      ledger,
-      reason: `${reason} 且规则式兜底也失败：${compiled.reason}`,
-      degradeCode: 'NO_DEGRADE_PATH',
-      providerKind: 'rules',
-    }
+  }
+  return {
+    status: 'FAILED',
+    skill: skill.key,
+    risk: skill.risk,
+    requiresApproval,
+    payload: null,
+    rawText: null,
+    injectionSignals: signals,
+    cost,
+    ledger,
+    reason: `${reason} 且规则式兜底也失败：${compiled.reason}`,
+    degradeCode: 'NO_DEGRADE_PATH',
+    providerKind: cost?.providerKind ?? 'rules',
+  }
   }
 
   return {
@@ -232,7 +234,9 @@ function degrade(
     ledger,
     reason: `${reason}（该技能没有降级路径 —— 宁可不产出，也不给未经验证的结果。）`,
     degradeCode: code,
-    providerKind: 'rules',
+    // 同上：失败不等于"没调模型"。真实调用失败也必须如实标注提供方，
+    // 否则"高成本调用次数"与"降级率"两组指标都会失真。
+    providerKind: cost?.providerKind ?? 'rules',
   }
 }
 
