@@ -18,7 +18,7 @@
 | 1 | 组织 / 成员 / 权限收口 + D-12 回归 | **PASS**（本地生产构建；线上路径待发布后重跑） | `02_ORG_MEMBER_LIFECYCLE.md` |
 | 2 | 世界级 UI/UX（13 屏 × 4 视口 × 2 主题） | **PASS**（视觉 104/104、axe 39/39；Figma 部分 `BLOCKED_FIGMA_WRITE`） | `03_UI_UX_13SCREENS.md` |
 | 3 | 真实 OAuth 回调 / 会话续期 / 登出 / 切租户 | **PASS**（22 PASS / 0 FAIL / 2 `NOT_TESTED`） | `04_AUTH_SESSION_LIFECYCLE.md` |
-| 4 | Agent → Consent → Action → Outcome（含 Verify 正例） | `NOT_TESTED` | 待执行 |
+| 4 | Agent → Consent → Action → Outcome（含 Verify 正例） | **PASS**（核验阶梯 15/15；完整 HTTP 链 1 项 `NOT_TESTED`） | `05_AGENT_CONSENT_OUTCOME.md` |
 | 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | `NOT_TESTED` | 待执行 |
 | 6 | 监控 + 发布治理 + Workers 独立轨道 | `NOT_TESTED` | 待执行 |
 | 7 | RC 验收 + GO/NO-GO 门 | `NOT_TESTED` | 待执行 |
@@ -119,6 +119,24 @@
 | 还原 tokenVersion 后**立即** 200 | 401 | 60s 用户缓存 + 该账号无 ACTIVE 租户（`/api/v1/org` 恒 403） | 换 `/api/v1/organizations` 探针，判据改"401 → 非 401" |
 | `POST /api/auth/signout` 会清 cookie | `302 清cookie=false` | 302 跳的是 `/login?error=MissingCSRF`（假绿） | 测新端点 + 清后 jar → 401 |
 | 降级后失去 `member.invite` | `含invite=false` | `qa.female` 是 OPERATOR，**本来就没有**该能力 | 算实际差集 + 断言"新增为空" |
+
+---
+
+## 三·四、Batch 4 · 成果核验阶梯
+
+- 复验命令：`node scripts/qa/v205-outcome-verify.mjs --base=<BASE>`（`npm run verify:outcome:verify`）
+- 结果：**15 PASS / 0 FAIL**（夹具 `v205b4_*`，跑完即删）
+
+| 验收 | 结论 | 关键证据 |
+| --- | --- | --- |
+| 自报 → 对手方确认 → 外部核验（正例阶梯） | **PASS** | P01/P07/P09；三级逐级升级，`verified` 同步变 true |
+| 「不得仅凭自述标为已验证」 | **PASS** | P03 请求体塞 `verificationLevel` 被忽略（核验记录 0 条）；P04 正文写"已验证"无效；P05 自确认 400；P06 非当事方确认 403 |
+| 幂等 | **PASS** | P08/P11 重复提交 `created=false` 且记录数仍 1 |
+| 跨租户 | **PASS** | P12 另一租户 ADMIN 核验 → 404 |
+| 审计 | **PASS** | P13 `reported / confirmed / externally_verified` 各 1 |
+| 快照无漂移 | **PASS** | P14 派生值 == `Outcome.verificationLevel` |
+| Agent/Consent/Action 逻辑层 | **PASS** | `jest tests/agents` **231/231**（execution-gated / outbound-delivery / approval-consistency / adversarial-injection） |
+| 完整 HTTP 链 A01–A12（v198） | `NOT_TESTED` | v198 按设计拒绝远程库，需本地 file 库 + `next dev` + stub provider 三步前置；命令见 05 §4.2 |
 
 ---
 

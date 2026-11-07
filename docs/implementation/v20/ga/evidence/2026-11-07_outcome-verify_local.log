@@ -1,0 +1,23 @@
+
+目标：http://localhost:3111
+夹具：v205b4_org / v205b4_proposal
+
+  ✓ P01    status=201 level=SELF_REPORTED verified=false id=cmw6fbdum0025qck89yw1k6uo
+  ✓ P02    verified=1 含它=false 全量含它=true unverifiedCount=1
+  ✓ P03    请求体带 verificationLevel=EXTERNALLY_VERIFIED → DB=SELF_REPORTED，核验记录=0 条
+  ✓ P04    summary 写满"已验证/EXTERNALLY_VERIFIED" → level=SELF_REPORTED verified=false
+  ✓ P05    status=400 code=VALIDATION_ERROR
+  ✓ P06    status=403 code=PERMISSION_DENIED
+  ✓ P07    status=200 created=true level=COUNTERPARTY_CONFIRMED verified=true
+  ✓ P08    第二次 created=false，COUNTERPARTY_CONFIRMED 记录=1 条
+  ✓ P09    status=200 level=EXTERNALLY_VERIFIED verified=true
+  ✓ P10    DB 有 evidence（94 字符）；响应体出现 evidence 字段=false
+  ✓ P11    第二次 created=false，EXTERNALLY_VERIFIED 记录=1 条
+  ✓ P12    别的租户的 ADMIN 核验本租户成果 → status=404 code=NOT_FOUND
+  ✓ P13    审计={"outcome.confirmed":1,"outcome.externally_verified":1,"outcome.reported":1}
+  ✓ P14    记录集=COUNTERPARTY_CONFIRMED,EXTERNALLY_VERIFIED → 派生=EXTERNALLY_VERIFIED；快照=EXTERNALLY_VERIFIED
+  ✓ P15    重复上报=409（期望 409），级别仍=EXTERNALLY_VERIFIED
+
+✓ 夹具已清理（--keep 可保留）
+
+15 PASS / 0 FAIL / 0 SKIP / 0 NOT_TESTED

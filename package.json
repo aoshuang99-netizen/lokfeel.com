@@ -195,7 +195,8 @@
     "verify:workspace-drift": "node scripts/qa/verify-workspace-spec-drift.mjs",
     "probe:uptime": "node scripts/qa/uptime-probe.mjs",
     "verify:uptime": "node scripts/qa/uptime-probe.mjs --self-test",
-    "verify:auth:session": "node scripts/qa/v205-auth-session.mjs"
+    "verify:auth:session": "node scripts/qa/v205-auth-session.mjs",
+    "verify:outcome:verify": "node scripts/qa/v205-outcome-verify.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
