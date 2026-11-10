@@ -29,12 +29,28 @@ describe('产品目录 · 现状', () => {
     expect(ids).toEqual(['connection-os', 'hlua-pass', 'legacy-membership']);
   });
 
-  it('Connection OS 的定价是「未获批」：不显示价格、不可购买', () => {
+  /**
+   * V20.5 起定价获批（`PRICING_APPROVAL` 2026-11-10），因此这条断言从
+   * "未获批"翻转成"已获批"。翻转**不是**放宽规则 —— 它同时钉住三件事：
+   *   ① 有价就必须有审批留痕（否则 `validateCatalog` 红）；
+   *   ② 结账必须是**站内**（kind='internal'），仍然不许指向 pay.html；
+   *   ③ 价格文案只是"起价"，权威金额在 subscription-plans.ts。
+   */
+  it('Connection OS 的定价已获批：有价格、有审批留痕、站内结账', () => {
     const p = getProduct('connection-os');
-    expect(p.pricing.status).toBe('PENDING_APPROVAL');
-    expect(displayPrice(p)).toBeNull();
-    expect(isPurchasable(p)).toBe(false);
-    expect(p.checkout.kind).toBe('none');
+    expect(p.pricing.status).toBe('APPROVED');
+    expect(displayPrice(p)).toBe('From $49/mo');
+    expect(p.pricing.approvalRef ?? '').toMatch(/PRICING_APPROVAL/);
+    expect(isPurchasable(p)).toBe(true);
+    expect(p.checkout.kind).toBe('internal');
+    // 站内收银台不得带外部 href —— 那是"跳去别处买"的形状
+    expect(p.checkout.href).toBeUndefined();
+  });
+
+  it('已获批但拿掉 approvalRef ⇒ 目录自检必须报红（不允许自己给自己批）', () => {
+    const p = getProduct('connection-os');
+    const bad: Product = { ...p, pricing: { status: 'APPROVED', displayPrice: 'From $49/mo' } };
+    expect(validateCatalog([bad]).join('\n')).toContain('approvalRef');
   });
 
   it('Hlua 的结账只在它自己的页面上，且被标成外部产品', () => {
@@ -51,11 +67,13 @@ describe('产品目录 · 现状', () => {
     expect(isPurchasable({ ...p, pricing: { status: 'APPROVED', displayPrice: '$12.99' } })).toBe(false);
   });
 
-  it('退款承诺各自可溯源：旧会员 14 天（/refunds）、Hlua 7 天（pay.html）', () => {
+  it('退款承诺各自可溯源：Connection OS 14 天 · 旧会员 14 天 · Hlua 7 天', () => {
+    expect(getProduct('connection-os').refund).toMatchObject({ days: 14, source: '/refunds' });
     expect(getProduct('legacy-membership').refund).toMatchObject({ days: 14, source: '/refunds' });
     expect(getProduct('hlua-pass').refund).toMatchObject({ days: 7, source: 'public/pay.html' });
-    // Connection OS 从未销售 ⇒ 没有已生效承诺
-    expect(getProduct('connection-os').refund.days).toBeNull();
+    // 🔴 三条承诺必须**各自**有出处：天数相同的两条也不能合并成一条，
+    //    因为它们是不同产品的承诺，将来任何一条都可能单独变化。
+    expect(getProduct('connection-os').refund.source).not.toBe(getProduct('hlua-pass').refund.source);
   });
 
   it('每一条退款承诺都带出处（不允许无主文案）', () => {

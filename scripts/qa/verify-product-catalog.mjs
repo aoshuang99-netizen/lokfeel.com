@@ -16,8 +16,10 @@
  *      （`/pricing`、`/plans`、`/subscribe` 必须落在 Connection OS 自己的页面上）
  *  R2. 剥掉注释后，`pay.html` 在代码里**只允许出现在一处**：`src/config/products.ts`
  *      （以及明确标注为"探测目标"的脚本）。销售入口只能有一个出口。
- *  R3. `products.ts` 里 `connection-os` 必须 `PENDING_APPROVAL` + `displayPrice: null`
- *      —— 定价未获批就不许有金额。想改成 APPROVED 必须同时填 `approvalRef`。
+ *  R3. `products.ts` 里 `connection-os` 的定价状态必须**自洽**：
+ *      未获批（`PENDING_APPROVAL`）⇒ `displayPrice: null`，不许有金额；
+ *      已获批（`APPROVED`）⇒ 必须有 `approvalRef` **且**有 `displayPrice`。
+ *      两种都**不许**挂外部结账 —— 本目录销售的产品只能在本站结账。
  *  R4. 定价页**不得**引用 `src/config/plans.ts`（那是旧 B2C 的价格源；
  *      把它接进 SaaS 定价 = 用交友会员价冒充 Connection OS 的价格）
  *  R5. `/pricing` 页面必须真实存在（不是重定向到别处）
@@ -174,11 +176,24 @@ export function analyze(sources) {
 
     const block = code.slice(code.indexOf("id: 'connection-os'"), code.indexOf("id: 'legacy-membership'"));
     if (block) {
-      if (!/status:\s*'PENDING_APPROVAL'/.test(block)) {
-        problems.push('R3：connection-os 的 pricing.status 不是 PENDING_APPROVAL（定价未获批就该是它）');
-      }
-      if (!/displayPrice:\s*null/.test(block)) {
-        problems.push('R3：connection-os 的 displayPrice 不是 null —— 未获批定价不许显示金额');
+      // R3 的两面：APPROVED 必须有审批留痕；未获批必须没有金额。
+      // 这里不接受"PENDING + 有价"也不接受"APPROVED + 无依据" —— 两种都是
+      // "自己给自己批"的形状，只是伪装不同。
+      const approved = /status:\s*'APPROVED'/.test(block);
+      if (approved) {
+        if (!/approvalRef:\s*['"][^'"]{8,}['"]/.test(block)) {
+          problems.push('R3：connection-os 标了 APPROVED 却没有 approvalRef（谁批的、何时、依据什么）');
+        }
+        if (/displayPrice:\s*null/.test(block)) {
+          problems.push('R3：connection-os 标了 APPROVED 却没有 displayPrice');
+        }
+      } else {
+        if (!/status:\s*'PENDING_APPROVAL'/.test(block)) {
+          problems.push('R3：connection-os 的 pricing.status 既不是 APPROVED 也不是 PENDING_APPROVAL');
+        }
+        if (!/displayPrice:\s*null/.test(block)) {
+          problems.push('R3：connection-os 的 displayPrice 不是 null —— 未获批定价不许显示金额');
+        }
       }
       if (/kind:\s*'external'/.test(block)) {
         problems.push("R3：connection-os 挂了外部结账入口 —— 这正是本次要修的错配");
@@ -264,7 +279,7 @@ function main() {
   console.log('✅ 商业契约通过：');
   console.log('   · 没有任何重定向把销售入口指向 /pay.html（R1）');
   console.log(`   · 剥注释后 pay.html 只出现在 ${PAY_HTML_ALLOW.length} 个白名单文件（R2）`);
-  console.log('   · connection-os = PENDING_APPROVAL + displayPrice:null + 无外部结账（R3）');
+  console.log('   · connection-os 定价状态自洽（未获批无金额 / 已获批有审批留痕）+ 无外部结账（R3）');
   console.log('   · 定价页与产品目录都不引用旧 B2C 价格源 plans.ts（R4）');
   console.log('   · /pricing 是真实页面（R5）');
 }

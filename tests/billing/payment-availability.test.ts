@@ -35,10 +35,16 @@ const FAKE = {
   stripeKey: ["sk", "test", "0123456789abcdef"].join("_"),
   stripeLiveKey: ["sk", "live", "0123456789abcdef"].join("_"),
   stripeWebhookSecret: ["whsec", "0123456789abcdef"].join("_"),
+  // Dodo：`whsec_` + 16 个 base64 字符（形状合法即可，验签真伪不在本文件测）
+  dodoApiKey: ["dodo", "0123456789abcdef0123"].join("_"),
+  dodoWebhookKey: ["whsec", "MDEyMzQ1Njc4OWFiY2RlZg=="].join("_"),
 };
 
 /** 全就绪的基准环境（假值，形状合法即可）。 */
 const READY: Record<string, string> = {
+  DODO_PAYMENTS_API_KEY: FAKE.dodoApiKey,
+  DODO_PAYMENTS_ENVIRONMENT: "test_mode",
+  DODO_PAYMENTS_WEBHOOK_KEY: FAKE.dodoWebhookKey,
   CREEM_API_KEY: FAKE.creemKey,
   CREEM_WEBHOOK_SECRET: FAKE.creemWebhookSecret,
   CREEM_ENV: "production",
@@ -54,19 +60,22 @@ function without(...keys: string[]): Record<string, string> {
 }
 
 describe("payment availability · 真值表", () => {
-  it("空环境：五个通道全部未就绪，缺 4 个变量", () => {
+  it("空环境：七个通道全部未就绪，缺 6 个变量", () => {
     const a = readPaymentAvailability({});
 
     expect(a.configured).toBe(false);
     expect(a.charging).toBe(false);
-    expect(PAYMENT_CHANNELS).toHaveLength(5);
+    expect(PAYMENT_CHANNELS).toHaveLength(7);
     for (const channel of PAYMENT_CHANNELS) {
       expect(a.channels[channel]).toBe(false);
     }
-    // STRIPE_SECRET_KEY 被两个通道共用，去重后恰好 4 个
+    // STRIPE_SECRET_KEY 被两个通道共用，去重后恰好 7 个变量
     expect(a.missing).toEqual([
       "CREEM_API_KEY",
       "CREEM_WEBHOOK_SECRET",
+      "DODO_PAYMENTS_API_KEY",
+      "DODO_PAYMENTS_ENVIRONMENT",
+      "DODO_PAYMENTS_WEBHOOK_KEY",
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
     ]);
@@ -97,8 +106,41 @@ describe("payment availability · 真值表", () => {
     expect(a.missing).toEqual(["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]);
   });
 
+  it("只接 Dodo（新的订阅主链路）也能 charging=true —— OR 语义", () => {
+    const a = readPaymentAvailability(
+      without(
+        "CREEM_API_KEY",
+        "CREEM_WEBHOOK_SECRET",
+        "CREEM_ENV",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+      ),
+    );
+
+    expect(a.charging).toBe(true);
+    expect(a.configured).toBe(false);
+    expect(a.channels["dodo.checkout"]).toBe(true);
+    expect(a.channels["dodo.webhook"]).toBe(true);
+    expect(a.channels["creem.checkout"]).toBe(false);
+    expect(a.missing).toEqual([
+      "CREEM_API_KEY",
+      "CREEM_WEBHOOK_SECRET",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+    ]);
+  });
+
   it("缺 checkout 的 key 时 charging=false —— 收了钱也没有入口", () => {
-    const a = readPaymentAvailability(without("CREEM_API_KEY"));
+    // 同时去掉 Dodo 的三件套：本用例要证明的是"Creem 主链路不闭环"，
+    // 留着 Dodo 会让 OR 语义把它判成 true，测的就不是这件事了。
+    const a = readPaymentAvailability(
+      without(
+        "CREEM_API_KEY",
+        "DODO_PAYMENTS_API_KEY",
+        "DODO_PAYMENTS_ENVIRONMENT",
+        "DODO_PAYMENTS_WEBHOOK_KEY",
+      ),
+    );
 
     expect(a.charging).toBe(false);
     expect(a.channels["creem.checkout"]).toBe(false);
@@ -125,6 +167,9 @@ describe("payment availability · 反向对照（证明断言有牙齿）", () =
   const CASES: Array<{ variable: string; affected: string[] }> = [
     { variable: "CREEM_API_KEY", affected: ["creem.checkout"] },
     { variable: "CREEM_WEBHOOK_SECRET", affected: ["creem.webhook"] },
+    { variable: "DODO_PAYMENTS_API_KEY", affected: ["dodo.checkout", "dodo.webhook"] },
+    { variable: "DODO_PAYMENTS_ENVIRONMENT", affected: ["dodo.checkout", "dodo.webhook"] },
+    { variable: "DODO_PAYMENTS_WEBHOOK_KEY", affected: ["dodo.webhook"] },
     { variable: "STRIPE_SECRET_KEY", affected: ["stripe.card", "stripe.refund", "stripe.webhook"] },
     { variable: "STRIPE_WEBHOOK_SECRET", affected: ["stripe.webhook"] },
   ];
@@ -183,6 +228,27 @@ describe("payment availability · 误配（malformed > missing）", () => {
     const a = readPaymentAvailability({ ...READY, CREEM_API_KEY: "   " });
     expect(a.channels["creem.checkout"]).toBe(false);
     expect(a.missing).toContain("CREEM_API_KEY");
+  });
+
+  it("DODO_PAYMENTS_ENVIRONMENT 取值非法 ⇒ malformed（不回落到 live 收款）", () => {
+    for (const bad of ["live", "test", "prod_mode", "LIVE_MODE"]) {
+      const a = readPaymentAvailability({ ...READY, DODO_PAYMENTS_ENVIRONMENT: bad });
+      expect(a.malformed).toContain("DODO_PAYMENTS_ENVIRONMENT");
+      expect(a.channels["dodo.checkout"]).toBe(false);
+      expect(a.channels["dodo.webhook"]).toBe(false);
+      expect(a.configured).toBe(false);
+    }
+  });
+
+  it("Dodo webhook 密钥少了 whsec_ 前缀 ⇒ malformed，而不是静默就绪", () => {
+    const a = readPaymentAvailability({
+      ...READY,
+      DODO_PAYMENTS_WEBHOOK_KEY: ["MDEyMzQ1Njc4OWFiY2RlZg=="].join(""),
+    });
+    expect(a.channels["dodo.webhook"]).toBe(false);
+    // checkout 不需要 webhook 密钥，因此仍然就绪 —— 这是"合法的中间状态"
+    expect(a.channels["dodo.checkout"]).toBe(true);
+    expect(a.malformed).toContain("DODO_PAYMENTS_WEBHOOK_KEY");
   });
 });
 
