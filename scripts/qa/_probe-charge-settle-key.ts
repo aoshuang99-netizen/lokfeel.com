@@ -48,11 +48,17 @@ console.log(JSON.stringify(keys(failed), null, 2));
 console.log('--- payment.succeeded (same payment_id) ---');
 console.log(JSON.stringify(keys(succeeded), null, 2));
 
-// 结论判定：共用键 ⇒ 成功那次的 settle 键与失败那次相同
+// 结论判定（2026-11-10 R-15 修复后语义）：
+// · 「建款」键重叠是正确幂等（同一笔款只创建一次，内核还强制拒绝重复创建）
+// · 「结算」键重叠才是缺陷（会让后到的结算命令被判 replayed 静默丢弃）
 const fk = failed.kind === 'apply' ? failed.commands.map((c) => (c as { dedupeKey: string }).dedupeKey) : [];
 const sk = succeeded.kind === 'apply' ? succeeded.commands.map((c) => (c as { dedupeKey: string }).dedupeKey) : [];
 const overlap = fk.filter((k) => sk.includes(k));
-console.log('\n重叠的 dedupeKey =', JSON.stringify(overlap, null, 2));
-console.log(overlap.length > 0
-  ? '=> 冲突成立：后到的成功事件中，重叠键对应的命令会被判 replayed 跳过'
-  : '=> 无冲突：成功与失败使用互不相同的键');
+const settleOverlap = overlap.filter((k) => k.includes('charge-settled'));
+console.log('\n建款键重叠（正确幂等） =', JSON.stringify(overlap.filter((k) => k.includes('charge-created'))));
+console.log('结算键重叠（必须是空） =', JSON.stringify(settleOverlap));
+console.log(
+  settleOverlap.length === 0
+    ? '=> R-15 已修复：结算键分态，失败不再吞成功；"失败后同 id 成功"由内核显式拒绝并告警'
+    : '=> R-15 仍存在：结算键重叠会让成功被静默吞掉',
+);

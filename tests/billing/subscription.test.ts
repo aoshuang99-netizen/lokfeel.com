@@ -390,3 +390,82 @@ describe('辅助判据', () => {
     expect(hasPendingCharge(reduceBillingEvents(startedAndPaid()))).toBe(false)
   })
 })
+
+/**
+ * 款项终态负控（R-15 · 2026-11-10 发布阻断缺陷的内核防线）
+ *
+ * 这组在 R-15 之前**不存在**——CHARGE_FAILED 在整个内核套件里零覆盖，
+ * 正是"同 id 先失败后成功被幂等吞掉"能溜进生产的原因。翻译层已分态键
+ *（tests/billing/dodo-events.test.ts），这里钉住"分态键放行之后内核怎么判"：
+ *
+ *   · FAILED 不改判成功：要重试必须**新 payment_id ⇒ 新款项**（转账单事实不变量）；
+ *   · 已确认成功不被后到失败回退（CHARGE_TRANSITIONS.SUCCEEDED = ['REFUNDED']）；
+ *   · 内核拒绝 = appendBillingEvent 不写库 = webhook 路由 200 + deferred + 告警，
+ *     绝不静默、绝不假装开通。
+ */
+describe('款项终态负控（R-15）', () => {
+  const opened = () => [
+    ev({ type: 'SUBSCRIPTION_STARTED', plan: 'GROWTH' }),
+    ev({ type: 'CHARGE_CREATED', chargeId: 'pay_same', amountCents: 14900 }),
+  ]
+
+  it('同 chargeId 先 FAILED 后 SUCCEEDED ⇒ 内核显式拒绝（不吞、不改判、不静默）', () => {
+    const failed = [
+      ...opened(),
+      ev({ type: 'CHARGE_FAILED', chargeId: 'pay_same', amountCents: 14900, gatewayStatus: 'FAILED', reason: 'card_declined' }),
+    ]
+    expect(() =>
+      reduceBillingEvents([
+        ...failed,
+        ev({ type: 'CHARGE_SUCCEEDED', chargeId: 'pay_same', amountCents: 14900, gatewayStatus: 'SUCCEEDED' }),
+      ]),
+    ).toThrow(/不允许变为/)
+  })
+
+  it('同 chargeId 先 SUCCEEDED 后 FAILED ⇒ 拒绝（已确认成功不被后到失败回退）', () => {
+    const succeeded = [
+      ...opened(),
+      ev({ type: 'CHARGE_SUCCEEDED', chargeId: 'pay_same', amountCents: 14900, gatewayStatus: 'SUCCEEDED' }),
+    ]
+    expect(() =>
+      reduceBillingEvents([
+        ...succeeded,
+        ev({ type: 'CHARGE_FAILED', chargeId: 'pay_same', amountCents: 14900, gatewayStatus: 'FAILED', reason: 'late_decline' }),
+      ]),
+    ).toThrow(/不允许变为/)
+  })
+
+  it('FAILED 重复结算 ⇒ 拒绝（幂等由去重键负责，内核拒绝一切重复终态写入）', () => {
+    expect(() =>
+      reduceBillingEvents([
+        ...opened(),
+        ev({ type: 'CHARGE_FAILED', chargeId: 'pay_same', amountCents: 14900, gatewayStatus: 'FAILED', reason: 'x' }),
+        ev({ type: 'CHARGE_FAILED', chargeId: 'pay_same', amountCents: 14900, gatewayStatus: 'FAILED', reason: 'x' }),
+      ]),
+    ).toThrow(/不允许变为/)
+  })
+
+  it('同 chargeId 重复建款 ⇒ 拒绝（去重键放行也过不了内核）', () => {
+    expect(() =>
+      reduceBillingEvents([
+        ...opened(),
+        ev({ type: 'CHARGE_CREATED', chargeId: 'pay_same', amountCents: 14900 }),
+      ]),
+    ).toThrow(/不能重复创建/)
+  })
+
+  it('失败后换新 chargeId 的成功 ⇒ 合法入账（这就是"重试必须新开一笔"的正确形态）', () => {
+    // 负控的对偶面：不是"失败后永远收不了钱"，而是"同一笔不重复入账"。
+    // 新 payment_id ⇒ 新款项，正常 SUCCEEDED。
+    const state = reduceBillingEvents([
+      ...opened(),
+      ev({ type: 'CHARGE_CREATED', chargeId: 'pay_old', amountCents: 14900 }),
+      ev({ type: 'CHARGE_FAILED', chargeId: 'pay_old', amountCents: 14900, gatewayStatus: 'FAILED', reason: 'declined' }),
+      ev({ type: 'CHARGE_CREATED', chargeId: 'pay_new', amountCents: 14900 }),
+      ev({ type: 'CHARGE_SUCCEEDED', chargeId: 'pay_new', amountCents: 14900, gatewayStatus: 'SUCCEEDED' }),
+    ])
+    const byId = new Map(state.charges.map((c) => [c.chargeId, c.status]))
+    expect(byId.get('pay_old')).toBe('FAILED')
+    expect(byId.get('pay_new')).toBe('SUCCEEDED')
+  })
+})

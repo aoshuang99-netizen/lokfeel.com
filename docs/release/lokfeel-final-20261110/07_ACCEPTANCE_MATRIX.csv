@@ -1,0 +1,15 @@
+﻿id,requirement,owner,priority,route/API,environment,release_sha,tested_at,method,expected,actual,status,evidence_path,blocker,next_action
+G0-baseline,源码/远端/产物/运行SHA关系明确,WorkBuddy,P0,-,local+prod,T0@a8ca968,2026-11-10 18:59 CST,git ls-remote+Netlify API+health curl,四者关系可陈述,local=remote=a8ca968; prod=5a161c4(healthy),PASS,evidence/g0-baseline-2026-11-10.txt,,已冻结
+R15-fix,同payment_id先失败后成功不被吞,WorkBuddy,P0,translateDodoEvent+reduceBillingEvents,local-test,,2026-11-10 19:15 CST,jest负控5+翻译层4+探针,成功不被静默吞且内核显式拒绝,22+39例全绿+探针结算键空重叠,PASS,evidence/gates-2026-11-10.log,,候选内闭环
+R15-live-probe,生产代码该缺陷仍存在(5a161c4),WorkBuddy,P0,/pricing+/api/payments/dodo/checkout,prod,5a161c4,2026-11-10 19:00 CST,生产plans API,线上按钮应不可点,checkoutReady=true 5/6 SKU 可点,FAIL,RELEASE_STATUS.md §3,线上未含候选修复,发布候选或临时摘除DODO_PAYMENTS_API_KEY(等用户D2)
+R14-assumption,renewed与payment.succeeded成对同id幂等,WorkBuddy,P1,dodo-events成对幂等,local-test,,2026-11-10 19:15 CST,jest,同id键相同后到者replayed,键相同断言绿,PASS(代码层),05_BILLING_SECURITY_REVIEW.md §2,真实投递未验证,首笔真实续费后对账笔数
+G12-gate,定价未经人工批准不得开卖,WorkBuddy,P0,commercial-gate+checkout/plans/pricing,local-test,,2026-11-10 19:18 CST,jest 5例+check:products,未批准⇒按钮禁用+503,enabled=false+503 PRICING_NOT_APPROVED,PASS,evidence/gates-2026-11-10.log,,
+G12-approval,定价获产品所有者真实批准,用户,P0,products.ts pricing,prod,,,人工,,APPROVED+approvalRef,PENDING_APPROVAL(代填已回退),BLOCKED,RELEASE_STATUS.md §4 D1,未获批准,用户批准后回填并复核
+G1-eight-questions,首页八问完整,内容,B1,-,n/a,,,n/a,,逐页有明确答案,未启动,NOT_STARTED,RELEASE_STATUS.md §5,B1未执行,启动B1
+G2-pages,六类公开页+法律闭环,前端,B2,/product /solutions /stories /how-it-works /about /contact,n/a,,,n/a,,页面存在且真实,未启动,NOT_STARTED,RELEASE_STATUS.md §5,B2未执行,启动B2
+G3-figma,可编辑Figma交付,设计,B2,figma,n/a,,,n/a,,文件URL+node映射,环境无写入连接器,BLOCKED,RELEASE_STATUS.md §1 G3,无connector,用户授权Figma或继续BLOCKED
+G5-user-test,≥5名目标用户4/5通过,用户,B4,/,n/a,,,n/a,,≥4/5两题,无人参与,NOT_TESTED,RELEASE_STATUS.md §4 D7,不可替代人工,用户招募
+G6-real-provider,真实授权行动与独立核验(候选SHA),QA,B3,MCP/A2A链,candidate,,n/a,既有15/15须重跑,,重跑后PASS,未在候选重跑,NOT_TESTED,RELEASE_STATUS.md §5,旧证据绑定旧SHA,候选构建后重跑
+G9-cf,目标架构可运行可恢复,平台,B4,全栈,n/a,,,n/a,,ADR+演练+对账,未启动,NOT_STARTED,RELEASE_STATUS.md §4 D6,迁移范围未定,用户确认D6
+G10-perf,LCP/CLS/INP/TBT预算,QA,B4,公开页,candidate,,n/a,固定条件5次测量,,全部达标,未实测(TBT旧600-2500ms超),NOT_TESTED,RELEASE_STATUS.md §1 G10,须绑定最终候选,候选定稿后实测
+G13-post-release,发布后生产复验,发布,B6,关键路径,prod,,,发布后实测,,全过,未发布,N/A,RELEASE_STATUS.md §5,未到B6,READY_FOR_APPROVAL后执行

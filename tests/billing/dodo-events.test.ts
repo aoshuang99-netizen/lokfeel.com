@@ -318,3 +318,78 @@ describe('辅助：组织 id 与档位判定', () => {
     expect(resolvePlanForEvent({ plan: 'NOPE' }, 'pdt_mystery', ENV)).toBeNull();
   });
 });
+
+/**
+ * 结算幂等键的终态区分 —— R-15 发布阻断缺陷的负控组。
+ *
+ * 缺陷（2026-11-10 探针实测确认）：CHARGE_FAILED 与 CHARGE_SUCCEEDED 曾共用
+ * `dodo:charge-settled:${paymentId}`。同一 payment_id 先失败后成功时，
+ * 成功事件的两条命令键均已被失败事件占用 ⇒ 全被判 replayed 跳过，
+ * 账本停在 FAILED，而钱已收（收钱不到账）。
+ *
+ * 修复契约：
+ *   · 结算键带终态后缀（succeeded/failed），失败不得吞掉后续成功；
+ *   · 同一事件重复投递键稳定（重投不双记）；
+ *   · "失败后同 id 成功"不再静默——由账本内核显式拒绝（见内核负控），
+ *     webhook 路由将其转为 200 + deferred + LEDGER REJECT 告警日志。
+ */
+describe('结算幂等键 · 终态区分（R-15）', () => {
+  const chargeEvent = (type: 'payment.succeeded' | 'payment.failed', paymentId: string) => ({
+    type,
+    data: {
+      payment_id: paymentId,
+      subscription_id: 'sub_1',
+      product_id: 'pdt_growth_monthly',
+      total_amount: 14900,
+      currency: 'usd',
+      metadata: META,
+    },
+  });
+
+  const chargeKeys = (type: 'payment.succeeded' | 'payment.failed', paymentId: string): string[] => {
+    const outcome = translateDodoEvent(chargeEvent(type, paymentId), ACTIVE_GROWTH, ENV);
+    if (outcome.kind !== 'apply') throw new Error(`expected apply, got ${outcome.kind}`);
+    return outcome.commands.map((c) => c.dedupeKey);
+  };
+
+  it('同 payment_id：失败的结算键与成功的结算键不重叠（失败不得吞成功）', () => {
+    const failedKeys = chargeKeys('payment.failed', 'pay_x');
+    const succeededKeys = chargeKeys('payment.succeeded', 'pay_x');
+    // 「建款」键允许重叠 —— 同一笔款只创建一次是正确幂等（内核还强制拒绝重复创建）。
+    // 但「结算」键必须分态：任何一个结算键重叠都会让后到的结算命令被判 replayed 静默丢弃。
+    const settleOf = (keys: string[]) => keys.filter((k) => k.includes('charge-settled'));
+    expect(settleOf(failedKeys).filter((k) => settleOf(succeededKeys).includes(k))).toEqual([]);
+    // 建款键两侧一致（同 payment_id ⇒ 同一笔款）
+    expect(failedKeys).toContain('dodo:charge-created:pay_x');
+    expect(succeededKeys).toContain('dodo:charge-created:pay_x');
+  });
+
+  it('成功事件重复投递：键稳定（重投不双记成功）', () => {
+    expect(chargeKeys('payment.succeeded', 'pay_y')).toEqual(chargeKeys('payment.succeeded', 'pay_y'));
+  });
+
+  it('失败事件重复投递：键稳定（重投不双记失败）', () => {
+    expect(chargeKeys('payment.failed', 'pay_z')).toEqual(chargeKeys('payment.failed', 'pay_z'));
+  });
+
+  it('成对幂等（R-14 正向设计）在分态键下仍然成立：renewed 与 payment.succeeded 同键', () => {
+    const payKeys = chargeKeys('payment.succeeded', 'pay_9');
+    const renewed = translateDodoEvent(
+      {
+        type: 'subscription.renewed',
+        data: {
+          subscription_id: 'sub_1',
+          payment_id: 'pay_9',
+          product_id: 'pdt_growth_monthly',
+          recurring_pre_tax_amount: 14900,
+          currency: 'usd',
+          metadata: META,
+        },
+      },
+      ACTIVE_GROWTH,
+      ENV,
+    );
+    if (renewed.kind !== 'apply') throw new Error(`expected apply, got ${renewed.kind}`);
+    expect(renewed.commands.map((c) => c.dedupeKey)).toEqual(payKeys);
+  });
+});

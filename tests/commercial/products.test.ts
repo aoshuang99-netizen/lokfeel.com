@@ -30,20 +30,19 @@ describe('产品目录 · 现状', () => {
   });
 
   /**
-   * V20.5 起定价获批（`PRICING_APPROVAL` 2026-11-10），因此这条断言从
-   * "未获批"翻转成"已获批"。翻转**不是**放宽规则 —— 它同时钉住三件事：
-   *   ① 有价就必须有审批留痕（否则 `validateCatalog` 红）；
-   *   ② 结账必须是**站内**（kind='internal'），仍然不许指向 pay.html；
-   *   ③ 价格文案只是"起价"，权威金额在 subscription-plans.ts。
+   * 🔴 2026-11-10 正式上线总令（G12）：此前实现者曾自填 APPROVED + approvalRef，
+   * 违反"禁止实现者代填商业审批"。已回退为 PENDING_APPROVAL：
+   *   · 未获批 ⇒ 不显示价格、不可购买、无结账入口；
+   *   · 恢开售的唯一路径是产品所有者真实批准后亲手填 APPROVED + approvalRef。
+   * 这条断言钉住回退状态，防止下一个实现者（或下个 AI）再次自我授权。
    */
-  it('Connection OS 的定价已获批：有价格、有审批留痕、站内结账', () => {
+  it('Connection OS 定价处于审批中（G12 回退）：无价格、不可购买、无结账入口', () => {
     const p = getProduct('connection-os');
-    expect(p.pricing.status).toBe('APPROVED');
-    expect(displayPrice(p)).toBe('From $49/mo');
-    expect(p.pricing.approvalRef ?? '').toMatch(/PRICING_APPROVAL/);
-    expect(isPurchasable(p)).toBe(true);
-    expect(p.checkout.kind).toBe('internal');
-    // 站内收银台不得带外部 href —— 那是"跳去别处买"的形状
+    expect(p.pricing.status).toBe('PENDING_APPROVAL');
+    expect(displayPrice(p)).toBeNull();
+    expect(p.pricing.approvalRef).toBeUndefined();
+    expect(isPurchasable(p)).toBe(false);
+    expect(p.checkout.kind).toBe('none');
     expect(p.checkout.href).toBeUndefined();
   });
 

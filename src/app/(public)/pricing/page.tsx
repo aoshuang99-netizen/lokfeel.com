@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ArrowRight, Check, Layers, Scale, ShieldCheck, Workflow } from 'lucide-react';
 
 import { PRODUCTS, displayPrice, isPurchasable } from '@/config/products';
-import { readSkuBindings, readStoreReadiness } from '@/lib/payments/dodo/config';
+import { readCheckoutGate } from '@/lib/payments/commercial-gate';
+import { readSkuBindings } from '@/lib/payments/dodo/config';
 import { PlanCards } from '@/components/billing/plan-cards';
 
 export const metadata: Metadata = {
@@ -45,11 +46,17 @@ export default async function PricingPage({
 
   const price = displayPrice(product);
   const purchasable = isPurchasable(product);
-  const store = readStoreReadiness();
   /**
-   * 逐格可用性。`store.ready` 只代表**凭据齐备**（能建会话），
-   * 具体某一格能不能卖要看这里 —— 例如 Scale 年付因 Dodo 单笔
-   * 金额上限（$3,000）暂时建不出商品，不该连累另外 5 个套餐。
+   * 🔴 G12：页面自己不判"能不能买"，服务端唯一判据是 commercial-gate：
+   *   开放 = 技术就绪（Dodo 凭据 + SKU 绑定）AND 人工定价批准（products.ts APPROVED + approvalRef）。
+   * 当前 products.ts 处于 PENDING_APPROVAL（代填审批已按总令回退），
+   * 所以按钮 disabled，文案为"定价审批中" —— 不会出现"点了报错"或"悄悄能绕过"。
+   */
+  const gate = readCheckoutGate();
+  /**
+   * 逐格可用性。凭据齐备只是"能建会话"；某一格能不能卖要看这里 ——
+   * 例如 Scale 年付因 Dodo 单笔金额上限（$3,000）暂时建不出商品，
+   * 不该连累另外 5 个套餐。
    */
   const bound = readSkuBindings();
 
@@ -83,7 +90,7 @@ export default async function PricingPage({
               已取消本次结账，未产生任何费用。你可以随时重新选择套餐。
             </div>
           )}
-          <PlanCards checkoutReady={store.ready} bound={bound} callbackUrl="/pricing" />
+          <PlanCards checkoutReady={gate.enabled} bound={bound} callbackUrl="/pricing" />
         </div>
 
         {/* ── 3. 权益与边界（与价格无关，但决定"值不值"）────── */}

@@ -130,16 +130,17 @@ export const PRODUCTS: readonly Product[] = [
       '机器面：MCP（5 工具）与 A2A 任务端点，与 REST 共用同一套租户守卫',
     ],
     pricing: {
-      status: 'APPROVED',
-      // 展示价是**入口的最低档**，权威金额在 src/config/subscription-plans.ts。
-      // 这里写 "From" 而不是某一档的精确价，是为了避免两处金额数字漂移：
-      // 卡片上的 $49 由套餐目录渲染，本字段只回答"起价多少"这个营销问题。
-      displayPrice: 'From $49/mo',
-      approvalRef: 'PRICING_APPROVAL 2026-11-10（产品所有者批准；依据：V20.5 GA 上线指令 · 订阅套餐定价）',
+      // 🔴 G12（2026-11-10 总令）：本块曾由实现者自填 APPROVED + approvalRef ——
+      // 那是"实现者代填商业审批"，违反"禁止让实现者代填商业审批"的总令纪律。
+      // 已回退为 PENDING_APPROVAL。恢复开售的唯一路径：产品所有者在真实批准后
+      // 亲手（或引用其书面批准工单）填 status:'APPROVED' + approvalRef + 恢复
+      // checkout.kind:'internal'；`readCheckoutGate()` 会据此解锁收银台。
+      status: 'PENDING_APPROVAL',
+      displayPrice: null,
     },
     checkout: {
-      kind: 'internal',
-      label: '选择套餐并订阅',
+      kind: 'none',
+      label: '定价审批中（等待产品所有者批准）',
     },
     refund: {
       days: 14,

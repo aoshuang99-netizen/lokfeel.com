@@ -1,0 +1,17 @@
+== 候选门禁 · 2026-11-10 19:20:52 CST · HEAD=a8ca9685266e8d3b6ac07cc0a8115819db3bf856 ==
+-- tsc --
+EXIT=0（输出为空，见 /tmp/tsc-g12.log 复核）
+-- eslint（改动面）--
+EXIT=0
+-- jest 全量 --
+Test Suites: 143 passed, 143 total
+Tests:       2719 passed, 2719 total
+JEST=0
+-- check:products --
+GATE=0（5 项契约全过，输出见执行记录）
+-- R-15 探针（修复后）--
+建款键重叠（正确幂等） = ["dodo:charge-created:pay_same"]
+结算键重叠（必须是空） = []
+=> R-15 已修复：结算键分态，失败不再吞成功；"失败后同 id 成功"由内核显式拒绝并告警
+-- next build --
+✓ Compiled successfully in 2.2min
