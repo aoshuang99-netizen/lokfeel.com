@@ -1,0 +1,32 @@
+﻿id,page,claim_or_copy,capability_or_fact,evidence,status,note
+C-00,/,LokFeel is a Connection OS turning collaboration intent into approved action and verifiable outcomes,产品定位=connection-os,src/config/products.ts:connection-os,PASS,八问 Q1
+C-01,/,Serves teams / professional communities / industry-network operators,角色体系 MEMBER/OPERATOR/OWNER,src/lib/tenancy/*（角色能力表）,PASS,八问 Q2
+C-02,/,Pain: intent dies in chat threads; nobody approves; results unprovable,对应 Consent/Outcome 一等对象,src/lib/living/consent/*；src/lib/outcome/verification.ts,PASS,八问 Q3
+C-03,/,Five-step chain intent→proposal→consent→action→outcome,五步链路 API 全实现,api/v1/intents;connections/proposals;[connectionId]/consent;agents/runs/[runId]/execute;outcomes,PASS,八问 Q4
+C-04,/,Difference: consent before action / visible execution / 3-level verification / org control,批准状态机+三级核验+七屏,src/lib/agent/approval.ts:23-36;src/lib/outcome/verification.ts:14-29;src/app/console/console-shell.tsx:48-63,PASS,八问 Q5
+C-05,/,Outcomes carry verification level + audit events,三级级别+审计事件,src/lib/outcome/verification.ts;audit outcome.reported/confirmed/externally_verified,PASS,八问 Q6
+C-06,/,How to start: register→org→goal→approve→verify,注册/OAuth/组织/意图/执行全存在,src/lib/auth/config.ts:2-3;api/v1/intents;agents/runs,PASS,八问 Q7
+C-07,/ + /about + /contact,Operator = LokFeel Inc.; support replies within 24h,support 页+分部门邮箱,/support/page.tsx:32,82;contact/page.tsx:38-96,PARTIAL,主体信息待 D8 核实
+C-08,/,Hero H1 rewrite: Turn collaboration intent into approved action and verifiable outcomes,总令建议句,docs/release/.../01b §P1,PASS,替换现 hero 主句
+C-09,/product,Consent gate: AWAITING_APPROVAL→EXECUTED 边不存在；prompt 注入不能绕过,批准状态机硬边界,src/lib/agent/approval.ts:23-36,PASS,核心差异点
+C-10,/product,Agents run on a real provider (WorkBuddy cloud) with usage accounting,真实 Provider+末帧 usage,src/lib/agents/provider-workbuddy.ts:1-16;provider-runtime.ts:77-124,PASS,生产出口 28/28 已证（evidence/g6）
+C-11,/product,Agent execution under quota & micro-cent budget,配额+预算双闸,src/lib/agents/quota.ts:12-20;src/lib/agent/cost.ts:127-140,PASS,无"无限"承诺
+C-12,/product,MCP 5 tools per-tool authenticated; A2A 120 req/min,机器面真实,src/app/api/mcp/route.ts:2-28;src/lib/interop/tools.ts:45-121;a2a/tasks/route.ts:42,PASS,首页 footer 数字一致
+C-13,/product,Workspace 6 screens; Console 7 screens,六屏/七屏清单,living-workspace.tsx:121-126;console-shell.tsx:48-63,PASS,不加修饰词
+C-14,/solutions,Scenario 1 professional introduction via consent+introduce,介绍功能真实,api/v1/connections/[connectionId]/introduce;console/connections/page.tsx,PASS,投递=站内信+邮件
+C-15,/solutions,Scenario 2 small-team goal approve→execute→externally verify,批准/执行/核验分离,agents/runs/[runId]/approve+execute;outcomes/[outcomeId]/verify,PASS,外部核验=ADMIN+且非当事方
+C-16,/solutions,Hiring/cross-border framed as supported scenario not vertical solution,不扩张垂直方案,总令 §4;产品无行业专用功能,PASS,措辞已按总令
+C-17,/stories,Two demo cases labeled "Demo scenario — not a real customer result",无真实客户案例,总令 §5;stories 页为新增,PASS,不伪造 Logo/引语/量化
+C-18,/how-it-works + /help,7-step onboarding incl. failure recovery & support channels,投递失败不丢：NotificationDelivery 落库,src/lib/workflow/delivery.ts:6-21;support 页,PASS,B2 实现新路由
+C-19,/pricing,Plans Starter $49/Growth $149/Scale $399 per month; yearly = 10×monthly,定价单一事实源,src/config/subscription-plans.ts:134-183,PASS,D1 未批准前不显示可购
+C-20,/pricing,14-day trial: card bound at checkout; first charge after trial; cancel before end = no charge,Dodo trial_period_days 语义,dodo/client.ts:196-197,PASS,必须写明绑卡与取消方式
+C-21,/pricing,Pricing approval pending — button disabled; checkout 503,commercial-gate 未批准,src/lib/payments/commercial-gate.ts;products.ts:132-144,PASS,D1 批准即自动解锁
+C-22,/pricing,Scale yearly $3990 exceeds Dodo $3000 per-transaction cap — not sellable until D3,Dodo 单笔上限实测 $3001 拒,release 状态页 §4 D3;pricing/page.tsx:57-59,BLOCKED,D3 三选一
+C-23,/terms,"Payments via Stripe Inc." → must change to Dodo Payments,文案与实际收银台不一致,terms/page.tsx:156 vs subscription-plans.ts:124-128,FAIL,C-01 内容缺陷 B2 修
+C-24,/ + all email footers,"LokFee! Inc." typo → LokFeel Inc.,邮件落款笔误,src/lib/email.ts:47;201;343,FAIL,C-02 内容缺陷 B2 修
+C-25,/about,Team & legal entity section,BLOCKED until owner verifies entity,D8;about/page.tsx,BLOCKED,缺位不填占位符
+C-26,/contact,Dedicated mailboxes + 24-48h response promise,现页邮箱结构保留,contact/page.tsx:38-96;145,PASS,收件回执 B4 实测（G2）
+C-27,/privacy,Data use incl. agent access/consent records/org isolation,隐私页主体描述,privacy/page.tsx:36;metadata:8-12,PARTIAL,主体一致性待 D8
+C-28,/login + /register,Email+password / Google OAuth 2.0 / X OAuth 2.0+PKCE; email verification resend,三种登录真实,login-inner-client.tsx:232-243;auth/config.ts;google-oauth.ts;twitter-oauth.ts,PASS,无 magic link——不得宣称
+C-29,/checkout/success,URL params never grant entitlement; server-side confirmation required,回跳页语义,checkout/success 页;G7 幂等测试集,PASS,G7 已覆盖
+C-30,footer,5 MCP tools · 50 REST routes · 3 agent skills · fail-closed consent,数字与源码核对,interop/tools.ts（5 工具）;mcp route,PASS,保留现 footer

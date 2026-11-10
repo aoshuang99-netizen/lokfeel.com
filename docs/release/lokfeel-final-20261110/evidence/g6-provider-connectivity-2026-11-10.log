@@ -1,0 +1,68 @@
+== G6 Provider 连通（复跑④：真实凭据注入成功）· 2026-11-10 20:25:01 +0800 · QA_BASE_URL=http://localhost:3111 @ 192a8ff ==
+
+════════ T09 生产出口连通性复验 ════════
+  目标 : http://localhost:3111
+  端点 : GET /api/v1/agents/diagnostics/connectivity
+  账号 : qa.male@lokfeel.com
+  说明 : 该端点只读 / 不计费（仅 GET /models）/ 不落库 / 不泄漏密钥
+
+[1] 匿名访问：能力闸门必须生效（否则这是个谁都能读的诊断面）
+  ✅ 匿名 → 401  status=401
+  ✅ 匿名 → JSON 信封  ctype=application/json
+
+[2] 真实登录路径（自定义端点，与登录页同一条）
+  ✅ POST /api/auth/login → 200  status=200
+  ✅ 下发了会话 cookie  (已下发)
+
+[3] 带会话访问诊断端点（这一步读的是**生产出口**的真实结论）
+  ✅ GET /api/v1/agents/diagnostics/connectivity → 200  status=200
+
+[4] 报告形状：五段齐备（少一段 = 分层在生产上塌了一层）
+  ✅ 含 endpoint  type=object
+  ✅ 含 network  type=object
+  ✅ 含 identity  type=object
+  ✅ 含 credentials  type=object
+  ✅ 含 probe  type=object
+  ✅ endpoint 含 baseUrl / source / probeUrl（能说清"打的是哪个端点、谁定的"）  baseUrl=https://lokfeel.app.workbuddy.host source=workbuddy
+  ✅ endpoint.provider ∈ workbuddy/openai（诊断必须说明探的是哪条真实调用路径）  provider=workbuddy model=deepseek-v4.1-flash
+  ✅ 云端算力：probeUrl 是 /.cloud/llm/models（不是 OpenAI 的 /models）  probeUrl=https://lokfeel.app.workbuddy.host/.cloud/llm/models
+  ✅ network 是分层结论（verdict ∈ PASS/FAIL/BLOCKED/INFO，且含 detail）  network.verdict=PASS
+  ✅ identity 是分层结论（verdict ∈ PASS/FAIL/BLOCKED/INFO，且含 detail）  identity.verdict=PASS
+  ✅ credentials 是分层结论（verdict ∈ PASS/FAIL/BLOCKED/INFO，且含 detail）  credentials.verdict=PASS
+
+[4b] 🔴 诊断口径 == 运行时口径（读同一份诚实块比对）
+  ✅ 用量接口可读到诚实块  status=200
+  ✅ 诊断 provider 与运行时一致（诊断=workbuddy 运行时=workbuddy）
+  ✅ 诚实块 realCallsEnabled=true 时，凭据层不得是 BLOCKED（自相矛盾即不可信）  realCallsEnabled=true credentials=PASS
+
+[5] 🔴 诚实性：报告不得自相矛盾、不得把前提说成结论
+  ✅ 每一层都不是"靠猜"的：network 有 status 字段、credentials 有 keyPresent/keyLength
+  ✅ 服务端 summary 与客户端重算一致（服务端=PASS 重算=PASS）
+  ✅ 🔴 凭据层 PASS ⇒ 网络层 PASS（凭据被接受必然蕴含端点回了我）
+  ✅ 🔴 无 key 时凭据层**不得**报 PASS（缺前提 ≠ 通过）  keyPresent=true verdict=PASS
+  ✅ 🔴 summary=BLOCKED 时措辞必须明说"不得宣称已验"
+
+[6] 🔴 不泄漏密钥
+  ✅ 响应体无 sk- 形态密钥串
+  ✅ 响应体无 wbpk_ 形态应用凭据
+  ✅ 响应体无 Bearer 明文
+
+[7] 关键读数（人工判断用）
+     provider   : workbuddy  model=deepseek-v4.1-flash
+     endpoint   : https://lokfeel.app.workbuddy.host  [workbuddy]  probe=https://lokfeel.app.workbuddy.host/.cloud/llm/models
+     network    : PASS  HTTP 200  249ms
+     identity   : PASS
+     credentials: PASS  keyPresent=true len=60 var=WORKBUDDY_LLM_KEY
+     runtime    : workbuddy  realCallsEnabled=true
+     summary    : PASS —— 网络、身份与凭据均已被端点实证
+     · network: 收到 HTTP 200（往返 249ms）—— 出口能到该端点
+     · identity: 确认是云端算力模型目录（37 个模型，含 deepseek-v4.1-flash）
+     · credentials: HTTP 200 —— 云端算力接受了该应用级凭据（key 长度 60，不打印明文）
+
+[8] 泄漏负测：不得出现部署专用域名
+  ✅ 响应无 --xxx.netlify.app
+
+════════ 结果：28 通过 / 0 失败 / 0 跳过 ════════
+🟢 生产出口连通性**已被端点实证**（见上面三层读数）。
+
+EXIT=0
