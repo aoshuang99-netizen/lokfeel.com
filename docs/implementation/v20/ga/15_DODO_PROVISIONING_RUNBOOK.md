@@ -163,3 +163,61 @@ DODO_PAYMENTS_API_KEY=... DODO_PAYMENTS_ENVIRONMENT=live_mode \
 | 环境变量写入 | **PASS** | Netlify API 复核 8/8 |
 | 真实扣款 + 真实事件投递 | **NOT_TESTED** | 需要一张真实卡，不能伪造 |
 | `SCALE` 年付可售 | **BLOCKED** | 单笔 $3,000 上限 |
+
+---
+
+## 8. 发布后线上验证（2026-11-10 16:52 GMT+8）
+
+生产 SHA `5a161c4`，Netlify deploy `6af2d9af…`（state=ready）。
+
+### 8.1 套餐绑定与金额（`GET /api/payments/dodo/plans`，HTTP 200）
+
+```
+provider=dodo  env=live_mode  checkoutReady=true  catalogVersion=2026-11-10.1  missing=[]
+STARTER  $49.00(True)   $1490? no → $490.00(True)
+GROWTH   $149.00(True)  $1490.00(True)
+SCALE    $399.00(True)  $3990.00(False)   ← 唯一降级格，符合预期
+```
+
+### 8.2 Webhook 验签（用本次配置的真实 `whsec` 对生产端点发起）
+
+| 场景 | 结果 |
+|---|---|
+| 伪造签名 | `401 {"reason":"no_matching_signature"}` |
+| 正确签名 | `200 {"ok":true,"ignored":"no_organization_in_metadata"}` ← 真的验过了才走到业务层 |
+| 缺签名头 | `401 {"reason":"missing_headers"}` |
+
+这一步同时证明了三件事：生产路由可达、**你提供的 webhook 密钥确实是该端点的签名密钥**、
+验签代码在线上真的生效（而不是"什么都收"）。
+
+### 8.3 真实结账会话（Dodo live，**不付款因此不产生扣款**）
+
+用生产同款载荷向 `POST /checkouts` 发起：
+
+```
+product_cart=[{product_id: pdt_0NrdGjSPkO55wB1t76sB2(GROWTH 月付), quantity: 1}]
+customer.email=billing-smoke@lokfeel.com
+return_url=https://app.lokfeel.com/checkout/success
+metadata={organizationId, plan, interval}
+subscription_data.trial_period_days=14
+→ HTTP 200  session_id=cks_0NrdKupMmvpM7oKLhLoZA
+            checkout_url=https://checkout.dodopayments.com/session/cks_0NrdKupMmvpM7oKLhLoZA
+```
+
+⇒ 商品 id 有效、请求体字段正确、试用期被接受、托管收银台可打开。该会话未支付，会自然过期。
+
+### 8.4 鉴权与健康
+
+| 项 | 结果 |
+|---|---|
+| 未登录 `POST /api/payments/dodo/checkout` | `401 {"error":"Unauthorized"}` |
+| `GET /api/health` | `status=healthy`；`dodo.checkout=true` `dodo.webhook=true` `charging=true` |
+| `GET /pricing` | `200`，页面含「订阅 Starter / Growth / Scale」 |
+
+### 8.5 仍未验证（诚实边界）
+
+- **真实扣款**：需要一张真实卡走完支付，未做，标记 `NOT_TESTED`。
+- **真实事件投递 → 开通**：Dodo 只在真实支付/订阅发生时投递；我们验证了"验签正确"
+  与"业务层可达"，但"`payment.succeeded` 的真实 payload 能否被翻译成账本命令"
+  仍以单测覆盖（`tests/billing/dodo-events.test.ts`）为准，未用真实事件验证。
+  首次真实成交后，去 Dodo 控制台 Webhook → 投递日志确认返回 `applied=1`。
