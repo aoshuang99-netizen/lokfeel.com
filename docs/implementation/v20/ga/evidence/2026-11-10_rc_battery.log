@@ -1,0 +1,390 @@
+
+===== jest 全量 =====
+PASS tests/api/error-envelope.test.ts
+PASS tests/agent/skill-prompt-contract.test.ts
+PASS tests/webrtc/store.test.ts
+PASS tests/billing/creem-events.test.ts
+PASS tests/agents/org-quota.test.ts
+PASS tests/agent/execution.test.ts
+PASS tests/tenancy/member-roles-api.test.ts
+PASS tests/agents/provider-mode.test.ts
+PASS tests/tenancy/member-roles.test.ts
+PASS tests/webrtc/components.test.ts
+PASS tests/agent/runtime.test.ts
+PASS tests/agent/guard.test.ts
+PASS tests/tenancy/active-org.test.ts
+PASS tests/agent/approval.test.ts
+PASS tests/bridges/bridges-api.test.ts
+PASS tests/agents/execution-gated.test.ts
+PASS tests/agent/cost.test.ts
+PASS tests/tenancy/tenant-isolation.test.ts
+PASS tests/connection/proposals.test.ts
+PASS tests/agents/outbound-delivery.test.ts
+PASS tests/connection/idempotency.test.ts
+PASS tests/living/agents/board.test.ts
+PASS tests/lifecycle/privacy-rights-api.test.ts
+PASS tests/connection/proposals-api.test.ts
+PASS tests/webrtc/useMediaDevices.test.ts
+PASS tests/connection/mission-api.test.ts
+PASS tests/billing/creem-webhook-matrix.test.ts
+PASS tests/workspace-spec/compile.test.ts
+PASS tests/billing/billing-api.test.ts
+PASS tests/connection/intent-api.test.ts
+PASS tests/tenancy/org-api.test.ts
+PASS tests/outcome/outcomes.test.ts
+PASS tests/tenancy/capability-semantics.test.ts
+PASS tests/workflow/delivery.test.ts
+PASS tests/connection/missions.test.ts
+PASS tests/billing/usage.test.ts
+PASS tests/agents/runs-service.test.ts
+PASS tests/lifecycle/account.test.ts
+PASS tests/billing/subscription.test.ts
+PASS tests/connection/intents.test.ts
+PASS tests/living/bridge/board.test.ts
+PASS tests/agents/agents-api.test.ts (24.011 s)
+PASS tests/workflow/workflow-api.test.ts
+PASS tests/webrtc/config.test.ts
+PASS tests/mcp/mcp-route.test.ts
+PASS tests/living/consent/types.test.ts
+PASS tests/google-oauth-state.test.ts
+PASS tests/agents/approval-consistency.test.ts
+PASS tests/agents/provider-openai.test.ts
+PASS tests/connection/mission-input.test.ts
+PASS tests/living/observatory/timeline.test.ts
+PASS tests/workflow/job-core.test.ts
+PASS tests/outcome/outcomes-api.test.ts
+PASS tests/a2a/a2a-tasks.test.ts
+PASS tests/agents/budget.test.ts
+PASS tests/living/workspace-view.test.ts
+PASS tests/lib/build-info.test.ts
+PASS tests/workflow/runtime.test.ts
+PASS tests/living/field/graph.test.ts
+PASS tests/living/observatory/types.test.ts
+PASS tests/agents/adversarial-injection.test.ts
+PASS tests/webrtc/usePusherSignaling.test.ts
+PASS tests/public-origin.test.ts
+PASS tests/billing/cancel-subscription.test.ts
+PASS tests/admin/feature-flags.test.ts
+PASS tests/workspace-spec/assemble.test.ts
+PASS tests/webhooks/pingpong-webhook.test.ts
+PASS tests/outcome/metrics-api.test.ts
+PASS tests/connection/operations.test.ts
+PASS tests/billing/stripe-refund.test.ts
+PASS tests/tenancy/invitations.test.ts
+PASS tests/webrtc/types.test.ts
+PASS tests/living/consent/projection.test.ts
+PASS tests/webrtc/ice-sources.test.ts
+PASS tests/cron/bot-tick-gate.test.ts
+PASS tests/tenancy/org.test.ts
+PASS tests/workspace-spec/schema.test.ts
+PASS tests/tenancy/capabilities.test.ts
+PASS tests/connection/recall.test.ts
+PASS tests/living/adaptive-stages.test.ts
+PASS tests/outcome/verification.test.ts
+PASS tests/lifecycle/policy.test.ts
+PASS tests/im-call-signaling.test.ts
+PASS tests/tenancy/consent-revocation.test.ts
+PASS tests/a11y/focus-trap.test.ts
+PASS tests/living/agents/types.test.ts
+PASS tests/agents/schema-drift.test.ts
+PASS tests/webrtc/useWebRTC.test.ts
+PASS tests/billing/stripe-checkout-doublecount.test.ts
+PASS tests/outcome/metrics.test.ts
+PASS tests/bridge/policy.test.ts
+PASS tests/living/bridge/types.test.ts
+PASS tests/connection/candidates.test.ts
+PASS tests/auth/login-audit.test.ts
+PASS tests/safe-redirect.test.ts
+PASS tests/connection/intent-input.test.ts
+PASS tests/billing/stripe-subscription-status.test.ts
+PASS tests/admin/subscription-view.test.ts
+PASS tests/oauth-redirect-uri.test.ts
+PASS tests/tenancy/org-create.test.ts
+PASS tests/bridge/schema-drift.test.ts
+PASS tests/workflow/notification-content.test.ts
+PASS tests/connection/pipeline-api.test.ts
+PASS tests/billing/creem-refund-accounting.test.ts
+PASS tests/commercial/products.test.ts
+PASS tests/living/field/types.test.ts
+PASS tests/agents/connectivity.test.ts
+PASS tests/webrtc/useCallTimer.test.ts
+PASS tests/billing/payment-availability.test.ts
+PASS tests/connection/disclosure.test.ts
+PASS tests/cron/cron-runner-drain.test.ts
+PASS tests/webrtc/utils.test.ts
+PASS tests/integration/simplified.test.ts
+PASS tests/workflow/hooks.test.ts
+PASS tests/cron/cleanup-soft-delete.test.ts
+PASS tests/tenancy/member-removal.test.ts
+PASS tests/connection/field-catalog.test.ts
+PASS tests/lib/redis-cache-set.test.ts
+PASS tests/lib/soft-delete-extension.test.ts
+PASS tests/tenancy/members-api.test.ts
+PASS tests/plans-consistency.test.ts
+PASS tests/billing/creem-checkout-plan.test.ts
+PASS tests/tenancy/members.test.ts
+PASS tests/workflow/workflow-service.test.ts
+PASS tests/connection/json-codec.test.ts
+PASS tests/workflow/alerts.test.ts
+PASS tests/connection/public-view.test.ts
+PASS tests/billing/stripe-invoice-payment.test.ts
+PASS tests/a2a/agent-card.test.ts
+PASS tests/a11y/scroll-lock.test.ts
+PASS tests/rate-limit.test.ts
+PASS tests/connection/intent-import.test.ts
+PASS tests/tenancy/audit-redact.test.ts
+PASS tests/sw-cache-policy.test.ts
+PASS tests/workflow/stage-machine.test.ts
+PASS tests/basic.test.ts
+PASS tests/auth/session-cookie.test.ts
+PASS tests/cron/bot-online-seed.test.ts (50.739 s)
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+
+Test Suites: 138 passed, 138 total
+Tests:       2643 passed, 2643 total
+Snapshots:   0 total
+Time:        55.581 s
+[0] env
+
+===== member-lifecycle =====
+
+目标：http://localhost:3111
+本轮 slug：e2e-b1-mwa4nzzz
+数据库直查：启用
+
+前置清理：删除上一轮遗留的 e2e 组织 1 个（e2e-b1-mw6ddgre）
+会话：
+  owner   test.new@lokfeel.com   login=200
+  invitee e2e-test@lokfeel.com login=200
+  stranger test.male@lokfeel.com login=200
+
+[C] 建组织
+  ✓ C01 匿名创建 → 401                         status=401
+  ✓ C02 创建 → 201/OWNER                     status=201 role=OWNER id=cmwa4ofd30006h6k8knqi7p4y
+  ✓ C03 DB 恰好 1 条 ACTIVE OWNER             memberships=1 activeOwner=1
+  ✓ C04 org 概览 → OWNER + 四项能力              status=200 myRole=OWNER 缺=无
+  ✓ C05 同 slug 重试 → 409 且不重复               status=409 code=SLUG_TAKEN orgs=1 memberships=1
+  ✓ C06 保留字 slug → 400                     status=400 code=SLUG_RESERVED
+  ✓ C07 审计 organization+membership         events=membership.created,organization.created
+
+[I] 邀请
+  ✓ I01 邀请 → 201 + 链接                      status=201 emailSent=false token=43字符 emailError=Email service not configured
+  ✓ I02 DB 只存 token 哈希                     len(hash)=64 明文入库=false
+  ✓ I03 重复邀请 → 换票（旧票 REVOKED）              旧票=REVOKED 新票 role=OPERATOR
+  ✓ I04 邀请已是成员 → 409                       status=409 code=ALREADY_MEMBER
+  ✓ I05 邀请授予 OWNER → 403                   status=403 code=OWNER_GRANT_FORBIDDEN
+  ✓ I06 非法邮箱 → 400                         status=400 code=INVALID_EMAIL
+  ✓ I07 非成员带 orgId → 403                   invitations=403 members=403
+
+[A] 接受
+  ✓ A01 匿名 accept → 401                    status=401
+  ✓ A02 别人拿链接 → 403 且票未消费                  status=403 code=EMAIL_MISMATCH 票=PENDING
+  ✓ A03 本人接受 → 200 + 入库                    status=200 role=OPERATOR reactivated=false membership=OPERATOR/ACTIVE 票=ACCEPTED acceptedAt=有
+  ✓ A04 同一 token 再接受 → 409                 status=409 code=NOT_PENDING
+  ✓ A05 伪造 token → 404                     status=404 code=INVALID_TOKEN
+  ✓ A06 过期票 → 409 且落库 EXPIRED              status=409 code=EXPIRED DB=EXPIRED
+  ✓ A07 撤销后接受 → 409 且 REVOKED              DELETE=200 accept=409/NOT_PENDING DB=REVOKED
+
+[R] 移出
+  ✓ R01 移出自己 → 409                         status=409 code=SELF_REMOVE
+  ✓ R02 移出成员 → 200                         status=200 code=null
+  ✓ R03 软移出（行仍在/SUSPENDED）                 role=OPERATOR status=SUSPENDED
+  ✓ R04 被移出者下一次请求 → 403                    members=403 org=403
+  ✓ R05 再移出一次 → 400 NOT_ACTIVE             status=400 code=NOT_ACTIVE
+  ✓ R06 跨租户 id → 404（不泄露存在性）               status=404 code=NOT_FOUND
+  ✓ R06b 他租户成员未被改动                         status=ACTIVE
+  ✓ R07 重新邀请 → reactivated + 行数不变          status=200 reactivated=true 成员行数=1
+  ✓ R08 审计事件齐备                             {"invitation.accepted":2,"invitation.created":5,"invitation.revoked":1,"membership.created":1,"membership.removed":2,"organization.created":1,"tenant.access_denied":3}
+
+本轮组织保留：id=cmwa4ofd30006h6k8knqi7p4y slug=e2e-b1-mwa4nzzz
+  清理 SQL（如需）：
+    DELETE FROM "OrganizationInvitation" WHERE organizationId='cmwa4ofd30006h6k8knqi7p4y';
+    DELETE FROM "Membership" WHERE organizationId='cmwa4ofd30006h6k8knqi7p4y';
+    DELETE FROM "TenantAuditEvent" WHERE organizationId='cmwa4ofd30006h6k8knqi7p4y';
+    DELETE FROM "Organization" WHERE id='cmwa4ofd30006h6k8knqi7p4y';
+
+30 PASS / 0 FAIL / 0 SKIP
+[0] node
+
+===== auth-session =====
+
+目标：http://localhost:3111
+数据库直查：启用
+
+[S1] 会话基线
+  ✓ S01 匿名 → 401                                   status=401
+  ✓ S02 登录 → 200 + session cookie                  status=200 cookie=有
+  ✓ S03 cookie 属性（HttpOnly + SameSite=Lax/Strict）  HttpOnly=true SameSite=lax
+  ✓ S04 /api/auth/session 与库一致                     status=200 sessionUser=ca6b5219-8 dbUser=ca6b5219-8
+  ✓ S05 会话有效期有上界（Max-Age ≈ 7 天）                    Max-Age=604800s
+  ? S06 滑动续期（跨 updateAge 窗口重签）                     需真实等待一个 updateAge 窗口（小时级）或改系统时钟；本轮不伪造时间。当前实现是"登录时签发 7 天绝对有效期"，续期语义未启用。
+
+[S2] 撤销 / 还原
+  ✓ S07 有效会话可反复使用                                  status=200
+  ✓ S08 tokenVersion+1 → 旧 JWT 失效（≤120s = 60s TTL + 0–30s 抖动） 失效延迟 ≈ 3.9s
+  ✓ S09 还原 tokenVersion → 缓存换版后旧 JWT 重新被接受         DB还原=true 复效=91.9s —— 判据是"版本不等即拒"，不是黑名单；降版本号会让旧凭据复效
+
+[S3] 登出
+  ✓ S10 登出 → 200 且会话 cookie 被清（含 __Secure- 变体）     status=200 清了 2 个 session-token cookie，Max-Age=0 全部成立=true
+  ✓ S11 登出后（浏览器视角的 cookie jar）→ 401                status=401 cookie=已空
+  ✓ S12 手工重放登出前的 cookie → 仍可用（无状态 JWT 的已知边界）       status=200 —— 登出是"删客户端凭据"；真撤销必须 tokenVersion+1
+
+[S4] 组织切换
+  ✓ S13 列出我的组织（≥2 才能测切换）                           status=200 count=2
+  ✓ S14 显式指定 organizationId → 各自成员目录               preview=200(2) default=200(3)
+  ✓ S15 切换社群 → 无参请求解析到新租户（cookie 软偏好）              POST=200 default=preview → target=default → 实际=default
+  ✓ S16 切回原租户（还原测试痕迹）                              POST=200 slug=preview
+  ✓ S17 切到"我不是成员的租户" → 403 且不写偏好 cookie            status=403 code=PERMISSION_DENIED cookie写入=false
+  ✓ S18 非法 organizationId 形状 → 400（不进查询）           status=400 code=INVALID_ORGANIZATION_ID
+
+[S5] 权限变更是否即时生效
+  ✓ S19 角色降级后同一会话能力立即收缩（差集非空、无新增）                  PATCH=200 before=19 after=9 失去=[member.read,mission.read,mission.create,mission.update,mission.delete,proposal.create,billing.read,workflow.read,agent.run,agent.execute] 新增=[]
+  ✓ S20 还原角色后能力恢复（与降级前集合相等）                        PATCH=200 caps=19/19 集合相等=true
+
+[S6] CSRF
+  ✓ S21 登录：跨源 Origin → 拒绝                          status=403
+  ✓ S22 登录：无 Origin 且无 Referer → 拒绝                status=403
+  ✓ S23 登出：跨源 Origin → 403 且不下发清 cookie            status=403 下发清cookie=false
+
+[S7] OAuth
+  ? S24 Google OAuth 成功回调                          需真实 GOOGLE_CLIENT_SECRET + 真人在 consent 页同意；本地只有 CLIENT_ID。授权请求形状（state/PKCE/redirect_uri）与坏回调拒绝见 v204-oauth-shape.mjs
+
+22 PASS / 0 FAIL / 0 SKIP / 2 NOT_TESTED / 0 BLOCKED
+[0] node
+
+===== outcome-verify =====
+
+目标：http://localhost:3111
+夹具：v205b4_org / v205b4_proposal
+
+  ✓ P01    status=201 level=SELF_REPORTED verified=false id=cmwa4ukjb0015h6k83xckowi4
+  ✓ P02    verified=1 含它=false 全量含它=true unverifiedCount=1
+  ✓ P03    请求体带 verificationLevel=EXTERNALLY_VERIFIED → DB=SELF_REPORTED，核验记录=0 条
+  ✓ P04    summary 写满"已验证/EXTERNALLY_VERIFIED" → level=SELF_REPORTED verified=false
+  ✓ P05    status=400 code=VALIDATION_ERROR
+  ✓ P06    status=403 code=PERMISSION_DENIED
+  ✓ P07    status=200 created=true level=COUNTERPARTY_CONFIRMED verified=true
+  ✓ P08    第二次 created=false，COUNTERPARTY_CONFIRMED 记录=1 条
+  ✓ P09    status=200 level=EXTERNALLY_VERIFIED verified=true
+  ✓ P10    DB 有 evidence（94 字符）；响应体出现 evidence 字段=false
+  ✓ P11    第二次 created=false，EXTERNALLY_VERIFIED 记录=1 条
+  ✓ P12    别的租户的 ADMIN 核验本租户成果 → status=404 code=NOT_FOUND
+  ✓ P13    审计={"outcome.confirmed":1,"outcome.externally_verified":1,"outcome.reported":1}
+  ✓ P14    记录集=COUNTERPARTY_CONFIRMED,EXTERNALLY_VERIFIED → 派生=EXTERNALLY_VERIFIED；快照=EXTERNALLY_VERIFIED
+  ✓ P15    重复上报=409（期望 409），级别仍=EXTERNALLY_VERIFIED
+
+✓ 夹具已清理（--keep 可保留）
+
+15 PASS / 0 FAIL / 0 SKIP / 0 NOT_TESTED
+[0] node
+
+===== payment-off =====
+
+━━━ payment-off 契约（支付未接入 = 受支持状态）━━━
+目标   : http://localhost:3111
+探针   : health=200 · products=503 · checkout=401 · stripe.webhook=503 · creem.webhook=503 · refund=401
+
+  ✅ 基线：/api/health 200 且带 payments 块
+  ✅ 基线：本环境确实是「未接入」（configured=false）
+  ✅ health.payments 结构完整（5 通道 + missing + malformed）
+  ✅ health.payments.missing 含 CREEM_API_KEY
+  ✅ health.payments.missing 含 CREEM_WEBHOOK_SECRET
+  ✅ health.payments.missing 含 STRIPE_SECRET_KEY
+  ✅ health.payments.missing 含 STRIPE_WEBHOOK_SECRET
+  ✅ health 响应不含凭据片段
+  ✅ GET /api/payments/creem/products → 503
+  ✅ products 响应带 code=PAYMENT_NOT_CONFIGURED 与 channel
+  ✅ products 响应回的是变量名而不是 provider 原始报错
+  ✅ products 不是 500（未接入不得被记成服务端故障）
+  ✅ POST /api/payments/creem/checkout（匿名）→ 401
+  ✅ POST /api/webhooks/stripe（带签名头）→ 503 + PAYMENT_NOT_CONFIGURED
+  ✅ POST /api/webhooks/creem（带签名头）→ 503 或 401（绝不 500）
+  ✅ creem webhook 不是 500
+  ✅ POST /api/admin/subscriptions/:id/refund（匿名）→ 401/403，不是 500
+  ✅ 本轮没有任何端点返回 500
+
+结论：18/18 通过
+[0] node
+
+===== oauth-shape =====
+
+=== 1. 授权请求形状（http://localhost:3111）===
+PASS  最终跳到 accounts.google.com  — http://localhost:3111/api/auth/oauth/google/signin?callbackUrl=%2Fdashboard
+PASS  response_type=code  — code
+PASS  client_id 存在且不是占位符  — 185541962106…
+FAIL  redirect_uri 指向 localhost:3111  — http://localhost:3111/api/auth/callback/google
+FAIL  redirect_uri 不含 localhost/127.0.0.1  — http://localhost:3111/api/auth/callback/google
+PASS  scope 含 openid  — openid email profile
+PASS  有 state 且长度 ≥ 16  — len=43
+PASS  PKCE: code_challenge_method=S256  — S256
+PASS  PKCE: code_challenge 长度 43–128  — len=43
+
+=== 2. 回调失败路径（必须全部拒绝，不得毛 500、不得下发会话）===
+PASS  [用户拒绝授权] 无 5xx  — 307→307→200
+PASS  [用户拒绝授权] 307 回登录页并带错误  — http://localhost:3111/login?error=Google+authorization+failed%3A+access_denied
+PASS  [用户拒绝授权] 未下发 session cookie  — ok
+PASS  [用户拒绝授权] 错误文案可读  — http://localhost:3111/login?error=Google authorization failed: access_denied
+PASS  [伪造 code + 伪造 state] 无 5xx  — 307→307→200
+PASS  [伪造 code + 伪造 state] 307 回登录页并带错误  — http://localhost:3111/login?error=Security+check+failed.+Please+start+the+sign-in+again.
+PASS  [伪造 code + 伪造 state] 未下发 session cookie  — ok
+PASS  [伪造 code + 伪造 state] 错误文案可读  — http://localhost:3111/login?error=Security check failed. Please start the sign-in again.
+PASS  [空参数] 无 5xx  — 307→307→200
+PASS  [空参数] 307 回登录页并带错误  — http://localhost:3111/login?error=Google+callback+missing+authorization+code
+PASS  [空参数] 未下发 session cookie  — ok
+PASS  [空参数] 错误文案可读  — http://localhost:3111/login?error=Google callback missing authorization code
+
+━━━ 19 PASS / 2 FAIL / 21 total ━━━
+
+失败项：
+  - redirect_uri 指向 localhost:3111 — http://localhost:3111/api/auth/callback/google
+  - redirect_uri 不含 localhost/127.0.0.1 — http://localhost:3111/api/auth/callback/google
+[1] node
+
+===== org-switcher-a11y =====
+✓ 登录成功（admin@lokfeel.com）· 服务端租户数=2
+
+  ✓ org-switcher-1440-field            PASS       选择器存在=true 选项=2/2 名="切换社群" 焦点=lf-org-switcher 登出按钮=true(44px,"退出登录") serious+违规=0
+  ✓ org-switcher-1440-paper            PASS       选择器存在=true 选项=2/2 名="切换社群" 焦点=lf-org-switcher 登出按钮=true(44px,"退出登录") serious+违规=0
+  ✓ org-switcher-390-field             PASS       选择器存在=true 选项=2/2 名="切换社群" 焦点=lf-org-switcher 登出按钮=true(44px,"退出登录") serious+违规=0
+  ✓ ws-signout-390-field               PASS       存在=true 名="退出登录" 尺寸=44×44（≥44 触达区）焦点可达=true
+  ✓ org-switcher-ui-switch             PASS       "LokFeel Preview" → 选择"Default Organization" → 头部="Default Organization"（RSC 重渲染=true）
+
+=== 5 PASS / 0 FAIL / 0 NOT_TESTED ===
+[0] node
+
+===== visual-104 =====
+✓ 登录成功（qa.male@lokfeel.com），cookie=authjs.session-token
+
+— Console 七屏 × 4 视口 × 2 主题 —
+  ✓ console-overview-360-field     PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=5
+  ✓ console-overview-360-paper     PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=5
+  ✓ console-overview-390-field     PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=7
+  ✓ console-overview-390-paper     PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=6
+  ✓ console-overview-768-field     PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-overview-768-paper     PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=14
+  ✓ console-overview-1440-field    PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-overview-1440-paper    PASS     overflow=0px len=348 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=7
+  ✓ console-agents-360-field       PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ console-agents-360-paper       PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=7
+  ✓ console-agents-390-field       PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=10
+  ✓ console-agents-390-paper       PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=6
+  ✓ console-agents-768-field       PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-agents-768-paper       PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=11
+  ✓ console-agents-1440-field      PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-agents-1440-paper      PASS     overflow=0px len=2414 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=10
+  ✓ console-connections-360-field  PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=8
+  ✓ console-connections-360-paper  PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=2
+  ✓ console-connections-390-field  PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=10
+  ✓ console-connections-390-paper  PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=6
+  ✓ console-connections-768-field  PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-connections-768-paper  PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=11
+  ✓ console-connections-1440-field PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=14
+  ✓ console-connections-1440-paper PASS     overflow=0px len=188 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=9
+  ✓ console-members-360-field      PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | consoleErr=2 | reqFail=4
+  ✓ console-members-360-paper      PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | consoleErr=2 | reqFail=7
+  ✓ console-members-390-field      PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | consoleErr=2 | reqFail=9
+  ✓ console-members-390-paper      PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | consoleErr=2 | reqFail=9
+  ✓ console-members-768-field      PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | consoleErr=2 | reqFail=8
+  ✓ console-members-768-paper      PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | consoleErr=2 | reqFail=12
+  ✓ console-members-1440-field     PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | consoleErr=2 | reqFail=16
+  ✓ console-members-1440-paper     PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | consoleErr=2 | reqFail=2

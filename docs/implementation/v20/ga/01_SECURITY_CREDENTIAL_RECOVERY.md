@@ -260,7 +260,7 @@ AdminAudit   总行数 = 0
 | R1 | GitHub **Secret Scanning Push Protection** 未确认开启（自定义规则不覆盖 `LokFeel@…` 形态） | 待开启；在 Settings → Code security 打开 push protection |
 | R2 | 公开历史中仍存在 9 个含字面量的提交（已 allowlist） | 已失效；如需彻底清除需改写历史（不建议，见 §5） |
 | R3 | 只对 `@lokfeel.com` 域做了口令复用比对；`demo`/`bot` 等 662 个账号未逐字节比对 | 这些账号由种子脚本生成，口令不来自这两个字面量；如要彻底确认需离线跑一次全量 bcrypt |
-| R4 | `LokFeel@Admin2026!` 若在**本系统之外**（邮箱、其他 SaaS）被复用，本仓库无从得知 | **需人工处置**：请确认该口令没有用于其他服务 |
+| R4 | 旧管理员口令（字面量见 git 历史，正文不再复写）若在**本系统之外**（邮箱、其他 SaaS）被复用，本仓库无从得知 | **需人工处置**：请确认该口令没有用于其他服务 |
 | R5 | 轮换后的口令保存在开发者本机 `.qa-credentials.local.json` | 已 0600 + gitignore；生产 CI 应改用 Secret Store 注入 |
 | R6 | 无登录速率限制 / 无爆破告警 | `AuditLog` 现在有数据了，但**告警规则未接**；列入 Batch 6 |
 
@@ -268,7 +268,7 @@ AdminAudit   总行数 = 0
 
 ## 8. 待人工完成（唯一的外部动作）
 
-1. 确认 `LokFeel@Admin2026!` 是否在**其他系统**复用；如有，逐个更换（R4）。
+1. 确认旧管理员口令（git 历史中的那条）是否在**其他系统**复用；如有，逐个更换（R4）。
 2. 在 GitHub 仓库设置里开启 **Secret Scanning + Push Protection**（R1）——需要仓库管理员权限。
 3. 如需在生产 CI 跑需要管理员凭据的脚本，把新口令写入 GitHub Secrets（`ADMIN_PASSWORD`），
    不要提交任何凭据文件。
