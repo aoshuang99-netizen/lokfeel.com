@@ -1,0 +1,14 @@
+目标：https://app.lokfeel.com（窗口 7 天）· 2026-11-10T03:20:15.665Z
+✓ M03   登录成功（真实账号 + session 回读）    [PASS] login=3890ms session=200 user=qa.male@lokfeel.com
+✓ M08   DB 错误（health.status × 3 采样） [PASS] healthy=3/3 dbLatency=5,6,6ms
+✓ M09   Secrets（charging 必须 false · malformed 必须空） [PASS] charging=false malformed=0 missing=4（missing=已知人工项 H-4）
+✓ M01   5xx 比例（7 端点 × 1 轮）         [PASS] 全 7 个 0 个 5xx
+✓ M02   延迟 p50/p95（12 采样）          [PASS] p50=457ms p95=851ms（基线记录；跨境网络含 ~250ms RTT）
+✓ M10   部署漂移（Netlify published_deploy vs expect） [PASS] deployed=3e27f3c health.commit=3e27f3c expect=3e27f3c
+✓ G06   Workers 轨道不变量（x-nf-request-id 存在） [PASS] Netlify 源在役 01M71QHEPD7E2YS4GTPESDGV…
+✓ M04   Agent 成功/失败（7 天事件分布）       [PASS] created=8 executed=3 blocked=0 degraded=0
+✓ M05   Provider 降级（degraded 事件 + 生产出口自检） [PASS] degraded=0 出口=PASS 894ms 身份=PASS
+✓ M06   Consent 异常（opted_* 必须有 actor） [PASS] opted_in=0 opted_out=0 拒绝=0 无actor=0
+✓ M07   Outcome 核验（outcome.* 分布 + workflow 死信） [PASS] reported=0 confirmed=0 verified=0 死信=0（写路径失败信号由 Batch 4 断言覆盖）
+
+=== 11 PASS / 0 FAIL / 0 BLOCKED ===

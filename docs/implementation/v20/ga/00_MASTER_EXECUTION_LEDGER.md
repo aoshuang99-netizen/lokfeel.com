@@ -5,7 +5,7 @@
 > 没有证据的 `PASS` 一律视为 `NOT_TESTED` —— 本文件的存在意义就是不允许"看起来做完了"。
 
 - 分支：`main`（RC 分支 `rc/v20.5-ga`，发布分支 `release/v20.5-ga` 见 Batch 7）
-- 线上当前：`bc46a22`（Netlify deploy `6aeeb9cd`，2026-11-07T05:40:29Z）
+- 线上当前：`3e27f3c`（Netlify `published_deploy.commit_ref` 实核 2026-11-10；**B0–B2 已上线**，GA 回滚点）
 - 台账最后更新：2026-11-07 · 基线 `3e27f3c` + Batch 3 本轮改动（提交见 `git log --grep=v20.5-b3`）
 
 ---
@@ -20,7 +20,7 @@
 | 3 | 真实 OAuth 回调 / 会话续期 / 登出 / 切租户 | **PASS**（22 PASS / 0 FAIL / 2 `NOT_TESTED`） | `04_AUTH_SESSION_LIFECYCLE.md` |
 | 4 | Agent → Consent → Action → Outcome（含 Verify 正例） | **PASS**（核验阶梯 15/15；完整 HTTP 链 1 项 `NOT_TESTED`） | `05_AGENT_CONSENT_OUTCOME.md` |
 | 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | **PASS**（LCP/CLS/INP 达标；TBT FAIL = P1 已登记；/console 并行化 −50%） | `06_PERFORMANCE_BUDGET.md` |
-| 6 | 监控 + 发布治理 + Workers 独立轨道 | `NOT_TESTED` | 待执行 |
+| 6 | 监控 + 发布治理 + Workers 独立轨道 | **PASS**（十项信号 11/11 生产实测；Workers 未切流护栏复核有效） | `07_MONITORING_GOVERNANCE.md` |
 | 7 | RC 验收 + GO/NO-GO 门 | `NOT_TESTED` | 待执行 |
 | 8 | 单次生产发布 + 15 步验证 + 最终报告 | `NOT_TESTED` | 待执行 |
 
@@ -148,6 +148,16 @@
 - **CLS** 0.000 全页 · **INP p75** 64–192ms 全页
 - **TBT ≤200ms FAIL 4/4**（Before/After 同级，非回归）——客户端水合 204–286KB 在 4×CPU 下阻塞 600–2500ms；整改需跨 13 屏拆包+懒水合，登记 P1 非阻塞，见 06 §4.1
 - 阈值一行未改；超预算项如实 FAIL
+
+---
+
+## 三·六、Batch 6 · 监控与发布治理
+
+- 新增 `scripts/qa/v205-monitor.mjs`（`npm run monitor:ga`）：十项信号单命令探针（5xx / p50/p95 / 登录 / Agent / Provider 降级 / Consent 异常 / Outcome / DB / Secrets / 部署漂移 + Workers 不变量）
+- 生产首跑 **11 PASS / 0 FAIL**（`evidence/2026-11-10_monitor_prod.log`，基线 `3e27f3c`）
+- 事实修正：线上 = `3e27f3c`（非 bc46a22）——Netlify API 实核，B0–B2 已上线；**GA 回滚点 = `3e27f3c`**
+- Workers 独立轨道：不切流结论维持；cloudflare-production.yml 仅显式 dispatch + 审批的护栏复核有效
+- 发布治理规则定死见 07 §5（单一通道 + [skip netlify] 纪律 + GO 证据链）
 
 ---
 
