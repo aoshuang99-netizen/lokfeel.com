@@ -61,8 +61,8 @@ export type ProductId = 'connection-os' | 'legacy-membership' | 'hlua-pass';
 /** 定价状态：只有 APPROVED 才允许对外显示金额 */
 export type PricingStatus = 'APPROVED' | 'PENDING_APPROVAL' | 'NOT_FOR_SALE';
 
-/** 结账方式：none = 无结账入口（未接入 / 未获批） */
-export type CheckoutKind = 'none' | 'external';
+/** 结账方式：none = 无结账入口（未接入 / 未获批）；internal = 站内收银台（Dodo） */
+export type CheckoutKind = 'none' | 'internal' | 'external';
 
 /**
  * 这个条目在目录里的**身份**：
@@ -130,17 +130,21 @@ export const PRODUCTS: readonly Product[] = [
       '机器面：MCP（5 工具）与 A2A 任务端点，与 REST 共用同一套租户守卫',
     ],
     pricing: {
-      status: 'PENDING_APPROVAL',
-      displayPrice: null,
+      status: 'APPROVED',
+      // 展示价是**入口的最低档**，权威金额在 src/config/subscription-plans.ts。
+      // 这里写 "From" 而不是某一档的精确价，是为了避免两处金额数字漂移：
+      // 卡片上的 $49 由套餐目录渲染，本字段只回答"起价多少"这个营销问题。
+      displayPrice: 'From $49/mo',
+      approvalRef: 'PRICING_APPROVAL 2026-11-10（产品所有者批准；依据：V20.5 GA 上线指令 · 订阅套餐定价）',
     },
     checkout: {
-      kind: 'none',
-      label: '申请试用 / Request access',
+      kind: 'internal',
+      label: '选择套餐并订阅',
     },
     refund: {
-      days: null,
+      days: 14,
       source: '/refunds',
-      note: '尚未对外销售，因此没有已生效的退款承诺；正式条款随首份报价一并书面确认',
+      note: '首次订阅 14 天冷静期（与 /refunds 第 53 行的现行承诺一致）',
     },
     docsRef: 'docs/implementation/FEATURE_INVENTORY.md',
   },
@@ -217,6 +221,8 @@ export function isPurchasable(product: Product): boolean {
   if (product.relation !== 'SOLD_HERE') return false;
   if (product.pricing.status !== 'APPROVED') return false;
   if (product.checkout.kind === 'none') return false;
+  // 站内收银台不需要外部 href（入口是本页的套餐选择器），外部结账必须有 href
+  if (product.checkout.kind === 'internal') return true;
   return Boolean(product.checkout.href);
 }
 
@@ -265,6 +271,10 @@ export function validateCatalog(products: readonly Product[] = PRODUCTS): string
     }
     if (p.checkout.kind === 'external' && !p.checkout.href) {
       problems.push(`${p.id}：checkout.kind='external' 但没有 href`);
+    }
+    // 站内收银台与外部结账是互斥的两种形态：填了 href 会让"到底跳去哪"变得依赖实现细节
+    if (p.checkout.kind === 'internal' && p.checkout.href) {
+      problems.push(`${p.id}：checkout.kind='internal' 不应填 href（站内收银台由套餐目录决定去向）`);
     }
 
     // R3：退款承诺必须可溯源

@@ -37,6 +37,8 @@
 
 /** 一条独立可用的支付通道。名称会出现在 API 响应里，改动等于改契约。 */
 export type PaymentChannel =
+  | "dodo.checkout"
+  | "dodo.webhook"
   | "creem.checkout"
   | "creem.webhook"
   | "stripe.card"
@@ -62,6 +64,26 @@ interface ChannelRule {
  * 不影响新路径 —— 若把可选变量写进必填集合，会让"接好了"被误判成"没接好"。
  */
 const CHANNEL_RULES: Readonly<Record<PaymentChannel, ChannelRule>> = {
+  // ── Dodo Payments（V20.5 · 订阅收银台）─────────────────────────────
+  // 🔴 `DODO_PAYMENTS_ENVIRONMENT` 是**必填**而不是可选：它决定打到
+  //    test.dodopayments.com 还是 live.dodopayments.com。给默认值等于给
+  //    "生产少配一个变量 ⇒ 在测试环境收款"开一条静默通道（见 creem.ts 的教训）。
+  "dodo.checkout": {
+    requires: ["DODO_PAYMENTS_API_KEY", "DODO_PAYMENTS_ENVIRONMENT"],
+    // Dodo 的 API Key 没有公开固定前缀，只做下限校验（挡住空串/占位符）
+    format: {
+      DODO_PAYMENTS_API_KEY: /^\S{16,}$/,
+      DODO_PAYMENTS_ENVIRONMENT: /^(test_mode|live_mode)$/,
+    },
+  },
+  "dodo.webhook": {
+    requires: ["DODO_PAYMENTS_API_KEY", "DODO_PAYMENTS_ENVIRONMENT", "DODO_PAYMENTS_WEBHOOK_KEY"],
+    format: {
+      DODO_PAYMENTS_API_KEY: /^\S{16,}$/,
+      DODO_PAYMENTS_ENVIRONMENT: /^(test_mode|live_mode)$/,
+      DODO_PAYMENTS_WEBHOOK_KEY: /^whsec_[A-Za-z0-9+/=]{8,}$/,
+    },
+  },
   "creem.checkout": {
     requires: ["CREEM_API_KEY"],
     // 与 /api/debug/creem-config 的既有判定保持一致（creem_ 前缀）
@@ -153,7 +175,17 @@ export function readPaymentAvailability(env: EnvLike = process.env): PaymentAvai
 
   return {
     configured: malformed.size === 0 && PAYMENT_CHANNELS.every((c) => channels[c]),
-    charging: channels["creem.checkout"] && channels["creem.webhook"],
+    /**
+     * 收费主链路 = **任一条**「创建会话 + 接收它的 webhook」闭环。
+     *
+     * 为什么是 OR 不是 AND（V20.5 改动）：同时接多个网关是迁移期的常态。
+     * 若要求全部闭环才算"能收钱"，那么"Creem 还在跑、Dodo 已接好"会被判成
+     * 完全不能收款 —— 这条判据会逼着人把旧通道的密钥删掉才能上线，是反向激励。
+     * 单通道的场景下 OR 与 AND 结果相同，故这是纯兼容的放宽。
+     */
+    charging:
+      (channels["dodo.checkout"] && channels["dodo.webhook"]) ||
+      (channels["creem.checkout"] && channels["creem.webhook"]),
     channels,
     missing: [...missing].sort(),
     malformed: [...malformed].sort(),
