@@ -19,7 +19,7 @@
 | 2 | 世界级 UI/UX（13 屏 × 4 视口 × 2 主题） | **PASS**（视觉 104/104、axe 39/39；Figma 部分 `BLOCKED_FIGMA_WRITE`） | `03_UI_UX_13SCREENS.md` |
 | 3 | 真实 OAuth 回调 / 会话续期 / 登出 / 切租户 | **PASS**（22 PASS / 0 FAIL / 2 `NOT_TESTED`） | `04_AUTH_SESSION_LIFECYCLE.md` |
 | 4 | Agent → Consent → Action → Outcome（含 Verify 正例） | **PASS**（核验阶梯 15/15；完整 HTTP 链 1 项 `NOT_TESTED`） | `05_AGENT_CONSENT_OUTCOME.md` |
-| 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | `NOT_TESTED` | 待执行 |
+| 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | **PASS**（LCP/CLS/INP 达标；TBT FAIL = P1 已登记；/console 并行化 −50%） | `06_PERFORMANCE_BUDGET.md` |
 | 6 | 监控 + 发布治理 + Workers 独立轨道 | `NOT_TESTED` | 待执行 |
 | 7 | RC 验收 + GO/NO-GO 门 | `NOT_TESTED` | 待执行 |
 | 8 | 单次生产发布 + 15 步验证 + 最终报告 | `NOT_TESTED` | 待执行 |
@@ -137,6 +137,17 @@
 | 快照无漂移 | **PASS** | P14 派生值 == `Outcome.verificationLevel` |
 | Agent/Consent/Action 逻辑层 | **PASS** | `jest tests/agents` **231/231**（execution-gated / outbound-delivery / approval-consistency / adversarial-injection） |
 | 完整 HTTP 链 A01–A12（v198） | `NOT_TESTED` | v198 按设计拒绝远程库，需本地 file 库 + `next dev` + stub provider 三步前置；命令见 05 §4.2 |
+
+---
+
+## 三·五、Batch 5 · 性能预算
+
+- 移动端 4G+4×CPU 节流，Before(`bc46a22`) / After(`1fb16e1`+) 各 3–5 轮取中位数
+- **改动**：console 布局两趟串行 Turso 查询并行化（TTFB 3330→1667ms，−50%）；测量脚本 `parseArgs` 截断 bug 修复（首采 4 页版证据作废留档，重采 `_public`/`_authed` 四份）
+- **LCP** PASS 4/4（/console 本地 FAIL 判据为本地→Turso 地理伪影，生产实测 TTFB 1.05–1.43s 含跨境 RTT，预算内）
+- **CLS** 0.000 全页 · **INP p75** 64–192ms 全页
+- **TBT ≤200ms FAIL 4/4**（Before/After 同级，非回归）——客户端水合 204–286KB 在 4×CPU 下阻塞 600–2500ms；整改需跨 13 屏拆包+懒水合，登记 P1 非阻塞，见 06 §4.1
+- 阈值一行未改；超预算项如实 FAIL
 
 ---
 

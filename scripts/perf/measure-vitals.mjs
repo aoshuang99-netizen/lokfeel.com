@@ -57,6 +57,12 @@ const BUDGET = {
   ttfb: { good: 800, poor: 1800 },
   // 首屏 JS 超过 300KB 时，中端机执行成本已明显可见
   jsKB: { good: 300, poor: 600 },
+  // V20.5 / Batch 5：主指令要求的总阻塞时间与交互延迟。
+  // TBT 是 lab 指标（长任务超出 50ms 的部分之和），可在本脚本里真测。
+  // INP 是**字段**指标（需要真实交互的 p75），lab 里只能给出"单次交互的代理值"——
+  // 两者的口径差异写在报告里，不把代理值冒充 p75。
+  tbt: { good: 200, poor: 600 },
+  inp: { good: 200, poor: 500 },
 }
 
 /** 移动端档位：iPhone 视口 + 4G + 4× CPU 降速（与 Lighthouse 移动档同源思路） */
@@ -86,7 +92,7 @@ const DEFAULT_URLS = [
  * 只读 Performance API，不改页面、不注入任何业务逻辑。
  */
 function collector() {
-  const v = { lcp: null, lcpEl: null, lcpUrl: null, cls: 0, clsShifts: 0, fcp: null }
+  const v = { lcp: null, lcpEl: null, lcpUrl: null, cls: 0, clsShifts: 0, fcp: null, tbt: 0, longTasks: 0, inpMax: null, inpCount: 0 }
   // 挂在 window 上是刻意为之：Playwright 的 evaluate 与页面共享同一个全局。
   window.__lfVitals = v
   try {
@@ -119,11 +125,44 @@ function collector() {
   } catch {
     /* 同上 */
   }
+  // TBT：只累加**超过 50ms** 的部分（Web Vitals 的定义），不是长任务时长总和。
+  // 直接把长任务时长加起来会系统性高估，那种数字没法与任何公开基线对比。
+  try {
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) {
+        v.longTasks += 1
+        if (e.duration > 50) v.tbt += e.duration - 50
+      }
+    }).observe({ type: 'longtask', buffered: true })
+  } catch {
+    /* 同上 */
+  }
+  // 交互延迟：只登记**真实用户交互**（event timing 的 interactionId 非 0）。
+  // lab 里靠脚本触发一次触摸，取这次交互的处理时长作为**代理值**。
+  try {
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) {
+        if (!e.interactionId) continue
+        v.inpCount += 1
+        if (v.inpMax === null || e.duration > v.inpMax) v.inpMax = e.duration
+      }
+    }).observe({ type: 'event', buffered: true, durationThreshold: 16 })
+  } catch {
+    /* 同上 */
+  }
 }
 
 async function measureOnce(browser, url, opts = {}) {
   const throttle = opts.throttle !== false
   const context = await browser.newContext(MOBILE)
+  // 登录态：把会话 cookie 注入上下文（V20.5 起工作区/控制台也能测了）。
+  // 注入的是**服务端签发的真实 JWT** —— 不是伪造的身份。
+  if (opts.cookie) {
+    const { name, value } = opts.cookie
+    await context.addCookies([
+      { name, value, domain: new URL(url).hostname, path: '/', httpOnly: true, sameSite: 'Lax' },
+    ])
+  }
   const page = await context.newPage()
   await page.addInitScript(collector)
 
@@ -153,6 +192,27 @@ async function measureOnce(browser, url, opts = {}) {
   await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {})
   await page.waitForTimeout(1200)
 
+  // INP 代理：等首屏定稿后再点一次（点击发生在采集之后，不会污染 LCP/CLS）。
+  // 只点"看得见、放得下"的元素；点不到就记录 null —— 不伪造一个 0 当"极快"。
+  if (opts.inp) {
+    const box = await page
+      .evaluate(() => {
+        const sel = 'button:not([disabled]),a[href],input:not([disabled]),select'
+        for (const el of document.querySelectorAll(sel)) {
+          const r = el.getBoundingClientRect()
+          if (r.width >= 8 && r.height >= 8 && r.top < window.innerHeight) {
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+          }
+        }
+        return null
+      })
+      .catch(() => null)
+    if (box) {
+      await page.touchscreen.tap(Math.max(1, box.x), Math.max(1, box.y)).catch(() => {})
+      await page.waitForTimeout(600)
+    }
+  }
+
   const data = await page.evaluate(() => {
     const v = window.__lfVitals || {}
     const nav = performance.getEntriesByType('navigation')[0] || {}
@@ -178,6 +238,10 @@ async function measureOnce(browser, url, opts = {}) {
       fcp: v.fcp ?? null,
       cls: typeof v.cls === 'number' ? v.cls : null,
       clsShifts: v.clsShifts ?? null,
+      tbt: typeof v.tbt === 'number' ? Math.round(v.tbt) : null,
+      longTasks: v.longTasks ?? null,
+      inpProxy: typeof v.inpMax === 'number' ? Math.round(v.inpMax) : null,
+      interactions: v.inpCount ?? 0,
       transferBytes: transfer,
       jsBytes: js,
       imgBytes: img,
@@ -253,7 +317,14 @@ function summarize(samples) {
   const cls = median(ok.map((s) => s.cls))
   const ttfb = median(ok.map((s) => s.ttfb))
   const jsKB = median(ok.map((s) => s.jsBytes)) / 1024
-  const grades = { lcp: grade('lcp', lcp), cls: grade('cls', cls), ttfb: grade('ttfb', ttfb), jsKB: grade('jsKB', jsKB) }
+  const tbt = median(ok.map((s) => s.tbt))
+  const grades = {
+    lcp: grade('lcp', lcp),
+    cls: grade('cls', cls),
+    ttfb: grade('ttfb', ttfb),
+    jsKB: grade('jsKB', jsKB),
+    tbt: grade('tbt', tbt),
+  }
   const values = Object.values(grades)
   const verdict = values.includes('FAIL') ? 'FAIL' : values.includes('NO_DATA') ? 'NO_DATA' : values.includes('WARN') ? 'WARN' : 'PASS'
   return {
@@ -263,6 +334,11 @@ function summarize(samples) {
     cls,
     ttfb,
     jsKB,
+    tbt,
+    // ⚠️ INP 是**代理值**：lab 里只点了一次，没有 p75 可言。
+    // 它不进 verdict —— 把代理值当字段指标判红/判绿，是另一种“阈值造假”。
+    inpProxy: median(ok.map((s) => s.inpProxy)),
+    longTasks: median(ok.map((s) => s.longTasks)),
     transferKB: median(ok.map((s) => s.transferBytes)) / 1024,
     coldStart: ok[0],
     samples: ok,
@@ -310,7 +386,9 @@ async function selfTest() {
   await new Promise((r) => server.listen(0, '127.0.0.1', r))
   const base = `http://127.0.0.1:${server.address().port}`
 
-  const browser = await chromium.launch()
+  // 与 main() 同款：macOS 13 上 playwright 已不支持自动安装 chromium，
+  // 自证也必须能指定已缓存的构建，否则门禁脚本自己先跑不起来。
+  const browser = await chromium.launch({ executablePath: process.env.PW_EXECUTABLE || undefined })
   try {
     const fast = summarize([await measureOnce(browser, `${base}/fast.html`, { throttle: false })])
     ok('快页面 → PASS（不是恒红）', fast.verdict === 'PASS', `verdict=${fast.verdict} lcp=${fast.lcp}`)
@@ -358,8 +436,15 @@ function parseArgs(argv) {
   const out = {}
   for (const a of argv) {
     if (!a.startsWith('--')) continue
-    const [k, v] = a.slice(2).split('=')
-    out[k] = v === undefined ? 'true' : v
+    // ⚠️ 不能写 `a.slice(2).split('=')` 再解构前两段：`--urls=...?view=now`
+    // 会被第二个 '=' 截断（V20.5 实测：`/workspace?view=now` 变成 `/workspace?view`，
+    // 紧随其后的下一个 URL 直接消失，报告少测一页却看不出来）。只切第一个 '='。
+    const i = a.indexOf('=')
+    if (i === -1) {
+      out[a.slice(2)] = 'true'
+      continue
+    }
+    out[a.slice(2, i)] = a.slice(i + 1)
   }
   return out
 }
@@ -371,6 +456,28 @@ async function main() {
   const urls = args.urls ? args.urls.split(',').map((s) => s.trim()).filter(Boolean) : DEFAULT_URLS
   const runs = Math.max(1, Number(args.runs || 3))
   const tap = args.tap === 'true'
+  const inp = args.inp === 'true'
+  // V20.5 / Batch 5：支持登录后的页面（/workspace、/console）。
+  // 注入的是**服务端签发的真实会话 cookie**，不是伪造身份。
+  let cookie = null
+  if (args['auth-email'] && args['pwd-file']) {
+    const pw = fs.readFileSync(args['pwd-file'], 'utf8').trim()
+    const origin = args['auth-base'] || new URL(urls[0]).origin
+    const res = await fetch(`${origin}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Origin: origin },
+      body: JSON.stringify({ email: args['auth-email'], password: pw }),
+      redirect: 'manual',
+    })
+    if (!res.ok) {
+      console.error(`✗ 登录失败 HTTP ${res.status}（${args['auth-email']}）`)
+      return 2
+    }
+    const raw = res.headers.getSetCookie().find((x) => /session-token/i.test(x))
+    const [name, ...rest] = raw.split(';')[0].split('=')
+    cookie = { name: name.trim(), value: rest.join('=') }
+    console.log(`✓ 已登录 ${args['auth-email']}`)
+  }
   // PW_EXECUTABLE：本地无对应版本缓存时指定已有 chromium（CI 不设该变量，行为不变）
   const browser = await chromium.launch({ executablePath: process.env.PW_EXECUTABLE || undefined })
 
@@ -381,7 +488,7 @@ async function main() {
     for (const url of urls) {
       const samples = []
       for (let i = 0; i < runs; i += 1) {
-        samples.push(await measureOnce(browser, url, { tap }))
+        samples.push(await measureOnce(browser, url, { tap, inp, cookie }))
       }
       const s = summarize(samples)
       if (s.verdict === 'FAIL') anyFail = true
@@ -390,11 +497,12 @@ async function main() {
       console.log(`\n${url}`)
       console.log(
         `  判定 ${s.verdict}  ·  LCP ${b(s.lcp)}  ·  FCP ${b(median(samples.map((x) => x.fcp)))}  ·  ` +
-          `CLS ${s.cls === null ? '—' : s.cls.toFixed(3)}  ·  TTFB ${b(s.ttfb)}  ·  JS ${Math.round(s.jsKB)}KB  ·  ` +
+          `CLS ${s.cls === null ? '—' : s.cls.toFixed(3)}  ·  TBT ${b(s.tbt)}  ·  ` +
+          `INP代理 ${b(s.inpProxy)}  ·  TTFB ${b(s.ttfb)}  ·  JS ${Math.round(s.jsKB)}KB  ·  ` +
           `传输 ${Math.round(s.transferKB)}KB`,
       )
       console.log(
-        `  分项 LCP ${s.grades.lcp} / CLS ${s.grades.cls} / TTFB ${s.grades.ttfb} / JS ${s.grades.jsKB}` +
+        `  分项 LCP ${s.grades.lcp} / CLS ${s.grades.cls} / TBT ${s.grades.tbt} / TTFB ${s.grades.ttfb} / JS ${s.grades.jsKB}` +
           (s.coldStart ? `  ·  首轮(冷) LCP ${b(s.coldStart.lcp)}` : ''),
       )
       const overflow = Math.max(...samples.map((x) => x.overflowX || 0))

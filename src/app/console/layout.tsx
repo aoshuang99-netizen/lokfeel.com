@@ -65,8 +65,16 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
     // ⚠️ 这里从 `resolveTenantForUser` 换成 `resolveActiveTenant`（V20.5 Batch 3）：
     //    前者永远返回"最早加入的社群"，导致多社群用户看不到第二个社群。
     //    后者先读 cookie 软偏好（用户在切换器里选的），失效再回落默认。
-    const tenant = await resolveActiveTenant(session.user.id)
-    tenants = await listTenants(session.user.id)
+    //
+    // 🔴 V20.5 Batch 5（性能）：两者必须**并行**。它们各自打一趟 Turso 往返
+    //    （本地实测单趟 1.5–1.9s），串行时 /console 的 TTFB = 两趟之和 ≈ 3.3s，
+    //    直接把 LCP 顶穿 2500ms 预算；并行后 TTFB 收敛到单趟。
+    //    两者都只依赖 userId，无共享依赖，Promise.all 安全。
+    const [tenant, tenantList] = await Promise.all([
+      resolveActiveTenant(session.user.id),
+      listTenants(session.user.id),
+    ])
+    tenants = tenantList
     organizationName =
       tenants.find((t) => t.organizationId === tenant.organizationId)?.name ?? '你的社群'
     capabilities = capabilitiesOf(tenant.role)
