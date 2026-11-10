@@ -5,7 +5,7 @@
 > 没有证据的 `PASS` 一律视为 `NOT_TESTED` —— 本文件的存在意义就是不允许"看起来做完了"。
 
 - 分支：`main`（RC 分支 `rc/v20.5-ga`，发布分支 `release/v20.5-ga` 见 Batch 7）
-- 线上当前：`3e27f3c`（Netlify `published_deploy.commit_ref` 实核 2026-11-10；**B0–B2 已上线**，GA 回滚点）
+- 线上当前：**`0aa24f3`**（V20.5 GA，2026-11-10 发布；deploy `6af2c1cb7b87b5`）· 回滚点 `3e27f3c`
 - 台账最后更新：2026-11-07 · 基线 `3e27f3c` + Batch 3 本轮改动（提交见 `git log --grep=v20.5-b3`）
 
 ---
@@ -22,7 +22,7 @@
 | 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | **PASS**（LCP/CLS/INP 达标；TBT FAIL = P1 已登记；/console 并行化 −50%） | `06_PERFORMANCE_BUDGET.md` |
 | 6 | 监控 + 发布治理 + Workers 独立轨道 | **PASS**（十项信号 11/11 生产实测；Workers 未切流护栏复核有效） | `07_MONITORING_GOVERNANCE.md` |
 | 7 | RC 验收 + GO/NO-GO 门 | **GO**（电池 10 项全绿；期间发现并修复 2 个真缺陷：CI 密钥字面量、paper 信号色对比度） | `08_RC_ACCEPTANCE.md` |
-| 8 | 单次生产发布 + 15 步验证 + 最终报告 | `NOT_TESTED` | 待执行 |
+| 8 | 单次生产发布 + 15 步验证 + 最终报告 | **PASS**（15/15；发布 `0aa24f3`，deploy `6af2c1cb7b87b5`，回滚点 `3e27f3c`） | `09`–`12` |
 
 ---
 
@@ -170,19 +170,9 @@
 
 ---
 
-## 四、待办清单（按阻塞关系排序）
+## 四、收尾状态（2026-11-10）
 
-1. **Batch 4 → 5**：无前置阻塞，可并行推进。（Batch 2 已完成：Figma 写权限判定为 `BLOCKED_FIGMA_WRITE`，前端工作照常推进，未因缺 Figma 停摆；Batch 3 已完成。）
-2. **Batch 6**：需要决定监控落地形态（自建 probe / 外部 uptime），并写清 "5xx / p50 / p95 / 登录成功率 / Agent 成功率 / Provider 降级 / Consent 异常 / Outcome 核验失败 / DB 错误 / Secrets 缺失 / 部署漂移" 各自的口径与阈值。
-3. **Batch 7**：GO 需要 Batch 0–6 全绿且 P0=0；`admin 口令风险已消除` 已有证据。
-4. **Batch 8**：发布是**唯一需要人工批准**的动作；发布后必须对 `https://app.lokfeel.com` 重跑
-   `verify-t07-org-lifecycle`、`verify-member-role-prod`、`prod-smoke`、`verify-public-origin`、`verify-payment-off`。
-
-### 需要人（不是 AI）做的事
-
-| # | 事项 | 为什么必须人来 |
-| --- | --- | --- |
-| H-1 | 确认泄漏口令是否在 LokFeel 之外被复用（邮箱/其他站点） | 只有本人知道他还在哪些地方用过同一口令 |
-| H-2 | 开启 GitHub Secret Scanning + Push Protection | 仓库设置项，需要账号权限 |
-| H-3 | 把新的管理员口令写入 GitHub Secrets（供 CI 用） | 凭据分发不能经过对话 |
-| H-4 | 支付/退款相关凭据（CREEM / STRIPE × API_KEY / WEBHOOK_SECRET） | 涉及真实扣款，属高风险操作，未获授权 |
+- **V20.5 GA 已上线**：`0aa24f3`（tag `v20.5.0-ga`），15 步验证全过
+- 13 份交付文档 00–12 全部落地，每条结论带路径/SHA/命令/退出码/日志
+- 未闭合项全部登记在 `11_KNOWN_ISSUES_AND_BACKLOG.md`（TBT=P1、真实 OAuth=NOT_TESTED、支付凭据=人工项）
+- 需用户决策：4 项安全人工项、是否开启支付、V20.6 是否先做 TBT

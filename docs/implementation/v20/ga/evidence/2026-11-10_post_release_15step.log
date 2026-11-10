@@ -1,0 +1,132 @@
+
+===== S1 prod-smoke --commit=0aa24f3 =====
+
+目标：https://app.lokfeel.com
+期望 commit：0aa24f3
+────────────────────────────────────────────────────────────────────────────────────────────────
+✓ R1             Runbook① commit == 发布 SHA                       [PASS] 线上 0aa24f3 vs 期望 0aa24f3
+✓ R2             Runbook② /pricing 是真实页面（200）                    [PASS] 200
+✓ R3             Runbook③ /hlua 200                              [PASS] 200
+✓ R3             Runbook③ /refunds 200                           [PASS] 200
+✓ R3             Runbook③ /pay.html 200                          [PASS] 200
+✓ R4             Runbook④ POST /api/payments/cancel 拒绝匿名         [PASS] HTTP 401
+✓ R5             Runbook⑤ 支付关闭且缺口恰为 4 键                          [PASS] configured=false missing=4
+✓ G1             首页 200                                          [PASS] 200
+✓ G2             /login 200                                      [PASS] 200
+✓ G3             /workspace 未登录应跳 /login                         [PASS] 307 → /login?callbackUrl=%2Fworkspace
+✓ G4             /console 未登录应跳 /login                           [PASS] 307 → /login?callbackUrl=%2Fconsole
+✓ G9             核心 API 无 500                                    [PASS] /api/auth/session=200 /api/payments/status=401 /api/matches=401 /api/v1/billing/subscription=401
+✓ G10            未配置支付时结账被拒（不产生订单）                               [PASS] HTTP 401 code=Unauthorized
+✓ C1             /login 不被公共缓存                                   [PASS] private,no-store,max-age=0,must-revalidate
+✓ C1             /register 不被公共缓存                                [PASS] private,no-store,max-age=0,must-revalidate
+────────────────────────────────────────────────────────────────────────────────────────────────
+合计 15：PASS 15 / FAIL 0 / UNVERIFIED 0
+[exit=0]
+
+===== S2 monitor --expect-commit=0aa24f3 =====
+目标：https://app.lokfeel.com（窗口 7 天）· 2026-11-10T07:09:35.397Z
+✓ M03   登录成功（真实账号 + session 回读）    [PASS] login=5842ms session=200 user=qa.male@lokfeel.com
+✓ M08   DB 错误（health.status × 3 采样） [PASS] healthy=3/3 dbLatency=14,9,7ms
+✓ M09   Secrets（charging 必须 false · malformed 必须空） [PASS] charging=false malformed=0 missing=4（missing=已知人工项 H-4）
+✓ M01   5xx 比例（7 端点 × 1 轮）         [PASS] 全 7 个 0 个 5xx
+✓ M02   延迟 p50/p95（12 采样）          [PASS] p50=366ms p95=939ms（基线记录；跨境网络含 ~250ms RTT）
+✓ M10   部署漂移（Netlify published_deploy vs expect） [PASS] deployed=0aa24f3 health.commit=0aa24f3 expect=0aa24f3
+✓ G06   Workers 轨道不变量（x-nf-request-id 存在） [PASS] Netlify 源在役 01M724NHZ21P97ZBRDVBA2PM…
+✓ M04   Agent 成功/失败（7 天事件分布）       [PASS] created=8 executed=3 blocked=0 degraded=0
+✓ M05   Provider 降级（degraded 事件 + 生产出口自检） [PASS] degraded=0 出口=PASS 2183ms 身份=PASS
+✓ M06   Consent 异常（opted_* 必须有 actor） [PASS] opted_in=0 opted_out=0 拒绝=0 无actor=0
+✓ M07   Outcome 核验（outcome.* 分布 + workflow 死信） [PASS] reported=0 confirmed=0 verified=0 死信=0（写路径失败信号由 Batch 4 断言覆盖）
+
+=== 11 PASS / 0 FAIL / 0 BLOCKED ===
+[exit=0]
+
+===== S3 payment-off prod =====
+
+━━━ payment-off 契约（支付未接入 = 受支持状态）━━━
+目标   : https://app.lokfeel.com
+探针   : health=200 · products=503 · checkout=401 · stripe.webhook=503 · creem.webhook=503 · refund=401
+
+  ✅ 基线：/api/health 200 且带 payments 块
+  ✅ 基线：本环境确实是「未接入」（configured=false）
+  ✅ health.payments 结构完整（5 通道 + missing + malformed）
+  ✅ health.payments.missing 含 CREEM_API_KEY
+  ✅ health.payments.missing 含 CREEM_WEBHOOK_SECRET
+  ✅ health.payments.missing 含 STRIPE_SECRET_KEY
+  ✅ health.payments.missing 含 STRIPE_WEBHOOK_SECRET
+  ✅ health 响应不含凭据片段
+  ✅ GET /api/payments/creem/products → 503
+  ✅ products 响应带 code=PAYMENT_NOT_CONFIGURED 与 channel
+  ✅ products 响应回的是变量名而不是 provider 原始报错
+  ✅ products 不是 500（未接入不得被记成服务端故障）
+  ✅ POST /api/payments/creem/checkout（匿名）→ 401
+  ✅ POST /api/webhooks/stripe（带签名头）→ 503 + PAYMENT_NOT_CONFIGURED
+  ✅ POST /api/webhooks/creem（带签名头）→ 503 或 401（绝不 500）
+  ✅ creem webhook 不是 500
+  ✅ POST /api/admin/subscriptions/:id/refund（匿名）→ 401/403，不是 500
+  ✅ 本轮没有任何端点返回 500
+
+结论：18/18 通过
+[exit=0]
+
+===== S4 member-role-prod (D-12) =====
+
+生产：https://app.lokfeel.com
+
+  ✓ P01 匿名 → 401                       status=401
+  ✓ P02 OPERATOR → 403                 status=403
+  – P03 改自己 → 409                      缺少 ADMIN_PASSWORD
+  – P04 授予 OWNER → 403                 缺少 ADMIN_PASSWORD
+  – P05 降级 → 200                       缺少 ADMIN_PASSWORD
+  – P06 还原 → 200                       缺少 ADMIN_PASSWORD
+
+2 PASS / 0 FAIL / 4 SKIP
+[exit=0]
+
+===== S5 oauth-shape prod =====
+
+=== 1. 授权请求形状（https://app.lokfeel.com）===
+PASS  最终跳到 accounts.google.com  — https://app.lokfeel.com/api/auth/oauth/google/signin?callbackUrl=%2Fdashboard
+PASS  response_type=code  — code
+PASS  client_id 存在且不是占位符  — 185541962106…
+PASS  redirect_uri 指向 app.lokfeel.com（https://）  — https://app.lokfeel.com/api/auth/callback/google
+PASS  redirect_uri 不含 localhost/127.0.0.1  — https://app.lokfeel.com/api/auth/callback/google
+PASS  scope 含 openid  — openid email profile
+PASS  有 state 且长度 ≥ 16  — len=43
+PASS  PKCE: code_challenge_method=S256  — S256
+PASS  PKCE: code_challenge 长度 43–128  — len=43
+
+=== 2. 回调失败路径（必须全部拒绝，不得毛 500、不得下发会话）===
+PASS  [用户拒绝授权] 无 5xx  — 307→307→200
+PASS  [用户拒绝授权] 307 回登录页并带错误  — https://app.lokfeel.com/login?error=Google+authorization+failed%3A+access_denied
+PASS  [用户拒绝授权] 未下发 session cookie  — ok
+PASS  [用户拒绝授权] 错误文案可读  — https://app.lokfeel.com/login?error=Google authorization failed: access_denied
+PASS  [伪造 code + 伪造 state] 无 5xx  — 307→307→200
+PASS  [伪造 code + 伪造 state] 307 回登录页并带错误  — https://app.lokfeel.com/login?error=Security+check+failed.+Please+start+the+sign-in+again.
+PASS  [伪造 code + 伪造 state] 未下发 session cookie  — ok
+PASS  [伪造 code + 伪造 state] 错误文案可读  — https://app.lokfeel.com/login?error=Security check failed. Please start the sign-in again.
+PASS  [空参数] 无 5xx  — 307→307→200
+PASS  [空参数] 307 回登录页并带错误  — https://app.lokfeel.com/login?error=Google+callback+missing+authorization+code
+PASS  [空参数] 未下发 session cookie  — ok
+PASS  [空参数] 错误文案可读  — https://app.lokfeel.com/login?error=Google callback missing authorization code
+
+━━━ 21 PASS / 0 FAIL / 21 total ━━━
+授权请求形状合规；三种坏回调全部被拒且不建会话。
+注：成功回调（真实 code 交换）仍需真人授权，本脚本不覆盖。
+[exit=0]
+
+===== S6 commit-drift =====
+站点          : app.lokfeel.com  (c46478e9-7ac8-4bcf-9052-7638b04fef83)
+已发布部署    : 6af2c1cb7b87b59fb3541265  state=ready
+发布时间      : 2026-11-10T07:05:39.621Z
+生产提交      : 0aa24f362a310046542388fc634f3bba14edce0c
+  提交标题    : release(v20.5-ga): LokFeel V20.5 GA —— 生产发布（人工批准 2026-11-10）
+
+发布内容 = R
+本地 HEAD     : 0aa24f362a310046542388fc634f3bba14edce0c
+落后提交数    : 0
+src 差异文件  : 0
+
+✅ src/ 无漂移（生产与 HEAD 的应用代码一致）。
+[exit=0]
+
+===== DONE =====
