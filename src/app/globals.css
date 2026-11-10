@@ -1765,9 +1765,15 @@ img {
      （axe 在 11px 小字上实测），达不到 AA 的 4.5:1。#86602c 为 4.9:1。 */
   --lf-signal: #86602c;
   --lf-signal-soft: rgba(184, 134, 63, 0.14);
-  --lf-success: #3f8c74;
-  --lf-warning: #b8862f;
-  --lf-danger: #b8564f;
+  /* 三个信号色在浅底全部必须 ≥4.5:1（2026-11-10 axe 实测修复）：
+     warning #b8862f 仅 2.72–3.23:1（ws-agents paper 的「失败」徽章 + 降级横幅实抓）；
+     success #3f8c74 仅 3.39–4.03:1、danger #b8564f 仅 3.94–4.69:1 —— 同类潜伏雷。
+     取值与 Console paper 映射同源（#1f6b52 / #a13a33），warning 用 #8a5f18（4.73–5.63:1）。
+     B2 时未暴露是因为当时 QA 库尚无带「失败」徽章的运行与降级横幅——数据是
+     B3/B4 复验播种出来的；扫描口径没问题，缺陷是真的。 */
+  --lf-success: #1f6b52;
+  --lf-warning: #8a5f18;
+  --lf-danger: #a13a33;
 }
 
 /* ── Adaptive Dual World（设计 C） ──────────────────────────────
@@ -1806,9 +1812,15 @@ img {
   --lf-text-faint: #63696d;
   --lf-signal: #86602c;
   --lf-signal-soft: rgba(184, 134, 63, 0.14);
-  --lf-success: #3f8c74;
-  --lf-warning: #b8862f;
-  --lf-danger: #b8564f;
+  /* 三个信号色在浅底全部必须 ≥4.5:1（2026-11-10 axe 实测修复）：
+     warning #b8862f 仅 2.72–3.23:1（ws-agents paper 的「失败」徽章 + 降级横幅实抓）；
+     success #3f8c74 仅 3.39–4.03:1、danger #b8564f 仅 3.94–4.69:1 —— 同类潜伏雷。
+     取值与 Console paper 映射同源（#1f6b52 / #a13a33），warning 用 #8a5f18（4.73–5.63:1）。
+     B2 时未暴露是因为当时 QA 库尚无带「失败」徽章的运行与降级横幅——数据是
+     B3/B4 复验播种出来的；扫描口径没问题，缺陷是真的。 */
+  --lf-success: #1f6b52;
+  --lf-warning: #8a5f18;
+  --lf-danger: #a13a33;
   color-scheme: light;
 }
 
@@ -1826,9 +1838,15 @@ img {
   --lf-text-faint: #63696d;
   --lf-signal: #86602c;
   --lf-signal-soft: rgba(184, 134, 63, 0.14);
-  --lf-success: #3f8c74;
-  --lf-warning: #b8862f;
-  --lf-danger: #b8564f;
+  /* 三个信号色在浅底全部必须 ≥4.5:1（2026-11-10 axe 实测修复）：
+     warning #b8862f 仅 2.72–3.23:1（ws-agents paper 的「失败」徽章 + 降级横幅实抓）；
+     success #3f8c74 仅 3.39–4.03:1、danger #b8564f 仅 3.94–4.69:1 —— 同类潜伏雷。
+     取值与 Console paper 映射同源（#1f6b52 / #a13a33），warning 用 #8a5f18（4.73–5.63:1）。
+     B2 时未暴露是因为当时 QA 库尚无带「失败」徽章的运行与降级横幅——数据是
+     B3/B4 复验播种出来的；扫描口径没问题，缺陷是真的。 */
+  --lf-success: #1f6b52;
+  --lf-warning: #8a5f18;
+  --lf-danger: #a13a33;
   color-scheme: light;
 }
 

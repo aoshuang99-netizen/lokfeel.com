@@ -388,3 +388,135 @@ PASS  [空参数] 错误文案可读  — http://localhost:3111/login?error=Goog
   ✓ console-members-768-paper      PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | consoleErr=2 | reqFail=12
   ✓ console-members-1440-field     PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | consoleErr=2 | reqFail=16
   ✓ console-members-1440-paper     PASS     overflow=0px len=296 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | consoleErr=2 | reqFail=2
+  ✓ console-missions-360-field     PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=8
+  ✓ console-missions-360-paper     PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=8
+  ✓ console-missions-390-field     PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=10
+  ✓ console-missions-390-paper     PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=6
+  ✓ console-missions-768-field     PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=10
+  ✓ console-missions-768-paper     PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=11
+  ✓ console-missions-1440-field    PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-missions-1440-paper    PASS     overflow=0px len=166 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=9
+  ✓ console-outcomes-360-field     PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=7
+  ✓ console-outcomes-360-paper     PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=7
+  ✓ console-outcomes-390-field     PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=12
+  ✓ console-outcomes-390-paper     PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=12
+  ✓ console-outcomes-768-field     PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-outcomes-768-paper     PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=10
+  ✓ console-outcomes-1440-field    PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=11
+  ✓ console-outcomes-1440-paper    PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=11
+  ✓ console-settings-360-field     PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=7
+  ✓ console-settings-360-paper     PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=4
+  ✓ console-settings-390-field     PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=10
+  ✓ console-settings-390-paper     PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=7
+  ✓ console-settings-768-field     PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=7
+  ✓ console-settings-768-paper     PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=14
+  ✓ console-settings-1440-field    PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11) | reqFail=12
+  ✓ console-settings-1440-paper    PASS     overflow=0px len=361 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0) | reqFail=6
+
+— Workspace 六屏 × 4 视口 × 2 主题（?view= 深链接）—
+  ✓ ws-now-360-field               PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-now-360-paper               PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-now-390-field               PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-now-390-paper               PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-now-768-field               PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-now-768-paper               PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-now-1440-field              PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-now-1440-paper              PASS     overflow=0px len=283 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-studio-360-field            PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-studio-360-paper            PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-studio-390-field            PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-studio-390-paper            PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-studio-768-field            PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-studio-768-paper            PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-studio-1440-field           PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-studio-1440-paper           PASS     overflow=0px len=187 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-field-360-field             PASS     overflow=0px len=133 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-field-360-paper             PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-field-390-field             PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-field-390-paper             PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-field-768-field             PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-field-768-paper             PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-field-1440-field            PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-field-1440-paper            PASS     overflow=0px len=170 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-consent-360-field           PASS     overflow=0px len=394 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-consent-360-paper           PASS     overflow=0px len=394 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-consent-390-field           PASS     overflow=0px len=394 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-consent-390-paper           PASS     overflow=0px len=394 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-consent-768-field           PASS     overflow=0px len=397 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-consent-768-paper           PASS     overflow=0px len=397 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-consent-1440-field          PASS     overflow=0px len=394 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-consent-1440-paper          PASS     overflow=0px len=397 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-outcomes-360-field          PASS     overflow=0px len=698 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-outcomes-360-paper          PASS     overflow=0px len=701 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-outcomes-390-field          PASS     overflow=0px len=698 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-outcomes-390-paper          PASS     overflow=0px len=698 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-outcomes-768-field          PASS     overflow=0px len=698 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-outcomes-768-paper          PASS     overflow=0px len=698 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-outcomes-1440-field         PASS     overflow=0px len=698 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-outcomes-1440-paper         PASS     overflow=0px len=698 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-agents-360-field            PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-agents-360-paper            PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-agents-390-field            PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-agents-390-paper            PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-agents-768-field            PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-agents-768-paper            PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+  ✓ ws-agents-1440-field           PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=field --lf-bg=#0b0e11 expect=#0b0e11)
+  ✓ ws-agents-1440-paper           PASS     overflow=0px len=215 h1=1 | THEME_PASS(attr=paper --lf-bg=#f7f5f0 expect=#f7f5f0)
+
+=== 汇总 104 PASS / 0 FAIL / 共 104 格（期望 104）===
+    主题：PASS 104 · N/A 0 · FAIL 0
+    报告：test-results/v204-visual/visual-results.json
+[0] node
+
+===== a11y-39 =====
+✓ 登录成功（qa.male@lokfeel.com）
+
+  ✓ ws-now-1440-field                  PASS     违规=0（serious+ = 0）
+  ✓ ws-now-1440-paper                  PASS     违规=0（serious+ = 0）
+  ✓ ws-now-390-field                   PASS     违规=0（serious+ = 0）
+  ✓ ws-studio-1440-field               PASS     违规=0（serious+ = 0）
+  ✓ ws-studio-1440-paper               PASS     违规=0（serious+ = 0）
+  ✓ ws-studio-390-field                PASS     违规=0（serious+ = 0）
+  ✓ ws-field-1440-field                PASS     违规=0（serious+ = 0）
+  ✓ ws-field-1440-paper                PASS     违规=0（serious+ = 0）
+  ✓ ws-field-390-field                 PASS     违规=0（serious+ = 0）
+  ✓ ws-consent-1440-field              PASS     违规=0（serious+ = 0）
+  ✓ ws-consent-1440-paper              PASS     违规=0（serious+ = 0）
+  ✓ ws-consent-390-field               PASS     违规=0（serious+ = 0）
+  ✓ ws-outcomes-1440-field             PASS     违规=0（serious+ = 0）
+  ✓ ws-outcomes-1440-paper             PASS     违规=0（serious+ = 0）
+  ✓ ws-outcomes-390-field              PASS     违规=0（serious+ = 0）
+  ✓ ws-agents-1440-field               PASS     违规=0（serious+ = 0）
+  ✗ ws-agents-1440-paper               FAIL     违规=1（serious+ = 1）
+  ✓ ws-agents-390-field                PASS     违规=0（serious+ = 0）
+  ✓ console-overview-1440-field        PASS     违规=0（serious+ = 0）
+  ✓ console-overview-1440-paper        PASS     违规=0（serious+ = 0）
+  ✓ console-overview-390-field         PASS     违规=0（serious+ = 0）
+  ✓ console-agents-1440-field          PASS     违规=0（serious+ = 0）
+  ✓ console-agents-1440-paper          PASS     违规=0（serious+ = 0）
+  ✓ console-agents-390-field           PASS     违规=0（serious+ = 0）
+  ✓ console-connections-1440-field     PASS     违规=0（serious+ = 0）
+  ✓ console-connections-1440-paper     PASS     违规=0（serious+ = 0）
+  ✓ console-connections-390-field      PASS     违规=0（serious+ = 0）
+  ✓ console-members-1440-field         PASS     违规=0（serious+ = 0）
+  ✓ console-members-1440-paper         PASS     违规=0（serious+ = 0）
+  ✓ console-members-390-field          PASS     违规=0（serious+ = 0）
+  ✓ console-missions-1440-field        PASS     违规=0（serious+ = 0）
+  ✓ console-missions-1440-paper        PASS     违规=0（serious+ = 0）
+  ✓ console-missions-390-field         PASS     违规=0（serious+ = 0）
+  ✓ console-outcomes-1440-field        PASS     违规=0（serious+ = 0）
+  ✓ console-outcomes-1440-paper        PASS     违规=0（serious+ = 0）
+  ✓ console-outcomes-390-field         PASS     违规=0（serious+ = 0）
+  ✓ console-settings-1440-field        PASS     违规=0（serious+ = 0）
+  ✓ console-settings-1440-paper        PASS     违规=0（serious+ = 0）
+  ✓ console-settings-390-field         PASS     违规=0（serious+ = 0）
+
+=== 38 PASS / 1 FAIL / 0 NOT_TESTED · 共 39 格 ===
+
+违规汇总（按规则）：
+  color-contrast:serious                           nodes=4
+
+报告：test-results/v205-a11y/a11y-13screens.json
+[1] node
+
+===== BATTERY DONE =====

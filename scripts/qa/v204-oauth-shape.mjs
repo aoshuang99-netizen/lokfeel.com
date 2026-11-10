@@ -98,13 +98,20 @@ if (googleHop) {
   );
 
   const redirectUri = q.get("redirect_uri") || "";
-  const baseHost = new URL(BASE).host;
+  const base = new URL(BASE);
+  const isLocal = /^(localhost|127\.0\.0\.1)$/.test(base.hostname);
+  // scheme 跟随 BASE：生产必须 https，本地 next start 是 http —— 写死 https
+  // 会让本地复验永远假红（2026-11-10 RC 电池实跑发现：19/21 中的 2 条红
+  // 全是环境断言写死所致，生产 21/21 证据不受影响）。
   check(
-    `redirect_uri 指向 ${baseHost}`,
-    redirectUri.startsWith(`https://${baseHost}/`),
+    `redirect_uri 指向 ${base.host}（${base.protocol}//）`,
+    redirectUri.startsWith(`${base.protocol}//${base.host}/`),
     redirectUri || "缺失",
   );
-  check("redirect_uri 不含 localhost/127.0.0.1", !/localhost|127\.0\.0\.1/.test(redirectUri), redirectUri);
+  // 「不含 localhost」只在生产断言：对 localhost BASE 跑这条是同义反复。
+  if (!isLocal) {
+    check("redirect_uri 不含 localhost/127.0.0.1", !/localhost|127\.0\.0\.1/.test(redirectUri), redirectUri);
+  }
 
   check(
     "scope 含 openid",

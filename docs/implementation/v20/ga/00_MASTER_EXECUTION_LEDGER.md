@@ -21,7 +21,7 @@
 | 4 | Agent → Consent → Action → Outcome（含 Verify 正例） | **PASS**（核验阶梯 15/15；完整 HTTP 链 1 项 `NOT_TESTED`） | `05_AGENT_CONSENT_OUTCOME.md` |
 | 5 | 性能预算（LCP/CLS/TBT/INP，Before/After） | **PASS**（LCP/CLS/INP 达标；TBT FAIL = P1 已登记；/console 并行化 −50%） | `06_PERFORMANCE_BUDGET.md` |
 | 6 | 监控 + 发布治理 + Workers 独立轨道 | **PASS**（十项信号 11/11 生产实测；Workers 未切流护栏复核有效） | `07_MONITORING_GOVERNANCE.md` |
-| 7 | RC 验收 + GO/NO-GO 门 | `NOT_TESTED` | 待执行 |
+| 7 | RC 验收 + GO/NO-GO 门 | **GO**（电池 10 项全绿；期间发现并修复 2 个真缺陷：CI 密钥字面量、paper 信号色对比度） | `08_RC_ACCEPTANCE.md` |
 | 8 | 单次生产发布 + 15 步验证 + 最终报告 | `NOT_TESTED` | 待执行 |
 
 ---
@@ -158,6 +158,15 @@
 - 事实修正：线上 = `3e27f3c`（非 bc46a22）——Netlify API 实核，B0–B2 已上线；**GA 回滚点 = `3e27f3c`**
 - Workers 独立轨道：不切流结论维持；cloudflare-production.yml 仅显式 dispatch + 审批的护栏复核有效
 - 发布治理规则定死见 07 §5（单一通道 + [skip netlify] 纪律 + GO 证据链）
+
+---
+
+## 三·七、Batch 7 · RC 验收
+
+- RC 分支 `release/v20.5-ga` 已建（与 main/rc 同 SHA）；本地生产构建电池 10 项全绿（§1 表格 + 两份 evidence 日志）
+- **发现 1（P0 级纪律）**：1a54de3 CI 首跑红——B0 轮换脚本注释里复写旧口令字面量（G1 命中）；红灯埋 3 天因 3e27f3c 推送从未触发 CI。整改 69eeae5：删字面量+脱敏，不加 allowlist，CI 全绿
+- **发现 2（P1 级 a11y）**：axe 首跑 38/39——paper 主题 warning 2.72:1（+success/danger 同类潜伏雷）；换达标色后复扫 39/39 + 视觉 104/104
+- **结论 GO**：10 条件全过，NO-GO 零命中；最终 RC SHA 的 CI 在推送后核验；Batch 8 生产发布需人工批准
 
 ---
 
