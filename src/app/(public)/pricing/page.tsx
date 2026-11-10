@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, Check, Layers, Scale, ShieldCheck, Workflow } from 'lucide-react';
 
 import { PRODUCTS, displayPrice, isPurchasable } from '@/config/products';
-import { readStoreReadiness } from '@/lib/payments/dodo/config';
+import { readSkuBindings, readStoreReadiness } from '@/lib/payments/dodo/config';
 import { PlanCards } from '@/components/billing/plan-cards';
 
 export const metadata: Metadata = {
@@ -46,6 +46,12 @@ export default async function PricingPage({
   const price = displayPrice(product);
   const purchasable = isPurchasable(product);
   const store = readStoreReadiness();
+  /**
+   * 逐格可用性。`store.ready` 只代表**凭据齐备**（能建会话），
+   * 具体某一格能不能卖要看这里 —— 例如 Scale 年付因 Dodo 单笔
+   * 金额上限（$3,000）暂时建不出商品，不该连累另外 5 个套餐。
+   */
+  const bound = readSkuBindings();
 
   return (
     // 无障碍：本页无自带 nav/footer，整页即主内容区 ⇒ 用 <main> 作根元素补 landmark
@@ -77,7 +83,7 @@ export default async function PricingPage({
               已取消本次结账，未产生任何费用。你可以随时重新选择套餐。
             </div>
           )}
-          <PlanCards checkoutReady={store.ready} callbackUrl="/pricing" />
+          <PlanCards checkoutReady={store.ready} bound={bound} callbackUrl="/pricing" />
         </div>
 
         {/* ── 3. 权益与边界（与价格无关，但决定"值不值"）────── */}

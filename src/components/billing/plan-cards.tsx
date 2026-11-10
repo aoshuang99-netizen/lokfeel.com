@@ -32,8 +32,16 @@ import {
 } from '@/config/subscription-plans';
 
 export interface PlanCardsProps {
-  /** 服务端判定的"能否在线结账"（含 Dodo 凭据与商品绑定）。 */
+  /** 服务端判定的"能否创建结账会话"（凭据是否齐备）。 */
   checkoutReady: boolean;
+  /**
+   * 逐 SKU 的商品绑定状态。缺省 = 全部已绑定。
+   *
+   * 为什么需要它：Dodo 有商户级单笔金额上限，某个高价 SKU 可能暂时
+   * 建不出来。此时**只禁那一格**，其余套餐照常可买 —— 否则 1 个 SKU
+   * 的缺失会让整页定价变成"即将开放"。
+   */
+  bound?: Record<SellablePlanId, Record<BillingInterval, boolean>>;
   /** 已订阅时的当前档位（用于把按钮改成"当前套餐"）。 */
   currentPlan?: string | null;
   /** 从定价页跳登录时的回跳地址。 */
@@ -45,7 +53,12 @@ interface CheckoutError {
   hint?: string;
 }
 
-export function PlanCards({ checkoutReady, currentPlan, callbackUrl = '/pricing' }: PlanCardsProps) {
+export function PlanCards({
+  checkoutReady,
+  bound,
+  currentPlan,
+  callbackUrl = '/pricing',
+}: PlanCardsProps) {
   const router = useRouter();
   const [interval, setInterval] = useState<BillingInterval>('monthly');
   const [pending, setPending] = useState<SellablePlanId | null>(null);
@@ -167,6 +180,9 @@ export function PlanCards({ checkoutReady, currentPlan, callbackUrl = '/pricing'
           const isCurrent = currentPlan === plan.id;
           const isPending = pending === plan.id;
           const price = formatPrice(plan.id, interval);
+          /** 该档该周期是否已绑商品。缺省视为已绑定（调用方未传 = 不细分）。 */
+          const skuBound = bound?.[plan.id]?.[interval] !== false;
+          const sellable = checkoutReady && skuBound;
 
           return (
             <div
@@ -208,13 +224,29 @@ export function PlanCards({ checkoutReady, currentPlan, callbackUrl = '/pricing'
                 ))}
               </ul>
 
+              {!skuBound && (
+                <p
+                  id={`sku-unavailable-${plan.id}`}
+                  className="mt-5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-foreground-muted leading-relaxed"
+                >
+                  {interval === 'monthly' ? '月付' : '年付'}这一档暂未开放在线开通（受支付通道单笔金额上限限制）。
+                  可改选{interval === 'monthly' ? '年付' : '月付'}，或
+                  <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">
+                    联系我们
+                  </a>
+                  走对公/年度合同开通，价格与权益不变。
+                </p>
+              )}
+
               <Button
                 type="button"
                 className="mt-6 w-full"
                 variant={plan.highlighted ? 'default' : 'outline'}
-                disabled={!checkoutReady || isPending || isCurrent}
+                disabled={!sellable || isPending || isCurrent}
                 onClick={() => startCheckout(plan.id)}
-                aria-describedby={!checkoutReady ? 'checkout-unavailable' : undefined}
+                aria-describedby={
+                  !checkoutReady ? 'checkout-unavailable' : !skuBound ? `sku-unavailable-${plan.id}` : undefined
+                }
               >
                 {isCurrent ? (
                   '当前套餐'
@@ -223,10 +255,12 @@ export function PlanCards({ checkoutReady, currentPlan, callbackUrl = '/pricing'
                     <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                     正在创建会话…
                   </>
-                ) : checkoutReady ? (
-                  `订阅 ${plan.name}`
-                ) : (
+                ) : !checkoutReady ? (
                   '在线开通即将开放'
+                ) : !skuBound ? (
+                  `${interval === 'monthly' ? '月付' : '年付'}暂不可用`
+                ) : (
+                  `订阅 ${plan.name}`
                 )}
               </Button>
             </div>

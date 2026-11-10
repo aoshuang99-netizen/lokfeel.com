@@ -23,6 +23,8 @@ import {
   BILLING_INTERVALS,
   DODO_PRODUCT_ENV,
   SELLABLE_PLAN_IDS,
+  type BillingInterval,
+  type SellablePlanId,
 } from '@/config/subscription-plans';
 
 export type DodoEnvironment = 'test_mode' | 'live_mode';
@@ -133,13 +135,42 @@ export function isDodoWebhookReady(env: EnvLike = process.env): boolean {
   return readDodoConfig(env, { requiresWebhook: true }).ok;
 }
 
+/** 每档 × 每周期是否已绑定 Dodo 商品（`true` 才允许把按钮点下去）。 */
+export type SkuBindings = Record<SellablePlanId, Record<BillingInterval, boolean>>;
+
 /**
- * 收银台是否**整店可售**：凭据齐备 **且** 每档每月/每年都绑定了商品。
+ * 逐个 SKU 的商品绑定状态。
  *
- * 分两层是有意的：
- *   · 只有凭据、没有商品 ⇒ 点了结账会在服务端 503（商品未绑定），
- *     那是一个用户已经产生期待之后才失败的时刻；
- *   · 这里提前判定，页面就能在**点击之前**说清"即将开放"。
+ * 为什么要**逐 SKU**、而不是一个全局布尔：
+ * Dodo 对单笔金额有商户级上限（实测 $3,000，超了创建商品直接
+ * `CART_AMOUNT_EXCEEDS_LIMIT`）。于是"Scale 年付 $3,990 建不出来"是
+ * 一个**合法外部约束**，不是配置写错。若用一个全局 `ready` 表达，
+ * 这 1 个 SKU 的缺失会把另外 5 个可售的套餐一起禁掉 —— 少卖 5 个，
+ * 只因 1 个撞了风控上限。所以绑定状态必须能落到 (档位, 周期) 这一格。
+ */
+export function readSkuBindings(env: EnvLike = process.env): SkuBindings {
+  const out = {} as SkuBindings;
+
+  for (const plan of SELLABLE_PLAN_IDS) {
+    out[plan] = {} as Record<BillingInterval, boolean>;
+    for (const interval of BILLING_INTERVALS) {
+      const v = env[DODO_PRODUCT_ENV[plan][interval]];
+      out[plan][interval] = typeof v === 'string' && v.trim().length > 0;
+    }
+  }
+
+  return out;
+}
+
+/**
+ * 收银台就绪度。**两个层次不可混为一谈**：
+ *
+ *   · `ready`           = 凭据齐备 ⇒ 能创建结账会话。这是"通道是否接上"。
+ *   · `unboundProducts` = 哪些 SKU 还没绑商品 ⇒ 那一格按钮要禁用。
+ *
+ * 早期版本把 `ready` 定义成"凭据齐备且 6 个 SKU 全绑定"，在遇到单笔
+ * 金额上限时会导致整页禁售。现在 `ready` 只表达凭据；逐格可用性看
+ * `readSkuBindings()`。
  *
  * 返回值只含**变量名**，可直接进公开页面（不含任何值）。
  */
@@ -161,7 +192,7 @@ export function readStoreReadiness(env: EnvLike = process.env): {
   }
 
   return {
-    ready: config.ok && unboundProducts.length === 0,
+    ready: config.ok,
     missingCredentials,
     unboundProducts,
   };
