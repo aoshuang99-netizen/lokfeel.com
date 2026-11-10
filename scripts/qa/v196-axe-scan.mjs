@@ -112,6 +112,7 @@ const pages = [
 // ---------- 扫描 ----------
 const browser = await chromium.launch({
   channel: process.env.PW_CHANNEL || undefined,
+  executablePath: process.env.PW_EXECUTABLE || undefined,
   args: ['--proxy-server=direct://', '--proxy-bypass-list=*'],
 });
 

@@ -19,7 +19,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const PUBLIC_DIR = path.join(ROOT, 'src/app/(public)')
+/** 2026-11-10（B2）：首页迁入 (landing) 组 —— 扫描范围跟着路由组走，不允许覆盖缩水 */
+const PUBLIC_DIRS = [
+  path.join(ROOT, 'src/app/(public)'),
+  path.join(ROOT, 'src/app/(landing)'),
+]
 const BRAND_FILE = path.join(ROOT, 'src/config/brand.ts')
 
 /** 从 brand.ts 解析禁词数组（保持单一来源，不在这里重复维护） */
@@ -87,7 +91,8 @@ function walk(dir) {
 }
 
 function routeOf(file) {
-  const rel = path.relative(PUBLIC_DIR, file)
+  const base = PUBLIC_DIRS.find((d) => file.startsWith(d + path.sep)) ?? PUBLIC_DIRS[0]
+  const rel = path.relative(base, file)
   const dir = path.dirname(rel)
   if (dir === '.') return '/'
   return '/' + dir.replace(/\\/g, '/').replace(/\/\([^)]+\)/g, '')
@@ -96,7 +101,7 @@ function routeOf(file) {
 function main() {
   const terms = loadLegacyTerms()
   const exemptions = loadExemptions()
-  const files = walk(PUBLIC_DIR).sort()
+  const files = PUBLIC_DIRS.flatMap((d) => walk(d)).sort()
 
   if (files.length === 0) {
     console.error('✗ 没有扫到任何公开路由文件 —— 扫描路径可能写错了')

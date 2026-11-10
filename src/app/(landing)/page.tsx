@@ -26,6 +26,8 @@ import QuickSignupModal from "@/components/auth/quick-signup-modal";
 const INK = "#0b0e11";
 const PAPER = "#f7f5f0";
 const SIGNAL = "#b8863f";
+/** 大字强调色的对比达标版（SIGNAL 在 PAPER 上 2.96:1，差大字 3:1 一线之隔） */
+const SIGNAL_DEEP = "#8a5a1e";
 const MUTED = "#5a636b";
 const FAINT = "#8a9298";
 
@@ -773,8 +775,20 @@ const FOOTER_COLUMNS: Array<{ title: string; links: Array<[string, string]> }> =
   {
     title: "Product",
     links: [
-      ["Living Workspace", "/workspace"],
-      ["Console", "/console"],
+      ["Product", "/product"],
+      ["Solutions", "/solutions"],
+      ["Stories", "/stories"],
+      ["How it works", "/how-it-works"],
+      ["Pricing", "/pricing"],
+      ["Help center", "/help"],
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      ["About", "/about"],
+      ["Contact", "/contact"],
+      ["Support", "/support"],
       ["Log in", "/login"],
       ["Create account", "/register"],
     ],
@@ -810,7 +824,8 @@ function SiteFooter() {
         </div>
         {FOOTER_COLUMNS.map((col) => (
           <div key={col.title}>
-            <p className="font-mono text-[9.5px] uppercase tracking-[0.18em]" style={{ color: FAINT }}>
+            {/* V196 棘轮实测：FAINT(2.9:1) 对 9.5px 小字不达 4.5:1 —— 加深到 MUTED(5.6:1) */}
+            <p className="font-mono text-[9.5px] uppercase tracking-[0.18em]" style={{ color: MUTED }}>
               {col.title}
             </p>
             <ul className="mt-3 space-y-2">
@@ -886,10 +901,10 @@ export default function LandingPage() {
 
           <div className="hidden items-center gap-7 md:flex">
             {[
-              ["Product", "#product"],
-              ["AI", "#ai"],
-              ["Graph", "#graph"],
-              ["Playbooks", "#playbooks"],
+              ["Product", "/product"],
+              ["Solutions", "/solutions"],
+              ["How it works", "/how-it-works"],
+              ["Pricing", "/pricing"],
             ].map(([label, href]) => (
               <a
                 key={href}
@@ -948,36 +963,37 @@ export default function LandingPage() {
               className="mt-5 font-display text-[2.7rem] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-[3.5rem] lg:text-[3.9rem]"
               style={{ color: INK }}
             >
-              Describe the outcome.
+              Turn collaboration intent
               <br />
-              Get a workspace
+              into <span style={{ color: SIGNAL_DEEP }}>approved action</span>
               <br />
-              <span style={{ color: SIGNAL }}>that runs it.</span>
+              and verifiable outcomes.
             </h1>
 
             <p className="mt-5 max-w-md text-[16px] leading-[1.6]" style={{ color: MUTED }}>
-              LokFeel compiles goals into missions, consent gates and AI agents — then runs them
-              with your team.
+              For teams, professional communities and industry networks: record what you want to
+              achieve, get explicit consent, let agents act under approval — and prove what came
+              out of it.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <button
-                onClick={openWorkspace}
+              <Link
+                href="/register"
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-3 text-[14.5px] font-medium text-white transition-transform duration-200 hover:-translate-y-px"
                 style={{ background: INK }}
               >
-                Open your workspace
+                Start your first collaboration
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
-              </button>
-              <button
-                onClick={() => setSignupOpen(true)}
+              </Link>
+              <Link
+                href="/how-it-works"
                 className="cursor-pointer rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors hover:bg-black/[0.03]"
                 style={{ borderColor: "rgba(11,14,17,0.16)", color: INK }}
               >
-                Create an account
-              </button>
+                See how it works
+              </Link>
             </div>
 
             <p className="mt-7 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: FAINT }}>

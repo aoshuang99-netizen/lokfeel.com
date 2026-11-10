@@ -1,0 +1,19 @@
+== B2 门禁 · 2026-11-10 22:15 CST · 工作树（HEAD 见提交） ==
+-- tsc --
+EXIT=0（0 诊断）
+-- eslint（改动面）--
+0 error（1 条 email.ts:231 存量 warning：sendSMSVerification 的 name 参数未用，非本次引入）
+-- jest 全量 --
+Test Suites: 143 passed, 143 total
+Tests:       2719 passed, 2719 total
+-- next build --
+✓ Compiled successfully in 56s
+-- brand-scan --
+结果：27 干净 / 0 命中 / 共 0 处
+✔ 公开路由无旧叙事残留
+-- check:products --
+   · /pricing 是真实页面（R5）
+-- v196 axe 棘轮（含落地页回归）--
+✓ 零新增（存量债 31→30：页脚栏标题 FAINT→MUTED 还债 2 处）
+-- B2 新页 axe（5 页 × 2 视口，serious/critical=0 hard gate）--
+10 PASS / 0 FAIL / 0 NOT_TESTED（scripts/qa/b2-public-pages-axe.mjs）

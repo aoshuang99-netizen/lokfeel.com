@@ -22,8 +22,11 @@ C-19,/pricing,Plans Starter $49/Growth $149/Scale $399 per month; yearly = 10×m
 C-20,/pricing,14-day trial: card bound at checkout; first charge after trial; cancel before end = no charge,Dodo trial_period_days 语义,dodo/client.ts:196-197,PASS,必须写明绑卡与取消方式
 C-21,/pricing,Pricing approval pending — button disabled; checkout 503,commercial-gate 未批准,src/lib/payments/commercial-gate.ts;products.ts:132-144,PASS,D1 批准即自动解锁
 C-22,/pricing,Scale yearly $3990 exceeds Dodo $3000 per-transaction cap — not sellable until D3,Dodo 单笔上限实测 $3001 拒,release 状态页 §4 D3;pricing/page.tsx:57-59,BLOCKED,D3 三选一
-C-23,/terms,"Payments via Stripe Inc." → must change to Dodo Payments,文案与实际收银台不一致,terms/page.tsx:156 vs subscription-plans.ts:124-128,FAIL,C-01 内容缺陷 B2 修
-C-24,/ + all email footers,"LokFee! Inc." typo → LokFeel Inc.,邮件落款笔误,src/lib/email.ts:47;201;343,FAIL,C-02 内容缺陷 B2 修
+C-23,/terms,"Payments via Stripe Inc." → changed to Dodo Payments,文案与实际收银台一致（B2 已修）,terms/page.tsx:156,FIXED,2026-11-10 B2 提交
+C-24,/ + all email footers,"LokFee! Inc." typo → LokFeel（23 处邮件模板全部修正，B2 已修）,src/lib/email.ts（23 处替换）,FIXED,2026-11-10 B2 提交
+C-31,/（页脚 FOLLOW 栏）,Social links (blog/twitter/instagram/facebook @lokfeel) reachability unverified,存量页脚链接未实测,footer.tsx FOLLOW 栏,BLOCKED,B4 实测；不存在则下架该栏
+C-32,全站,BRAND.name 'LokFee' → 'LokFeel'（30 处渲染点 · 7+ 页面用户可见品牌名错误，B2 已修）,src/config/brand.ts:21,FIXED,2026-11-10 B2 提交；brand-scan 门禁同步扩到 (landing) 组
+C-33,五新页,/product /solutions /stories /how-it-works /help 已上线（本地候选构建实测 200 + axe 10/10 零违规）,五个新 page.tsx + (public)/layout.tsx 共享 chrome,PASS,B2 交付；页面截图矩阵归 B4
 C-25,/about,Team & legal entity section,BLOCKED until owner verifies entity,D8;about/page.tsx,BLOCKED,缺位不填占位符
 C-26,/contact,Dedicated mailboxes + 24-48h response promise,现页邮箱结构保留,contact/page.tsx:38-96;145,PASS,收件回执 B4 实测（G2）
 C-27,/privacy,Data use incl. agent access/consent records/org isolation,隐私页主体描述,privacy/page.tsx:36;metadata:8-12,PARTIAL,主体一致性待 D8

@@ -5,20 +5,20 @@
 
 **当前状态：`NO_GO`**（未达到 `READY_FOR_APPROVAL`；未发布，未切流，未发生任何真实扣款）
 
-- 更新时间：2026-11-10 21:15 GMT+8
+- 更新时间：2026-11-10 22:15 GMT+8
 - 基线 T0：2026-11-10 18:59:43 CST（接令取证）
-- 候选代码：`main` @ `192a8ff`（与远端一致），**未推送生产**（待 READY_FOR_APPROVAL + 用户批准）
+- 候选代码：`main` @ B2 提交（见 §2），**未推送生产**（待 READY_FOR_APPROVAL + 用户批准）
 - 生产现状：`https://app.lokfeel.com` 运行 `5a161c4`，**收银台按钮仍可点** —— 候选已关闭但线上止损待用户表态（§3/§6）
-- B1 内容层已交付（§2 新增 3 项）；G6/G8 已在候选 SHA 重跑并留档（§1）
+- B1 内容层 ✅ · **B2 页面层 ✅**（五新页 + 共享 chrome + 三处品牌/文案缺陷修复 + 棘轮零新增）；G6/G8 已绑候选留档（§1）
 
 ## 1. 目标完成度（诚实计数，分母为总令强制项）
 
 | 强制门禁 | 状态 | 一句话 |
 |---|---|---|
 | G0 基线冻结/取证 | **PASS** | SHA/部署/health/路由全部实测，evidence 留档 |
-| G1 对外八问 | **PARTIAL（内容层 PASS）** | 八问矩阵+逐页文案+逐条证据映射已交付（01b/01）；**页面落地属 B2**，页面截图待 B2 |
-| G2 页面/路由/法律闭环 | **NOT_STARTED**（B1/B2 未启动） | 现有公开页 7 个 200，但缺 /product /solutions /stories /how-it-works /about /contact |
-| G3 Figma 可编辑交付 | **BLOCKED**（环境无 Figma 写入连接） | 上一轮已实测并登记 `BLOCKED_FIGMA_WRITE`；本轮未重复探测 |
+| G1 对外八问 | **PASS（内容+页面层）** | 八问矩阵+逐页文案+五新页落地（200 + axe 10/10）；**页面截图矩阵**（全路由×视口×主题）归 B4/G4 一并产出 |
+| G2 页面/路由/法律闭环 | **PARTIAL（D8 阻断）** | 路由闭环完成：五新页 200、全部公开子页挂载共享导航+页脚、品牌名统一 LokFeel；**/about 团队段与法律主体 BLOCKED 于 D8** |
+| G3 Figma 可编辑交付 | **BLOCKED**（环境无 Figma 写入凭据，复核两轮） | 已交付 `03_FIGMA_IMPLEMENTATION_MAP.md`（设计规格+页面到代码映射+凭据到位后建稿清单）；HTML/代码预览 ≠ 可编辑 Figma，不伪称 |
 | G4 响应式/无障碍矩阵 | **NOT_STARTED**（绑定最终候选后执行；沿用旧 104/104 无效） | 总令禁止复用固定分母 |
 | G5 ≥5 人真实用户测试 | **NOT_TESTED**（不可替代人工） | 需用户招募或代理目标用户 |
 | G6 真实授权行动核验 | **PASS（候选 `192a8ff` 实测）** | ① Outcome 核验阶梯 15/15（自报→对手方→外部核验，evidence 留档）② Provider 连通 28/28（WorkBuddy 云端算力真实 HTTP 200/37 模型/凭据被接受）。**口径：本机出口实测候选代码**；生产出口复验留 G13 |
@@ -45,6 +45,9 @@
 | 7 | **G8 在候选 `192a8ff` 重跑**：源码密钥门禁 2388 文件 0 命中；生产 40 键真实值反查构建产物（server+static+预渲染）= 0 密钥泄漏（278 命中全为公开 URL/ID/开关）；客户端 bundle 8 类密钥形态扫描 0 | `evidence/g8-artifact-secret-scan-2026-11-10.log` |
 | 8 | **B1 内容层交付**：八问矩阵 + 九区块逐页完整文案（英文主版+中文口径+术语词表+诚实性负表）+ 逐条声明→源码证据 CSV（30 条，含 2 条内容缺陷登记）+ KKmatch 资产复用登记 11 项（含禁止复用项与权属边界） | `01b_EIGHT_QUESTIONS_AND_PAGE_COPY.md`；`01_CONTENT_AND_CLAIMS.csv`；`02_ASSET_REUSE_REGISTER.csv` |
 | 9 | **新增内容缺陷登记（B2 修复）**：C-01 /terms 写 Stripe 实为 Dodo Payments（terms:156）；C-02 邮件落款 "LokFee! Inc." 笔误（email.ts:47,201,343） | `01_CONTENT_AND_CLAIMS.csv`（C-23/C-24 行，status=FAIL） |
+| 10 | **B2 页面层交付**：新公开页 ×5（/product /solutions /stories /how-it-works /help，深色 glass 系统、服务端组件、响应式）+ 首页 hero 重写（八问 H1/CTA）+ `(public)` 全子页共享 Navbar/Footer chrome + sitemap 收录 + brand-scan 扩到 (landing) 组 | 各 page.tsx；`(public)/layout.tsx`；`03_FIGMA_IMPLEMENTATION_MAP.md` |
+| 11 | **B2 缺陷修复**：C-01（Stripe→Dodo）✅ · C-02（23 处 LokFee!→LokFeel）✅ · C-03（BRAND.name 'LokFee'→'LokFeel'，30 处渲染点）✅ · 落地页页脚栏标题 FAINT→MUTED + hero 强调色过 3:1 线（棘轮还债 31→30） | `01_CONTENT_AND_CLAIMS.csv`（C-23/C-24/C-32 FIXED） |
+| 12 | **B2 门禁（候选工作树）**：tsc 0 · eslint 0 error（1 条存量 warning）· jest 143 套 2719 例全绿 · next build 0（五新页静态生成）· brand-scan 27 文件干净 · product 目录负控 0 · **v196 axe 棘轮零新增（含落地页）** · **新页 axe 10/10 零违规**（`scripts/qa/b2-public-pages-axe.mjs` 入库可复跑） | `evidence/gates-b2-2026-11-10.log` |
 
 ## 3. B0 止损（收银台入口）
 
@@ -70,7 +73,7 @@
 ## 5. 后续批次入口（不重复询问，按序执行）
 
 - **B1（T0+8h 目标）**：✅ 内容层完成（§2 第 8 项）；页面截图层随 B2。
-- **B2（T0+24h 目标）**：新公开页 /product /solutions /stories /how-it-works /help + 既有页按 01b 文案改造（含 C-01/C-02 缺陷修复）；Figma 若连接器可用则建文件，否则继续 `BLOCKED`。
+- **B2（T0+24h 目标）**：✅ 页面层完成（§2 第 10-12 项）；Figma 保持 BLOCKED（规格已交付）。
 - **B3 剩余**：✅ G6/G8 已在候选 SHA 重跑（§2 第 6/7 项）。生产出口与部署产物复核并入 G13。
 - **B4**：CF 兼容性探针 + 迁移演练（G9）+ 性能实测（G10）+ 无障碍矩阵（G4）+ 用户测试（G5）。
 - **B5**：07_ACCEPTANCE_MATRIX.csv 全量填实 → 09_GO_NO_GO → `READY_FOR_APPROVAL`。

@@ -153,7 +153,7 @@ export default function TermsPage() {
             <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
               <li>Monthly subscription: Billed monthly at the current rate</li>
               <li>Annual subscription: Billed annually at a discounted rate</li>
-              <li>All payments are processed securely through <strong>Stripe, Inc.</strong>, a PCI DSS Level 1 compliant payment processor</li>
+              <li>All payments are processed securely through <strong>Dodo Payments</strong>. Card data never touches LokFeel servers; payment fields are hosted by the processor</li>
               <li>Subscriptions auto-renew unless cancelled at least 24 hours before the renewal date</li>
               <li>You may cancel at any time; cancellation takes effect at the end of the current billing period</li>
               <li>Refund requests may be submitted to <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">billing@lokfeel.com</a> and will be evaluated on a case-by-case basis</li>

@@ -1,6 +1,17 @@
 import Link from "next/link";
 
 const footerSections = {
+  PRODUCT: {
+    title: "PRODUCT",
+    links: [
+      { label: "Product", href: "/product", external: false },
+      { label: "Solutions", href: "/solutions", external: false },
+      { label: "Stories", href: "/stories", external: false },
+      { label: "How it works", href: "/how-it-works", external: false },
+      { label: "Help center", href: "/help", external: false },
+      { label: "Pricing", href: "/pricing", external: false },
+    ],
+  },
   COMPANY: {
     title: "COMPANY",
     links: [
@@ -51,7 +62,7 @@ export default function Footer() {
   return (
     <footer className="relative z-10 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
           {Object.entries(footerSections).map(([key, section]) => (
             <div key={key}>
               {/* 无障碍：原为 h4，页面只有 h1 时构成 h1→h4 跳级（键盘/读屏审计实测）。
