@@ -1,0 +1,113 @@
+================================================================
+ LokFeel · V20.5 GA + V20.6 收银台 —— 发布前评审快照
+ 生成时间: 2026-11-10 16:59:03 CST
+================================================================
+
+## 0. 版本事实
+local HEAD      = facb4a6392d0e6a4804cb0d2273b73737125f7c1
+branch          = main
+worktree        = 1 处未提交变更
+remote main     = facb4a6392d0e6a4804cb0d2273b73737125f7c1
+tag v20.5.0-ga  = 0aa24f362a310046542388fc634f3bba14edce0c
+
+## 1. 类型检查
+----- tsc -----
+$ env -u NODE_OPTIONS npx tsc --noEmit -p tsconfig.json
+EXIT[tsc]=0
+
+## 2. Lint（V20.6 新增/改动文件）
+----- eslint -----
+$ env -u NODE_OPTIONS npx eslint src/config/subscription-plans.ts src/config/products.ts src/lib/payments/dodo src/lib/payments/availability.ts src/app/api/payments/dodo src/app/api/webhooks/dodo src/components/billing 'src/app/(public)/pricing/page.tsx' 'src/app/(public)/checkout/success/page.tsx' scripts/ops/dodo-provision-plans.ts
+EXIT[eslint]=0
+
+## 3. 单元测试（计费 / 商业 / 租户）
+----- jest -----
+$ env -u NODE_OPTIONS npx jest tests/billing tests/commercial tests/tenancy --silent
+PASS tests/billing/dodo-signature.test.ts
+PASS tests/tenancy/invitations.test.ts
+PASS tests/billing/dodo-store-readiness.test.ts
+PASS tests/tenancy/capability-semantics.test.ts
+PASS tests/tenancy/org-api.test.ts
+PASS tests/billing/billing-api.test.ts
+PASS tests/billing/creem-checkout-plan.test.ts
+PASS tests/tenancy/member-roles.test.ts
+PASS tests/billing/stripe-subscription-status.test.ts
+PASS tests/billing/dodo-events.test.ts
+PASS tests/tenancy/org-create.test.ts
+PASS tests/billing/stripe-refund.test.ts
+PASS tests/tenancy/tenant-isolation.test.ts
+PASS tests/billing/subscription.test.ts
+PASS tests/billing/dodo-plan-catalog.test.ts
+PASS tests/billing/creem-webhook-matrix.test.ts
+PASS tests/commercial/products.test.ts
+PASS tests/tenancy/member-roles-api.test.ts
+PASS tests/billing/usage.test.ts
+PASS tests/billing/creem-refund-accounting.test.ts
+PASS tests/tenancy/members.test.ts
+PASS tests/tenancy/capabilities.test.ts
+PASS tests/billing/cancel-subscription.test.ts
+PASS tests/tenancy/member-removal.test.ts
+PASS tests/tenancy/org.test.ts
+PASS tests/billing/payment-availability.test.ts
+PASS tests/billing/stripe-invoice-payment.test.ts
+PASS tests/billing/creem-events.test.ts
+PASS tests/billing/stripe-checkout-doublecount.test.ts
+PASS tests/tenancy/consent-revocation.test.ts
+PASS tests/tenancy/members-api.test.ts
+PASS tests/tenancy/audit-redact.test.ts
+PASS tests/tenancy/active-org.test.ts
+
+Test Suites: 33 passed, 33 total
+Tests:       622 passed, 622 total
+Snapshots:   0 total
+Time:        7.708 s
+EXIT[jest]=0
+
+## 4. 产品目录门禁 + 自证
+----- gate -----
+$ env -u NODE_OPTIONS npm run check:products
+
+> nexus-app@0.1.0 check:products
+> node scripts/qa/verify-product-catalog.mjs
+
+✅ 商业契约通过：
+   · 没有任何重定向把销售入口指向 /pay.html（R1）
+   · 剥注释后 pay.html 只出现在 5 个白名单文件（R2）
+   · connection-os 定价状态自洽（未获批无金额 / 已获批有审批留痕）+ 无外部结账（R3）
+   · 定价页与产品目录都不引用旧 B2C 价格源 plans.ts（R4）
+   · /pricing 是真实页面（R5）
+EXIT[gate]=0
+----- selftest -----
+$ node scripts/qa/verify-product-catalog.mjs --self-test
+✓ 对照：合法夹具通过
+✓ 变异①：/pricing → pay.html ⇒ 红
+✓ 变异②：未获批却填价格 ⇒ 红
+✓ 变异③：SaaS 挂 Hlua 结账 ⇒ 红
+✓ 变异④：定价页接旧 B2C 价格 ⇒ 红
+✓ 变异⑤：定价页直连 pay.html ⇒ 红
+✓ 对照：注释里的 pay.html 不误报
+✓ 变异⑥：真代码里的 pay.html 必被抓
+✓ 对照：URL 里的 // 不误伤后续代码
+
+✅ 自证 9 条：9 通过 / 0 失败
+EXIT[selftest]=0
+
+## 5. 生产探针（真实请求 app.lokfeel.com）
+--- 5.1 /api/health ---
+{"status":"healthy","dbLatency":225,"timestamp":"2026-11-10T09:00:55.381Z","cache":{"hits":0,"misses":0,"hitRate":0},"redis":{"backend":"upstash","configured":true,"degraded":false,"degradedForMs":0,"degradedReason":"","degradeCount":0},"botModule":{"enabled":true,"enabledSource":"env","tickIntervalMs":60000,"maxActionsPerTick":50,"minActionIntervalMs":30000,"speedMultiplier":1,"warnings":[]},"firebaseAdmin":{"sdkLoaded":true,"configured":true,"initialized":true,"appCount":1},"payments":{"configured":false,"charging":true,"channels":{"dodo.checkout":true,"dodo.webhook":true,"creem.checkout":false,"creem.webhook":false,"stripe.card":false,"stripe.refund":false,"stripe.webhook":false},"missing":["CREEM_API_KEY","CREEM_WEBHOOK_SECRET","STRIPE_SECRET_KEY","STRIPE_WEBHOOK_SECRET"],"malformed":[]},"version":"0.1.0","commit":"5a161c4","builtAt":"2026-11-10T08:45:57.612Z","commitSource":"env"}
+--- 5.2 /api/payments/dodo/plans ---
+{"ok":true,"provider":"dodo","currency":"USD","catalogVersion":"2026-11-10.1","approvedAt":"2026-11-10","checkoutReady":true,"missing":[],"environment":"live_mode","plans":[{"id":"STARTER","name":"Starter","tagline":"把第一个真实流程跑通","audience":"刚开始用 Connection OS 的小团队","highlighted":false,"trialDays":14,"currency":"USD","highlights":["每月 200 次连接提案 / 30 次介绍","每月 100 份成果上报 · 25 次核验","最多 25 个席位","Consent 依据与撤回全程留痕"],"limits":{"proposalPerMonth":200,"introductionPerMonth":30,"outcomePerMonth":100,"verificationPerMonth":25,"seats":25,"agentMicroCentsPerMonth":5000000000,"agentHighCostCallsPerMonth":200},"intervals":{"monthly":{"amountCents":4900,"display":"$49.00","configured":true},"yearly":{"amountCents":49000,"display":"$490.00","perMonthDisplay":"$40.83","savingsPercent":17,"configured":true}}},{"id":"GROWTH","name":"Growth","tagline":"让协作成为组织的日常","audience":"已有稳定协作节奏的团队与社群","highlighted":true,"trialDays":14,"currency":"USD","highlights":["每月 1,500 次提案 / 200 次介绍","每月 800 份成果上报 · 200 次核验","最多 100 个席位","机器面 MCP / A2A 全量开放","优先支持（1 个工作日内响应）"],"limits":{"proposalPerMonth":1500,"introductionPerMonth":200,"outcomePerMonth":800,"verificationPerMonth":200,"seats":100,"agentMicroCentsPerMonth":25000000000,"agentHighCostCallsPerMonth":1000},"intervals":{"monthly":{"amountCents":14900,"display":"$149.00","configured":true},"yearly":{"amountCents":149000,"display":"$1490.00","perMonthDisplay":"$124.17","savingsPercent":17,"configured":true}}},{"id":"SCALE","name":"Scale","tagline":"跨组织协作，按你的规模跑","audience":"需要跨社群桥接与审计的大型机构","highlighted":false,"trialDays":14,"currency":"USD","highlights":["提案 / 介绍 / 成果 / 核验均不限量","最多 500 个席位","跨社群桥接协议（Bridge）","审计导出与合规留痕","专属上线支持"],"limits":{"proposalPerMonth":null,"introductionPerMonth":null,"outcomePerMonth":null,"verificationPerMonth":null,"seats":500,"agentMicroCentsPerMonth":100000000000,"agentHighCostCallsPerMonth":5000},"intervals":{"monthly":{"amountCents":39900,"display":"$399.00","configured":true},"yearly":{"amountCents":399000,"display":"$3990.00","perMonthDisplay":"$332.50","savingsPercent":17,"configured":false}}}]}
+--- 5.3 页面状态码 ---
+  200  /
+  200  /pricing
+  200  /checkout/success
+  200  /login
+  200  /refunds
+  200  /terms
+  200  /privacy
+  307  /console
+  307  /workspace
+
+================================================================
+ 快照结束
+================================================================
