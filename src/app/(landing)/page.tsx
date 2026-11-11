@@ -29,7 +29,8 @@ const SIGNAL = "#b8863f";
 /** 大字强调色的对比达标版（SIGNAL 在 PAPER 上 2.96:1，差大字 3:1 一线之隔） */
 const SIGNAL_DEEP = "#8a5a1e";
 const MUTED = "#5a636b";
-const FAINT = "#8a9298";
+/** 对比达标版浅色次级文字（G4：#8a9298 在 PAPER 上 2.9:1 不达 4.5） */
+const FAINT = "#626a70";
 
 /* ─────────────────────────── 2. Hero 3D 场景（零依赖 CSS 3D + rAF） ─────────────────────────── */
 
@@ -439,7 +440,7 @@ function NodeCard({
   lines: string[];
   tone: "goal" | "candidate" | "execution";
 }) {
-  const accent = tone === "goal" ? SIGNAL : tone === "candidate" ? "#3f8c74" : "rgba(11,14,17,0.55)";
+  const accent = tone === "goal" ? SIGNAL_DEEP : tone === "candidate" ? "#2f6e59" : "rgba(11,14,17,0.8)";
   return (
     <div className="rounded-xl border bg-white p-3" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
       <div className="mb-2 flex items-center gap-1.5">
@@ -486,9 +487,29 @@ const ORBIT_COLOR: Record<OrbitKind, string> = {
 function OrbitGraph() {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const labelRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const coreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    /** 透视投影到 2D（与 wrap 的 perspective:1100px 一致），驱动平铺标签层的 left/top。
+     *  定义在 effect 内：只闭包稳定的 ref，无外部依赖 ⇒ exhaustive-deps 干净，
+     *  且不会因组件重渲染而重启 requestAnimationFrame 循环。 */
+    const project = (x: number, y: number, z: number) => {
+      const P = 1100;
+      const s = P / (P - z);
+      return { px: x * s, py: y * s };
+    };
+
+    /** 平铺标签跟随节点（不走 transform —— axe 无法解析 3D 变换层的背景堆叠，G4）。 */
+    const placeLabel = (i: number, x: number, y: number, z: number, depth: number) => {
+      const lab = labelRefs.current[i];
+      if (!lab) return;
+      const { px, py } = project(x, y, z);
+      lab.style.left = `calc(50% + ${(px + 6).toFixed(1)}px)`;
+      lab.style.top = `calc(50% + ${(py + 18).toFixed(1)}px)`;
+      lab.style.opacity = (0.35 + depth * 0.65).toFixed(2);
+    };
+
     const wrap = wrapRef.current;
     if (!wrap) return;
     const N = ORBIT_NODES.length;
@@ -497,8 +518,12 @@ function OrbitGraph() {
       nodeRefs.current.forEach((el, i) => {
         if (!el) return;
         const a = (i / N) * Math.PI * 2;
-        el.style.transform = `translate3d(${(Math.sin(a) * 180).toFixed(1)}px, ${(((i % 3) - 1) * 44).toFixed(1)}px, ${(Math.cos(a) * 180).toFixed(1)}px)`;
+        const x = Math.sin(a) * 180;
+        const z = Math.cos(a) * 180;
+        const y = ((i % 3) - 1) * 44;
+        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px)`;
         el.style.opacity = "0.8";
+        placeLabel(i, x, y, z, 0.5);
       });
       return;
     }
@@ -516,6 +541,7 @@ function OrbitGraph() {
         const depth = (z + 185) / 370; // 0 远 → 1 近
         el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px)`;
         el.style.opacity = (0.35 + depth * 0.65).toFixed(2);
+        placeLabel(i, x, y, z, depth);
       });
       if (coreRef.current) {
         const s = 1 + Math.sin(((now - t0) / 1000) * 1.6) * 0.06;
@@ -566,14 +592,14 @@ function OrbitGraph() {
           </div>
         </div>
 
-        {/* 轨道节点 */}
+        {/* 轨道节点（仅圆点；文字标签在下方平铺层） */}
         {ORBIT_NODES.map((n, i) => (
           <div
             key={n.label}
             ref={(el) => {
               nodeRefs.current[i] = el;
             }}
-            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5"
+            className="absolute left-1/2 top-1/2"
           >
             <span
               className="block h-3 w-3 rounded-full"
@@ -584,15 +610,32 @@ function OrbitGraph() {
               }}
               aria-hidden
             />
-            <span
-              className="whitespace-nowrap font-mono text-[8.5px] uppercase tracking-[0.14em]"
-              style={{ color: "rgba(242,241,236,0.72)" }}
-            >
-              {n.label}
-            </span>
           </div>
         ))}
       </div>
+
+      {/* 轨道标签平铺层：不参与 3D 变换（每帧由 placeLabel 以 left/top 同步投影坐标）。
+          原因：axe 的背景解析无法跟随 3D 变换层，标签在任何底色上的实际对比 ≈13:1
+          （实色深底芯片），但 axe 误取金色核心为背景 —— 拆平后几何可解析（G4）。 */}
+      {ORBIT_NODES.map((n, i) => (
+        <span
+          key={n.label}
+          ref={(el) => {
+            labelRefs.current[i] = el;
+          }}
+          className="absolute -translate-x-1/2 whitespace-nowrap rounded-md px-1.5 py-0.5 font-mono text-[8.5px] uppercase tracking-[0.14em]"
+          style={{
+            left: "50%",
+            top: "50%",
+            opacity: 0,
+            color: "#f2f1ec",
+            background: "#14171a",
+            border: "1px solid rgba(242,241,236,0.18)",
+          }}
+        >
+          {n.label}
+        </span>
+      ))}
     </div>
   );
 }
@@ -603,7 +646,7 @@ function Eyebrow({ children, dark = false }: { children: ReactNode; dark?: boole
   return (
     <p
       className="font-mono text-[10px] uppercase tracking-[0.22em]"
-      style={{ color: dark ? "rgba(242,241,236,0.45)" : FAINT }}
+      style={{ color: dark ? "rgba(242,241,236,0.7)" : FAINT }}
     >
       {children}
     </p>
@@ -637,7 +680,7 @@ function FeatureCard({
       >
         {title}
       </h3>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: dark ? "rgba(242,241,236,0.6)" : MUTED }}>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: dark ? "rgba(242,241,236,0.78)" : MUTED }}>
         {line}
       </p>
     </div>
@@ -737,7 +780,7 @@ function PlaybookCard({ p, i }: { p: (typeof PLAYBOOKS)[number]; i: number }) {
   return (
     <div className="flex flex-col rounded-2xl border bg-white p-6" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] tracking-[0.2em]" style={{ color: SIGNAL }}>
+        <span className="font-mono text-[10px] tracking-[0.2em]" style={{ color: SIGNAL_DEEP }}>
           {String(i + 1).padStart(2, "0")}
         </span>
         <span
@@ -1067,7 +1110,7 @@ export default function LandingPage() {
               ))}
             </ul>
 
-            <p className="mt-7 border-t pt-5 text-[12px] leading-relaxed" style={{ borderColor: "rgba(242,241,236,0.12)", color: "rgba(242,241,236,0.42)" }}>
+            <p className="mt-7 border-t pt-5 text-[12px] leading-relaxed" style={{ borderColor: "rgba(242,241,236,0.12)", color: "rgba(242,241,236,0.75)" }}>
               Every call is metered and attributable. Missing credentials degrade to rules — never
               to a pretend model.
             </p>
@@ -1144,6 +1187,8 @@ export default function LandingPage() {
             </div>
           </div>
           <pre
+            tabIndex={0}
+            aria-label="机器接口清单（MCP、A2A、REST）"
             className="overflow-x-auto rounded-xl px-4 py-3.5 font-mono text-[11px] leading-[1.8]"
             style={{ background: PAPER, color: MUTED, border: "1px solid rgba(11,14,17,0.08)" }}
           >

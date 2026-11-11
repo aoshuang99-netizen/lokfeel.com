@@ -23,13 +23,11 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 const { chromium } = require('playwright')
 
-const HERE = path.dirname(fileURLToPath(import.meta.url))
 const AXE_SRC = fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
 
 const argv = process.argv.slice(2)
@@ -55,8 +53,6 @@ fs.mkdirSync(OUT_DIR, { recursive: true })
 const exe = process.env.PW_EXECUTABLE
 const browser = await chromium.launch(exe ? { executablePath: exe } : undefined)
 const results = []
-let hardFail = 0
-let notTested = 0
 
 for (const route of [...NEW_PAGES, ...LEGACY_PAGES]) {
   const isNew = NEW_PAGES.includes(route)
@@ -88,15 +84,12 @@ for (const route of [...NEW_PAGES, ...LEGACY_PAGES]) {
         violations = axe.filter((v) => ['serious', 'critical'].includes(v.impact))
         if (violations.length > 0 && isNew) {
           verdict = 'FAIL'
-          hardFail += 1
         }
       }
     } catch (err) {
       verdict = 'NOT_TESTED'
       violations = [{ rule: String(err).slice(0, 120) }]
-      notTested += 1
     }
-    if (verdict === 'NOT_TESTED') notTested += 0
     const row = { cell, route, viewport: vp.name, isNew, verdict, violations }
     results.push(row)
     const mark = verdict === 'PASS' ? '✓' : verdict === 'FAIL' ? '✗' : '○'
@@ -113,6 +106,13 @@ const gateRows = results.filter((r) => r.isNew)
 const gateFail = gateRows.filter((r) => r.verdict === 'FAIL').length
 const gateNotTested = gateRows.filter((r) => r.verdict === 'NOT_TESTED').length
 const gatePass = gateRows.filter((r) => r.verdict === 'PASS').length
+
+// 前置非空断言：分母被意外清空时，不允许「零 FAIL ⇒ 通过」的空集恒真假绿。
+const EXPECTED_GATE_CELLS = NEW_PAGES.length * VIEWPORTS.length
+if (gateRows.length !== EXPECTED_GATE_CELLS) {
+  console.error(`🔴 门禁分母异常：期望 ${EXPECTED_GATE_CELLS} 格，实得 ${gateRows.length} 格 —— 拒绝判绿`)
+  process.exit(2)
+}
 
 fs.writeFileSync(
   path.join(OUT_DIR, 'b2-public-axe.json'),

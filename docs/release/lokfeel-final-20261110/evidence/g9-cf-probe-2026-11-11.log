@@ -1,0 +1,14 @@
+== G9 CF 兼容性探针 · 2026-11-11 12:30 CST ==
+--- curl -sI https://app.lokfeel.com (关键头) ---
+server: cloudflare
+x-nf-request-id: 01M74D1WB0CDDZK0T3MDY4GQ8Q
+cf-cache-status: DYNAMIC
+cf-ray: a58a7921df8c9f70-AMS
+--- DNS ---
+104.21.88.244
+172.67.154.126
+cloe.ns.cloudflare.com.
+rocky.ns.cloudflare.com.
+--- 代码代理头消费 ---
+grep -rn "x-forwarded-for" src/ --include="*.ts" | wc -l = 10
+（10 处 = 登录/管理员审计、限流、地理、统计对 XFF 首跳的只读消费；login-audit.ts:84 注释明确 Cloudflare/Netlify 均写入该头 ⇒ CF 前置兼容；安全关键路径【跳转构造/同源判定】不消费可伪造头，见 06_G9 §1#4）

@@ -1,0 +1,95 @@
+== B4 门禁 · 2026-11-11 21:00–22:00 CST · 候选工作树（未发布）==
+方法：env -u NODE_OPTIONS；本地生产构建 next build + next start @127.0.0.1:3112；所有结论可复跑。
+
+-- tsc --
+EXIT=0（0 诊断）
+
+-- eslint 全量 `npx eslint .` --
+1467 problems（787 errors / 680 warnings，扫描 1238 文件）
+口径：这是**已冻结的全仓存量债**（基线 1542 problems，当前净下降 75），非本轮引入。
+本项目发布门禁 = 改动面 eslint + lint ratchet 逐文件×逐规则；恒红的裸 eslint 不作为门禁
+（设计理由见 scripts/ci/lint-ratchet.mjs 头部：恒红门禁等于没有门禁）。
+
+-- 改动面 eslint（5 个改动源码/样式文件 + 5 个 QA 脚本）--
+0 problem（修复后）
+
+-- lint ratchet `npm run lint:gate` --
+✅ 零新增（债务下降 5 处、清零 17 处）
+修复前曾报「新增 2 处 +4 条」，均为本轮/B2 引入的真债，已修而非吸收进基线：
+  1. scripts/qa/b2-public-pages-axe.mjs::no-unused-vars 0→3
+     → 删除 3 个冗余计数与未用 import，并补「门禁分母非空断言」（防零 FAIL 的空集假绿）
+  2. src/app/(landing)/page.tsx::react-hooks/exhaustive-deps 0→1
+     → project/placeLabel 移入 useEffect 内部，行为不变、消除告警、避免 RAF 重启
+全仓复核输出：冻结基线 1542 → 当前 1467 problems。
+
+-- jest 全量 `npm test` --
+Test Suites: 143 passed, 143 total
+Tests:       2719 passed, 2719 total
+Time:        59.729 s
+
+-- next build `npm run build` --
+EXIT=0；路由清单含五新页静态生成（/product /solutions /stories /how-it-works /help）
+
+-- verify:brand-scan --
+27 个公开 page/layout 干净 / 0 命中
+
+-- check:products --
+✅ 5 项全通过（R1 无 /pay.html 重定向 · R2 剥注释白名单 · R3 定价状态自洽
+   · R4 不引用旧 B2C 价格源 · R5 /pricing 真实页）
+
+-- check:secrets --
+扫描 2403 个跟踪文件，✅ PASS 无命中
+
+-- G4 判定层 TDD 红→绿（scripts/qa/b4-g4-verdict.test.mjs）--
+RED   : node --test → ERR_MODULE_NOT_FOUND（判定模块未实现，exit 1）
+GREEN : 8/8 PASS
+  含负控：② 注入 serious 违规必须 FAIL（证明门禁对真缺陷敏感）
+          ③/③b axe 未真正运行 / rulesEvaluated 缺失必须 ERROR 而非 PASS（防空集恒真假绿）
+          ⑤ 横向溢出 >1px FAIL、1px 噪声容差 PASS
+
+-- G4 子集实测（--routes=/,/pricing,/product,/privacy × 4 视口）--
+16/16 PASS · rulesEvaluatedMin=34 · zeroScanCells=0
+  ⇒ 前置非空断言在真实页面成立，未误伤；输出标 subset，不冒充全量分母
+
+-- G4 全量矩阵 -- 见文末「补记」
+
+-- G10 性能预算（evidence/g10-perf-2026-11-11.log）--
+PARTIAL：LCP 8/8 · CLS 8/8 · TTFB 8/8 · JS 8/8 · INP 代理 2/2 达标
+TBT 0/8 达标（487–1063ms > 200ms 预算）—— 已知 P1 结构性债，
+历史同级值 786–2549ms，非候选引入；按总令「不按实测反推阈值、不放水」维持 NOT 达标
+
+-- G9 CF 兼容性（06_G9 + evidence/g9-cf-probe-2026-11-11.log）--
+PARTIAL：CF 前置兼容性 PASS（生产实证 server: cloudflare / CF anycast / DNS 代理）
+  代码层 5 项适配证据（XFF 只读首跳 10 处、public-origin 不读代理头构造跳转、
+  webhook 原始字节验签、dedupeKey 数据库唯一约束、Pusher/Upstash 出站）
+方案 A（CF 代理 → Netlify 运行时）「可运行可恢复」PASS；全量迁移 B/C BLOCKED 于 D6
+
+-- G5 用户测试（08_G5_USER_TEST_PROTOCOL.md）--
+NOT_TESTED（≥5 名真人不可替代人工，D7 未决；材料齐备不等于测试发生）
+
+-- G3 Figma（03_FIGMA_IMPLEMENTATION_MAP.md · 第三轮复核）--
+BLOCKED：① 进程 env 无 FIGMA 键 ② 8 个 .env* 无 FIGMA 键
+  ③ ~/.workbuddy/mcp.json 无 figma 条目 ④ list_installed_plugins(connector) = No connectors installed
+  四类全空 ⇒ 无可写入通道；交付设计规格+页面映射+建稿清单，不伪称已建稿
+
+-- 生产只读复核（本轮 21:4x，未改动任何线上配置）--
+GET https://app.lokfeel.com/api/payments/dodo/plans → HTTP 200
+  checkoutReady=true · live_mode · approvedAt=2026-11-10 · catalogVersion=2026-11-10.1
+响应头 server: cloudflare（与 G9 结论一致）
+⇒ 线上收银台仍开放，D2 未处置；生产代码仍含 R-15 缺陷（见 RELEASE_STATUS §6）
+
+== 补记 · G4 全量矩阵（2026-11-11 22:0x · 耗时 9m31s · EXIT=0）==
+命令：node scripts/qa/b4-g4-public-matrix.mjs --base=http://127.0.0.1:3112
+  --shot-dir=test-results/b4-g4-matrix-r3
+  --out=docs/release/lokfeel-final-20261110/evidence/g4-public-matrix.json
+  （rebuild 后重跑：产物含本轮 lint 修复重构；浏览器 = 本机缓存 Chrome for Testing）
+汇总：{"base":"http://127.0.0.1:3112","subset":null,"expectedFullCells":116,
+  "totalCells":116,"pass":112,"fail":0,"na":4,"error":0,"testedDenominator":112,
+  "scannedCells":112,"rulesEvaluatedMin":33,"zeroScanCells":0}
+结论：
+  · 全量 116 格 = 112 PASS / 0 FAIL / 4 NA / 0 ERROR
+  · 4 个 NA 全部是 /checkout @4 视口 HTTP 404（商业门禁关闭的正确表现，如实记 NA 不凑分母）
+  · 112 个 200 格全部真实跑过 axe：最少评估 33 条规则、零扫描格 0
+    ⇒ 前置非空断言在全量成立，112/112 不是「axe 没跑却零违规」的空集恒真假绿
+  · subset=null 且 expectedFullCells=116=totalCells ⇒ 本轮确为全量，非子集冒充
+截图清单：evidence/g4-screens-manifest.txt（r3 目录 112 张 sha256，gitignored 可一键复跑再生）

@@ -1,8 +1,11 @@
 # 03 · FIGMA IMPLEMENTATION MAP — lokfeel-final-20261110
 
-> 结论先行：**G3（Figma 可编辑交付）= BLOCKED**。
-> 实测（2026-11-10）：本环境无 Figma 写入凭据 —— 用户级 skill（`~/.workbuddy/skills/figma`）为操作知识库，不含 token；环境变量、`.env*`、Netlify env（44 键）中均无 `FIGMA_*` 凭据；上轮已实测登记 `BLOCKED_FIGMA_WRITE`，本轮复核结论不变。
+> 结论先行：**G3（Figma 可编辑交付）= BLOCKED**（三轮复核，结论稳定）。
+> - 2026-11-10 首轮：用户级 skill（`~/.workbuddy/skills/figma`）为操作知识库，不含 token；环境变量、`.env*`、Netlify env（44 键）无 `FIGMA_*`；登记 `BLOCKED_FIGMA_WRITE`。
+> - 2026-11-10 次轮：复核写入连接器，仍无。
+> - **2026-11-11 21:05 第三轮（本轮）**：穷尽四类来源 —— ① 进程 `env` 无 FIGMA 键；② 仓库 8 个 `.env*` 文件无 FIGMA 键；③ `~/.workbuddy/mcp.json` 无 figma 条目；④ `list_installed_plugins(type=connector)` 返回 **"No connectors installed"**。四类全空 ⇒ 无任何可写入通道。
 > 按总令口径：**不伪称已交付 Figma**。本文档交付「设计规格 + 页面到代码映射」，供任意设计工具按规格建稿，或凭据到位后一键还原。
+> 恢复 G3 的唯一路径：用户提供 Figma Personal Access Token + 目标 Team/File，或安装并授权 Figma connector；随后按 §3 清单建稿并回填文件 URL + node 映射。
 
 ## 1. 设计规格（Design Spec · 可在任何工具中重建）
 
@@ -76,8 +79,16 @@
 4. Prototype：首页 → /product → /how-it-works → /register 的 CTA 流。
 5. 每帧标注对应代码文件（§2），保证「实现与设计一致」可核对。
 
-## 4. 遗留债务（如实登记，B4 清偿）
+## 4. 遗留债务（B4 清偿结果，如实登记）
 
-- 落地页存量 FAINT mono 眉标/轨道图标签 25+ 处 2.9–4.5:1（v196 基线冻结中；G4 目标 = 全清零）。
+**已清偿（B4 实测）**
+- **低对比文本**：落地页 FAINT→MUTED、装饰 SIGNAL→文字级 `SIGNAL_DEEP #8a5a1e`、rgba 文本改实色、页脚栏标题提亮、`bg-primary text-white` 白字按钮/徽标改深色字（plan-cards / hlua）。
+- **axe 结构性违规**：`(public)` 文本块内链接补下划线（`globals.css` `[data-public-root] a.text-primary`）；`<pre>` 可聚焦；OrbitGraph 标签改平铺 overlay（不再走 3D transform 层）。
+- **主题/动画口径**：公开面无 `data-lf-theme` 切换 ⇒ G4 主题维度记 `THEME_NA`（不凑分母）；动画帧导致 axe 背景解析闪烁，统一在 `prefers-reduced-motion: reduce` 下测量（组件有完整静态降级分支，是真实用户渲染态，非绕过门禁）。
+- **G4 判定层加固（本轮）**：抽出 `scripts/qa/b4-g4-verdict.mjs` 纯函数 + 8 条红→绿回归（含「注入 serious 必须 FAIL」「axe 未运行必须 ERROR」负控），主矩阵接入并要求每格 `rulesEvaluated > 0`，evidence 新增 `rulesEvaluatedMin` / `zeroScanCells` 字段；子集 16/16 实测 `rulesEvaluatedMin=34`、`zeroScanCells=0`。
+- **lint 债**：`b2-public-pages-axe.mjs` 3 个未用变量清除并补门禁分母非空断言；`(landing)/page.tsx` 的 `project/placeLabel` 移入 useEffect 消除 `exhaustive-deps` 告警 ⇒ 棘轮零新增。
+
+**仍未清偿（如实保留）**
 - 页脚 FOLLOW 栏社媒链接可达性未实测（blog/twitter/instagram/facebook @lokfeel 是否存在）→ G2 债 C-31。
-- 两套公开面视觉语言（编辑风 vs 深色玻璃）并存 —— 本轮按"落地页保留、子页统一深色"收敛，全站单语言为后续迭代项（需用户拍板方向）。
+- 两套公开面视觉语言（落地页编辑风 vs 子页深色玻璃）并存 —— 本轮按"落地页保留、子页统一深色"收敛，全站单语言为后续迭代项（需用户拍板方向）。
+- **G3 本身**：仍 `BLOCKED`，本文件仅供按规格建稿，不是可编辑 Figma 交付。

@@ -15,7 +15,8 @@ export default function PublicLayout({
   return (
     <>
       <Navbar />
-      <main>{children}</main>
+      {/* data-public-root：a11y 钩子——公开面正文链接下划线常驻（axe link-in-text-block，见 globals.css） */}
+      <main data-public-root>{children}</main>
       <Footer />
     </>
   );

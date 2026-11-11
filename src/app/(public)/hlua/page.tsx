@@ -82,7 +82,7 @@ export default function HluaPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <a
                 href={product.checkout.href}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-white hover:opacity-90 transition"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-[#0b0e11] hover:opacity-90 transition"
               >
                 {product.checkout.label}
                 <ArrowRight className="w-4 h-4" />

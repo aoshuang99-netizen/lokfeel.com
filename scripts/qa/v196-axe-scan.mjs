@@ -186,7 +186,9 @@ const ctx0 = await browser.newContext();
 const axeSrc = fs.readFileSync(AXE_SRC, 'utf8');
 
 for (const vp of VIEWPORTS) {
-  const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+  // reducedMotion：与 b4-g4-public-matrix 同口径——axe 对"每帧位移的元素"背景解析不稳定
+  // （轨道图标签会被随机误判），动画内容按 axe 官方最佳实践在 prefers-reduced-motion 下扫描。
+  const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, reducedMotion: 'reduce' });
   if (authCookie) {
     const host = new URL(BASE).hostname;
     await ctx.addCookies([

@@ -1,0 +1,2132 @@
+{
+ "summary": {
+  "base": "http://127.0.0.1:3112",
+  "subset": null,
+  "expectedFullCells": 116,
+  "totalCells": 116,
+  "pass": 112,
+  "fail": 0,
+  "na": 4,
+  "error": 0,
+  "testedDenominator": 112,
+  "scannedCells": 112,
+  "rulesEvaluatedMin": 33,
+  "zeroScanCells": 0
+ },
+ "results": [
+  {
+   "route": "/",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 48,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/home--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/product",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 38,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/product--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/solutions",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/solutions--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/stories",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/stories--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/how-it-works",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/how-it-works--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/help",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/help--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/pricing",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 40,
+    "totalRules": 4,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "landmark-main-is-top-level",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-no-duplicate-main",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-unique",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/pricing--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/about",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/about--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/contact",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/contact--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/support",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/support--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/faq",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/faq--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/terms",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/terms--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/privacy--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cookies",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 38,
+    "totalRules": 2,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cookies--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/refunds",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/refunds--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cancellations-policy",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cancellations-policy--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/careers",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/careers--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/press",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/press--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/community-guidelines",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/community-guidelines--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/content-removal-appeals-policy",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 38,
+    "totalRules": 2,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/content-removal-appeals-policy--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/dmca",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/dmca--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/safety-tips",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/safety-tips--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/hlua",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/hlua--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/fan-creator-agreement",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/fan-creator-agreement--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/18-usc-2257",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/18-usc-2257--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/checkout",
+   "viewport": "m360",
+   "status": 404,
+   "axe": null,
+   "overflow": null,
+   "theme": "THEME_NA",
+   "shot": null,
+   "verdict": "NA"
+  },
+  {
+   "route": "/login",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 40,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/login--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/register",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 42,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/register--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "m360",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 39,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/forgot-password--m360.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 48,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/home--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/product",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 38,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/product--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/solutions",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/solutions--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/stories",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/stories--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/how-it-works",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/how-it-works--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/help",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/help--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/pricing",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 40,
+    "totalRules": 4,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "landmark-main-is-top-level",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-no-duplicate-main",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-unique",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/pricing--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/about",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/about--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/contact",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/contact--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/support",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/support--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/faq",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/faq--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/terms",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/terms--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/privacy--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cookies",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 38,
+    "totalRules": 2,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cookies--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/refunds",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/refunds--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cancellations-policy",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cancellations-policy--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/careers",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/careers--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/press",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/press--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/community-guidelines",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/community-guidelines--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/content-removal-appeals-policy",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 38,
+    "totalRules": 2,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/content-removal-appeals-policy--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/dmca",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 36,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/dmca--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/safety-tips",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/safety-tips--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/hlua",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/hlua--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/fan-creator-agreement",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/fan-creator-agreement--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/18-usc-2257",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 37,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "region",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/18-usc-2257--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/checkout",
+   "viewport": "m390",
+   "status": 404,
+   "axe": null,
+   "overflow": null,
+   "theme": "THEME_NA",
+   "shot": null,
+   "verdict": "NA"
+  },
+  {
+   "route": "/login",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 40,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/login--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/register",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 42,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/register--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "m390",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 39,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/forgot-password--m390.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 47,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/home--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/product",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 35,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/product--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/solutions",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/solutions--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/stories",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/stories--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/how-it-works",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/how-it-works--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/help",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/help--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/pricing",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 39,
+    "totalRules": 3,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "landmark-main-is-top-level",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-no-duplicate-main",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-unique",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/pricing--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/about",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/about--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/contact",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/contact--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/support",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/support--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/faq",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/faq--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/terms",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/terms--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/privacy--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cookies",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 35,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cookies--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/refunds",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/refunds--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cancellations-policy",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cancellations-policy--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/careers",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/careers--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/press",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/press--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/community-guidelines",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/community-guidelines--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/content-removal-appeals-policy",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 35,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/content-removal-appeals-policy--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/dmca",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/dmca--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/safety-tips",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/safety-tips--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/hlua",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/hlua--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/fan-creator-agreement",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/fan-creator-agreement--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/18-usc-2257",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/18-usc-2257--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/checkout",
+   "viewport": "t768",
+   "status": 404,
+   "axe": null,
+   "overflow": null,
+   "theme": "THEME_NA",
+   "shot": null,
+   "verdict": "NA"
+  },
+  {
+   "route": "/login",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 40,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/login--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/register",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 42,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/register--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "t768",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 40,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/forgot-password--t768.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 47,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/home--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/product",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 35,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/product--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/solutions",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/solutions--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/stories",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/stories--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/how-it-works",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/how-it-works--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/help",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/help--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/pricing",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 39,
+    "totalRules": 3,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "landmark-main-is-top-level",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-no-duplicate-main",
+      "impact": "moderate",
+      "nodes": 1
+     },
+     {
+      "id": "landmark-unique",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/pricing--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/about",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/about--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/contact",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/contact--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/support",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/support--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/faq",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/faq--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/terms",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/terms--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/privacy",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/privacy--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cookies",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 35,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cookies--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/refunds",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/refunds--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/cancellations-policy",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/cancellations-policy--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/careers",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/careers--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/press",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/press--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/community-guidelines",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/community-guidelines--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/content-removal-appeals-policy",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 35,
+    "totalRules": 1,
+    "seriousCount": 0,
+    "detail": [
+     {
+      "id": "heading-order",
+      "impact": "moderate",
+      "nodes": 1
+     }
+    ]
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/content-removal-appeals-policy--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/dmca",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 33,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/dmca--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/safety-tips",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/safety-tips--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/hlua",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/hlua--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/fan-creator-agreement",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/fan-creator-agreement--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/18-usc-2257",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 34,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/18-usc-2257--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/checkout",
+   "viewport": "d1440",
+   "status": 404,
+   "axe": null,
+   "overflow": null,
+   "theme": "THEME_NA",
+   "shot": null,
+   "verdict": "NA"
+  },
+  {
+   "route": "/login",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 40,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/login--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/register",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 42,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/register--d1440.png",
+   "verdict": "PASS"
+  },
+  {
+   "route": "/forgot-password",
+   "viewport": "d1440",
+   "status": 200,
+   "axe": {
+    "rulesEvaluated": 39,
+    "totalRules": 0,
+    "seriousCount": 0,
+    "detail": []
+   },
+   "overflow": 0,
+   "theme": "THEME_NA",
+   "shot": "test-results/b4-g4-matrix-r3/forgot-password--d1440.png",
+   "verdict": "PASS"
+  }
+ ]
+}

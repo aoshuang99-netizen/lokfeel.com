@@ -1995,3 +1995,12 @@ img {
 .lf-signal-pulse {
   animation: lf-signal-pulse var(--lf-dur-slow) var(--lf-ease) 1;
 }
+
+/* ─── G4 a11y 修复（lokfeel-final-20261110 B4）─── */
+/* 公开面正文链接：下划线常驻 —— 链接不得仅靠颜色与正文区分（axe link-in-text-block, serious）。
+   作用域限定 data-public-root（(public) 布局），不影响 app 内屏既有设计。 */
+[data-public-root] a.text-primary {
+  text-decoration-line: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
