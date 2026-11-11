@@ -3,7 +3,7 @@
 **结论：`NO_GO`** —— 未达 `READY_FOR_APPROVAL`，未发布、未切流、无任何真实扣款。
 更新时间：2026-11-11 22:10 GMT+8 · 状态词只用 `PASS` / `FAIL` / `PARTIAL` / `BLOCKED` / `NOT_TESTED`；`PARTIAL`/`BLOCKED`/`NOT_TESTED` 一律不计入完成。
 
-**候选 SHA：`main` @ `8696c62`**（B4，`[skip netlify]`；`git ls-remote` 复核远端一致，未触发生产构建）。生产仍为 `5a161c4`。
+**候选代码 SHA：`8696c62`**（B4 功能提交，`[skip netlify]`，已推送、未触发生产构建）。远端 main 头提交为**纯文档 SHA 回填**（无代码改动），运行时代码与 `8696c62` 一致；`git ls-remote origin refs/heads/main` 可复核。生产仍为 `5a161c4`。
 
 ## 逐门禁结论（详表见 07_ACCEPTANCE_MATRIX.csv）
 
