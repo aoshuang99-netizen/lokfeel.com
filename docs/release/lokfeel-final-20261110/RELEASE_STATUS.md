@@ -7,7 +7,7 @@
 
 - 更新时间：2026-11-11 22:00 GMT+8
 - 基线 T0：2026-11-10 18:59:43 CST（接令取证）
-- 候选代码：`main` @ B2 `dd3db32` + **B4 本提交**（`[skip netlify]`，**未推送生产**）
+- 候选代码：`main` @ **`8696c62`**（B4 候选，`[skip netlify]`，已推送远端 main 但**未触发生产构建/未发布**；`git ls-remote origin refs/heads/main` = `8696c62c1d447170873f3cefa80df0fcc7425dd2` 复核）；前一提交 `dd3db32` 为 B2
 - 生产现状：`https://app.lokfeel.com` 仍运行 `5a161c4`；**2026-11-11 21:45 只读复核：`checkoutReady=true` / `live_mode` / `approvedAt=2026-11-10`，收银台仍可点** —— 线上止损待用户表态（§3/§6）
 - B1 内容层 ✅ · B2 页面层 ✅ · B3 候选重跑 ✅ · **B4 实测层 ✅（结论见 §1）** · B5 矩阵填实 ✅ · B6 未启动
 

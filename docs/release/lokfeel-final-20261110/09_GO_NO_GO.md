@@ -1,7 +1,9 @@
 # 09 · GO / NO-GO（lokfeel-final-20261110 · B0–B5 阶段性结论）
 
 **结论：`NO_GO`** —— 未达 `READY_FOR_APPROVAL`，未发布、未切流、无任何真实扣款。
-更新时间：2026-11-11 22:00 GMT+8 · 状态词只用 `PASS` / `FAIL` / `PARTIAL` / `BLOCKED` / `NOT_TESTED`；`PARTIAL`/`BLOCKED`/`NOT_TESTED` 一律不计入完成。
+更新时间：2026-11-11 22:10 GMT+8 · 状态词只用 `PASS` / `FAIL` / `PARTIAL` / `BLOCKED` / `NOT_TESTED`；`PARTIAL`/`BLOCKED`/`NOT_TESTED` 一律不计入完成。
+
+**候选 SHA：`main` @ `8696c62`**（B4，`[skip netlify]`；`git ls-remote` 复核远端一致，未触发生产构建）。生产仍为 `5a161c4`。
 
 ## 逐门禁结论（详表见 07_ACCEPTANCE_MATRIX.csv）
 

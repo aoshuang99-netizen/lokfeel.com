@@ -1,5 +1,6 @@
-== B4 门禁 · 2026-11-11 21:00–22:00 CST · 候选工作树（未发布）==
+== B4 门禁 · 2026-11-11 21:00–22:10 CST · 候选 SHA 8696c62（未发布）==
 方法：env -u NODE_OPTIONS；本地生产构建 next build + next start @127.0.0.1:3112；所有结论可复跑。
+候选提交：main @ 8696c62（[skip netlify]，git ls-remote 复核远端一致）；生产仍 5a161c4。
 
 -- tsc --
 EXIT=0（0 诊断）
