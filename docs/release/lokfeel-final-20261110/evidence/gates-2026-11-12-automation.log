@@ -1,0 +1,71 @@
+=== B6 后续自动化执行 · 门禁留档 · 2026-11-12 15:23:50 +0800 ===
+范围：本轮新增只读脚本与 Figma 资产包；状态仍 NO_GO，未发布/未切流/未改生产配置
+--- TDD 收银台判定层（6 行为） ---
+# tests 6
+# pass 6
+# fail 0
+--- TDD Figma 资产校验（3 行为） ---
+# tests 3
+# pass 3
+# fail 0
+--- 既有 G4 判定层回归（8 行为） ---
+# tests 8
+# pass 8
+# fail 0
+--- 资产包 CLI 自检 ---
+{
+  "ok": true,
+  "errors": [],
+  "stats": {
+    "frames": 20,
+    "colorTokens": 20,
+    "components": 9,
+    "systems": [
+      "landing-light",
+      "public-dark"
+    ]
+  }
+}
+ASSET_CLI_EXIT=0
+--- 端到端负控（不可达 BASE 必须 ERROR） ---
+  "verdict": "ERROR",
+[ERROR] 取证不完整，不得判 PASS
+NEGATIVE_EXIT=0
+--- 语法检查 ---
+SYNTAX_ALL_OK
+--- eslint 新增脚本 ---
+ESLINT_OK
+--- tsc ---
+TSC_OK
+--- lint ratchet（全仓） ---
+LINT_GATE_EXIT=0
+  src/app/(public)/page.tsx::react/no-unescaped-entities
+  src/app/(public)/press/page.tsx::@typescript-eslint/no-unused-vars
+  src/app/(public)/safety-tips/page.tsx::react/no-unescaped-entities
+  src/app/api/admin/subscriptions/[id]/refund/route.ts::@typescript-eslint/no-explicit-any
+  src/app/api/cron/bot-online/route.ts::@typescript-eslint/no-explicit-any
+  src/app/api/cron/cleanup-soft-delete/route.ts::@typescript-eslint/no-unsafe-function-type
+  src/app/api/v1/public/missions/[token]/route.ts::@typescript-eslint/no-unused-vars
+  src/app/api/webhooks/creem/route.ts::@typescript-eslint/no-explicit-any
+
+✅ lint 棘轮通过：零新增。（债务下降 5 处、清零 17 处 —— 恭喜）
+--- 生产哨兵只读复跑 ---
+  "verdict": "RISK_OPEN",
+    "commit": "5a161c4"
+[RISK] 线上收银台仍开放 · R-15 风险未止损 · 请对 D2 表态（发布候选 / 摘除 DODO_PAYMENTS_API_KEY）
+--- git status ---
+ M docs/release/lokfeel-final-20261110/03_FIGMA_IMPLEMENTATION_MAP.md
+ M docs/release/lokfeel-final-20261110/10_REMAINING_TASKS_AUTOMATION_PLAN.md
+?? docs/release/lokfeel-final-20261110/evidence/checkout-sentinel-2026-11-12.log
+?? docs/release/lokfeel-final-20261110/evidence/gates-2026-11-12-automation.log
+?? docs/release/lokfeel-final-20261110/figma-import-kit/
+?? scripts/qa/checkout-sentinel-verdict.mjs
+?? scripts/qa/checkout-sentinel-verdict.test.mjs
+?? scripts/qa/checkout-sentinel.mjs
+?? scripts/qa/verify-figma-import-kit.mjs
+?? scripts/qa/verify-figma-import-kit.test.mjs
+
+--- 负控退出码复核（正确捕获，不经管道） ---
+NEGATIVE_SCRIPT_EXIT=1
+  "verdict": "ERROR",
+说明：上方门禁日志中的 NEGATIVE_EXIT=0 是 grep 管道退出码，不代表脚本；脚本本身 exit 1 表示取证不完整必须报错。

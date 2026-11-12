@@ -289,12 +289,33 @@ B1 内容层 · B2 五新页与共享 chrome · B3 R-15/G12 修复与候选重�
 | 顺序 | 动作 | 谁做 | 可否自动化 |
 |---|---|---|---|
 | 1 | **D2 表态**（发布候选 / 摘除 `DODO_PAYMENTS_API_KEY`）——线上收银台可点且含 R-15 缺陷 | 你 | ❌ 需授权 |
-| 2 | 注册 A-01 哨兵（只读告警，零风险，可立即生效） | 我（等你一句话） | ✅ |
+| 2 | ~~注册 A-01 哨兵~~ → **已注册并真实取证**（§8） | 已完成 | ✅ |
 | 3 | 集中批复 D1–D8（可一次性回复八个字母 + 选择） | 你 | ❌ 不可替代 |
 | 4 | 按 D 项逐条触发 L3 补齐（回填/补证/复验） | 我 | ✅ 输入到达后 |
 | 5 | 触发 L2 一次：B6 发布 + G13 生产复验 + 结论回填 | 我（等你指定时间与发布授权） | ⚠️ 需显式授权 |
 | 6 | L4 观察期 48h（health / 付款闭环 / 账本对账） | 我 | ✅ |
-| 7 | G10 TBT、G3 Figma、视觉语言统一、历史债 | 我（独立迭代） | 部分 |
+| 7 | G10 TBT、G3 Figma、视觉语言统一、历史债 | 部分已推进（§8），其余独立迭代 | 部分 |
 
 > 我**不会**自动执行 1 / 3 / 5 中的不可逆或不可替代动作，也不会在未获批准时把任何 `BLOCKED` 改写成 `PASS`。
-> 若你确认，下一步我可以：① 注册 4.1 / 4.2 两个只读巡检任务；② 把 4.3 建成 `PAUSED` 的一次性发布任务；③ 或把本文档的 19 张任务卡导出成 CSV 供其他自动化系统读取。
+> 下一步仍可：① 把 4.3 建成 `PAUSED` 的一次性发布任务（需你指定时间 + 发布授权）；② 把 19 张任务卡导出成 CSV；③ 按 D1–D8 批复逐项触发 L3。
+
+---
+
+## 8. 本轮执行结果（2026-11-12 15:20 GMT+8）
+
+**执行范围**：只做「可自主完成、可逆、只读或本地」的任务；未发布、未切流、未改生产配置、未发生真实扣款、未推进状态词（仍 `NO_GO`）。
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| A-01 收银台哨兵 | **已落地并真实跑生产** | `scripts/qa/checkout-sentinel-verdict.mjs`（判定层）、`checkout-sentinel.mjs`（只读取证）、`checkout-sentinel-verdict.test.mjs` |
+| TDD 垂直切片 | **6 个行为逐个 RED→GREEN，全绿 6/6**；另端到端负控「不可达 BASE ⇒ ERROR + exit 1」 | 行为 B1–B6；B6 是真实生产契约（`environment="live_mode"`，无 `live_mode` 键）逼出的第 6 条 |
+| 生产实测（15:11） | **`RISK_OPEN`**：生产 commit `5a161c4`、远端 `eaf2ca1`、`environment=live_mode`、`checkoutReady=true` | `evidence/checkout-sentinel-2026-11-12.log`（2 行：正例 + 负控） |
+| 4.1 / 4.2 自动化 | **已注册 ACTIVE**：`b88e8e97…`（每小时）、`be585b35…`（每天 9:20）；均只读告警，prompts 含 L0 护栏 | 自动化清单；创建时工具自动带入会话 expert 绑定，本轮已清除为 `null`；prompt 自包含，不依赖任何 expert 角色 |
+| 4.3 发布任务 | **未注册**（须你指定时间 + 显式发布授权） | 本文档 §4.3 仍为草稿 |
+| G3 / Figma | **第四轮复核仍 `BLOCKED`**（四类来源全空，`list_installed_plugins` = No connectors installed）；新增可导入资产包 | `figma-import-kit/`（4 文件）、`03_FIGMA_IMPLEMENTATION_MAP.md`、Figma 经验库 |
+| Figma 资产校验 | TDD 3 行为全绿（完整包 PASS / 缺文件 FAIL / 编造 `code_path` FAIL）；CLI `ok=true`：20 帧 · 20 color tokens · 9 组件 · 2 套系统 | `scripts/qa/verify-figma-import-kit.mjs` + `.test.mjs` |
+| 文档差异修正 | 03 §1.1 的 FAINT 由旧值 `#8a9298` 更正为源码真实值 `#626a70`；登记 globals.css 注释历史品牌名、sitemap 18 路由 vs 资产包 10 页 | `figma-import-kit/README.md` §4 |
+
+**仍未闭合**：D1–D8 全部待批复 · D2 线上收银台仍开放且含 R-15 缺陷 · B6 未启动 · G5 真人测试 NOT_TESTED · G12 BLOCKED · G10 TBT PARTIAL · C-31 与其余历史债。
+
+**未伪称**：资产包不是 Figma 文件、无文件 URL / node id；告警不是止损；`BLOCKED` / `NOT_TESTED` / `PARTIAL` 未改判为 `PASS`。

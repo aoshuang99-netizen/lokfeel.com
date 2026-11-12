@@ -1,0 +1,10 @@
+﻿component,system,states,code_path,spec_ref
+Navbar,both,"default,scrolled,mobile-menu",src/components/layout/navbar.tsx,03 §1.2
+Footer,both,"default,link-hover",src/components/layout/footer.tsx,03 §1.2
+glass-card,public-dark,"default,hover",src/app/globals.css,03 §1.1/§1.2
+btn-primary,public-dark,"default,hover,focus,disabled",src/app/globals.css,03 §1.1
+btn-secondary,public-dark,"default,hover,focus,disabled",src/app/globals.css,03 §1.1
+btn-ghost,public-dark,"default,hover,focus,disabled",src/app/globals.css,03 §1.1
+步骤卡,public-dark,"default,hover",src/app/(public)/product/page.tsx,03 §1.2
+演示标注条,public-dark,default,src/app/(public)/stories/page.tsx,03 §1.2
+OrbitGraph 标签层,landing-light,"animated,reduced-motion",src/app/(landing)/page.tsx,03 §4

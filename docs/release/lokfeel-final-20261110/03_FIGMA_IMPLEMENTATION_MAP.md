@@ -3,9 +3,10 @@
 > 结论先行：**G3（Figma 可编辑交付）= BLOCKED**（三轮复核，结论稳定）。
 > - 2026-11-10 首轮：用户级 skill（`~/.workbuddy/skills/figma`）为操作知识库，不含 token；环境变量、`.env*`、Netlify env（44 键）无 `FIGMA_*`；登记 `BLOCKED_FIGMA_WRITE`。
 > - 2026-11-10 次轮：复核写入连接器，仍无。
-> - **2026-11-11 21:05 第三轮（本轮）**：穷尽四类来源 —— ① 进程 `env` 无 FIGMA 键；② 仓库 8 个 `.env*` 文件无 FIGMA 键；③ `~/.workbuddy/mcp.json` 无 figma 条目；④ `list_installed_plugins(type=connector)` 返回 **"No connectors installed"**。四类全空 ⇒ 无任何可写入通道。
-> 按总令口径：**不伪称已交付 Figma**。本文档交付「设计规格 + 页面到代码映射」，供任意设计工具按规格建稿，或凭据到位后一键还原。
-> 恢复 G3 的唯一路径：用户提供 Figma Personal Access Token + 目标 Team/File，或安装并授权 Figma connector；随后按 §3 清单建稿并回填文件 URL + node 映射。
+> - **2026-11-11 21:05 第三轮**：穷尽四类来源 —— ① 进程 `env` 无 FIGMA 键；② 仓库 8 个 `.env*` 文件无 FIGMA 键；③ `~/.workbuddy/mcp.json` 无 figma 条目；④ `list_installed_plugins(type=connector)` 返回 **"No connectors installed"**。四类全空 ⇒ 无任何可写入通道。
+> - **2026-11-12 15:05 第四轮**：`env` / `.env*` / `mcp.json` 复核全空，`list_installed_plugins` 仍为 **No connectors installed**。结论稳定，G3 继续 `BLOCKED`。
+> 按总令口径：**不伪称已交付 Figma**。本文档交付「设计规格 + 页面到代码映射」，并新增 **`figma-import-kit/`**（机器可读 `tokens.json` / `frames.csv` / `components.csv` + README），供凭据到位后一键导入建稿。
+> 恢复 G3 的唯一路径：用户提供 Figma Personal Access Token + 目标 Team/File，或安装并授权 Figma connector；随后按 §3 清单建稿并回填文件 URL + node 映射。资产包完整性由 `scripts/qa/verify-figma-import-kit.mjs` 门禁校验（3 条红绿负控，实测 `ok=true`）。
 
 ## 1. 设计规格（Design Spec · 可在任何工具中重建）
 
@@ -20,7 +21,7 @@
 | SIGNAL | `#b8863f` | 装饰性青铜强调（**大字对比 2.96:1，仅限装饰与非文字用途**） |
 | SIGNAL_DEEP | `#8a5a1e` | 文字级青铜强调（对比 5.4:1，达标） |
 | MUTED | `#5a636b` | 次级文字（5.6:1 达标） |
-| FAINT | `#8a9298` | ⚠️ 仅装饰性 mono 眉标存量（2.9–3.2:1，**B4 清偿清单**，新代码禁用） |
+| FAINT | `#626a70` | B4 已把源码改为对比达标版（旧值 `#8a9298` 2.9:1 已废弃）；以 `src/app/(landing)/page.tsx:33` 为准 |
 | 字体 | Outfit（正文）+ Sora（`font-display` 展示字） | 16px 正文起步 |
 | 按钮 | 圆角胶囊（`rounded-full`），主=INK 底白字，次=1px INK/16% 描边 |
 
@@ -88,7 +89,12 @@
 - **G4 判定层加固（本轮）**：抽出 `scripts/qa/b4-g4-verdict.mjs` 纯函数 + 8 条红→绿回归（含「注入 serious 必须 FAIL」「axe 未运行必须 ERROR」负控），主矩阵接入并要求每格 `rulesEvaluated > 0`，evidence 新增 `rulesEvaluatedMin` / `zeroScanCells` 字段；子集 16/16 实测 `rulesEvaluatedMin=34`、`zeroScanCells=0`。
 - **lint 债**：`b2-public-pages-axe.mjs` 3 个未用变量清除并补门禁分母非空断言；`(landing)/page.tsx` 的 `project/placeLabel` 移入 useEffect 消除 `exhaustive-deps` 告警 ⇒ 棘轮零新增。
 
+**2026-11-12 增量（第四轮复核）**
+- 新增 `figma-import-kit/`：20 个真实源码 color token、10 页 × 2 断点 = 20 帧、9 个组件与状态集合，全部带 `code_path` 并逐条验证文件存在；TDD 三类负控（缺文件 / 编造映射 / 空分母）全绿。
+- 修正本文件 §1.1 的 FAINT 旧值；登记 `src/app/globals.css` 头部注释仍留历史品牌名 `LOKFEE!`（仅注释、非对外可见文案，存量债）。
+- 登记 `src/app/sitemap.ts` 18 条路由 vs 资产包 10 个核心页的差异，不冒充全覆盖。
+
 **仍未清偿（如实保留）**
 - 页脚 FOLLOW 栏社媒链接可达性未实测（blog/twitter/instagram/facebook @lokfeel 是否存在）→ G2 债 C-31。
 - 两套公开面视觉语言（落地页编辑风 vs 子页深色玻璃）并存 —— 本轮按"落地页保留、子页统一深色"收敛，全站单语言为后续迭代项（需用户拍板方向）。
-- **G3 本身**：仍 `BLOCKED`，本文件仅供按规格建稿，不是可编辑 Figma 交付。
+- **G3 本身**：仍 `BLOCKED`，本文件与资产包均不是可编辑 Figma 交付，无文件 URL / node id。
