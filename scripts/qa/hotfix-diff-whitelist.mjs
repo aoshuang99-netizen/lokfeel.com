@@ -29,6 +29,10 @@ export const ALLOWED = [
   /^src\/config\/products\.ts$/,
   /^src\/app\/api\/payments\/dodo\/(plans|checkout)\/route\.ts$/,
   /^tests\/billing\/[A-Za-z0-9._-]+\.test\.ts$/,
+  // 唯一被放行的非 billing 测试：它断言的是 `products.ts` 定价状态本身。
+  // 改目录而不改断言 ⇒ CI 必红（该断言原写死"已获批 + From $49/mo + 可购买"，
+  // 正是 G12 明令禁止的实现者自批状态）。它不是"顺手改的测试"，而是同一改动的另一半。
+  /^tests\/commercial\/products\.test\.ts$/,
   /^docs\/release\/lokfeel-final-20261110\/.*$/,
   /^scripts\/qa\/hotfix-diff-whitelist(\.test)?\.mjs$/,
 ]

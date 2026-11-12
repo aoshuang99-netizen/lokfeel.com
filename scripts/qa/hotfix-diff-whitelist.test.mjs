@@ -48,3 +48,9 @@ test('W7 · 空 diff 不得判 PASS（否则"没改动"会冒充"最小改动"�
   assert.equal(r.verdict, 'EMPTY_DIFF')
   assert.notEqual(r.verdict, 'PASS')
 })
+
+test('W8 · products 目录断言是同一改动的另一半，必须在白名单内', () => {
+  assert.equal(classify('tests/commercial/products.test.ts'), 'allowed')
+  // 但同目录下的其他文件不得借道放行（避免"开一个口子变成开一片"）
+  assert.notEqual(classify('tests/commercial/other.test.ts'), 'allowed')
+})
