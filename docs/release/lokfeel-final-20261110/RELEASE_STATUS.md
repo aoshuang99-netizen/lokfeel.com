@@ -2,12 +2,14 @@
 
 > 本页是本次发布唯一状态结论页；与其他文档冲突时以本页为准。
 > 状态词只用 `PASS / FAIL / PARTIAL / BLOCKED / NOT_TESTED / N/A`；后三者不计完成。
+> `PASS_CODE_ONLY` 只是 G7 的代码层子状态，**不是 PASS**（fail-closed 检查器仍判 `G7_not_PASS`）。
 > **最新完整结论（含七问回答与最终签字单）：`12_RC_FINAL_GO_NO_GO.md`**
 
 **当前状态：`NO_GO`**（未达 `READY_FOR_APPROVAL`；未发布、未切流、未改生产配置、无真实扣款）
 
-- 更新时间：2026-11-12 17:05 GMT+8 · 基线 T0：2026-11-10 18:59:43 CST
-- 生产运行时：`5a161c4`（16:10 重新只读取证）；远端 main 开工时 `f6576db`；**SHA 漂移 = true**
+- 更新时间：2026-11-12 17:30 GMT+8 · 基线 T0：2026-11-10 18:59:43 CST
+- 生产运行时：`5a161c4`（16:10 首采 + **17:25 复采**均为 `RISK_OPEN`）；远端 main 开工时 `f6576db`、当前 `2f95aa1`；**SHA 漂移 = true**
+- 发布候选 `rcSha` 锁定为 `2b52ce0`，不被后续纯文档提交（`2f95aa1`）漂走；见 `STATUS.json` 的 `headSha` 字段
 - 候选运行时代码：**本轮功能提交**（见 `RELEASE_MANIFEST.json` 的 `rcSha`；后续纯文档提交不改变运行时代码）
 - **D2 线上风险仍在**：`checkoutReady=true` / `environment=live_mode` / `charging=true` / `/pricing` 含可点 CTA / `commercialApproval` 字段不存在（旧代码）。哨兵告警 ≠ 止损。
 - 批次：B0–B5 ✅ · **本轮 P0-01→P0-10 可自主项 ✅** · B6 未启动 · G13 N/A
@@ -23,7 +25,7 @@
 | G4 矩阵 | **PASS** | UI 改动后重跑 116 格：**112 PASS / 0 FAIL / 4 NA / 0 ERROR**；`rulesEvaluatedMin=33`、`zeroScanCells=0`、`scannedCells=112` |
 | G5 真人 | **NOT_TESTED** | 统计门禁 TDD 7/7 就绪；无真人参与，CLI 判 `NOT_TESTED` |
 | G6 Provider | **PASS（候选）** | Outcome 15/15 + Provider 28/28；生产出口复验留 G13 |
-| G7 账本 | **PASS（代码层）** | P0-02 端到端 11 例（含旧键注入负控）+ R-15/R-14 内核负控；**无 provider event ID / 沙箱投递** |
+| G7 账本 | **PASS_CODE_ONLY（代码层，不计 PASS）** | P0-02 端到端 11 例（含旧键注入负控）+ R-15/R-14 内核负控；**无 provider event ID / 沙箱真实投递 ⇒ 实投层 `NOT_TESTED`** |
 | G8 安全 | **PARTIAL** | secrets 2427 文件 0 命中、产物 sha256、跨租户/重放负例在 jest 内；**gitleaks 未安装**；部署产物复扫留 G13 |
 | G9 架构 | **PARTIAL** | 生产本就在 CF 代理后；建议方案 A 维持现状；D6 未批 |
 | G10 性能 | **PARTIAL（TBT 实为 FAIL）** | 两次 8 页×5 轮实测 TBT **0/8 达标**（1022–2338ms / 1173–2732ms）；LCP/CLS/TTFB/JS 达标，不放水 |
@@ -31,14 +33,15 @@
 | G12 定价批准 | **BLOCKED** | `PENDING_APPROVAL`；生产 `approvedAt` 是目录版本常量，**不是**批准记录 |
 | G13 生产复验 | **N/A** | 未发布；`PRODUCTION_SMOKE.log` 明确 NOT_TESTED |
 
-**完成率**：13 门禁中 **6 PASS**（G0/G1/G4/G6/G7/G11，G7 仅代码层）· 4 PARTIAL（G2/G8/G9/G10）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PARTIAL/BLOCKED/NOT_TESTED` 不计完成 ⇒ **未达 100%，不得进入 B6**。
+**完成率**：G0–G12 共 13 门禁中 **5 PASS**（G0/G1/G4/G6/G11）· **1 PASS_CODE_ONLY（G7，代码层，不计 PASS）** · 4 PARTIAL（G2/G8/G9/G10）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PASS_CODE_ONLY / PARTIAL / BLOCKED / NOT_TESTED` 一律不计完成 ⇒ **5/13，未达 100%，不得进入 B6**。
+> 计数由 `build-release-status.mjs` 从 `GATES.csv` 动态算出（不再手填），并由 `scripts/qa/release-status-verdict.test.mjs` 守卫回潮；`STATUS.json` 的 `strictPass = 5 / 13`。
 
 ## 2. 本轮（V20.7 作战包）实际完成
 
 | # | 交付 | 证据 |
 |---|---|---|
 | 1 | **ZIP 9 个文件全部读取**并审查落地：3 脚本 sha 与原件一致、6/6 测试、空 manifest 负控 exit 1 | `scripts/release-preflight*`、`scripts/check-release-manifest.mjs`、`reference/` |
-| 2 | **P0-01 实时风险重新取证**：`RISK_OPEN`（exit 2），新增完整取证脚本 TDD 8/8（含「200+空 body 必须 ERROR」负控） | `evidence/p0-01-production-risk.json`、`release-preflight-2026-11-12.json` |
+| 2 | **P0-01 实时风险取证**：`RISK_OPEN`（exit 2）；新增完整取证脚本 TDD 8/8（含「200+空 body 必须 ERROR」负控）；**17:25 第三次复采结论一致** | `evidence/p0-01-production-risk.json`、`evidence/p0-01-production-risk-recheck-2026-11-12.json`、`release-preflight-2026-11-12.json` |
 | 3 | **D2 因果链实证**：候选 + 完整 live 凭据仍 `checkoutReady=false`（商业门单独挡住）⇒ 发布候选无需摘除生产 env，不影响 webhook/已有订阅 | `evidence/d2-candidate-gate-proof.json` |
 | 4 | **P0-02 支付端到端 11 例**：R-15 失败后成功不静默 + 旧键注入必须复现吞单 + R-14 成对只记一笔 + 逆序/重放/乱序；D2 门禁 4 例 | `tests/billing/p0-02-*.test.ts` |
 | 5 | **P0-03 公开面审计**：候选 12/12 页 200、八问 8/8；**发现生产 5 页 404**（独立补齐用户无法访问生产时的证据缺口） | `evidence/p0-03-public-surface-{candidate,production}.json` |
@@ -49,6 +52,7 @@
 | 10 | **P0-09 G5 统计门禁** TDD 7/7（人数/阈值/知情同意三类负控） | `scripts/qa/g5-user-test-score.mjs` |
 | 11 | **Release Agent 产出**：`STATUS.json` / `GATES.csv` / `RELEASE_MANIFEST.json` / `PRODUCTION_SMOKE.log` / `POST_RELEASE_48H.log` | 同目录 |
 | 12 | **最终签字包**：D2 优先单列 + 七问逐条回答 + 一次集中签字单 + 最短关键路径 | `12_RC_FINAL_GO_NO_GO.md` |
+| 13 | **17:25 复盘补强**：第三次实时复采；完成率改由 `GATES.csv` 动态计算（5/13），`PASS_CODE_ONLY` 不计 PASS；`rcSha` 锁定不再被纯文档提交漂移；口径守卫测试 7/7 | `scripts/qa/build-release-status.mjs`、`scripts/qa/release-status-verdict.test.mjs`、`evidence/p0-01-production-risk-recheck-2026-11-12.json` |
 
 ## 3. D2 · 唯一需要优先单独表态的线上风险
 

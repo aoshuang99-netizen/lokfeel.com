@@ -1,8 +1,19 @@
 {
-  "timestamp": "2026-11-12T09:07:08.719Z",
+  "timestamp": "2026-11-12T09:30:10.372Z",
   "releaseName": "lokfeel-v20.7-rc-final",
   "rcSha": "2b52ce04480dc8df53d260ec43fbe81f917e3650",
-  "remoteMainSha": "2b52ce04480dc8df53d260ec43fbe81f917e3650",
+  "headSha": "2f95aa11cce0d2d9da85a1961d2e1daf022da59b",
+  "remoteMainSha": "2f95aa11cce0d2d9da85a1961d2e1daf022da59b",
+  "gateTally": {
+    "PASS": 5,
+    "PARTIAL": 4,
+    "BLOCKED": 2,
+    "NOT_TESTED": 1,
+    "PASS_CODE_ONLY": 1,
+    "N/A": 1
+  },
+  "strictPass": 5,
+  "strictDenominator": 13,
   "productionCommit": "5a161c4",
   "shaDrift": true,
   "command": "node scripts/qa/build-release-status.mjs",
@@ -41,8 +52,10 @@
     "zeroScanCells": 0
   },
   "notes": [
-    "PARTIAL / BLOCKED / NOT_TESTED 不计完成 ⇒ 13 门禁中 6 PASS，未达 100%",
+    "严格口径：仅字面 PASS 计完成（G0–G12 共 13 项）⇒ 5/13 PASS，未达 100%",
+    "不计完成：G2=PARTIAL / G3=BLOCKED / G5=NOT_TESTED / G7=PASS_CODE_ONLY / G8=PARTIAL / G9=PARTIAL / G10=PARTIAL / G12=BLOCKED；PASS_CODE_ONLY 不是 PASS（检查器仍判 G7_not_PASS）",
     "生产收银台仍为 RISK_OPEN（D2 未决）；哨兵告警不等于止损",
-    "G13 是发布后动作，本状态不得提前判 PASS"
+    "G13 是发布后动作，本状态不得提前判 PASS",
+    "当前 HEAD 2f95aa1 为后续纯文档/证据提交；发布候选 rcSha 锁定为 2b52ce0"
   ]
 }

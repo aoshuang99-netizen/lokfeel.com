@@ -63,3 +63,14 @@ scripts/release-preflight.test.mjs                         # pass 6 # fail 0
 --- manifest 空模板负控（应 exit 1） ---
 MANIFEST_TEMPLATE_EXIT=1
 0
+--- 17:30 复盘补强（第三次实时复采 + 严格口径修正） ---
+P0-01 复采: node scripts/qa/p0-01-production-risk.mjs --base=https://app.lokfeel.com → RISK_OPEN exit 2 (17:25 GMT+8)
+  生产 5a161c4 · checkoutReady=true · environment=live_mode · commercialApproval=null
+  pricing 46009 bytes 含 checkout/subscribe · server=cloudflare · remoteMain=2f95aa1 · shaDrift=true
+  证据 evidence/p0-01-production-risk-recheck-2026-11-12.json
+哨兵自动巡检: 17:26 GMT+8 RISK_OPEN · stopLossAuthorized=false → evidence/checkout-sentinel-2026-11-12.log
+判定层全套: node --test scripts/qa/*.test.mjs scripts/release-preflight.test.mjs → 51/51 PASS（新增 release-status-verdict 7 例，先 RED 后 GREEN）
+口径: STATUS.json strictPass=5/13 · G7=PASS_CODE_ONLY · gaps NO_GO/21 · G7_not_PASS=true · manifest NO_GO
+CSV: 07_ACCEPTANCE_MATRIX.csv 19×15 · GATES.csv 15×7 · 无不齐行
+lint: 改动两脚本 eslint 0 · lint-ratchet 零新增（下降 5 / 清零 17）
+结论: NO_GO 不变；未发布、未切流、未改生产配置、未发生真实扣款

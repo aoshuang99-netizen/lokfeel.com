@@ -7,7 +7,7 @@
 | 基线 | 值 | 取证 |
 |---|---|---|
 | 生产运行时 commit | `5a161c4`（builtAt 2026-11-10 08:45Z） | `evidence/p0-01-production-risk.json` |
-| 远端 main（本轮开工时） | `f6576db` | `git ls-remote origin refs/heads/main` |
+| 远端 main（本轮开工时 / 17:25 复采） | `f6576db` → `2f95aa1`（后续均为纯文档/证据提交） | `git ls-remote origin refs/heads/main`；`evidence/p0-01-production-risk-recheck-2026-11-12.json` |
 | **唯一 RC SHA** | **`2b52ce04480dc8df53d260ec43fbe81f917e3650`** | `git ls-remote origin refs/heads/main` 已复核；后续纯文档补提交不改变运行时代码；见 `RELEASE_MANIFEST.json` |
 | 生产边缘 | `server: cloudflare` + CF anycast + DNS 代理 | 同上，响应头实证 |
 | SHA 漂移 | `true`（生产 ≠ 远端） | `evidence/p0-01-production-risk.json` |
@@ -20,9 +20,10 @@
 
 用户要求「D2 优先单独处理，不能让每小时告警长期代替解决问题」。本轮把该决策所需的证据全部补齐，**但止损动作本身仍属于生产变更，必须你一句话授权**；哨兵告警 ≠ 止损。
 
-### 1.1 实时证据（2026-11-12 16:10 GMT+8 重新获取，非复用旧报告）
+### 1.1 实时证据（2026-11-12 16:10 首采 + **17:25 复采**，均非复用旧报告）
 
-作战包原脚本 `scripts/release-preflight.mjs` 与仓库增强脚本 `scripts/qa/p0-01-production-risk.mjs` 两次独立只读取证，结论一致：**`RISK_OPEN`（exit 2）**
+作战包原脚本 `scripts/release-preflight.mjs` 与仓库增强脚本 `scripts/qa/p0-01-production-risk.mjs` 两次独立只读取证，结论一致：**`RISK_OPEN`（exit 2）**。
+本轮续跑又于 **17:25 GMT+8 第三次重新采集**（`evidence/p0-01-production-risk-recheck-2026-11-12.json`）：生产仍 `5a161c4` / `checkoutReady=true` / `environment=live_mode` / `commercialApproval=null` / `/pricing` 46 KB 含可点 CTA / `server: cloudflare`，远端 main 已推进到 `2f95aa1`（纯文档提交，运行时代码未变）。**风险未解除，D2 仍未处置。**
 
 | 字段 | 生产实测 |
 |---|---|
@@ -63,8 +64,8 @@
 
 | ID | 状态 | 本轮做了什么 | 证据 |
 |---|---|---|---|
-| **P0-01** 生产风险取证 | **PASS（取证）/ FAIL（风险仍在）** | 重新获取实时证据；作战包 3 个脚本原样落地（sha 与 ZIP 一致，6/6 测试通过，空 manifest 按预期 exit 1）；新增完整取证脚本 TDD 8/8（含「200+空 body 必须 ERROR」负控） | `evidence/p0-01-production-risk.json`、`release-preflight-2026-11-12.json` |
-| **P0-02** 支付账本与权益 | **PASS（代码层）** | 补 11 例端到端「翻译→去重→内核折叠」测试：R-15 失败后成功不静默、旧结算键注入必须复现吞单（负控）、新 payment_id 重试合法、R-14 成对事件只记一笔、逆序不回退、重放幂等、乱序稳定；D2 因果链单测 4 例 | `tests/billing/p0-02-*.test.ts`、jest 145 套 2730 例 |
+| **P0-01** 生产风险取证 | **PASS（取证）/ FAIL（风险仍在）** | 重新获取实时证据（16:10 首采 + **17:25 复采**均 `RISK_OPEN`）；作战包 3 个脚本原样落地（sha 与 ZIP 一致，6/6 测试通过，空 manifest 按预期 exit 1）；新增完整取证脚本 TDD 8/8（含「200+空 body 必须 ERROR」负控） | `evidence/p0-01-production-risk.json`、`evidence/p0-01-production-risk-recheck-2026-11-12.json`、`release-preflight-2026-11-12.json` |
+| **P0-02** 支付账本与权益 | **PASS_CODE_ONLY（代码层，不计 PASS）** | 补 11 例端到端「翻译→去重→内核折叠」测试：R-15 失败后成功不静默、旧结算键注入必须复现吞单（负控）、新 payment_id 重试合法、R-14 成对事件只记一笔、逆序不回退、重放幂等、乱序稳定；D2 因果链单测 4 例 | `tests/billing/p0-02-*.test.ts`、jest 145 套 2730 例 |
 | **P0-03** 官网八问与 CTA | **PASS（候选）/ ERROR（生产）** | 新增 12 页真实 HTML 审计（TDD 5/5）：候选 12/12 页 200、八问 8/8 有可见证据；**生产 5 个核心页 404** | `evidence/p0-03-public-surface-{candidate,production}.json` |
 | **P0-04** Figma / Token | **BLOCKED（G3）** | 第五轮凭据复核四类来源全空；补齐作战包指定的 `--lf-*` 权威系统（33 token / 3 systems），资产校验加硬规则 + F4 负控 4/4 | `figma-import-kit/`、`03_FIGMA_IMPLEMENTATION_MAP.md` |
 | **P0-05** 全矩阵重跑 | **PASS** | UI 改动后重跑 29 路由×4 视口 = 116 格：**112 PASS / 0 FAIL / 4 NA / 0 ERROR**，`rulesEvaluatedMin=33`、`zeroScanCells=0`、`scannedCells=112`、`subset=null` | `evidence/g4-public-matrix.json`、`g4-screens-manifest.txt`（112 张 sha256） |
@@ -97,7 +98,7 @@
 **未创建。** 第五轮复核四类来源（进程 env / 8 个 `.env*` / `mcp.json` / `list_installed_plugins` = No connectors installed）全部无写入通道。`figma-import-kit/` 是可导入规格（33 token / 20 帧 / 9 组件，全部带真实 `code_path`），**不是**可编辑 Figma 文件；ZIP 里的 HTML 是概念稿，也不是 Figma node。G3 保持 `BLOCKED`，恢复路径见 `03_...md` §3。
 
 **Q7 · 唯一 RC SHA 是多少？对照哪份可即时回滚的 Netlify deploy？**
-运行时 RC = **`2b52ce04480dc8df53d260ec43fbe81f917e3650`**（`RELEASE_MANIFEST.json` 的 `rcSha`，`git ls-remote origin refs/heads/main` 已复核）；后续纯文档提交不改变运行时代码。作战包 fail-closed 检查器对该 manifest 返回 `NO_GO` 并列出 21 个缺口（`evidence/release-manifest-gaps.json`）。**可回滚 deploy ID 目前不可得**：本机无 `netlify` CLI、无 Netlify API token / site id，`/tmp/nl-env.json` 的 44 个键里也没有任何部署凭据；`x-nf-request-id` 只是请求 ID。因此**回滚目标未验证**，这是 G13/发布前必须补齐的阻断项，不能拿 request id 冒充 deploy id。
+运行时 RC = **`2b52ce04480dc8df53d260ec43fbe81f917e3650`**（`RELEASE_MANIFEST.json` 的 `rcSha`，`git ls-remote origin refs/heads/main` 已复核）；后续纯文档提交不改变运行时代码。17:25 复盘已把 `build-release-status.mjs` 改为**锁定已冻结的 `rcSha`**（默认不再取 `git rev-parse HEAD`，只有显式 `--rc-sha=` 才能更换候选），`STATUS.json` 同时记录 `headSha=2f95aa1` 与 `rcSha=2b52ce0` 以便追溯。作战包 fail-closed 检查器对该 manifest 返回 `NO_GO` 并列出 21 个缺口（`evidence/release-manifest-gaps.json`）。**可回滚 deploy ID 目前不可得**：本机无 `netlify` CLI、无 Netlify API token / site id，`/tmp/nl-env.json` 的 44 个键里也没有任何部署凭据；`x-nf-request-id` 只是请求 ID。因此**回滚目标未验证**，这是 G13/发布前必须补齐的阻断项，不能拿 request id 冒充 deploy id。
 
 ---
 
@@ -111,7 +112,7 @@
 | G2 页面 / 法律 | 全 PASS | **PARTIAL**（D8 主体未批；候选 12/12 页 200） | 你：D8 |
 | G3 Figma | 可编辑设计真实交付 | **BLOCKED** | 你：PAT + Team/File 或 connector |
 | G5 真人 | ≥5 名、4/5 达标 | **NOT_TESTED** | 你：D7 招募 |
-| G6 / G7 | 生产 E2E + 沙箱真实投递 | G6 PASS（候选）；G7 **仅代码层**，真实投递 NOT_TESTED | 你：D4 |
+| G6 / G7 | 生产 E2E + 沙箱真实投递 | G6：PASS（候选）；G7：`PASS_CODE_ONLY`，真实投递 NOT_TESTED | 你：D4 |
 | G8 安全 | 生产产物复扫 0 P0/P1 | PARTIAL（源码/产物 0 命中；部署产物复扫留 G13；gitleaks 未跑） | 发布后 |
 | G9 架构 | 与上线一致 | PARTIAL（生产本就 CF 代理；建议方案 A 维持现状） | 你：D6 |
 | G10 性能 | **TBT 8/8 ≤200ms** | **0/8 达标，FAIL** | 我：独立结构性迭代（按路由拆包 + 延迟水合） |
@@ -122,7 +123,8 @@
 | G13 | 生产真实验证全绿 | **N/A（未发布）** | 发布后 |
 | 观察期 | 48h 监控与异常对账启动 | **N/A（未发布）** | 发布后 |
 
-**严格完成率**：13 门禁中 6 PASS（G0/G1/G4/G6/G7/G11，G7 仅代码层）· 4 PARTIAL（G2/G8/G9/G10）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PARTIAL/BLOCKED/NOT_TESTED` 不计完成 ⇒ **未达 100%，不得进入 B6**。
+**严格完成率**：G0–G12 共 13 门禁中 **5 PASS**（G0/G1/G4/G6/G11）· **1 PASS_CODE_ONLY（G7，代码层，不计 PASS；检查器仍判 `G7_not_PASS`）** · 4 PARTIAL（G2/G8/G9/G10）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PASS_CODE_ONLY / PARTIAL / BLOCKED / NOT_TESTED` 一律不计完成 ⇒ **5/13，未达 100%，不得进入 B6**。
+> 2026-11-12 17:25 复盘修正：此前把 G7 的 `PASS_CODE_ONLY` 误计为「六个 PASS」，与 `GATES.csv` / `STATUS.json` / fail-closed 检查器口径不一致；现以脚本动态计数 `strictPass = 5/13` 为准，结论 `NO_GO` 不变且完成率更低。
 
 ### 需要你一次性给出的输入（可只回字母 + 选择）
 

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-12T09:07:08.798Z",
+  "checkedAt": "2026-11-12T09:30:10.464Z",
   "rcSha": "2b52ce04480dc8df53d260ec43fbe81f917e3650",
   "command": "node scripts/check-release-manifest.mjs RELEASE_MANIFEST.json",
   "exitCode": 1,

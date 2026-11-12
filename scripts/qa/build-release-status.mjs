@@ -17,10 +17,20 @@ const DIR = path.join(ROOT, 'docs/release/lokfeel-final-20261110')
 const E = path.join(DIR, 'evidence')
 
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'))
-const sha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+const headSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
 const remote = execFileSync('git', ['ls-remote', 'origin', 'refs/heads/main'], { encoding: 'utf8' }).trim().split(/\s+/)[0]
 const risk = readJson(path.join(E, 'p0-01-production-risk.json'))
 const g4 = readJson(path.join(E, 'g4-public-matrix.json'))
+
+// 发布候选 SHA 必须锁定：后续纯文档/证据提交不改变运行时代码，不能让 HEAD 把 rcSha 悄悄漂走。
+// 默认沿用 manifest 中已冻结的值；只有明确更换候选时才允许显式 --rc-sha=<40hex>。
+const manifestPath = path.join(DIR, 'RELEASE_MANIFEST.json')
+let frozenRcSha = null
+if (existsSync(manifestPath)) {
+  try { frozenRcSha = readJson(manifestPath).rcSha } catch { frozenRcSha = null }
+}
+const explicitRcSha = process.argv.find((a) => a.startsWith('--rc-sha='))?.slice('--rc-sha='.length) ?? null
+const sha = explicitRcSha || (typeof frozenRcSha === 'string' && /^[0-9a-f]{40}$/.test(frozenRcSha) ? frozenRcSha : headSha)
 
 // 门禁状态取自 GATES.csv（唯一表），不在这里另写一套结论
 const gateRows = readFileSync(path.join(DIR, 'GATES.csv'), 'utf8').trim().split(/\r?\n/).slice(1)
@@ -32,11 +42,25 @@ for (const line of gateRows) {
   gateEvidence[gate.split('-')[0]] = evidencePath || null
 }
 
+// 严格口径：只有字面 PASS 计完成。PASS_CODE_ONLY / PARTIAL / BLOCKED / NOT_TESTED / N/A 一律不计。
+// 计数由 GATES.csv 动态算出，禁止在文档里手填「N PASS」。
+const tally = {}
+for (const verdict of Object.values(gates)) tally[verdict] = (tally[verdict] || 0) + 1
+const strictDenominator = Object.keys(gates).filter((g) => g !== 'G13').length
+const strictPass = tally.PASS || 0
+const notCounted = Object.entries(gates)
+  .filter(([g, verdict]) => g !== 'G13' && verdict !== 'PASS')
+  .map(([g, verdict]) => `${g}=${verdict}`)
+
 const status = {
   timestamp: new Date().toISOString(),
   releaseName: 'lokfeel-v20.7-rc-final',
   rcSha: sha,
+  headSha,
   remoteMainSha: remote,
+  gateTally: tally,
+  strictPass,
+  strictDenominator,
   productionCommit: risk.evidence.health.commit,
   shaDrift: risk.traceability.shaDrift,
   command: 'node scripts/qa/build-release-status.mjs',
@@ -47,9 +71,11 @@ const status = {
   gates,
   g4Summary: g4.summary,
   notes: [
-    'PARTIAL / BLOCKED / NOT_TESTED 不计完成 ⇒ 13 门禁中 6 PASS，未达 100%',
+    `严格口径：仅字面 PASS 计完成（G0–G12 共 ${strictDenominator} 项）⇒ ${strictPass}/${strictDenominator} PASS，未达 100%`,
+    `不计完成：${notCounted.join(' / ')}；PASS_CODE_ONLY 不是 PASS（检查器仍判 G7_not_PASS）`,
     '生产收银台仍为 RISK_OPEN（D2 未决）；哨兵告警不等于止损',
     'G13 是发布后动作，本状态不得提前判 PASS',
+    headSha !== sha ? `当前 HEAD ${headSha.slice(0, 7)} 为后续纯文档/证据提交；发布候选 rcSha 锁定为 ${sha.slice(0, 7)}` : '当前 HEAD 即发布候选 rcSha',
   ],
 }
 

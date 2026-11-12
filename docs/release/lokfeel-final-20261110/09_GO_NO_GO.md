@@ -2,11 +2,11 @@
 
 **结论：`NO_GO`** —— 未达 `READY_FOR_APPROVAL`；未发布、未切流、未改生产配置、无真实扣款。
 完整判定、七问回答与签字单见 **`12_RC_FINAL_GO_NO_GO.md`**（标题 `LOKFEEL RC FINAL GO/NO-GO — Evidence Based`）。
-状态词只用 `PASS / FAIL / PARTIAL / BLOCKED / NOT_TESTED / N/A`；后三者一律不计完成。
+状态词只用 `PASS / FAIL / PARTIAL / BLOCKED / NOT_TESTED / N/A`；后三者一律不计完成。`PASS_CODE_ONLY` 是 G7 的代码层子状态，同样不计 PASS。
 
 | 基线 | 值 |
 |---|---|
-| 生产运行时 | `5a161c4`（2026-11-12 16:10 重新只读取证） |
+| 生产运行时 | `5a161c4`（2026-11-12 16:10 首采 + **17:25 复采**，均为 `RISK_OPEN`） |
 | 远端 main（开工时） | `f6576db` |
 | 候选运行时 | 本轮功能提交，见 `RELEASE_MANIFEST.json` 的 `rcSha` |
 | SHA 漂移 | `true` |
@@ -22,7 +22,7 @@
 | G4 | PASS | 116 格 = 112 PASS / 0 FAIL / 4 NA / 0 ERROR；`scannedCells=112`、`zeroScanCells=0`、`subset=null` |
 | G5 | NOT_TESTED | 无真人；统计门禁与协议齐备不等于测试发生 |
 | G6 | PASS | 候选 Outcome 15/15 + Provider 28/28；生产出口复验留 G13 |
-| G7 | PASS（代码层） | 端到端 11 例含缺陷注入负控；**无 provider event ID、无沙箱真实投递** |
+| G7 | PASS_CODE_ONLY（代码层，不计 PASS） | 端到端 11 例含缺陷注入负控；**无 provider event ID、无沙箱真实投递**；检查器仍判 `G7_not_PASS` |
 | G8 | PARTIAL | 源码/产物 0 泄漏、负例在 jest 内；gitleaks 未安装；部署产物复扫留 G13 |
 | G9 | PARTIAL | 生产本就 CF 代理；建议方案 A；D6 未批 |
 | G10 | PARTIAL（TBT 实为 FAIL） | 两次 8 页×5 轮 TBT **0/8 达标**（1022–2338ms / 1173–2732ms），不放水 |
@@ -30,7 +30,7 @@
 | G12 | BLOCKED | `PENDING_APPROVAL`；生产 `approvedAt` 是目录版本常量，不是批准记录 |
 | G13 | N/A | 未发布；`PRODUCTION_SMOKE.log` 明确 NOT_TESTED |
 
-**严格完成率**：6 PASS · 4 PARTIAL · 2 BLOCKED · 1 NOT_TESTED · G13 N/A ⇒ **未达 100%，不得进入 B6**。
+**严格完成率**：**5 PASS**（G0/G1/G4/G6/G11）· 1 PASS_CODE_ONLY（G7，不计 PASS）· 4 PARTIAL · 2 BLOCKED · 1 NOT_TESTED · G13 N/A ⇒ **5/13，未达 100%，不得进入 B6**。
 
 ## 本轮新增的硬证据（可复核）
 
