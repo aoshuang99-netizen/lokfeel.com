@@ -162,7 +162,13 @@ function moneyCommands(input: {
           currency,
           gatewayStatus: 'SUCCEEDED' as const,
           providerRef: subscriptionId,
-          dedupeKey: `dodo:charge-settled:${paymentId}`,
+          // 🔴 R-15（发布阻断）：结算键必须带终态。曾与 CHARGE_FAILED 共用
+          // `dodo:charge-settled:${paymentId}`，导致同一 payment_id 先失败后成功时，
+          // 成功事件整条被判 replayed 吞掉——账本停在 FAILED，钱已收（收钱不到账）。
+          // 分态后：失败不再吞成功；"失败后同 id 成功"由账本内核显式拒绝
+          // （CHARGE_TRANSITIONS.FAILED = []，不可改判），webhook 层转为
+          // 200 + deferred + LEDGER REJECT 告警，绝不静默。
+          dedupeKey: `dodo:charge-settled:${paymentId}:succeeded`,
           offsetMs: baseOffsetMs + 1,
         }
       : {
@@ -174,7 +180,7 @@ function moneyCommands(input: {
           reason: input.reason?.trim() || 'Dodo 报告支付失败（未返回具体原因）',
           gatewayStatus: 'FAILED' as const,
           providerRef: subscriptionId,
-          dedupeKey: `dodo:charge-settled:${paymentId}`,
+          dedupeKey: `dodo:charge-settled:${paymentId}:failed`,
           offsetMs: baseOffsetMs + 1,
         },
   ];

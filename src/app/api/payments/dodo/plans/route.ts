@@ -16,7 +16,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 
-import { isPaymentChannelReady, missingForChannel } from '@/lib/payments/availability';
+import { missingForChannel } from '@/lib/payments/availability';
+import { readCheckoutGate } from '@/lib/payments/commercial-gate';
 import { readDodoConfig } from '@/lib/payments/dodo/config';
 import {
   DODO_PRODUCT_ENV,
@@ -28,7 +29,11 @@ import {
 
 export async function GET() {
   const config = readDodoConfig();
-  const checkoutReady = isPaymentChannelReady('dodo.checkout');
+  // 🔴 G12：checkoutReady 是「对公众可售」＝ 技术就绪 AND 人工定价批准（commercial-gate）。
+  // 凭据未配（本地/CI）时 gate.enabled=false —— 与旧 isPaymentChannelReady 语义一致；
+  // 凭据齐了但 products.ts 未批准（如当前 PENDING_APPROVAL）也必须 false。
+  const gate = readCheckoutGate();
+  const checkoutReady = gate.enabled;
 
   const plans = PLAN_LIST.map((plan) => ({
     id: plan.id,
@@ -64,10 +69,12 @@ export async function GET() {
       currency: 'USD',
       catalogVersion: PRICING_APPROVAL.version,
       approvedAt: PRICING_APPROVAL.approvedAt,
-      /** 是否可以走在线结账（含商品绑定是否齐全） */
+      /** 是否可以走在线结账（技术就绪 + 人工定价批准） */
       checkoutReady,
+      /** 商业门的当前状态（供前端区分"未配置"与"审批中"两种不可售原因） */
+      commercialApproval: gate.approval,
       /** 只回变量名 */
-      missing: checkoutReady ? [] : missingForChannel('dodo.checkout'),
+      missing: gate.credentialsReady ? [] : missingForChannel('dodo.checkout'),
       environment: config.ok ? config.config.environment : null,
       plans,
     },

@@ -31,6 +31,7 @@ import { can } from '@/lib/tenancy/capabilities';
 import { resolveActiveTenant } from '@/lib/tenancy/resolve';
 import { hasCapability } from '@/lib/tenancy/guard';
 import { isPaymentChannelReady } from '@/lib/payments/availability';
+import { readCheckoutGate } from '@/lib/payments/commercial-gate';
 import { paymentNotConfigured } from '@/lib/payments/not-configured';
 import { publicOriginOf } from '@/lib/http/public-origin';
 import { readDodoConfig } from '@/lib/payments/dodo/config';
@@ -168,6 +169,24 @@ export async function POST(request: NextRequest) {
     // 这里是"解析视角"，两者曾出现过判定口径不一致的历史问题。
     console.error('[Dodo Checkout] config unresolved:', configResult.missing.join(','));
     return paymentNotConfigured('dodo.checkout');
+  }
+
+  // ── 5.5 商业门（G12）：定价未获产品所有者批准 ⇒ 一律拒发结账会话。
+  // 这道门挡的是**实现者自己**：技术凭据齐备也不能绕过人工批准开卖。
+  const gate = readCheckoutGate();
+  if (!gate.commercialApproved) {
+    console.error(
+      `[Dodo Checkout] commercial gate CLOSED (pricing.status=${gate.approval.status}) — 定价未经产品所有者批准`,
+    );
+    return NextResponse.json(
+      {
+        ok: false,
+        code: 'PRICING_NOT_APPROVED',
+        approvalStatus: gate.approval.status,
+        error: 'Online checkout is not available yet. Please try again later.',
+      },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   // ── 6. 解析结算目标（商品 id 只能由服务端决定）────────────
