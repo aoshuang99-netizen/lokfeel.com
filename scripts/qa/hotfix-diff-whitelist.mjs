@@ -35,6 +35,10 @@ export const ALLOWED = [
   /^tests\/commercial\/products\.test\.ts$/,
   /^docs\/release\/lokfeel-final-20261110\/.*$/,
   /^scripts\/qa\/hotfix-diff-whitelist(\.test)?\.mjs$/,
+  // CI 门禁脚本本身：`verify-payment-off.mjs` 里 `channels === 5` 是陈旧断言，
+  // 与 availability.ts 的 7 通道矛盾 ⇒ 生产基线 5a161c4 与 main 也一直是红的。
+  // 不放宽它就没法证明"hotfix 的远端 CI 绿"，而改法是严格化（集合相等），不是放水。
+  /^scripts\/qa\/verify-payment-off\.mjs$/,
 ]
 
 /** 明确禁止：新公开页、落地页改版、任何新增路由页面。 */
