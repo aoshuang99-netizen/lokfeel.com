@@ -1,0 +1,91 @@
+{
+  "checkedAt": "2026-11-12T11:36:48.018Z",
+  "base": "https://app.lokfeel.com",
+  "readOnly": true,
+  "plan": [
+    {
+      "name": "health",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/api/health"
+    },
+    {
+      "name": "plans",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/api/payments/dodo/plans"
+    },
+    {
+      "name": "pricing",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/pricing"
+    },
+    {
+      "name": "git",
+      "method": "GIT_LS_REMOTE",
+      "url": "origin refs/heads/main"
+    }
+  ],
+  "verdict": "RISK_OPEN",
+  "reasons": [
+    "live_checkout_enabled_on_old_production_code",
+    "R15_settlement_dedupe_defect_present_in_production_commit",
+    "pricing_page_exposes_clickable_checkout_cta",
+    "production_commit_drifts_from_remote_main_candidate"
+  ],
+  "evidence": {
+    "health": {
+      "httpStatus": 200,
+      "elapsedMs": 11465,
+      "status": "healthy",
+      "commit": "5a161c4",
+      "charging": true,
+      "dodoCheckoutChannel": true,
+      "paymentsMissing": [
+        "CREEM_API_KEY",
+        "CREEM_WEBHOOK_SECRET",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET"
+      ],
+      "paymentsConfigured": false
+    },
+    "plans": {
+      "httpStatus": 200,
+      "elapsedMs": 9203,
+      "environment": "live_mode",
+      "checkoutReady": true,
+      "approvedAt": "2026-11-10",
+      "catalogVersion": "2026-11-10.1",
+      "planCount": 3,
+      "commercialApproval": null
+    },
+    "pricing": {
+      "httpStatus": 200,
+      "elapsedMs": 10090,
+      "bytes": 46009,
+      "hasCheckoutCta": true,
+      "ctaKeywords": [
+        "subscribe",
+        "checkout"
+      ]
+    },
+    "headers": {
+      "server": "cloudflare",
+      "cfRay": "a5953db98f88b8e8-AMS",
+      "nfRequestId": "01M77RQM5QSY5F983YV5TNMM8N"
+    },
+    "git": {
+      "remoteMainSha": "773433af263c1dee44b180bf71b994bd53a04383"
+    }
+  },
+  "traceability": {
+    "productionCommit": "5a161c4",
+    "remoteMainSha": "773433af263c1dee44b180bf71b994bd53a04383",
+    "shaDrift": true,
+    "edge": "cloudflare",
+    "charging": true,
+    "dodoCheckoutChannel": true,
+    "pricingCtaVisible": true,
+    "catalogVersion": "2026-11-10.1",
+    "approvedAt": "2026-11-10",
+    "environment": "live_mode"
+  }
+}

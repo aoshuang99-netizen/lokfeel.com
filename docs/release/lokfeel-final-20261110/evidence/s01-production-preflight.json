@@ -1,0 +1,151 @@
+{
+  "checkedAt": "2026-11-12T11:42:38.804Z",
+  "base": "https://app.lokfeel.com",
+  "readOnly": true,
+  "plan": [
+    {
+      "name": "/api/health",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/api/health"
+    },
+    {
+      "name": "/api/payments/dodo/plans",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/api/payments/dodo/plans"
+    },
+    {
+      "name": "/pricing",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/pricing"
+    },
+    {
+      "name": "/product",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/product"
+    },
+    {
+      "name": "/solutions",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/solutions"
+    },
+    {
+      "name": "/stories",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/stories"
+    },
+    {
+      "name": "/how-it-works",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/how-it-works"
+    },
+    {
+      "name": "/help",
+      "method": "GET",
+      "url": "https://app.lokfeel.com/help"
+    },
+    {
+      "name": "git-ls-remote",
+      "method": "GIT_LS_REMOTE",
+      "url": "origin refs/heads/main"
+    }
+  ],
+  "verdict": "RISK_OPEN",
+  "reasons": [
+    "live_checkout_enabled_on_production",
+    "production_drifts_from_remote_main",
+    "public_routes_not_200:/product,/solutions,/stories,/how-it-works,/help",
+    "netlify_deploy_id_not_available_without_api_channel"
+  ],
+  "routes": {
+    "/api/health": {
+      "httpStatus": 200,
+      "elapsedMs": 13172,
+      "bytes": 899
+    },
+    "/api/payments/dodo/plans": {
+      "httpStatus": 200,
+      "elapsedMs": 2684,
+      "bytes": 2081
+    },
+    "/pricing": {
+      "httpStatus": 200,
+      "elapsedMs": 2515,
+      "bytes": 46009
+    },
+    "/product": {
+      "httpStatus": 404,
+      "elapsedMs": 2806,
+      "bytes": 20789
+    },
+    "/solutions": {
+      "httpStatus": 404,
+      "elapsedMs": 1736,
+      "bytes": 20789
+    },
+    "/stories": {
+      "httpStatus": 404,
+      "elapsedMs": 3214,
+      "bytes": 20789
+    },
+    "/how-it-works": {
+      "httpStatus": 404,
+      "elapsedMs": 9771,
+      "bytes": 20789
+    },
+    "/help": {
+      "httpStatus": 404,
+      "elapsedMs": 2531,
+      "bytes": 20789
+    }
+  },
+  "health": {
+    "status": "healthy",
+    "commit": "5a161c4",
+    "charging": true,
+    "dodoCheckoutChannel": true,
+    "paymentsMissing": [
+      "CREEM_API_KEY",
+      "CREEM_WEBHOOK_SECRET",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET"
+    ]
+  },
+  "plans": {
+    "environment": "live_mode",
+    "checkoutReady": true,
+    "approvedAt": "2026-11-10",
+    "catalogVersion": "2026-11-10.1",
+    "planCount": 3,
+    "commercialApproval": null
+  },
+  "headers": {
+    "server": "cloudflare",
+    "cfRay": "a595464ecb220b68-AMS",
+    "nfRequestId": "01M77S2BFDAXRCGSKCTA8ZPVB2",
+    "nfDeployId": null
+  },
+  "deploy": {
+    "deployId": null,
+    "source": "netlify_api_or_console_required"
+  },
+  "git": {
+    "remoteMainSha": "773433af263c1dee44b180bf71b994bd53a04383"
+  },
+  "traceability": {
+    "productionCommit": "5a161c4",
+    "remoteMainSha": "773433af263c1dee44b180bf71b994bd53a04383",
+    "shaDrift": true,
+    "edge": "cloudflare",
+    "checkoutReady": true,
+    "environment": "live_mode",
+    "commercialApproval": null,
+    "missingPublicPages": [
+      "/product",
+      "/solutions",
+      "/stories",
+      "/how-it-works",
+      "/help"
+    ],
+    "deployId": null
+  }
+}

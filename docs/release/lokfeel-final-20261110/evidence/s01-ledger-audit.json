@@ -1,0 +1,78 @@
+{
+  "checkedAt": "2026-11-12T11:51:16.925Z",
+  "readOnly": true,
+  "target": "libsql://lokfeelcom-lokfeelboss.aws-us-east-1.turso.io",
+  "tables": {
+    "billingEvent": true,
+    "subscription": true,
+    "payment": true
+  },
+  "verdict": "NO_SAMPLE",
+  "zeroSample": true,
+  "counts": {
+    "billingEvents": 0,
+    "charges": 0,
+    "succeededCharges": 0,
+    "b2cSubscriptions": 2226,
+    "b2cPaidSubscriptions": 51,
+    "b2cPayments": 56,
+    "b2cSucceededPayments": 52,
+    "b2cPayableRows": 54
+  },
+  "typeCounts": [],
+  "findings": [],
+  "invariantViolations": [],
+  "r15Suspects": [],
+  "legacySettledKeys": [],
+  "paidNotProvisioned": [],
+  "b2cSubscriptionByPlan": [
+    {
+      "key": "PREMIUM_MONTHLY",
+      "n": 30
+    },
+    {
+      "key": "LADY_FREE",
+      "n": 2174
+    },
+    {
+      "key": "PREMIUM_YEARLY",
+      "n": 21
+    },
+    {
+      "key": "FREE",
+      "n": 1
+    }
+  ],
+  "b2cSubscriptionStatus": [
+    {
+      "key": "ACTIVE",
+      "n": 2226
+    }
+  ],
+  "b2cPaymentStatus": [
+    {
+      "key": "SUCCEEDED",
+      "n": 52
+    },
+    {
+      "key": "FAILED",
+      "n": 2
+    },
+    {
+      "key": "REFUNDED",
+      "n": 2
+    }
+  ],
+  "b2cPaidWithoutSub": [],
+  "b2cPaymentWindow": {
+    "minAt": "2026-04-24T02:29:12.740Z",
+    "maxAt": "2026-04-24T03:05:56.493Z",
+    "n": 56
+  },
+  "blockers": [],
+  "snapshot": {
+    "typeCounts": [],
+    "orgPlanRows": [],
+    "chargeRowCount": 0
+  }
+}
