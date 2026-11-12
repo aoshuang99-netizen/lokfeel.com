@@ -10,6 +10,6 @@ G7-billing,PASS_CODE_ONLY,local-test,jest tests/billing/* + p0-02端到端11例,
 G8-security,PARTIAL,local-prod-build,check:secrets + 产物sha256 + 跨租户/重放负例,0,evidence/gates-p0-2026-11-12.log,gitleaks未安装; Netlify部署产物复扫留G13
 G9-infra,PARTIAL,prod+code,生产响应头 + CF/DNS + XFF只读审查,0,06_G9_CF_MIGRATION_REHEARSAL.md; evidence/g9-cf-probe-2026-11-11.log,D6范围未定; 建议方案A维持现状
 G10-perf,PARTIAL,local-prod-build@3112,node scripts/perf/measure-vitals.mjs --runs=5 (8页),1,evidence/vitals-p0-2026-11-12.json; evidence/vitals-p0-clean-2026-11-12.json; evidence/g10-perf-2026-11-12.log,TBT 0/8达标(<=200ms); 需按路由拆包+延迟水合
-G11-same-rc-gates,PASS,local,tsc + eslint + lint:gate + jest + build + brand + products + secrets,0,evidence/gates-p0-2026-11-12.log; evidence/g4-public-matrix.json,GitHub独立RC PR未建(gh缺失)
+G11-same-rc-gates,PARTIAL,local+remote,tsc + eslint + lint:gate + jest + build + probes + remote CI,1,evidence/gates-p0-2026-11-12.log; evidence/s03-remote-evidence.json,远端CI 12PASS/1FAIL(E2E浏览器冒烟6例均为/pricing线上既有缺陷); 独立RC PR未建(无token)
 G12-pricing-approval,BLOCKED,prod,readCheckoutGate() + check:products R3,0,RELEASE_STATUS.md; evidence/d2-candidate-gate-proof.json,D1未批准; APPROVED不得代填
 G13-post-release,N/A,prod,(未执行),N/A,PRODUCTION_SMOKE.log,未发布

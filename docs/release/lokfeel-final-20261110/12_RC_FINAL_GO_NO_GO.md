@@ -123,7 +123,9 @@
 | G13 | 生产真实验证全绿 | **N/A（未发布）** | 发布后 |
 | 观察期 | 48h 监控与异常对账启动 | **N/A（未发布）** | 发布后 |
 
-**严格完成率**：G0–G12 共 13 门禁中 **5 PASS**（G0/G1/G4/G6/G11）· **1 PASS_CODE_ONLY（G7，代码层，不计 PASS；检查器仍判 `G7_not_PASS`）** · 4 PARTIAL（G2/G8/G9/G10）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PASS_CODE_ONLY / PARTIAL / BLOCKED / NOT_TESTED` 一律不计完成 ⇒ **5/13，未达 100%，不得进入 B6**。
+**严格完成率**：G0–G12 共 13 门禁中 **4 PASS**（G0/G1/G4/G6）· **1 PASS_CODE_ONLY（G7，代码层，不计 PASS；检查器仍判 `G7_not_PASS`）** · 5 PARTIAL（G2/G8/G9/G10/G11）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PASS_CODE_ONLY / PARTIAL / BLOCKED / NOT_TESTED` 一律不计完成 ⇒ **4/13，未达 100%，不得进入 B6**。
+
+> G11 由 PASS 下调为 PARTIAL（2026-11-12 20:35）：`c97c893` 远端 CI 12 PASS / **1 FAIL** / 2 SKIP，失败为 E2E 浏览器冒烟 6 例，全部落在 `/pricing`，已用生产实测证明是既有缺陷（`evidence/s03-production-pricing-defect.json`）。
 > 2026-11-12 17:25 复盘修正：此前把 G7 的 `PASS_CODE_ONLY` 误计为「六个 PASS」，与 `GATES.csv` / `STATUS.json` / fail-closed 检查器口径不一致；现以脚本动态计数 `strictPass = 5/13` 为准，结论 `NO_GO` 不变且完成率更低。
 
 ### 需要你一次性给出的输入（可只回字母 + 选择）

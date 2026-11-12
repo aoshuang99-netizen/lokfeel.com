@@ -7,12 +7,15 @@
 
 **当前状态：`NO_GO`**（未达 `READY_FOR_APPROVAL`；未发布、未切流、未改生产配置、无真实扣款）
 
-- 更新时间：2026-11-12 17:30 GMT+8 · 基线 T0：2026-11-10 18:59:43 CST
-- 生产运行时：`5a161c4`（16:10 首采 + **17:25 复采**均为 `RISK_OPEN`）；远端 main 开工时 `f6576db`、当前 `2f95aa1`；**SHA 漂移 = true**
-- 发布候选 `rcSha` 锁定为 `2b52ce0`，不被后续纯文档提交（`2f95aa1`）漂走；见 `STATUS.json` 的 `headSha` 字段
-- 候选运行时代码：**本轮功能提交**（见 `RELEASE_MANIFEST.json` 的 `rcSha`；后续纯文档提交不改变运行时代码）
+- 更新时间：2026-11-12 20:35 GMT+8 · 基线 T0：2026-11-10 18:59:43 CST
+- 生产运行时：`5a161c4`（16:10 首采 + 17:25 复采 + **19:43 三采**均为 `RISK_OPEN`）；远端 main 开工时 `f6576db`、当前 `4c…`（见 `git ls-remote`）；**SHA 漂移 = true**
+- **生产 Netlify deploy id 已真实取得**：`6af2d9afb8e9e8e1aab031e4`（`commit_ref=5a161c4`，`context=production`，`state=ready`）
+- **S 轨道已建立**（V20.7 总令）：`rc/hotfix-checkout-safety` = `c97c893`，见 `13_S_TRACK_RECORD.md` / `14_HOTFIX_APPROVAL_PACKET.md`；**未部署**
+- 发布候选 `rcSha` 锁定为 `2b52ce0`，不被后续纯文档提交漂走；见 `STATUS.json` 的 `headSha` 字段
 - **D2 线上风险仍在**：`checkoutReady=true` / `environment=live_mode` / `charging=true` / `/pricing` 含可点 CTA / `commercialApproval` 字段不存在（旧代码）。哨兵告警 ≠ 止损。
-- 批次：B0–B5 ✅ · **本轮 P0-01→P0-10 可自主项 ✅** · B6 未启动 · G13 N/A
+- 🔴 **本轮新发现（此前未知）**：远端 CI 自 `f6576db` 起**连续 4 次失败**，失败步骤全部是 `payment-off 契约` 的陈旧断言 `channels.length===5`（实际 7）。**已修**（改集合严格相等），`c97c893` 该步转绿。此前若引用过"CI 通过"，该证据不成立。
+- 🔴 **`/pricing` 线上既有缺陷**（生产实测）：渲染 `$49` 且 2 个链接高度 20px < 24px（WCAG 2.2 AA 2.5.8）。属 G2/G4 真实欠账，非本轮引入。
+- 批次：B0–B5 ✅ · P0-01→P0-10 可自主项 ✅ · **S-01→S-03 ✅（S-04 待授权）** · B6 未启动 · G13 N/A
 
 ## 1. 门禁完成度（严格口径）
 
@@ -26,14 +29,15 @@
 | G5 真人 | **NOT_TESTED** | 统计门禁 TDD 7/7 就绪；无真人参与，CLI 判 `NOT_TESTED` |
 | G6 Provider | **PASS（候选）** | Outcome 15/15 + Provider 28/28；生产出口复验留 G13 |
 | G7 账本 | **PASS_CODE_ONLY（代码层，不计 PASS）** | P0-02 端到端 11 例（含旧键注入负控）+ R-15/R-14 内核负控；**无 provider event ID / 沙箱真实投递 ⇒ 实投层 `NOT_TESTED`** |
-| G8 安全 | **PARTIAL** | secrets 2427 文件 0 命中、产物 sha256、跨租户/重放负例在 jest 内；**gitleaks 未安装**；部署产物复扫留 G13 |
+| G8 安全 | **PARTIAL** | 本地 secrets 2427 文件 0 命中；**远端 CI 的 gitleaks job 在 `c97c893` 上 PASS**（官方 action，非本地替代）；CodeQL 仍需 PR 触发（无 token → BLOCKED）；部署产物复扫留 G13 |
 | G9 架构 | **PARTIAL** | 生产本就在 CF 代理后；建议方案 A 维持现状；D6 未批 |
 | G10 性能 | **PARTIAL（TBT 实为 FAIL）** | 两次 8 页×5 轮实测 TBT **0/8 达标**（1022–2338ms / 1173–2732ms）；LCP/CLS/TTFB/JS 达标，不放水 |
-| G11 同 RC 门禁 | **PASS（本地）** | tsc 0 · eslint 0 · 棘轮零新增 · jest **145 套 2730 例** · build 0 · brand 27 · products 5/5 · secrets 0 · 判定层 44/44；独立 RC PR 未建（`gh` 缺失） |
+| G11 同 RC 门禁 | **PARTIAL** | 本地：tsc 0 · eslint 0 · 棘轮零新增 · jest 2737 例 · build 0 · 判定层 **66/66**。远端：`c97c893` 的 CI **12 PASS / 1 FAIL / 2 SKIP** —— 失败为 `/pricing` 线上既有页面缺陷（生产实测复现）；独立 RC PR 仍 BLOCKED（无 token） |
 | G12 定价批准 | **BLOCKED** | `PENDING_APPROVAL`；生产 `approvedAt` 是目录版本常量，**不是**批准记录 |
 | G13 生产复验 | **N/A** | 未发布；`PRODUCTION_SMOKE.log` 明确 NOT_TESTED |
 
-**完成率**：G0–G12 共 13 门禁中 **5 PASS**（G0/G1/G4/G6/G11）· **1 PASS_CODE_ONLY（G7，代码层，不计 PASS）** · 4 PARTIAL（G2/G8/G9/G10）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PASS_CODE_ONLY / PARTIAL / BLOCKED / NOT_TESTED` 一律不计完成 ⇒ **5/13，未达 100%，不得进入 B6**。
+**完成率**：G0–G12 共 13 门禁中 **4 PASS**（G0/G1/G4/G6）· **1 PASS_CODE_ONLY（G7，代码层，不计 PASS）** · 5 PARTIAL（G2/G8/G9/G10/**G11**）· 2 BLOCKED（G3/G12）· 1 NOT_TESTED（G5）· G13 N/A。`PASS_CODE_ONLY / PARTIAL / BLOCKED / NOT_TESTED` 一律不计完成 ⇒ **4/13，未达 100%，不得进入 B6**。
+> G11 由 PASS 下调为 PARTIAL：`c97c893` 的远端 CI 有 1 个 job 红（E2E 浏览器冒烟 6 例，均为 `/pricing` 线上既有缺陷）。下调依据是「远端 CI 也属于同 RC 门禁」，不是新增失败。
 > 计数由 `build-release-status.mjs` 从 `GATES.csv` 动态算出（不再手填），并由 `scripts/qa/release-status-verdict.test.mjs` 守卫回潮；`STATUS.json` 的 `strictPass = 5 / 13`。
 
 ## 2. 本轮（V20.7 作战包）实际完成

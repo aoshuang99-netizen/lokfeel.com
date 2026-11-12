@@ -1,0 +1,126 @@
+{
+  "checkedAt": "2026-11-12T12:21:18.738Z",
+  "readOnly": true,
+  "sha": "c97c893c450e2139db7e824cfce01e9c34d9b0b0",
+  "branch": "rc/hotfix-checkout-safety",
+  "ci": {
+    "found": true,
+    "runId": 43215650524,
+    "status": "completed",
+    "conclusion": "failure",
+    "htmlUrl": "https://github.com/aoshuang99-netizen/lokfeel.com/actions/runs/43215650524",
+    "jobCount": 15,
+    "passed": 12,
+    "failed": 1,
+    "skipped": 2,
+    "failures": [
+      {
+        "name": "E2E（构建产物 · 浏览器冒烟）",
+        "status": "completed",
+        "conclusion": "failure",
+        "failedSteps": [
+          "浏览器冒烟"
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "next-start.log",
+        "message": "服务端日志里**没有任何错误行** —— 这说明失败不是服务端抛异常，应往网络/导航层查（keep-alive、连接被复用、重定向链）"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "",
+        "message": "Process completed with exit code 1."
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "E2E 汇总",
+        "message": "status=failed 失败用例=6 —— 明细见上方每条 annotation"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "E2E 未通过：⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页）",
+        "message": "Error: 未获批定价 ⇒ 页面上不该有金额 /  / expect(received).not.toMatch(expected) /  / Expected pattern: not /\\$\\s?\\d/ / Received string:      \"LOKFEEL /  / LokFeel Connection OS /  / 把你的目标编译成一个可运行的工作区：目标 → WorkspaceSpec → Mission → Agent → Consent → Verified Outcome。 /  / 订阅套餐 /  / 按组织订阅 · 随时升降档 · 年付送两个月 · 全部套餐含 14 天试用 /  / 月付 / 年付省 17% / Starter /  / 把第一个真实流程跑通 /  / $49.00 / 月 /  / 面向：刚开始用 Connection OS 的小团队 /  / 每月 200 次连接提案 / 30 次介绍 / 每月 100 份成果上报 · 25 次核验 / 最多 25 个席位 / Consent 依据与撤回全程留痕 /  / 月付这一档暂未开放在线开"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "E2E 未通过：⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页）",
+        "message": "Error: 未获批定价 ⇒ 页面上不该有金额 /  / expect(received).not.toMatch(expected) /  / Expected pattern: not /\\$\\s?\\d/ / Received string:      \"LOKFEEL /  / LokFeel Connection OS /  / 把你的目标编译成一个可运行的工作区：目标 → WorkspaceSpec → Mission → Agent → Consent → Verified Outcome。 /  / 订阅套餐 /  / 按组织订阅 · 随时升降档 · 年付送两个月 · 全部套餐含 14 天试用 /  / 月付 / 年付省 17% / Starter /  / 把第一个真实流程跑通 /  / $49.00 / 月 /  / 面向：刚开始用 Connection OS 的小团队 /  / 每月 200 次连接提案 / 30 次介绍 / 每月 100 份成果上报 · 25 次核验 / 最多 25 个席位 / Consent 依据与撤回全程留痕 /  / 月付这一档暂未开放在线开"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "E2E 未通过：360×800 · Connection OS 定价页 /pricing",
+        "message": "Error: 360×800 /pricing 有 1 个触控目标 <24px（WCAG 2.2 AA 2.5.8）： / · a \"需要采购/发票/年度合同？联系我们\" → /contact?topic=connection-os-acc [246×20] /  / expect(received).toEqual(expected) // deep equality /  / - Expected  - 1 / + Received  + 7 /  / - Array [] / + Array [ / +   Object { / +     \"h\": 20, / +     \"label\": \"a \\\"需要采购/发票/年度合同？联系我们\\\" → /contact?topic=connection-os-acc\", / +     \"w\": 246, / +   }, / + ]"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "E2E 未通过：360×800 · Connection OS 定价页 /pricing",
+        "message": "Error: 360×800 /pricing 有 1 个触控目标 <24px（WCAG 2.2 AA 2.5.8）： / · a \"需要采购/发票/年度合同？联系我们\" → /contact?topic=connection-os-acc [246×20] /  / expect(received).toEqual(expected) // deep equality /  / - Expected  - 1 / + Received  + 7 /  / - Array [] / + Array [ / +   Object { / +     \"h\": 20, / +     \"label\": \"a \\\"需要采购/发票/年度合同？联系我们\\\" → /contact?topic=connection-os-acc\", / +     \"w\": 246, / +   }, / + ]"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "E2E 未通过：390×844 · Connection OS 定价页 /pricing",
+        "message": "Error: 390×844 /pricing 有 1 个触控目标 <24px（WCAG 2.2 AA 2.5.8）： / · a \"需要采购/发票/年度合同？联系我们\" → /contact?topic=connection-os-acc [246×20] /  / expect(received).toEqual(expected) // deep equality /  / - Expected  - 1 / + Received  + 7 /  / - Array [] / + Array [ / +   Object { / +     \"h\": 20, / +     \"label\": \"a \\\"需要采购/发票/年度合同？联系我们\\\" → /contact?topic=connection-os-acc\", / +     \"w\": 246, / +   }, / + ]"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "E2E 未通过：390×844 · Connection OS 定价页 /pricing",
+        "message": "Error: 390×844 /pricing 有 1 个触控目标 <24px（WCAG 2.2 AA 2.5.8）： / · a \"需要采购/发票/年度合同？联系我们\" → /contact?topic=connection-os-acc [246×20] /  / expect(received).toEqual(expected) // deep equality /  / - Expected  - 1 / + Received  + 7 /  / - Array [] / + Array [ / +   Object { / +     \"h\": 20, / +     \"label\": \"a \\\"需要采购/发票/年度合同？联系我们\\\" → /contact?topic=connection-os-acc\", / +     \"w\": 246, / +   }, / + ]"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "V18 隔离取证 BLOCKED",
+        "message": "SEC-08 Consent 撤销后继续执行被拒 — 需要 Connection/Consent 夹具（跨 4 张表）；本轮无本地库可验证，下一轮用真实流程造数"
+      },
+      {
+        "job": "E2E（构建产物 · 浏览器冒烟）",
+        "title": "",
+        "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\""
+      }
+    ]
+  },
+  "netlify": {
+    "available": true,
+    "siteId": "c46478e9-7ac8-4bcf-9052-7638b04fef83",
+    "allowedBranches": [
+      "main"
+    ],
+    "productionDeploy": {
+      "id": "6af2d9afb8e9e8e1aab031e4",
+      "commitRef": "5a161c47b3df18fab9130a04a1cdd2145f2e7408",
+      "state": "ready"
+    },
+    "branchDeploys": [
+      {
+        "id": "6af5aa99505179477be2600b",
+        "state": "new",
+        "context": "deploy-preview",
+        "branch": "rc-hotfix-checkout-safety",
+        "commitRef": null
+      },
+      {
+        "id": "6af0ba767c1b58dc0ee73634",
+        "state": "ready",
+        "context": "deploy-preview",
+        "branch": "dependabot/npm_and_yarn/minor-and-patch-802ec9504e",
+        "commitRef": "517f2fe64cfce027781ebd7b4ee16d1830453205"
+      },
+      {
+        "id": "6aeef52b7c1b58dc0e897e73",
+        "state": "ready",
+        "context": "deploy-preview",
+        "branch": "dependabot/npm_and_yarn/minor-and-patch-802ec9504e",
+        "commitRef": "8bead3d0bb38e27a17f9daa1f7e9a9bdd56813fa"
+      },
+      {
+        "id": "6aec65bdb7badab135d3d36f",
+        "state": "error",
+        "context": "deploy-preview",
+        "branch": "dependabot/npm_and_yarn/minor-and-patch-fc6de36591",
+        "commitRef": "5b09c76edd8f387382b03ff320173ef06e54fad4"
+      }
+    ]
+  }
+}

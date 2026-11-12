@@ -47,6 +47,36 @@ const EXPECTED_MISSING = [
   'STRIPE_WEBHOOK_SECRET',
 ];
 
+/**
+ * 🔴 2026-11-12 修正（S-03 实证）：此处原为 `Object.keys(channels).length === 5`。
+ *
+ * 事实：`src/lib/payments/availability.ts` 的 `CHANNEL_RULES` 早已是 **7 个通道**
+ * （V20.5 引入 dodo.checkout / dodo.webhook 两个，stripe 拆成 card/refund/webhook 三个）。
+ * 于是这条断言在**每一个提交上**都失败 —— 包括生产基线 5a161c4 与 main 的 c46a03d，
+ * 远端 CI 自 f6576db 起连续红灯，失败点全部是这一步。
+ * 它测的不再是"支付未接入是否可观测"，而是"通道数量有没有变过"，属于陈旧断言。
+ *
+ * 修法取**严格集合相等**（不是放宽为 `>=`）：未来新增/删除通道会让本门禁失败，
+ * 迫使改动者显式更新契约。放水式修法（只看 `missing` 不看 `channels`）会使
+ * "健康检查漏报通道"这类回归无人拦截。
+ */
+const EXPECTED_CHANNELS = [
+  'creem.checkout',
+  'creem.webhook',
+  'dodo.checkout',
+  'dodo.webhook',
+  'stripe.card',
+  'stripe.refund',
+  'stripe.webhook',
+];
+
+function sameChannelSet(channels) {
+  if (!channels || typeof channels !== 'object') return false;
+  const actual = Object.keys(channels).sort();
+  const expected = [...EXPECTED_CHANNELS].sort();
+  return actual.length === expected.length && actual.every((k, i) => k === expected[i]);
+}
+
 const results = [];
 let failed = 0;
 
@@ -103,9 +133,8 @@ if (payments) {
     `configured=${payments.configured} —— 若已配好凭据，应改跑 verify-payment-channel.mjs --probe`,
   );
   check(
-    'health.payments 结构完整（5 通道 + missing + malformed）',
-    payments.channels &&
-      Object.keys(payments.channels).length === 5 &&
+    'health.payments 结构完整（通道集合 + missing + malformed）',
+    sameChannelSet(payments.channels) &&
       Array.isArray(payments.missing) &&
       Array.isArray(payments.malformed),
     JSON.stringify(payments),

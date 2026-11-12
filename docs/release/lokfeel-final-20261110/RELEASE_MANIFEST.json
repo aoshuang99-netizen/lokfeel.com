@@ -7,7 +7,7 @@
   "productionBeforeDeployId": null,
   "runtime": "cloudflare-proxy-netlify-origin",
   "baseUrl": "https://app.lokfeel.com",
-  "generatedAt": "2026-11-12T09:30:10.375Z",
+  "generatedAt": "2026-11-12T12:27:37.783Z",
   "humanDecisions": {
     "D1": null,
     "D2": null,
@@ -35,7 +35,7 @@
     "G8": "PARTIAL",
     "G9": "PARTIAL",
     "G10": "PARTIAL",
-    "G11": "PASS",
+    "G11": "PARTIAL",
     "G12": "BLOCKED",
     "G13": "N/A"
   },
@@ -51,7 +51,7 @@
     "G8": "evidence/gates-p0-2026-11-12.log",
     "G9": "06_G9_CF_MIGRATION_REHEARSAL.md; evidence/g9-cf-probe-2026-11-11.log",
     "G10": "evidence/vitals-p0-2026-11-12.json; evidence/vitals-p0-clean-2026-11-12.json; evidence/g10-perf-2026-11-12.log",
-    "G11": "evidence/gates-p0-2026-11-12.log; evidence/g4-public-matrix.json",
+    "G11": "evidence/gates-p0-2026-11-12.log; evidence/s03-remote-evidence.json",
     "G12": "RELEASE_STATUS.md; evidence/d2-candidate-gate-proof.json"
   },
   "rollback": {

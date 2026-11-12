@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-11-12T12:24:59.682Z",
+  "base": "https://app.lokfeel.com",
+  "url": "https://app.lokfeel.com/pricing",
+  "httpStatus": 200,
+  "finalPath": "/pricing",
+  "bodyText": "LOKFEEL\n\nLokFeel Connection OS\n\n把你的目标编译成一个可运行的工作区：目标 → WorkspaceSpec → Mission → Agent → Consent → Verified Outcome。\n\n订阅起价 From $49/mo · 支持在线开通\n\n订阅套餐\n\n按组织订阅 · 随时升降档 · 年付送两个月 · 全部套餐含 14 天试用\n\n月付\n年付省 17%\nStarter\n\n把第一个真实流程跑通\n\n$49.00 / 月\n\n面向：刚开始用 Connection OS 的小团队\n\n每月 200 次连接提案 / 30 次介绍\n每月 100 份成果上报 · 25 次核验\n最多 25 个席位\nConsent 依据与撤回全程留痕\n订阅 Starter\n最受欢迎\nGrowth\n\n让协作成为组织的日常\n\n$149.00 / 月\n\n面向：已有稳定协作节奏的团队与社群\n\n每月 1,500 次提案 / 200 次介绍\n每月 800 份成果上报 · 200 次核验\n最多 100 个席位\n机器面 MCP / A2A 全量开放\n优先支持（1 个工作日内响应）\n订阅 Growth\nScale\n\n跨组织协作，按你的规模跑\n\n$399.00 / 月\n\n面向：需要跨社群桥接与审计的大型机构\n\n提案 / 介绍 / 成果 / 核验均不限量\n最多 500 个席位\n跨社群桥接协议（Bridge）\n审计导出与合规留痕\n专属上线支持\n订阅 Scale\n\n试用期内可随时取消，不产生费用。首次订阅享 14 天冷静期（见 退款政策）。价格与权益以本页为准；付款由 Dodo Payments 作为 Merchant of Record 处理。\n\n你能拿到什么\nLiving Workspace 六屏：Now / Studio / Field / Consent / Outcomes / Agents\n组织态 Console 七屏：任务、成员、权限、用量、审计、桥接、设置\nConsent 先于动作：每一次对外披露都有依据与可撤回记录\nVerified Outcome：结果要能被验证，不是\"跑完就算\"\n机器面：MCP（5 工具）与 A2A 任务端点，与 REST 共用同一套租户守卫\n承诺与边界\nConsent 先于动作：对外披露必须先有依据，且可撤回。\nVerified Outcome：结果要能被验证，不接受「跑完就算」。\n退款条款：按 /refunds 承诺 14 天（首次订阅冷静期）。\n这里不卖什么\n\nLokFeel 站上还有两条独立的产品线，它们不属于 Connection OS，也不共享本页的定价与权益：\n\nLokFeel 旧会员（B2C） —— 交友产品线的订阅，权益是每周匹配数、隐身、保险箱等。\nHlua Pass —— streaming 与 H-Points 会员，是另一条业务。 了解 Hlua Pass\n\n如果你是从旧链接（`/plans`、`/subscribe`、`/membership`、`/pass`）过来的：前两个已指向本页，后两个指向 Hlua Pass 的说明页。\n\n需要采购/发票/年度合同？联系我们",
+  "smallTargets": [
+    {
+      "label": "了解 Hlua Pass",
+      "w": 103,
+      "h": 20
+    },
+    {
+      "label": "需要采购/发票/年度合同？联系我们",
+      "w": 245,
+      "h": 20
+    }
+  ],
+  "verdict": "DEFECTS_PRESENT",
+  "defects": [
+    {
+      "code": "price_amount_visible",
+      "detail": "$49"
+    },
+    {
+      "code": "touch_target_under_24px",
+      "detail": "了解 Hlua Pass [103×20]"
+    },
+    {
+      "code": "touch_target_under_24px",
+      "detail": "需要采购/发票/年度合同？联系我们 [245×20]"
+    }
+  ]
+}

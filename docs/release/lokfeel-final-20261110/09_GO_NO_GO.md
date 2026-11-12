@@ -30,7 +30,7 @@
 | G12 | BLOCKED | `PENDING_APPROVAL`；生产 `approvedAt` 是目录版本常量，不是批准记录 |
 | G13 | N/A | 未发布；`PRODUCTION_SMOKE.log` 明确 NOT_TESTED |
 
-**严格完成率**：**5 PASS**（G0/G1/G4/G6/G11）· 1 PASS_CODE_ONLY（G7，不计 PASS）· 4 PARTIAL · 2 BLOCKED · 1 NOT_TESTED · G13 N/A ⇒ **5/13，未达 100%，不得进入 B6**。
+**严格完成率**：**4 PASS**（G0/G1/G4/G6）· 1 PASS_CODE_ONLY（G7，不计 PASS）· 5 PARTIAL（含 G11：远端 CI 有 1 job 红）· 2 BLOCKED · 1 NOT_TESTED · G13 N/A ⇒ **4/13，未达 100%，不得进入 B6**。
 
 ## 本轮新增的硬证据（可复核）
 

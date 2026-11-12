@@ -1,12 +1,12 @@
 {
-  "checkedAt": "2026-11-12T09:30:10.464Z",
+  "checkedAt": "2026-11-12T12:27:37.945Z",
   "rcSha": "2b52ce04480dc8df53d260ec43fbe81f917e3650",
   "command": "node scripts/check-release-manifest.mjs RELEASE_MANIFEST.json",
   "exitCode": 1,
   "source": "scripts/check-release-manifest.mjs（作战包原件，sha 与 ZIP 一致）",
   "verdict": "NO_GO",
   "evidencePath": "docs/release/lokfeel-final-20261110/evidence/release-manifest-gaps.json",
-  "totalGaps": 21,
+  "totalGaps": 22,
   "errors": [
     "missing_rollback_deploy",
     "G2_not_PASS",
@@ -16,6 +16,7 @@
     "G8_not_PASS",
     "G9_not_PASS",
     "G10_not_PASS",
+    "G11_not_PASS",
     "G12_not_PASS",
     "D1_approval_evidence_missing",
     "D2_approval_evidence_missing",

@@ -34,9 +34,9 @@ const gates = Object.fromEntries(gateRows.map((line) => {
 test('R1 · 严格完成率只数字面 PASS，且由 GATES.csv 动态算出', () => {
   const literalPass = Object.values(gates).filter((v) => v === 'PASS').length
   assert.equal(status.strictPass, literalPass)
-  assert.equal(status.strictPass, 5)
+  assert.equal(status.strictPass, 4)
   assert.equal(status.strictDenominator, 13)
-  assert.equal(status.gateTally.PASS, 5)
+  assert.equal(status.gateTally.PASS, 4)
   assert.equal(status.verdict, 'NO_GO')
 })
 
@@ -77,16 +77,19 @@ test('R4 · 发布候选 SHA 锁定：不随后续纯文档提交漂移', () => 
   assert.ok(status.notes.some((n) => n.includes('锁定')))
 })
 
-test('R5 · 三份人类可读状态文档不得回潮写「6 PASS」', () => {
+test('R5 · 三份人类可读状态文档不得回潮写旧完成率（6 PASS / 5 PASS 均为旧口径）', () => {
   // 用带词边界的正则：能抓到「13 门禁中 6 PASS」，但不会把门禁编号「G6 PASS」误判成旧口径。
-  const stalePassCount = /\b6 PASS\b/
-  assert.equal(stalePassCount.test('13 门禁中 6 PASS（G0/G1/...）'), true, '守卫必须能抓到旧完成率写法')
-  assert.equal(stalePassCount.test('G6 PASS（候选）'), false, '门禁编号不得被误判')
+  const stale6 = /\b6 PASS\b/
+  const stale5 = /\b5 PASS\b/
+  assert.equal(stale6.test('13 门禁中 6 PASS（G0/G1/...）'), true, '守卫必须能抓到 6 PASS 旧写法')
+  assert.equal(stale5.test('13 门禁中 5 PASS（G0/G1/...）'), true, '守卫必须能抓到 5 PASS 旧写法')
+  assert.equal(stale6.test('G6 PASS（候选）'), false, '门禁编号不得被误判')
   const docs = ['RELEASE_STATUS.md', '09_GO_NO_GO.md', '12_RC_FINAL_GO_NO_GO.md']
   for (const name of docs) {
     const text = readFileSync(path.join(DIR, name), 'utf8')
-    assert.ok(!stalePassCount.test(text), `${name} 仍写 6 PASS`)
-    assert.ok(text.includes('5 PASS'), `${name} 未写 5 PASS`)
+    assert.ok(!stale6.test(text), `${name} 仍写 6 PASS`)
+    assert.ok(!stale5.test(text), `${name} 仍写 5 PASS（G11 已下调为 PARTIAL，应为 4 PASS）`)
+    assert.ok(text.includes('4 PASS'), `${name} 未写 4 PASS`)
   }
 })
 
