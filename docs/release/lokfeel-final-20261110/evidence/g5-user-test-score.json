@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-11-12T08:44:01.915Z",
+  "source": "none",
+  "note": "空记录 = 真人测试未发生，判 NOT_TESTED；本脚本不生成参与者、不模拟问答。",
+  "verdict": "NOT_TESTED",
+  "reasons": [
+    "no_participant_records"
+  ],
+  "stats": {
+    "count": 0
+  }
+}

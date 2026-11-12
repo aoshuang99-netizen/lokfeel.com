@@ -1,0 +1,1421 @@
+{
+  "checkedAt": "2026-11-12T08:37:33.614Z",
+  "base": "http://127.0.0.1:3112",
+  "readOnly": true,
+  "routeCount": 12,
+  "verdict": "PASS",
+  "errors": [],
+  "questionCoverage": [
+    {
+      "id": "Q1",
+      "question": "你是谁 / 平台定位",
+      "route": "/",
+      "hits": 2,
+      "needles": 2
+    },
+    {
+      "id": "Q2",
+      "question": "为谁服务",
+      "route": "/solutions",
+      "hits": 2,
+      "needles": 4
+    },
+    {
+      "id": "Q3",
+      "question": "解决什么问题",
+      "route": "/product",
+      "hits": 3,
+      "needles": 3
+    },
+    {
+      "id": "Q4",
+      "question": "与聊天机器人 / CRM 的差异",
+      "route": "/product",
+      "hits": 3,
+      "needles": 4
+    },
+    {
+      "id": "Q5",
+      "question": "怎么用 / 流程",
+      "route": "/how-it-works",
+      "hits": 2,
+      "needles": 3
+    },
+    {
+      "id": "Q6",
+      "question": "订阅档位与价格区别",
+      "route": "/pricing",
+      "hits": 3,
+      "needles": 3
+    },
+    {
+      "id": "Q7",
+      "question": "谁负责 / 怎么联系",
+      "route": "/contact",
+      "hits": 3,
+      "needles": 3
+    },
+    {
+      "id": "Q8",
+      "question": "法律 / 退款 / 数据处理",
+      "route": "/terms",
+      "hits": 3,
+      "needles": 3
+    }
+  ],
+  "coveredQuestions": 8,
+  "totalQuestions": 8,
+  "unlistedInternalLinks": [
+    {
+      "from": "/",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/",
+      "href": "/showcase/studio.webp"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/",
+      "href": "/login"
+    },
+    {
+      "from": "/",
+      "href": "/register"
+    },
+    {
+      "from": "/",
+      "href": "/support"
+    },
+    {
+      "from": "/",
+      "href": "/.well-known/agent-card.json"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/product",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/product",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/product",
+      "href": "/login"
+    },
+    {
+      "from": "/product",
+      "href": "/register"
+    },
+    {
+      "from": "/product",
+      "href": "/cookies"
+    },
+    {
+      "from": "/product",
+      "href": "/careers"
+    },
+    {
+      "from": "/product",
+      "href": "/press"
+    },
+    {
+      "from": "/product",
+      "href": "/faq"
+    },
+    {
+      "from": "/product",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/product",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/product",
+      "href": "/support"
+    },
+    {
+      "from": "/product",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/product",
+      "href": "/dmca"
+    },
+    {
+      "from": "/product",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/solutions",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/solutions",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/solutions",
+      "href": "/login"
+    },
+    {
+      "from": "/solutions",
+      "href": "/register"
+    },
+    {
+      "from": "/solutions",
+      "href": "/cookies"
+    },
+    {
+      "from": "/solutions",
+      "href": "/careers"
+    },
+    {
+      "from": "/solutions",
+      "href": "/press"
+    },
+    {
+      "from": "/solutions",
+      "href": "/faq"
+    },
+    {
+      "from": "/solutions",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/solutions",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/solutions",
+      "href": "/support"
+    },
+    {
+      "from": "/solutions",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/solutions",
+      "href": "/dmca"
+    },
+    {
+      "from": "/solutions",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/stories",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/stories",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/stories",
+      "href": "/login"
+    },
+    {
+      "from": "/stories",
+      "href": "/register"
+    },
+    {
+      "from": "/stories",
+      "href": "/cookies"
+    },
+    {
+      "from": "/stories",
+      "href": "/careers"
+    },
+    {
+      "from": "/stories",
+      "href": "/press"
+    },
+    {
+      "from": "/stories",
+      "href": "/faq"
+    },
+    {
+      "from": "/stories",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/stories",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/stories",
+      "href": "/support"
+    },
+    {
+      "from": "/stories",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/stories",
+      "href": "/dmca"
+    },
+    {
+      "from": "/stories",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/login"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/register"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/cookies"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/careers"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/press"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/faq"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/support"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/dmca"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/pricing",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/pricing",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/pricing",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/pricing",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/pricing",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/pricing",
+      "href": "/login"
+    },
+    {
+      "from": "/pricing",
+      "href": "/register"
+    },
+    {
+      "from": "/pricing",
+      "href": "/cookies"
+    },
+    {
+      "from": "/pricing",
+      "href": "/hlua"
+    },
+    {
+      "from": "/pricing",
+      "href": "/careers"
+    },
+    {
+      "from": "/pricing",
+      "href": "/press"
+    },
+    {
+      "from": "/pricing",
+      "href": "/faq"
+    },
+    {
+      "from": "/pricing",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/pricing",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/pricing",
+      "href": "/support"
+    },
+    {
+      "from": "/pricing",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/pricing",
+      "href": "/dmca"
+    },
+    {
+      "from": "/pricing",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/help",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/help",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/help",
+      "href": "/login"
+    },
+    {
+      "from": "/help",
+      "href": "/register"
+    },
+    {
+      "from": "/help",
+      "href": "/cookies"
+    },
+    {
+      "from": "/help",
+      "href": "/support"
+    },
+    {
+      "from": "/help",
+      "href": "/careers"
+    },
+    {
+      "from": "/help",
+      "href": "/press"
+    },
+    {
+      "from": "/help",
+      "href": "/faq"
+    },
+    {
+      "from": "/help",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/help",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/help",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/help",
+      "href": "/dmca"
+    },
+    {
+      "from": "/help",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/about",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/about",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/about",
+      "href": "/login"
+    },
+    {
+      "from": "/about",
+      "href": "/register"
+    },
+    {
+      "from": "/about",
+      "href": "/cookies"
+    },
+    {
+      "from": "/about",
+      "href": "/careers"
+    },
+    {
+      "from": "/about",
+      "href": "/press"
+    },
+    {
+      "from": "/about",
+      "href": "/faq"
+    },
+    {
+      "from": "/about",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/about",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/about",
+      "href": "/support"
+    },
+    {
+      "from": "/about",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/about",
+      "href": "/dmca"
+    },
+    {
+      "from": "/about",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/contact",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/contact",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/contact",
+      "href": "/login"
+    },
+    {
+      "from": "/contact",
+      "href": "/register"
+    },
+    {
+      "from": "/contact",
+      "href": "/cookies"
+    },
+    {
+      "from": "/contact",
+      "href": "/careers"
+    },
+    {
+      "from": "/contact",
+      "href": "/press"
+    },
+    {
+      "from": "/contact",
+      "href": "/faq"
+    },
+    {
+      "from": "/contact",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/contact",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/contact",
+      "href": "/support"
+    },
+    {
+      "from": "/contact",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/contact",
+      "href": "/dmca"
+    },
+    {
+      "from": "/contact",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/terms",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/terms",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/terms",
+      "href": "/login"
+    },
+    {
+      "from": "/terms",
+      "href": "/register"
+    },
+    {
+      "from": "/terms",
+      "href": "/cookies"
+    },
+    {
+      "from": "/terms",
+      "href": "/careers"
+    },
+    {
+      "from": "/terms",
+      "href": "/press"
+    },
+    {
+      "from": "/terms",
+      "href": "/faq"
+    },
+    {
+      "from": "/terms",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/terms",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/terms",
+      "href": "/support"
+    },
+    {
+      "from": "/terms",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/terms",
+      "href": "/dmca"
+    },
+    {
+      "from": "/terms",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/privacy",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/privacy",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/privacy",
+      "href": "/login"
+    },
+    {
+      "from": "/privacy",
+      "href": "/register"
+    },
+    {
+      "from": "/privacy",
+      "href": "/cookies"
+    },
+    {
+      "from": "/privacy",
+      "href": "/careers"
+    },
+    {
+      "from": "/privacy",
+      "href": "/press"
+    },
+    {
+      "from": "/privacy",
+      "href": "/faq"
+    },
+    {
+      "from": "/privacy",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/privacy",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/privacy",
+      "href": "/support"
+    },
+    {
+      "from": "/privacy",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/privacy",
+      "href": "/dmca"
+    },
+    {
+      "from": "/privacy",
+      "href": "/content-removal-appeals-policy"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/chunks/0i78fdan5bip7.css"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/refunds",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/refunds",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/refunds",
+      "href": "/login"
+    },
+    {
+      "from": "/refunds",
+      "href": "/register"
+    },
+    {
+      "from": "/refunds",
+      "href": "/cookies"
+    },
+    {
+      "from": "/refunds",
+      "href": "/careers"
+    },
+    {
+      "from": "/refunds",
+      "href": "/press"
+    },
+    {
+      "from": "/refunds",
+      "href": "/faq"
+    },
+    {
+      "from": "/refunds",
+      "href": "/safety-tips"
+    },
+    {
+      "from": "/refunds",
+      "href": "/community-guidelines"
+    },
+    {
+      "from": "/refunds",
+      "href": "/support"
+    },
+    {
+      "from": "/refunds",
+      "href": "/cancellations-policy"
+    },
+    {
+      "from": "/refunds",
+      "href": "/dmca"
+    },
+    {
+      "from": "/refunds",
+      "href": "/content-removal-appeals-policy"
+    }
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "httpStatus": 200,
+      "bytes": 54738,
+      "elapsedMs": 388,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/showcase/studio.webp",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/login",
+        "/register",
+        "/stories",
+        "/help",
+        "/about",
+        "/contact",
+        "/support",
+        "/.well-known/agent-card.json"
+      ]
+    },
+    {
+      "route": "/product",
+      "httpStatus": 200,
+      "bytes": 69051,
+      "elapsedMs": 100,
+      "title": "Product | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/solutions",
+      "httpStatus": 200,
+      "bytes": 57544,
+      "elapsedMs": 65,
+      "title": "Solutions | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/contact",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/stories",
+      "httpStatus": 200,
+      "bytes": 56137,
+      "elapsedMs": 94,
+      "title": "Stories | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/how-it-works",
+      "httpStatus": 200,
+      "bytes": 58277,
+      "elapsedMs": 56,
+      "title": "How it works | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/help",
+        "/stories",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/pricing",
+      "httpStatus": 200,
+      "bytes": 64430,
+      "elapsedMs": 1480,
+      "title": "Pricing · LokFeel Connection OS | LokFeel",
+      "internalLinks": [
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/refunds",
+        "/hlua",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/help",
+      "httpStatus": 200,
+      "bytes": 67630,
+      "elapsedMs": 61,
+      "title": "Help center | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/refunds",
+        "/support",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/about",
+      "httpStatus": 200,
+      "bytes": 55898,
+      "elapsedMs": 87,
+      "title": "About | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/contact",
+      "httpStatus": 200,
+      "bytes": 56195,
+      "elapsedMs": 249,
+      "title": "Contact Us - LokFeel | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/terms",
+      "httpStatus": 200,
+      "bytes": 75100,
+      "elapsedMs": 44,
+      "title": "Terms of Service | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/privacy",
+      "httpStatus": 200,
+      "bytes": 78912,
+      "elapsedMs": 38,
+      "title": "Privacy Policy | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    },
+    {
+      "route": "/refunds",
+      "httpStatus": 200,
+      "bytes": 58141,
+      "elapsedMs": 35,
+      "title": "Refunds Policy | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0i78fdan5bip7.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/product",
+        "/solutions",
+        "/how-it-works",
+        "/pricing",
+        "/about",
+        "/login",
+        "/register",
+        "/privacy",
+        "/terms",
+        "/cookies",
+        "/stories",
+        "/help",
+        "/careers",
+        "/press",
+        "/contact",
+        "/faq",
+        "/safety-tips",
+        "/community-guidelines",
+        "/support",
+        "/refunds",
+        "/cancellations-policy",
+        "/dmca",
+        "/content-removal-appeals-policy"
+      ]
+    }
+  ]
+}

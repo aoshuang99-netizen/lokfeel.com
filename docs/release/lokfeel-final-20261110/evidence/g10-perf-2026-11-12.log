@@ -1,0 +1,48 @@
+== G10 性能预算实测 · 2026-11-12 16:52–17:01 CST · 候选生产构建 next start @127.0.0.1:3112 ==
+方法：scripts/perf/measure-vitals.mjs --runs=5 · 移动端 390×844 / 4G(1.6Mbps/150ms RTT) / 4×CPU 节流
+阈值先行（脚本内 BUDGET，未按实测反推）：LCP≤2500 · CLS≤0.1 · TBT≤200 · TTFB≤800 · JS≤300KB
+两次独立实测：首次（3112 + 3113 双服务并存）；清洁复测（停掉 3113，仅 3112）以排除宿主机负载噪声。
+
+--- 首次 8 页 × 5 轮中位数（evidence/vitals-p0-2026-11-12.json） ---
+/              LCP 1620 PASS | CLS 0.000 | TBT 1228 FAIL | TTFB 15 | JS 267KB
+/login         LCP 1580 PASS | CLS 0.000 | TBT 1022 FAIL | TTFB 21 | JS 204KB
+/product       LCP 1772 PASS | CLS 0.000 | TBT 1780 FAIL | TTFB 13 | JS 196KB
+/solutions     LCP 1664 PASS | CLS 0.000 | TBT 1668 FAIL | TTFB 12 | JS 196KB
+/stories       LCP 1680 PASS | CLS 0.000 | TBT 1466 FAIL | TTFB 13 | JS 196KB
+/how-it-works  LCP 1556 PASS | CLS 0.000 | TBT 1426 FAIL | TTFB 12 | JS 196KB
+/help          LCP 1476 PASS | CLS 0.000 | TBT 1330 FAIL | TTFB 12 | JS 196KB
+/pricing       LCP 2540 WARN | CLS 0.000 | TBT 2338 FAIL | TTFB 27 | JS 210KB
+合计 0 PASS / 8 FAIL
+
+--- 清洁复测 8 页 × 5 轮中位数（evidence/vitals-p0-clean-2026-11-12.json） ---
+/              LCP 1804 PASS | CLS 0.000 | TBT 1359 FAIL | TTFB 13 | JS 267KB
+/login         LCP 1752 PASS | CLS 0.000 | TBT 1173 FAIL | TTFB 20 | JS 204KB
+/product       LCP 1660 PASS | CLS 0.000 | TBT 1547 FAIL | TTFB 14 | JS 196KB
+/solutions     LCP 1728 PASS | CLS 0.000 | TBT 1451 FAIL | TTFB 15 | JS 196KB
+/stories       LCP 1560 PASS | CLS 0.000 | TBT 1233 FAIL | TTFB 14 | JS 196KB
+/how-it-works  LCP 1552 PASS | CLS 0.000 | TBT 1581 FAIL | TTFB 17 | JS 196KB
+/help          LCP 1556 PASS | CLS 0.000 | TBT 1541 FAIL | TTFB 17 | JS 196KB
+/pricing       LCP 2788 WARN | CLS 0.000 | TBT 2732 FAIL | TTFB 26 | JS 210KB
+合计 0 PASS / 8 FAIL
+
+--- 与历史基线（2026-11-11 12:15 · evidence/g10-perf-2026-11-11.log）对比 ---
+历史 TBT：/ 1972 · /login 478 · /product 571 · /solutions 677 · /stories 550 · /how-it-works 487 · /help 547 · /pricing 1063
+本轮 TBT：普遍 1000–2732ms，**8/8 仍未达标**，且除首页外多数页面高于历史值。
+不可直接归因为本轮改动：其他 7 页不含 OrbitGraph，两次运行环境/负载/Next 产物也不同；
+本轮不做「拿平均值挑好看的一次」的选择性报告，两次原始 JSON 全部留档。
+
+--- 本轮实际优化（P0-06 可自主部分） ---
+src/app/(landing)/page.tsx · OrbitGraph：
+  · 由「挂载即起 rAF、每帧改写 12 组 3D transform + 标签」改为 requestIdleCallback(start,{timeout:1500}) 延迟启动；
+  · 30fps 限流（FRAME_MS=32），省掉约一半主线程长任务；
+  · document.visibilityState === 'hidden' 时跳过整帧计算；
+  · 与同文件 HeroScene 的既有 idle 模式对齐（该模式历史实测把 LCP 从 7008ms 压到 4476ms）；
+  · prefers-reduced-motion 静态分支不变，G4 的 reducedMotion 口径不受影响。
+效果：首页 TBT 1972 → 1228 / 1359（局部改善），但**不足以让 8/8 达标**，且其他页未受益。
+
+--- 判定 ---
+LCP 8/8 内 7 PASS + 1 WARN（pricing 2540/2788ms）· CLS 8/8 PASS(0.000) · TTFB 8/8 PASS · JS 8/8 PASS
+TBT 0/8 达标（两次实测均 > 200ms）⇒ 作战包签字单「G10 TBT 8/8 ≤200ms」**未满足**。
+G10 = PARTIAL（强制项 TBT 实为 FAIL），不改判 PASS、不放水、不把 P1 债说成已解决。
+根因方向（未在本发布批次实施）：按路由拆包 + 延迟水合 + 削减首屏 JS 执行/第三方脚本；
+属结构性改造，须独立迭代并重新 8 页×5 轮实测达标后才能改判。

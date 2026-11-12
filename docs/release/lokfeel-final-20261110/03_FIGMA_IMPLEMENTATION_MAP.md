@@ -94,7 +94,13 @@
 - 修正本文件 §1.1 的 FAINT 旧值；登记 `src/app/globals.css` 头部注释仍留历史品牌名 `LOKFEE!`（仅注释、非对外可见文案，存量债）。
 - 登记 `src/app/sitemap.ts` 18 条路由 vs 资产包 10 个核心页的差异，不冒充全覆盖。
 
+**2026-11-12 16:xx 增量（V20.7 作战包 P0-04 · 第五轮复核）**
+- 作战包 §3 指定 `--lf-*` 为 Workspace 权威源；资产包已补齐第三套 `living-connection-os` 系统（13 个真实 token，源码行号 `globals.css:1722-1738`），规模 20 → **33 color tokens / 3 systems / 20 frames / 9 components**。
+- `verify-figma-import-kit.mjs` 新增「`--lf-*` < 10 即失败」硬规则与 F4 负控（删光必须 FAIL），资产校验 3/3 → **4/4** 全绿。
+- 第五轮凭据复核：进程 env / `.env*` / `mcp.json` / `list_installed_plugins` 四类仍全空 ⇒ **G3 继续 `BLOCKED`**，不伪称建稿。
+- 作战包 `examples/lokfeel_visual_reference.html` 已归档至 `reference/`，明确标注为 HTML/CSS 概念稿，不是生产截图或 Figma node。
+
 **仍未清偿（如实保留）**
-- 页脚 FOLLOW 栏社媒链接可达性未实测（blog/twitter/instagram/facebook @lokfeel 是否存在）→ G2 债 C-31。
+- C-31 部分清偿：`blog.lokfeel.com` 经 DNS 查询**无任何记录**（确认死链）已从全站页脚移除；twitter/instagram/facebook 三条域名有 DNS 记录但本机代理对外站一律阻断（对照 `github.com` 同为 HTTP 000），可达性记 **NOT_TESTED**，保留但不宣称已核验。
 - 两套公开面视觉语言（落地页编辑风 vs 子页深色玻璃）并存 —— 本轮按"落地页保留、子页统一深色"收敛，全站单语言为后续迭代项（需用户拍板方向）。
 - **G3 本身**：仍 `BLOCKED`，本文件与资产包均不是可编辑 Figma 交付，无文件 URL / node id。

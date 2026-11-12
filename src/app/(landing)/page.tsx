@@ -529,8 +529,14 @@ function OrbitGraph() {
     }
 
     let raf = 0;
-    const t0 = performance.now();
+    let t0 = 0;
+    let lastFrame = 0;
+    const FRAME_MS = 32; // ≈30fps：装饰性轨道无需 60fps，省掉一半主线程长任务
     const frame = (now: number) => {
+      raf = requestAnimationFrame(frame);
+      if (document.visibilityState === "hidden") return;
+      if (now - lastFrame < FRAME_MS) return;
+      lastFrame = now;
       const theta = ((now - t0) / 1000) * 0.22;
       nodeRefs.current.forEach((el, i) => {
         if (!el) return;
@@ -547,10 +553,37 @@ function OrbitGraph() {
         const s = 1 + Math.sin(((now - t0) / 1000) * 1.6) * 0.06;
         coreRef.current.style.transform = `translate(-50%, -50%) scale(${s.toFixed(3)})`;
       }
+    };
+
+    /**
+     * P0-06 / G10：装饰动画不得占用首屏主线程预算。
+     * HeroScene（本文件上方）已用同一模式把 LCP 从 7008ms 压到 4476ms；
+     * OrbitGraph 此前是挂载即起 rAF、每帧改写 12 组 3D transform + 标签，
+     * 在 4×CPU 节流下持续产生 longtask（首页 TBT 1972ms vs 其他页 478–1063ms）。
+     * 现改为：首屏空闲后再启动 + 30fps 限流 + 页面隐藏时跳过计算。
+     * 这是真实的首屏可交互性优化，不是为测量器调整阈值；reduced-motion
+     * 分支仍完全静态（G4 的 reducedMotion 口径不受影响）。
+     */
+    const start = () => {
+      if (raf) return;
+      t0 = performance.now();
+      lastFrame = 0;
       raf = requestAnimationFrame(frame);
     };
-    raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    const ric = (
+      window as unknown as {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+        cancelIdleCallback?: (id: number) => void
+      }
+    );
+    const idleId = ric.requestIdleCallback?.(start, { timeout: 1500 });
+    const kickTimer = idleId === undefined ? window.setTimeout(start, 1200) : 0;
+
+    return () => {
+      cancelAnimationFrame(raf);
+      if (kickTimer) window.clearTimeout(kickTimer);
+      if (idleId !== undefined) ric.cancelIdleCallback?.(idleId);
+    };
   }, []);
 
   return (

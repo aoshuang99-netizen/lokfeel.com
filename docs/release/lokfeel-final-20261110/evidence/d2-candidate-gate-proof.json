@@ -1,0 +1,55 @@
+{
+  "title": "D2 因果链实证：发布候选是否天然关闭线上收银台",
+  "checkedAt": "2026-11-12T08:38:07.605Z",
+  "method": "只读 GET + 本地候选生产构建（next start，两实例不同 env），无任何写入/真实扣款/生产配置改动",
+  "production": {
+    "commit": "5a161c4",
+    "checkoutReady": true,
+    "environment": "live_mode",
+    "commercialApprovalFieldPresent": false,
+    "pricingCtaVisible": true,
+    "charging": true,
+    "dodoCheckoutChannel": true,
+    "source": "evidence/p0-01-production-risk.json"
+  },
+  "candidateWithLiveCredentials": {
+    "port": 3113,
+    "injectedEnv": [
+      "DODO_PAYMENTS_API_KEY=<placeholder>",
+      "DODO_PAYMENTS_ENVIRONMENT=live_mode"
+    ],
+    "credentialsMissing": [],
+    "environment": "live_mode",
+    "checkoutReady": false,
+    "commercialApproval": {
+      "status": "PENDING_APPROVAL",
+      "ref": null
+    },
+    "planCount": 3
+  },
+  "candidateWithoutCredentials": {
+    "port": 3112,
+    "credentialsMissing": [
+      "DODO_PAYMENTS_API_KEY",
+      "DODO_PAYMENTS_ENVIRONMENT"
+    ],
+    "environment": null,
+    "checkoutReady": false,
+    "commercialApproval": {
+      "status": "PENDING_APPROVAL",
+      "ref": null
+    }
+  },
+  "remoteMainSha": "f6576db95ea475887a942df0b851f345f9b18f6f",
+  "conclusion": {
+    "verdict": "CANDIDATE_CLOSES_CHECKOUT_WITHOUT_TOUCHING_PRODUCTION_ENV",
+    "explanation": "候选代码 plans route 的 checkoutReady = readCheckoutGate().enabled = 技术就绪 AND 人工定价批准。即使注入完整的 live_mode 凭据使技术门通过（missing=[]），商业门仍因 products.ts 为 PENDING_APPROVAL 且无 approvalRef 而单独挡住，checkoutReady=false。生产 5a161c4 无此门（commercialApproval 字段缺失）故为 true。",
+    "implicationForD2": "选择「发布候选」即可同时完成 R-15 修复与收银台止损，且 Dodo 凭据保持原样 ⇒ Webhook 验签、已有订阅与账本不受影响；无需摘除 DODO_PAYMENTS_API_KEY。",
+    "caveat": "这仍是本地候选构建的实测，不是生产已部署的证据。B6 发布与 G13 生产复验必须针对该 RC SHA 显式授权后执行。",
+    "notProven": [
+      "真实 Dodo 事件投递（G7）",
+      "生产环境等价性（G13）",
+      "已有订阅在部署后不受影响的线上实测"
+    ]
+  }
+}

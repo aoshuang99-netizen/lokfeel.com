@@ -1,0 +1,22 @@
+== L4 发布后 48 小时观察期 · 尚未启动（N/A）==
+timestamp: 2026-11-12T08:55:00+08:00
+rcSha: PENDING_RC_COMMIT
+productionCommit: 5a161c4
+command: (未执行)
+exitCode: N/A
+source: none
+verdict: N/A
+evidencePath: none
+
+说明：作战包 §7 要求 G13 全绿后才启动 48 小时巡检。当前结论 NO_GO、未发布，
+因此观察期不存在，不写"0 异常"之类的空集假绿。
+
+启动后的采集口径（每项含 timestamp / rcSha / productionCommit / command / exitCode / source / verdict / evidencePath）：
+  · health：每 30 分钟，含 commit、dbLatency、redis.degraded、5xx 计数
+  · plans：checkoutReady / environment / commercialApproval 与审批记录逐次比对
+  · SHA 漂移：git ls-remote origin refs/heads/main 与 health.commit
+  · 账本对账：Dodo provider settlements vs BillingEvent 归约 vs 权益状态
+  · 告警：收银台风险哨兵（每小时，已 ACTIVE）与候选门禁日检（每天 9:20，已 ACTIVE）继续运行
+
+若窗口内无法取得真实交易/账本数据，对应项记 NOT_TESTED，不得用"0 笔交易"
+宣称支付对账 100% 通过。

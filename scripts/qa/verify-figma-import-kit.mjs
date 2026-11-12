@@ -69,6 +69,12 @@ export function validateKit(dir = KIT_DIR) {
   for (const token of colorTokens) {
     if (!token.name || !token.value || !token.type) errors.push(`token 字段不全：${JSON.stringify(token)}`)
   }
+  // V20.7 作战包 §3：`--lf-*`（Deep Field / Living Paper）是 Workspace 的唯一权威色板。
+  // 资产包若退化成只有旧两套系统，Figma 建稿就会重新靠猜色值 —— 门禁必须挡住。
+  const lfTokens = colorTokens.filter((t) => String(t.name).startsWith('--lf-'))
+  if (lfTokens.length < 10) {
+    errors.push(`资产包缺少 --lf-* 权威源 Token（当前 ${lfTokens.length} 个，需 ≥10）`)
+  }
   for (const frame of frames) {
     if (!frame.route || !frame.code_path) {
       errors.push(`帧缺 route/code_path：${JSON.stringify(frame)}`)

@@ -1,0 +1,65 @@
+== 全量静态门禁 · 2026-11-12 16:37:12 +0800 ==
+--- jest 全量 ---
+PASS tests/sw-cache-policy.test.ts
+PASS tests/billing/dodo-signature.test.ts
+PASS tests/lib/redis-cache-set.test.ts
+PASS tests/webrtc/useWebRTC.test.ts
+PASS tests/a11y/scroll-lock.test.ts
+PASS tests/basic.test.ts
+PASS tests/cron/bot-online-seed.test.ts (47.725 s)
+
+Test Suites: 145 passed, 145 total
+Tests:       2730 passed, 2730 total
+Snapshots:   0 total
+Time:        52.886 s, estimated 54 s
+JEST_EXIT=0
+--- lint ratchet 全仓 ---
+  src/app/(public)/faq/page.tsx::react/no-unescaped-entities
+  src/app/(public)/page.tsx::@next/next/no-img-element
+  src/app/(public)/page.tsx::@typescript-eslint/no-explicit-any
+  src/app/(public)/page.tsx::react-hooks/set-state-in-effect
+  src/app/(public)/page.tsx::react/no-unescaped-entities
+  src/app/(public)/press/page.tsx::@typescript-eslint/no-unused-vars
+  src/app/(public)/safety-tips/page.tsx::react/no-unescaped-entities
+  src/app/api/admin/subscriptions/[id]/refund/route.ts::@typescript-eslint/no-explicit-any
+  src/app/api/cron/bot-online/route.ts::@typescript-eslint/no-explicit-any
+  src/app/api/cron/cleanup-soft-delete/route.ts::@typescript-eslint/no-unsafe-function-type
+  src/app/api/v1/public/missions/[token]/route.ts::@typescript-eslint/no-unused-vars
+  src/app/api/webhooks/creem/route.ts::@typescript-eslint/no-explicit-any
+
+✅ lint 棘轮通过：零新增。（债务下降 5 处、清零 17 处 —— 恭喜）
+LINT_GATE_EXIT=0
+--- brand ---
+
+公开路由扫描：27 个 page/layout · 禁词 12 条
+
+
+结果：27 干净 / 0 命中 / 共 0 处
+✔ 公开路由无旧叙事残留
+BRAND_EXIT=0
+--- products ---
+✅ 商业契约通过：
+   · 没有任何重定向把销售入口指向 /pay.html（R1）
+   · 剥注释后 pay.html 只出现在 5 个白名单文件（R2）
+   · connection-os 定价状态自洽（未获批无金额 / 已获批有审批留痕）+ 无外部结账（R3）
+   · 定价页与产品目录都不引用旧 B2C 价格源 plans.ts（R4）
+   · /pricing 是真实页面（R5）
+PRODUCTS_EXIT=0
+--- secrets ---
+> nexus-app@0.1.0 check:secrets
+> node scripts/check-secrets.mjs
+
+扫描：2427 个跟踪文件（门禁 G1 已知泄漏 + G2 env 回退字面量）
+
+✅ PASS —— 无命中
+SECRETS_EXIT=0
+--- node --test 判定层全套 ---
+scripts/qa/b4-g4-verdict.test.mjs                          # pass 8 # fail 0 
+scripts/qa/checkout-sentinel-verdict.test.mjs              # pass 6 # fail 0 
+scripts/qa/verify-figma-import-kit.test.mjs                # pass 4 # fail 0 
+scripts/qa/p0-01-production-risk.test.mjs                  # pass 8 # fail 0 
+scripts/qa/p0-03-public-surface-audit.test.mjs             # pass 5 # fail 0 
+scripts/release-preflight.test.mjs                         # pass 6 # fail 0 
+--- manifest 空模板负控（应 exit 1） ---
+MANIFEST_TEMPLATE_EXIT=1
+0

@@ -1,0 +1,29 @@
+== G13 生产端到端复验 · 尚未启动（NOT_TESTED）==
+timestamp: 2026-11-12T08:55:00+08:00
+rcSha: PENDING_RC_COMMIT（本轮功能提交后回填；不得用占位值发布）
+productionCommit: 5a161c4
+command: (未执行)
+exitCode: N/A
+source: none
+verdict: NOT_TESTED
+evidencePath: none
+
+说明：G13 是**发布后**动作，按作战包 §6 不得在 RC 阶段提前判 PASS。
+本文件不伪造任何生产冒烟结果。B6 获针对唯一 RC SHA 的明确授权并实际部署后，
+须显式带上 --base=https://app.lokfeel.com 重跑（默认 BASE 会打到本机 127.0.0.1:3000，
+那是已记录过的假绿陷阱）：
+
+  BASE=https://app.lokfeel.com
+  node scripts/qa/prod-smoke.mjs --base="$BASE"
+  npm run verify:payment-off -- --base="$BASE"
+  QA_BASE_URL="$BASE" node scripts/qa/verify-public-origin.mjs
+  node scripts/qa/verify-released-surface.mjs --base="$BASE"
+  node scripts/release-preflight.mjs --base="$BASE" --out=evidence/release-preflight-postdeploy.json
+  node scripts/qa/p0-01-production-risk.mjs --base="$BASE" --out=evidence/p0-01-postdeploy.json
+  node scripts/qa/p0-03-public-surface-audit.mjs --base="$BASE" --out=evidence/p0-03-postdeploy.json
+
+四项必须同时成立才记 RELEASED_AND_VERIFIED：
+  ① health.commit 与批准的 RC 运行时 SHA 一致；
+  ② plans.checkoutReady 与当次批准的商业状态一致（未批准必须为 false）；
+  ③ 五个新公开页由 404 变为 200（P0-03 生产基线已记录 404）；
+  ④ payment-off / public-origin / released-surface 全绿且无回归。

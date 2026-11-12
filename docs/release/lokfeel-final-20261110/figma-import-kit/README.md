@@ -38,8 +38,18 @@ node scripts/qa/verify-figma-import-kit.mjs
 | 2 | `src/app/globals.css` 头部注释仍写历史品牌名 `LOKFEE!` / `LokFee!` | 仅注释、非对外可见文案，`verify:brand-scan` 未命中；属存量注释债，不在本轮清理范围 |
 | 3 | `src/app/sitemap.ts` 有 18 条路由，本资产包按 03 规格只建 10 个核心页 × 2 帧 | 其余 8 条为法律/认证/低频页（`/faq` `/cookies` `/press` `/safety-tips` 等），需要时按同一格式补帧，不冒充已全覆盖 |
 
-## 5. 边界
+## 5. V20.7 作战包增量（2026-11-12，P0-04）
+
+作战包 §3 明确指定 `--lf-*`（Concept C Deep Field / Living Paper）为 **Workspace/Console 的权威色板**。上一版资产包只覆盖 `landing-light` 与 `public-dark` 两套，会逼着 Figma 建稿时重新猜 Workspace 的颜色 —— 本轮补齐第三套系统：
+
+- `tokens.json` 新增 13 个 `--lf-*` color token，取值与行号全部来自 `src/app/globals.css:1722-1738`（`[data-lf-theme=field]` 默认值），并在注释中指明 `[data-lf-theme='paper']` 变体位置（1755+）。
+- 资产规模由 20 → **33 color tokens / 3 systems**，帧 20、组件 9 不变。
+- `verify-figma-import-kit.mjs` 新增硬规则：`--lf-*` token < 10 个即 `ok=false`；配套 **F4 负控**（删掉全部 `--lf-*` 必须 FAIL）已跑 RED→GREEN。资产校验现为 **4/4**。
+- G3 状态**不变**：仍 `BLOCKED`（第五轮凭据复核四类来源仍全空）。资产包是「可导入规格」，不是可编辑 Figma 文件。
+
+## 6. 边界
 
 - 禁止把本目录或任何 HTML/代码预览当作「Figma 可编辑交付」（经验库已登记为踩雷项）。
 - 禁止在凭据未到位时把 G3 写成 `PASS`；`BLOCKED` 不计入完成率。
 - 两套公开面视觉语言（落地页编辑风 / 子页深色玻璃）并存，全站单语言需用户拍板方向，不在本资产包内擅自统一。
+- 作战包自带的 `examples/lokfeel_visual_reference.html` 是 HTML/CSS 概念稿，**不是**生产截图、Figma node 或已接线业务代码；已归档到 `reference/` 仅供视觉讨论。

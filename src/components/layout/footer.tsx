@@ -50,7 +50,11 @@ const footerSections = {
   FOLLOW: {
     title: "FOLLOW",
     links: [
-      { label: "Blog", href: "https://blog.lokfeel.com", external: true },
+      // C-31 / P0-08（2026-11-12 实测）：blog.lokfeel.com 经 dscacheutil 查询
+      // **无任何 DNS 记录**，curl 报 CONNECT tunnel 502 ⇒ 确认死链，从全站页脚移除。
+      // Twitter / Instagram / Facebook 三个域名有 DNS 记录，但本机代理对
+      // 外站一律阻断（对照 github.com 同为 HTTP 000），可达性本轮 NOT_TESTED，
+      // 故保留但不宣称已核验；D8 主体批复时一并复核。
       { label: "Twitter / X", href: "https://twitter.com/lokfeel", external: true },
       { label: "Instagram", href: "https://instagram.com/lokfeel", external: true },
       { label: "Facebook", href: "https://facebook.com/lokfeel", external: true },

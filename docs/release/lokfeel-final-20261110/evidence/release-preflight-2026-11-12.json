@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-12T08:10:33.307Z",
+  "base": "https://app.lokfeel.com",
+  "readOnly": true,
+  "verdict": "RISK_OPEN",
+  "checks": {
+    "health": {
+      "httpStatus": 200,
+      "status": "healthy",
+      "commit": "5a161c4"
+    },
+    "plans": {
+      "httpStatus": 200,
+      "environment": "live_mode",
+      "checkoutReady": true,
+      "approvedAt": "2026-11-10",
+      "catalogVersion": "2026-11-10.1"
+    },
+    "git": {
+      "remoteMainSha": "f6576db95ea475887a942df0b851f345f9b18f6f"
+    }
+  },
+  "reasons": [
+    "live_checkout_enabled_verify_human_approval_and_R15_production_fix"
+  ]
+}

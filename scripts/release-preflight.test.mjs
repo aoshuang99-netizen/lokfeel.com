@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { classifyPlans } from './release-preflight.mjs';
+const sha = 'a'.repeat(40);
+const plans = { environment:'live_mode', checkoutReady:true, approvedAt:'2026-11-10', catalogVersion:'2026-11-10.1' };
+test('unapproved/live risk is never called PASS',()=> assert.equal(classifyPlans(plans,sha).verdict,'RISK_OPEN'));
+test('closed is classified CLOSED',()=> assert.equal(classifyPlans({...plans, checkoutReady:false},sha).verdict,'CLOSED'));
+test('missing environment becomes ERROR',()=> assert.equal(classifyPlans({...plans, environment:undefined},sha).verdict,'ERROR'));
+test('missing approvedAt becomes ERROR',()=> {const p={...plans}; delete p.approvedAt; assert.equal(classifyPlans(p,sha).verdict,'ERROR');});
+test('missing catalogVersion becomes ERROR',()=> assert.equal(classifyPlans({...plans, catalogVersion:undefined},sha).verdict,'ERROR'));
+test('missing sha becomes ERROR',()=> assert.equal(classifyPlans(plans,'').verdict,'ERROR'));

@@ -1,0 +1,653 @@
+{
+  "checkedAt": "2026-11-12T08:37:50.816Z",
+  "base": "https://app.lokfeel.com",
+  "readOnly": true,
+  "routeCount": 12,
+  "verdict": "ERROR",
+  "errors": [
+    "/product_http_404",
+    "/solutions_http_404",
+    "/stories_http_404",
+    "/how-it-works_http_404",
+    "/help_http_404"
+  ],
+  "questionCoverage": [
+    {
+      "id": "Q1",
+      "question": "你是谁 / 平台定位",
+      "route": "/",
+      "hits": 2,
+      "needles": 2
+    },
+    {
+      "id": "Q2",
+      "question": "为谁服务",
+      "route": "/solutions",
+      "hits": 1,
+      "needles": 4
+    },
+    {
+      "id": "Q3",
+      "question": "解决什么问题",
+      "route": "/product",
+      "hits": 2,
+      "needles": 3
+    },
+    {
+      "id": "Q4",
+      "question": "与聊天机器人 / CRM 的差异",
+      "route": "/product",
+      "hits": 1,
+      "needles": 4
+    },
+    {
+      "id": "Q5",
+      "question": "怎么用 / 流程",
+      "route": "/how-it-works",
+      "hits": 1,
+      "needles": 3
+    },
+    {
+      "id": "Q6",
+      "question": "订阅档位与价格区别",
+      "route": "/pricing",
+      "hits": 3,
+      "needles": 3
+    },
+    {
+      "id": "Q7",
+      "question": "谁负责 / 怎么联系",
+      "route": "/contact",
+      "hits": 3,
+      "needles": 3
+    },
+    {
+      "id": "Q8",
+      "question": "法律 / 退款 / 数据处理",
+      "route": "/terms",
+      "hits": 2,
+      "needles": 3
+    }
+  ],
+  "coveredQuestions": 8,
+  "totalQuestions": 8,
+  "unlistedInternalLinks": [
+    {
+      "from": "/",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/",
+      "href": "/showcase/studio.webp"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/",
+      "href": "/login"
+    },
+    {
+      "from": "/",
+      "href": "/workspace"
+    },
+    {
+      "from": "/",
+      "href": "/console"
+    },
+    {
+      "from": "/",
+      "href": "/register"
+    },
+    {
+      "from": "/",
+      "href": "/.well-known/agent-card.json"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/product",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/product",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/product",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/product",
+      "href": "/dashboard"
+    },
+    {
+      "from": "/product",
+      "href": "/login"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/solutions",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/solutions",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/solutions",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/solutions",
+      "href": "/dashboard"
+    },
+    {
+      "from": "/solutions",
+      "href": "/login"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/stories",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/stories",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/stories",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/stories",
+      "href": "/dashboard"
+    },
+    {
+      "from": "/stories",
+      "href": "/login"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/dashboard"
+    },
+    {
+      "from": "/how-it-works",
+      "href": "/login"
+    },
+    {
+      "from": "/pricing",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/pricing",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/pricing",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/pricing",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/pricing",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/pricing",
+      "href": "/hlua"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/help",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/help",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/help",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/help",
+      "href": "/dashboard"
+    },
+    {
+      "from": "/help",
+      "href": "/login"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/about",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/about",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/about",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/about",
+      "href": "/register"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/contact",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/contact",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/contact",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/terms",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/terms",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/terms",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/terms",
+      "href": "/cookies"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/privacy",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/privacy",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/privacy",
+      "href": "/icons/icon-192x192.png"
+    },
+    {
+      "from": "/privacy",
+      "href": "/cookies"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/chunks/2y3ewws4tgt7a.css"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/chunks/0tc-wrdyxgqmi.css"
+    },
+    {
+      "from": "/refunds",
+      "href": "/_next/static/chunks/0xylpbtrknfne.js"
+    },
+    {
+      "from": "/refunds",
+      "href": "/manifest.json"
+    },
+    {
+      "from": "/refunds",
+      "href": "/icons/icon-192x192.png"
+    }
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "httpStatus": 200,
+      "bytes": 53263,
+      "elapsedMs": 10180,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/showcase/studio.webp",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/",
+        "/login",
+        "/workspace",
+        "/console",
+        "/register",
+        "/.well-known/agent-card.json"
+      ]
+    },
+    {
+      "route": "/product",
+      "httpStatus": 404,
+      "bytes": 20789,
+      "elapsedMs": 891,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "internalLinks": [
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/dashboard",
+        "/login"
+      ]
+    },
+    {
+      "route": "/solutions",
+      "httpStatus": 404,
+      "bytes": 20789,
+      "elapsedMs": 407,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "internalLinks": [
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/dashboard",
+        "/login"
+      ]
+    },
+    {
+      "route": "/stories",
+      "httpStatus": 404,
+      "bytes": 20789,
+      "elapsedMs": 409,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "internalLinks": [
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/dashboard",
+        "/login"
+      ]
+    },
+    {
+      "route": "/how-it-works",
+      "httpStatus": 404,
+      "bytes": 20789,
+      "elapsedMs": 442,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "internalLinks": [
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/dashboard",
+        "/login"
+      ]
+    },
+    {
+      "route": "/pricing",
+      "httpStatus": 200,
+      "bytes": 46009,
+      "elapsedMs": 655,
+      "title": "Pricing · LokFeel Connection OS | LokFeel",
+      "internalLinks": [
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/refunds",
+        "/hlua"
+      ]
+    },
+    {
+      "route": "/help",
+      "httpStatus": 404,
+      "bytes": 20789,
+      "elapsedMs": 590,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "internalLinks": [
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/dashboard",
+        "/login"
+      ]
+    },
+    {
+      "route": "/about",
+      "httpStatus": 200,
+      "bytes": 38722,
+      "elapsedMs": 378,
+      "title": "About | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/register"
+      ]
+    },
+    {
+      "route": "/contact",
+      "httpStatus": 200,
+      "bytes": 39933,
+      "elapsedMs": 998,
+      "title": "Contact Us - LokFeel | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/"
+      ]
+    },
+    {
+      "route": "/terms",
+      "httpStatus": 200,
+      "bytes": 58762,
+      "elapsedMs": 906,
+      "title": "Terms of Service | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/privacy",
+        "/cookies",
+        "/"
+      ]
+    },
+    {
+      "route": "/privacy",
+      "httpStatus": 200,
+      "bytes": 62660,
+      "elapsedMs": 461,
+      "title": "Privacy Policy | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/cookies",
+        "/"
+      ]
+    },
+    {
+      "route": "/refunds",
+      "httpStatus": 200,
+      "bytes": 41893,
+      "elapsedMs": 434,
+      "title": "Refunds Policy | LokFeel",
+      "internalLinks": [
+        "/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2",
+        "/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2",
+        "/_next/static/chunks/2y3ewws4tgt7a.css",
+        "/_next/static/chunks/0tc-wrdyxgqmi.css",
+        "/_next/static/chunks/0xylpbtrknfne.js",
+        "/manifest.json",
+        "/icons/icon-192x192.png",
+        "/"
+      ]
+    }
+  ]
+}

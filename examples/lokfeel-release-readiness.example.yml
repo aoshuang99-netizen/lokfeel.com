@@ -1,0 +1,37 @@
+# Copy and adapt to actual repo only after reviewing current workflows.
+# Manual, read-only. Does NOT deploy. Never auto-deploy on `push: main`.
+name: LokFeel release readiness (manual, non-deploy)
+on:
+  workflow_dispatch:
+    inputs:
+      expected_rc_sha:
+        description: Full 40-character reviewed RC commit
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Verify checked-out SHA matches review target
+        shell: bash
+        env:
+          EXPECTED: ${{ inputs.expected_rc_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+      - run: env -u NODE_OPTIONS npx tsc --noEmit -p tsconfig.json
+      - run: env -u NODE_OPTIONS npm run lint:gate
+      - run: env -u NODE_OPTIONS npm test -- --ci --silent
+      - run: env -u NODE_OPTIONS npm run check:products
+      - run: env -u NODE_OPTIONS npm run check:secrets
+      - run: env -u NODE_OPTIONS npm run build
+      - name: Read-only production check (not approval)
+        run: node scripts/release-preflight.mjs --base=https://app.lokfeel.com
+        continue-on-error: true
