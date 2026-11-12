@@ -1,6 +1,6 @@
 == G13 生产端到端复验 · 尚未启动（NOT_TESTED）==
 timestamp: 2026-11-12T08:55:00+08:00
-rcSha: PENDING_RC_COMMIT（本轮功能提交后回填；不得用占位值发布）
+rcSha: 2b52ce04480dc8df53d260ec43fbe81f917e3650（唯一 RC；git ls-remote 已复核）
 productionCommit: 5a161c4
 command: (未执行)
 exitCode: N/A

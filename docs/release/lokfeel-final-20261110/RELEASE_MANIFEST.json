@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0",
+  "releaseName": "lokfeel-v20.7-rc-final",
+  "status": "NO_GO",
+  "rcSha": "2b52ce04480dc8df53d260ec43fbe81f917e3650",
+  "productionBeforeSha": "5a161c4",
+  "productionBeforeDeployId": null,
+  "runtime": "cloudflare-proxy-netlify-origin",
+  "baseUrl": "https://app.lokfeel.com",
+  "generatedAt": "2026-11-12T09:07:08.720Z",
+  "humanDecisions": {
+    "D1": null,
+    "D2": null,
+    "D3": null,
+    "D4": null,
+    "D5": null,
+    "D6": null,
+    "D7": null,
+    "D8": null
+  },
+  "releaseAuthorization": {
+    "approvedRcSha": null,
+    "approver": null,
+    "approvalEvidence": null
+  },
+  "gates": {
+    "G0": "PASS",
+    "G1": "PASS",
+    "G2": "PARTIAL",
+    "G3": "BLOCKED",
+    "G4": "PASS",
+    "G5": "NOT_TESTED",
+    "G6": "PASS",
+    "G7": "PASS_CODE_ONLY",
+    "G8": "PARTIAL",
+    "G9": "PARTIAL",
+    "G10": "PARTIAL",
+    "G11": "PASS",
+    "G12": "BLOCKED",
+    "G13": "N/A"
+  },
+  "evidence": {
+    "G0": "evidence/p0-01-production-risk.json; evidence/gates-p0-2026-11-12.log",
+    "G1": "evidence/p0-03-public-surface-candidate.json; 01b_EIGHT_QUESTIONS_AND_PAGE_COPY.md",
+    "G2": "11_D8_LEGAL_ENTITY_PLACEHOLDERS.md; evidence/p0-03-public-surface-production.json",
+    "G3": "03_FIGMA_IMPLEMENTATION_MAP.md; figma-import-kit/",
+    "G4": "evidence/g4-public-matrix.json; evidence/g4-screens-manifest.txt",
+    "G5": "evidence/g5-user-test-score.json",
+    "G6": "evidence/g6-outcome-ladder-2026-11-10.log; evidence/g6-provider-connectivity-2026-11-10.log",
+    "G7": "evidence/gates-p0-2026-11-12.log; tests/billing/p0-02-dodo-ledger-e2e.test.ts",
+    "G8": "evidence/gates-p0-2026-11-12.log",
+    "G9": "06_G9_CF_MIGRATION_REHEARSAL.md; evidence/g9-cf-probe-2026-11-11.log",
+    "G10": "evidence/vitals-p0-2026-11-12.json; evidence/vitals-p0-clean-2026-11-12.json; evidence/g10-perf-2026-11-12.log",
+    "G11": "evidence/gates-p0-2026-11-12.log; evidence/g4-public-matrix.json",
+    "G12": "RELEASE_STATUS.md; evidence/d2-candidate-gate-proof.json"
+  },
+  "rollback": {
+    "deployId": null,
+    "dryRunVerified": false,
+    "dataCompatibilityVerified": false
+  },
+  "integrity": {
+    "source": "GATES.csv + evidence/*（由本脚本只读组装，无手填结论）",
+    "g4": {
+      "base": "http://127.0.0.1:3112",
+      "subset": null,
+      "expectedFullCells": 116,
+      "totalCells": 116,
+      "pass": 112,
+      "fail": 0,
+      "na": 4,
+      "error": 0,
+      "testedDenominator": 112,
+      "scannedCells": 112,
+      "rulesEvaluatedMin": 33,
+      "zeroScanCells": 0
+    },
+    "productionRiskVerdict": "RISK_OPEN",
+    "caveat": "本 manifest 描述的是未获批准的候选；check-release-manifest.mjs 必须返回 NO_GO，其错误清单即剩余关键路径。"
+  }
+}

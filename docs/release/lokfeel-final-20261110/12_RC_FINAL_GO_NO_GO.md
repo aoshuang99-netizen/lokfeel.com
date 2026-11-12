@@ -8,7 +8,7 @@
 |---|---|---|
 | 生产运行时 commit | `5a161c4`（builtAt 2026-11-10 08:45Z） | `evidence/p0-01-production-risk.json` |
 | 远端 main（本轮开工时） | `f6576db` | `git ls-remote origin refs/heads/main` |
-| 候选运行时代码 | **本轮功能提交**（见 `RELEASE_MANIFEST.json` 的 `rcSha`） | 提交后以 `git ls-remote` 复核 |
+| **唯一 RC SHA** | **`2b52ce04480dc8df53d260ec43fbe81f917e3650`** | `git ls-remote origin refs/heads/main` 已复核；后续纯文档补提交不改变运行时代码；见 `RELEASE_MANIFEST.json` |
 | 生产边缘 | `server: cloudflare` + CF anycast + DNS 代理 | 同上，响应头实证 |
 | SHA 漂移 | `true`（生产 ≠ 远端） | `evidence/p0-01-production-risk.json` |
 
@@ -97,7 +97,7 @@
 **未创建。** 第五轮复核四类来源（进程 env / 8 个 `.env*` / `mcp.json` / `list_installed_plugins` = No connectors installed）全部无写入通道。`figma-import-kit/` 是可导入规格（33 token / 20 帧 / 9 组件，全部带真实 `code_path`），**不是**可编辑 Figma 文件；ZIP 里的 HTML 是概念稿，也不是 Figma node。G3 保持 `BLOCKED`，恢复路径见 `03_...md` §3。
 
 **Q7 · 唯一 RC SHA 是多少？对照哪份可即时回滚的 Netlify deploy？**
-运行时 RC = **本轮功能提交**（`RELEASE_MANIFEST.json` 的 `rcSha`，提交后 `git ls-remote` 复核）；后续纯文档提交不改变运行时代码。**可回滚 deploy ID 目前不可得**：本机无 `netlify` CLI、无 Netlify API token / site id，`/tmp/nl-env.json` 的 44 个键里也没有任何部署凭据；`x-nf-request-id` 只是请求 ID。因此**回滚目标未验证**，这是 G13/发布前必须补齐的阻断项，不能拿 request id 冒充 deploy id。
+运行时 RC = **`2b52ce04480dc8df53d260ec43fbe81f917e3650`**（`RELEASE_MANIFEST.json` 的 `rcSha`，`git ls-remote origin refs/heads/main` 已复核）；后续纯文档提交不改变运行时代码。作战包 fail-closed 检查器对该 manifest 返回 `NO_GO` 并列出 21 个缺口（`evidence/release-manifest-gaps.json`）。**可回滚 deploy ID 目前不可得**：本机无 `netlify` CLI、无 Netlify API token / site id，`/tmp/nl-env.json` 的 44 个键里也没有任何部署凭据；`x-nf-request-id` 只是请求 ID。因此**回滚目标未验证**，这是 G13/发布前必须补齐的阻断项，不能拿 request id 冒充 deploy id。
 
 ---
 

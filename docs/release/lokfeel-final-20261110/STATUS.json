@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-11-12T09:07:08.719Z",
+  "releaseName": "lokfeel-v20.7-rc-final",
+  "rcSha": "2b52ce04480dc8df53d260ec43fbe81f917e3650",
+  "remoteMainSha": "2b52ce04480dc8df53d260ec43fbe81f917e3650",
+  "productionCommit": "5a161c4",
+  "shaDrift": true,
+  "command": "node scripts/qa/build-release-status.mjs",
+  "exitCode": 0,
+  "source": "git + GATES.csv + evidence/p0-01-production-risk.json + evidence/g4-public-matrix.json",
+  "verdict": "NO_GO",
+  "evidencePath": "docs/release/lokfeel-final-20261110/RELEASE_MANIFEST.json",
+  "gates": {
+    "G0": "PASS",
+    "G1": "PASS",
+    "G2": "PARTIAL",
+    "G3": "BLOCKED",
+    "G4": "PASS",
+    "G5": "NOT_TESTED",
+    "G6": "PASS",
+    "G7": "PASS_CODE_ONLY",
+    "G8": "PARTIAL",
+    "G9": "PARTIAL",
+    "G10": "PARTIAL",
+    "G11": "PASS",
+    "G12": "BLOCKED",
+    "G13": "N/A"
+  },
+  "g4Summary": {
+    "base": "http://127.0.0.1:3112",
+    "subset": null,
+    "expectedFullCells": 116,
+    "totalCells": 116,
+    "pass": 112,
+    "fail": 0,
+    "na": 4,
+    "error": 0,
+    "testedDenominator": 112,
+    "scannedCells": 112,
+    "rulesEvaluatedMin": 33,
+    "zeroScanCells": 0
+  },
+  "notes": [
+    "PARTIAL / BLOCKED / NOT_TESTED 不计完成 ⇒ 13 门禁中 6 PASS，未达 100%",
+    "生产收银台仍为 RISK_OPEN（D2 未决）；哨兵告警不等于止损",
+    "G13 是发布后动作，本状态不得提前判 PASS"
+  ]
+}

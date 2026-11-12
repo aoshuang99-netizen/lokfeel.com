@@ -1,6 +1,6 @@
 == L4 发布后 48 小时观察期 · 尚未启动（N/A）==
 timestamp: 2026-11-12T08:55:00+08:00
-rcSha: PENDING_RC_COMMIT
+rcSha: 2b52ce04480dc8df53d260ec43fbe81f917e3650（唯一 RC；git ls-remote 已复核）
 productionCommit: 5a161c4
 command: (未执行)
 exitCode: N/A
