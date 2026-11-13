@@ -84,3 +84,8 @@
 
 **仍未闭合**：Dodo `test_mode` 真实投递与账本对账、Figma 与 ≥5 真人、定价与法律主体纸质批准、
 G13 48h 观察窗。本次**未做任何真实扣款**。
+
+**追记（20:42）**：上表 `71c54c6` 之后又随本文档提交产生 `e944e9e`，为避免生产 SHA 落后于
+main 头，已再次 `POST /builds`，部署 `6af705591943a37aff1a9dcb` `ready` 于 20:42:26。
+生产 `/api/health` 现返回 `commit=e944e9e`，与 `git ls-remote origin refs/heads/main` 逐字一致。
+两次部署资产相同（「All files already uploaded」），差异仅为文档。
