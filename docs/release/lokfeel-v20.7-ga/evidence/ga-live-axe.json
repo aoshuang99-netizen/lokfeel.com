@@ -1,0 +1,58 @@
+[
+  {
+    "viewport": "desktop",
+    "route": "/",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  },
+  {
+    "viewport": "desktop",
+    "route": "/pricing",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  },
+  {
+    "viewport": "desktop",
+    "route": "/login",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  },
+  {
+    "viewport": "desktop",
+    "route": "/holding",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  },
+  {
+    "viewport": "mobile",
+    "route": "/",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  },
+  {
+    "viewport": "mobile",
+    "route": "/pricing",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  },
+  {
+    "viewport": "mobile",
+    "route": "/login",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  },
+  {
+    "viewport": "mobile",
+    "route": "/holding",
+    "status": 200,
+    "serious": [],
+    "smallTargets": []
+  }
+]

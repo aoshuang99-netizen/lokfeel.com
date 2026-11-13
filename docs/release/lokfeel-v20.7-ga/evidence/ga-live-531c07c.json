@@ -1,0 +1,103 @@
+{
+  "capturedAt": "2026-11-13T11:21:08.416Z",
+  "base": "https://app.lokfeel.com",
+  "deploy": {
+    "commit": "531c07c",
+    "commitFull": "531c07cf78090568af3ca2f74d249ec4ae65f4e9",
+    "deployId": "6af6f0d8f35d21df4997e59d",
+    "state": "ready",
+    "trigger": "api POST /sites/{id}/builds（push 未自动触发构建，已确认为平台侧未建 deploy）",
+    "previousCommit": "0e16959"
+  },
+  "health": {
+    "commit": "531c07c",
+    "status": "healthy"
+  },
+  "s04": {
+    "verdict": {
+      "verdict": "PRODUCTION_RISK_CLOSED",
+      "reasons": []
+    },
+    "checkoutReady": false,
+    "commercial": "PENDING_APPROVAL",
+    "env": "live_mode",
+    "anonymousPostStatus": 401,
+    "r15Key": "present"
+  },
+  "publicSurface": {
+    "frozenRoutes": [
+      "/product",
+      "/solutions",
+      "/stories",
+      "/how-it-works",
+      "/help"
+    ],
+    "rewriteTarget": "/holding",
+    "visibleTextAllRoutes": "无金额、无法人断言、无承诺词",
+    "xRobotsTag": "noindex, nofollow",
+    "sitemapExcludesFrozen": true,
+    "navExcludesFrozen": true
+  },
+  "a11y": {
+    "runs": 8,
+    "seriousOrCritical": 0,
+    "subTwentyFourPxTargets": 0,
+    "viewports": [
+      "desktop 1440x900",
+      "mobile 390x844"
+    ],
+    "pages": [
+      "/",
+      "/pricing",
+      "/login",
+      "/holding"
+    ]
+  },
+  "routes": {
+    "home": 200,
+    "holding": 200,
+    "login": 200,
+    "register": 200,
+    "pricing": 200,
+    "product": 200,
+    "solutions": 200,
+    "stories": 200,
+    "how-it-works": 200,
+    "help": 200,
+    "terms": 200,
+    "privacy": 200,
+    "refunds": 200,
+    "contact": 200,
+    "support": 200,
+    "press": 200,
+    "safety-tips": 200,
+    "workspace": 307,
+    "dashboard": 307,
+    "console": 307,
+    "admin": 307,
+    "sitemap": 200,
+    "robots": 200,
+    "health": 200
+  },
+  "consoleErrors": {
+    "pagesChecked": 5,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "failedRequests": 0
+  },
+  "ci": {
+    "run": "531c07c",
+    "conclusion": "success",
+    "checks": 16,
+    "skipped": [
+      "DCO sign-off",
+      "Perf 基线实跑"
+    ]
+  },
+  "notDone": [
+    "Dodo test_mode 真实投递与账本对账（无沙箱凭据/D1 未批）",
+    "Figma 与 ≥5 真人验收（无写入凭据/无真人）",
+    "定价与法律主体批准（D1/D8 需人工）",
+    "G13 48h 观察窗（时间未到）"
+  ]
+}
