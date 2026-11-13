@@ -8,6 +8,7 @@ import {
   isDebugPath,
   SECURITY_HEADERS,
 } from './src/config/region-policy'
+import { isFrozenPublicRoute, isPublicSurfaceFrozen } from './src/config/public-surface'
 
 /**
  * PROXY — Region Block + Security + CORS + Debug Endpoint Protection
@@ -62,6 +63,26 @@ export default async function middleware(request: NextRequest) {
       JSON.stringify({ error: 'Service not available in your region', code: 'REGION_BLOCKED' }),
       { status: 451, headers: { 'Content-Type': 'application/json' } },
     )
+  }
+
+  // ─── 1.5 公开面冻结（GA T2）────────────────────────────────────────
+  // 五个 B2 公开页在 2026-11-12 被意外随生产构建上线，页面里含未获批准的
+  // 定价展示与未核实的法律主体表述。这里**rewrite** 到 /holding：
+  // 原页面组件根本不执行，所以"仅隐藏入口却仍能直连看到内容"不成立。
+  // 同时下发 X-Robots-Tag —— 但它是补充，不是替代：真正的保护是"内容没被渲染"。
+  // 解冻走 PUBLIC_SURFACE_FROZEN=false（见 src/config/public-surface.ts）。
+  if (isPublicSurfaceFrozen() && isFrozenPublicRoute(pathname)) {
+    const holdUrl = request.nextUrl.clone()
+    holdUrl.pathname = '/holding'
+    holdUrl.searchParams.set('from', pathname)
+    const held = NextResponse.rewrite(holdUrl)
+    for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+      held.headers.set(key, value)
+    }
+    held.headers.set('X-Robots-Tag', 'noindex, nofollow')
+    // 冻结页的判定随审批状态变化，不能被 CDN 长时间缓存
+    held.headers.set('Cache-Control', 'no-store, must-revalidate')
+    return held
   }
 
   // ─── 2. 调试/诊断端点：对外不可访问 ───
@@ -145,6 +166,12 @@ export const config = {
     '/',
     '/login',
     '/register',
+    // GA T2：五个被意外发布的公开页必须经过中间件才能被冻结
+    '/product',
+    '/solutions',
+    '/stories',
+    '/how-it-works',
+    '/help',
     '/terms',
     '/privacy',
     '/about',

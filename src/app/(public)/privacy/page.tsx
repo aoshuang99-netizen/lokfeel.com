@@ -33,7 +33,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              LokFeel ("we," "our," or "us") is operated by <strong>LokFeel Inc.</strong>, a company registered in the State of Delaware, USA. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              LokFeel ("we," "our," or "us") is operated by <strong>LokFeel</strong> (legal entity and registration details are provided in the signed agreement). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
               We are committed to transparency and to giving you control over your data. Using an
@@ -291,8 +291,8 @@ export default function PrivacyPage() {
               <p><strong>General Inquiries:</strong> <a href="mailto:hello@lokfeel.com" className="text-primary hover:underline">hello@lokfeel.com</a></p>
               <p><strong>Support:</strong> <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">support@lokfeel.com</a></p>
               <p className="text-foreground-muted text-sm mt-4">
-                LokFeel Inc.<br />
-                Wilmington, Delaware, USA
+                LokFeel<br />
+                Registered address pending verification
               </p>
             </div>
           </section>

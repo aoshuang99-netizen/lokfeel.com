@@ -54,6 +54,16 @@ export default async function PricingPage({
    */
   const gate = readCheckoutGate();
   /**
+   * GA T2：**金额本身也是商业声明**。
+   *
+   * 此前这里只判 `displayPrice(product)` 有没有值，于是"定价未获批"时页面
+   * 仍然渲染 `$49.00`，浏览器冒烟断言 `not /\$\s?\d/` 因此长期红 —— 而它红得对：
+   * 未获批准的金额被展示出来，就是在对外报价。
+   *
+   * 所以金额的显示条件是**商业批准**，不是"目录里有数字"。
+   */
+  const showPrices = gate.commercialApproved;
+  /**
    * 逐格可用性。凭据齐备只是"能建会话"；某一格能不能卖要看这里 ——
    * 例如 Scale 年付因 Dodo 单笔金额上限（$3,000）暂时建不出商品，
    * 不该连累另外 5 个套餐。
@@ -72,10 +82,15 @@ export default async function PricingPage({
           <p className="text-sm uppercase tracking-widest text-foreground-muted mb-3">{product.brand}</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">{product.name}</h1>
           <p className="text-foreground-muted max-w-2xl mx-auto leading-relaxed">{product.oneLiner}</p>
-          {price && (
+          {showPrices && price ? (
             <p className="text-sm text-foreground-muted mt-4">
               订阅起价 <span className="text-foreground font-semibold">{price}</span>
               {purchasable ? ' · 支持在线开通' : ' · 在线开通即将开放'}
+            </p>
+          ) : (
+            <p className="text-sm text-foreground-muted mt-4">
+              <span className="text-foreground font-semibold">定价尚未公布</span>
+              {' · '}计费方案尚未开放，在线开通前会先完成定价审批
             </p>
           )}
         </div>
@@ -90,7 +105,12 @@ export default async function PricingPage({
               已取消本次结账，未产生任何费用。你可以随时重新选择套餐。
             </div>
           )}
-          <PlanCards checkoutReady={gate.enabled} bound={bound} callbackUrl="/pricing" />
+          <PlanCards
+            checkoutReady={gate.enabled}
+            showPrices={showPrices}
+            bound={bound}
+            callbackUrl="/pricing"
+          />
         </div>
 
         {/* ── 3. 权益与边界（与价格无关，但决定"值不值"）────── */}
@@ -152,7 +172,7 @@ export default async function PricingPage({
             </li>
             <li>
               <strong>Hlua Pass</strong> —— streaming 与 H-Points 会员，是另一条业务。{' '}
-              <Link href="/hlua" className="text-primary hover:underline">
+              <Link href="/hlua" className="inline-flex min-h-6 items-center text-primary hover:underline">
                 了解 Hlua Pass
               </Link>
             </li>
@@ -164,7 +184,7 @@ export default async function PricingPage({
           <div className="mt-6">
             <Link
               href="/contact?topic=connection-os-access"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+              className="inline-flex min-h-6 items-center gap-2 text-sm font-semibold text-primary hover:underline"
             >
               需要采购/发票/年度合同？联系我们
               <ArrowRight className="w-4 h-4" aria-hidden="true" />

@@ -20,7 +20,7 @@ export const BRAND = {
   /** 对外品牌名（注意拼写：LokFeel，不是 LokFee） */
   name: 'LokFeel',
   /** 法律实体名（如与实际注册主体不一致，需法务复核后修改） */
-  legalName: 'LokFeel Inc.',
+  legalName: 'LokFeel', // D8：真实主体未核验前不得对外声称具体法人
   /** 品类定义：这是产品的"货架位置" */
   category: 'Agent-Native Connection OS',
   /** 主标题（对外统一） */

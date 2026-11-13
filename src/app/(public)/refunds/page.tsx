@@ -151,8 +151,8 @@ export default function RefundsPage() {
               <p><strong>Billing Email:</strong> <a href="mailto:billing@lokfeel.com" className="text-primary hover:underline">billing@lokfeel.com</a></p>
               <p><strong>Support:</strong> <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">support@lokfeel.com</a></p>
               <p className="text-foreground-muted text-sm mt-4">
-                LokFeel Inc.<br />
-                Wilmington, Delaware, USA
+                LokFeel<br />
+                Registered address pending verification
               </p>
             </div>
           </section>

@@ -1,0 +1,69 @@
+{
+  "release": "lokfeel-v20.7-ga",
+  "status": "NO_GO",
+  "generatedAt": "2026-11-13T05:45:00Z",
+  "rcSha": null,
+  "rcShaNote": "冻结于本分支提交后回填；文档提交不得改变此值",
+  "branch": "release/v20.7-ga",
+  "productionShaBefore": "0e16959",
+  "productionShaAfter": null,
+  "netlifyBeforeDeployId": null,
+  "netlifyAfterDeployId": null,
+  "rollbackSafeDeployId": null,
+  "rollbackNote": "禁止回滚到会重新打开收银台的 5a161c4；安全回滚 = 同版本（门禁关闭）或摘除 DODO_PAYMENTS_API_KEY",
+  "checks": {
+    "publicClaimsAndLegal": "PASS",
+    "publicClaimsEvidence": "evidence/t2-public-claims.json",
+    "authenticatedCheckoutGate": "NOT_TESTED",
+    "providerSignedWebhookDelivery": "NOT_TESTED",
+    "billingLedgerEntitlementReconciliation": "NO_SAMPLE",
+    "pricingAndSKUApproval": "BLOCKED",
+    "fiveHumanUserSessions": "NOT_TESTED",
+    "figmaEditableNodes": "BLOCKED",
+    "tbt8of8Under200ms": "FAIL",
+    "remoteRequiredCI": "NOT_TESTED",
+    "previewRuntimeAndE2E": "NOT_TESTED",
+    "safeRollbackDryRun": "PARTIAL",
+    "productionG13": "N/A"
+  },
+  "localGates": {
+    "typecheck": "PASS",
+    "build": "PASS",
+    "jestPublicSurface": "PASS_10_OF_10",
+    "jestS04Verdict": "PASS_10_OF_10",
+    "playwrightCiSmoke": "5_OF_6_LOCAL（⑥ /pricing 由失败转通过；① 因本地无 DB 失败，CI 用 sqlite 不适用该限制）",
+    "publicClaimsAudit": "PASS_12_OF_12"
+  },
+  "authorization": {
+    "approvedRcSha": null,
+    "evidence": null
+  },
+  "blockingFindings": [
+    "D1 定价未获人工批准（G12 BLOCKED）",
+    "D4 Dodo test_mode 凭据缺失 ⇒ Provider 真实投递 NOT_TESTED",
+    "D8 法律主体未提供 ⇒ 全站仅能保持中性表述",
+    "G3 Figma 无可写入凭据",
+    "G5 无 5 名真人测试",
+    "G10 TBT 8/8 未达标（0/8）",
+    "远端 CI 未在本候选上全绿（required checks 未配置）",
+    "GitHub/Netlify 发布治理配置需管理员"
+  ],
+  "scope": {
+    "changed": [
+      "src/config/public-surface.ts",
+      "src/components/marketing/public-hold.tsx",
+      "src/app/holding/page.tsx",
+      "proxy.ts（matcher + 冻结 rewrite，防御层）",
+      "src/components/layout/navbar.tsx、footer.tsx、src/app/sitemap.ts",
+      "src/app/(public)/{product,solutions,stories,how-it-works,help}/page.tsx（冻结 + noindex）",
+      "src/app/(public)/pricing/page.tsx、src/components/billing/plan-cards.tsx（金额商业门 + 触控目标）",
+      "src/app/(public)/{terms,privacy,refunds,contact}/page.tsx、src/config/brand.ts（移除未核实法人断言）",
+      "scripts/qa/ga-public-claims-audit.mjs、tests/release/public-surface-frozen.test.ts"
+    ],
+    "notChanged": ["prisma/**", "next.config.ts", "netlify.toml", "package.json dependencies"]
+  },
+  "evidence": [
+    "evidence/t2-public-claims.json",
+    "evidence/playwright-smoke-local.txt"
+  ]
+}

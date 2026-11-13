@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { visiblePublicLinks } from "@/config/public-surface";
+
 const footerSections = {
   PRODUCT: {
     title: "PRODUCT",
@@ -76,7 +78,9 @@ export default function Footer() {
                 {section.title}
               </h2>
               <ul className="space-y-2 list-none p-0 m-0">
-                {section.links.map((link) => (
+                {/* GA T2：审核中的公开页从页脚摘除（与中间件/sitemap 同一份名单），
+                    避免"入口还在、点进去却是审核中"的孤儿导航。 */}
+                {visiblePublicLinks(section.links).map((link) => (
                   <li key={link.href}>
                     {link.external ? (
                       <a
@@ -106,7 +110,7 @@ export default function Footer() {
         <div className="pt-8 border-t border-white/10 flex items-center justify-center">
           {/* V19.8：同上，white/40 → white/60（对比度 3.78 → ≈6.9:1） */}
           <p className="text-[13px] text-white/60">
-            &copy; 2026 LokFeel Inc. All rights reserved.
+            &copy; 2026 LokFeel. All rights reserved.
           </p>
         </div>
       </div>

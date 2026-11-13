@@ -33,7 +33,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">1. Agreement to Terms</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              Welcome to LokFeel. These Terms of Service (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;User,&quot; &quot;you,&quot; or &quot;your&quot;) and <strong>LokFeel Inc.</strong> ("LokFeel," "we," "us," or "our"), a Delaware corporation, governing your access to and use of the LokFeel service at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
+              Welcome to LokFeel. These Terms of Service (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;User,&quot; &quot;you,&quot; or &quot;your&quot;) and <strong>LokFeel</strong> ("LokFeel," "we," "us," or "our"), the operator of the Service (legal entity and registration details are provided in the signed agreement), governing your access to and use of the LokFeel service at <strong>app.lokfeel.com</strong> and <strong>lokfeel.com</strong> (collectively, the &quot;Service&quot;).
             </p>
             <p className="text-foreground leading-relaxed">
               By accessing or using our Service, you agree to be bound by these Terms and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this Service.
@@ -132,7 +132,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">6. Intellectual Property</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              The LokFeel service, including but not limited to the website, the specification compiler, the component registry, logos, trademarks ("LokFeel"), and content, is owned by LokFeel Inc. and protected by United States and international intellectual property laws.
+              The LokFeel service, including but not limited to the website, the specification compiler, the component registry, logos, trademarks ("LokFeel"), and content, is owned by LokFeel and protected by United States and international intellectual property laws.
             </p>
             <p className="text-foreground leading-relaxed">
               You retain ownership of content you submit but grant us a limited, non-exclusive, royalty-free license to use, reproduce, and display your content solely for the purpose of providing the Service.
@@ -196,7 +196,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">10. Indemnification</h2>
             <p className="text-foreground leading-relaxed">
-              You agree to indemnify, defend, and hold harmless LokFeel Inc., its officers, directors, employees, agents, and affiliates from and against any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorney&apos;s fees) arising from or related to your use of the Service, your violation of these Terms, or your violation of any rights of another party.
+              You agree to indemnify, defend, and hold harmless LokFeel, its officers, directors, employees, agents, and affiliates from and against any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorney&apos;s fees) arising from or related to your use of the Service, your violation of these Terms, or your violation of any rights of another party.
             </p>
           </section>
 
@@ -241,7 +241,7 @@ export default function TermsPage() {
               <strong>Informal Resolution:</strong> Before filing any legal claim, you agree to first contact us at <a href="mailto:legal@lokfeel.com" className="text-primary hover:underline">legal@lokfeel.com</a> and attempt to resolve the dispute informally. We will attempt to resolve the dispute within 30 days.
             </p>
             <p className="text-foreground leading-relaxed mb-4">
-              <strong>Arbitration:</strong> Any dispute not resolved informally shall be resolved by binding arbitration administered by the American Arbitration Association (AAA) under its Consumer Arbitration Rules. The arbitration shall be conducted in Wilmington, Delaware, or at another mutually agreed location.
+              <strong>Arbitration:</strong> Any dispute not resolved informally shall be resolved by binding arbitration administered by the American Arbitration Association (AAA) under its Consumer Arbitration Rules. The arbitration shall be conducted at a location mutually agreed in writing.
             </p>
             <p className="text-foreground leading-relaxed">
               <strong>Class Action Waiver:</strong> You agree to resolve disputes with us on an individual basis only and waive any right to bring or participate in class actions, collective actions, or representative proceedings.
@@ -252,7 +252,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-bold text-foreground mb-4">14. Governing Law</h2>
             <p className="text-foreground leading-relaxed mb-4">
-              These Terms shall be governed by and construed in accordance with the laws of the <strong>State of Delaware, USA</strong>, without regard to its conflict of law provisions.
+              These Terms shall be governed by and construed in accordance with the laws of the jurisdiction stated in the signed agreement, without regard to its conflict of law provisions.
             </p>
             <p className="text-foreground leading-relaxed">
               For US users, these Terms comply with applicable federal and state laws, including but not limited to the California Consumer Privacy Act (CCPA), the CAN-SPAM Act, and the Children&apos;s Online Privacy Protection Act (COPPA).
@@ -287,8 +287,8 @@ export default function TermsPage() {
               <p><strong>General:</strong> <a href="mailto:hello@lokfeel.com" className="text-primary hover:underline">hello@lokfeel.com</a></p>
               <p><strong>Support:</strong> <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">support@lokfeel.com</a></p>
               <p className="text-foreground-muted text-sm mt-4">
-                LokFeel Inc.<br />
-                Wilmington, Delaware, USA
+                LokFeel<br />
+                Registered address pending verification
               </p>
             </div>
           </section>

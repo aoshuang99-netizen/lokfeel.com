@@ -10,8 +10,12 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { BRAND } from "@/config/brand";
+import { PublicHold } from "@/components/marketing/public-hold";
+import { isPublicSurfaceFrozen } from "@/config/public-surface";
 
 export const metadata: Metadata = {
+  // GA T2：审核期间不索引（正文已由 PublicHold 占位，这里只是配套）
+  robots: { index: false, follow: false },
   title: "How it works",
   description:
     "From sign-up to your first verified outcome: register, create or join an organization, submit a goal, approve, and check the result — with failure recovery and support along the way.",
@@ -68,6 +72,8 @@ const steps = [
 ];
 
 export default function HowItWorksPage() {
+  // GA T2：内容安全的保证在**渲染层** —— 审核未完成时这个组件不渲染任何商业声明。
+  if (isPublicSurfaceFrozen()) return <PublicHold />;
   return (
     <div className="pt-24">
       {/* Hero */}

@@ -1,0 +1,11 @@
+# playwright ci smoke @ local build (127.0.0.1:3116)
+config: playwright.ci.config.ts  (PW_SKIP_GLOBAL_SETUP=1, PW_CHANNEL=chrome)
+note: ① 失败原因是本地没有 CI 的 sqlite 基线库（/api/health 503），与本轮改动无关；
+      ⑥ 是远端 CI 唯一失败的用例，本轮由 FAIL 转 PASS。
+
+FAILED  · ① 健康检查 200，且数据库真实可达
+PASSED  · ② 匿名访问受保护 API 必须 401（守卫未被构建产物绕开）
+PASSED  · ③ 登录页渲染出可交互表单（客户端组件已水合）
+PASSED  · ④ 未知路径必须 404（否则 ①③ 的断言会退化成永真）
+PASSED  · ⑤ 根路径可达且返回 HTML
+PASSED  · ⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页）

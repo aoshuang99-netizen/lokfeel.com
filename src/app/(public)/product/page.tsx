@@ -12,8 +12,12 @@ import {
   Users,
 } from "lucide-react";
 import { BRAND } from "@/config/brand";
+import { PublicHold } from "@/components/marketing/public-hold";
+import { isPublicSurfaceFrozen } from "@/config/public-surface";
 
 export const metadata: Metadata = {
+  // GA T2：审核期间不索引（正文已由 PublicHold 占位，这里只是配套）
+  robots: { index: false, follow: false },
   title: "Product",
   description:
     "One workspace from intent to proof: intent, proposals, consent, approved agent action and three-level outcome verification — plus a machine surface of MCP tools and A2A tasks.",
@@ -97,6 +101,8 @@ const honestBoundaries = [
 ];
 
 export default function ProductPage() {
+  // GA T2：内容安全的保证在**渲染层** —— 审核未完成时这个组件不渲染任何商业声明。
+  if (isPublicSurfaceFrozen()) return <PublicHold />;
   return (
     <div className="pt-24">
       {/* Hero */}

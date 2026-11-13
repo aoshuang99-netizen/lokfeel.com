@@ -35,6 +35,14 @@ export interface PlanCardsProps {
   /** 服务端判定的"能否创建结账会话"（凭据是否齐备）。 */
   checkoutReady: boolean;
   /**
+   * 是否展示金额（GA T2）。
+   *
+   * 金额是**商业声明**：定价未获人工批准时展示 `$49.00`，等于对外报价。
+   * 缺省 `true` 保持既有调用方（Console 内部计费页）行为不变；
+   * 公开定价页显式传 `gate.commercialApproved`。
+   */
+  showPrices?: boolean;
+  /**
    * 逐 SKU 的商品绑定状态。缺省 = 全部已绑定。
    *
    * 为什么需要它：Dodo 有商户级单笔金额上限，某个高价 SKU 可能暂时
@@ -55,6 +63,7 @@ interface CheckoutError {
 
 export function PlanCards({
   checkoutReady,
+  showPrices = true,
   bound,
   currentPlan,
   callbackUrl = '/pricing',
@@ -202,14 +211,25 @@ export function PlanCards({
               <p className="text-sm text-foreground-muted mt-1">{plan.tagline}</p>
 
               <div className="mt-5" aria-live="polite">
-                <span className="text-3xl font-bold text-foreground">{price}</span>
-                <span className="text-foreground-muted text-sm">
-                  {interval === 'monthly' ? ' / 月' : ' / 年'}
-                </span>
-                {interval === 'yearly' && (
-                  <p className="text-xs text-foreground-muted mt-1">
-                    折合 {yearlyPerMonth(plan.id)}/月 · 比月付省 {yearlySavingsPercent(plan.id)}%
-                  </p>
+                {showPrices ? (
+                  <>
+                    <span className="text-3xl font-bold text-foreground">{price}</span>
+                    <span className="text-foreground-muted text-sm">
+                      {interval === 'monthly' ? ' / 月' : ' / 年'}
+                    </span>
+                    {interval === 'yearly' && (
+                      <p className="text-xs text-foreground-muted mt-1">
+                        折合 {yearlyPerMonth(plan.id)}/月 · 比月付省 {yearlySavingsPercent(plan.id)}%
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl font-bold text-foreground">定价尚未公布</span>
+                    <p className="text-xs text-foreground-muted mt-1">
+                      定价审批完成后会在这里公布金额
+                    </p>
+                  </>
                 )}
               </div>
 
@@ -231,7 +251,7 @@ export function PlanCards({
                 >
                   {interval === 'monthly' ? '月付' : '年付'}这一档暂未开放在线开通（受支付通道单笔金额上限限制）。
                   可改选{interval === 'monthly' ? '年付' : '月付'}，或
-                  <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">
+                  <a href="mailto:support@lokfeel.com" className="inline-flex min-h-6 items-center text-primary hover:underline">
                     联系我们
                   </a>
                   走对公/年度合同开通，价格与权益不变。
@@ -271,7 +291,7 @@ export function PlanCards({
       {!checkoutReady && (
         <p id="checkout-unavailable" className="text-sm text-foreground-muted mt-4">
           订阅通道正在完成最后一步配置。在此之前可以直接联系{' '}
-          <a href="mailto:support@lokfeel.com" className="text-primary hover:underline">
+          <a href="mailto:support@lokfeel.com" className="inline-flex min-h-6 items-center text-primary hover:underline">
             support@lokfeel.com
           </a>{' '}
           开通，权益与价格与页面一致。

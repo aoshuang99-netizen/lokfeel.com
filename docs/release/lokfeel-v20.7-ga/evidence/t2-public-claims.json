@@ -1,0 +1,105 @@
+{
+  "checkedAt": "2026-11-13T05:42:49.721Z",
+  "base": "http://127.0.0.1:3116",
+  "readOnly": true,
+  "verdict": "PASS",
+  "routes": {
+    "/": {
+      "status": 200,
+      "bytes": 3972,
+      "frozen": false,
+      "hasHold": false,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/pricing": {
+      "status": 200,
+      "bytes": 3972,
+      "frozen": false,
+      "hasHold": false,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/product": {
+      "status": 200,
+      "bytes": 668,
+      "frozen": true,
+      "hasHold": true,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/solutions": {
+      "status": 200,
+      "bytes": 670,
+      "frozen": true,
+      "hasHold": true,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/stories": {
+      "status": 200,
+      "bytes": 668,
+      "frozen": true,
+      "hasHold": true,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/how-it-works": {
+      "status": 200,
+      "bytes": 673,
+      "frozen": true,
+      "hasHold": true,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/help": {
+      "status": 200,
+      "bytes": 672,
+      "frozen": true,
+      "hasHold": true,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/about": {
+      "status": 200,
+      "bytes": 3072,
+      "frozen": false,
+      "hasHold": false,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/terms": {
+      "status": 200,
+      "bytes": 8838,
+      "frozen": false,
+      "hasHold": false,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/privacy": {
+      "status": 200,
+      "bytes": 8463,
+      "frozen": false,
+      "hasHold": false,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/refunds": {
+      "status": 200,
+      "bytes": 4036,
+      "frozen": false,
+      "hasHold": false,
+      "amountHits": [],
+      "legalEntityHits": []
+    },
+    "/contact": {
+      "status": 200,
+      "bytes": 1509,
+      "frozen": false,
+      "hasHold": false,
+      "amountHits": [],
+      "legalEntityHits": []
+    }
+  },
+  "findings": []
+}

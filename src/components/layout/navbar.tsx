@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { LokFeeLogo } from "@/components/LokFeeLogo";
+import { visiblePublicLinks } from "@/config/public-surface";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -18,13 +19,15 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
+  // GA T2：审核中的公开页不得出现在导航里（同一份名单也驱动中间件与 sitemap）。
+  // 这不是安全边界 —— 直接访问由 proxy.ts 冻结；这里只避免"点了却看到审核中"。
+  const navLinks = visiblePublicLinks([
     { label: "Product", href: "/product" },
     { label: "Solutions", href: "/solutions" },
     { label: "How it works", href: "/how-it-works" },
     { label: "Pricing", href: "/pricing" },
     { label: "About", href: "/about" },
-  ];
+  ]);
 
   return (
     <>

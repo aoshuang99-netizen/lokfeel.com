@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next'
 
+import { isPublicLinkVisible } from '@/config/public-surface'
+
 /**
  * Dynamic sitemap.xml generator.
  * Served at /sitemap.xml by Next.js built-in convention.
@@ -10,7 +12,7 @@ import type { MetadataRoute } from 'next'
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://app.lokfeel.com'
 
-  return [
+  const entries: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -120,4 +122,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
   ]
+
+  /**
+   * GA T2：冻结中的页面不进 sitemap。
+   * 注意 —— 这只是"别主动告诉搜索引擎"，**不是**内容保护；
+   * 真正的不渲染在 proxy.ts 的 rewrite 里。
+   */
+  return entries.filter((entry) => isPublicLinkVisible(new URL(entry.url).pathname))
 }

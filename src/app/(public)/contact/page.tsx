@@ -107,9 +107,8 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-foreground">Mailing Address</h2>
             </div>
             <div className="ml-13 glass border-card-border p-6 rounded-lg">
-              <p className="text-foreground font-semibold mb-2">LokFeel Inc.</p>
-              <p className="text-foreground">Wilmington, Delaware</p>
-              <p className="text-foreground">United States</p>
+              <p className="text-foreground font-semibold mb-2">LokFeel</p>
+              <p className="text-foreground">Registered address pending verification</p>
             </div>
           </section>
 
