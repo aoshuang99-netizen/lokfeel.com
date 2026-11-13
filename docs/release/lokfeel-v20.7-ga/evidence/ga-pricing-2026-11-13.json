@@ -1,0 +1,143 @@
+{
+  "capturedAt": "2026-11-13T12:05:26.024Z",
+  "commit": "2769773",
+  "deployId": "6af6fb8cd6b149b9e0143fe5",
+  "catalogVersion": "2026-11-13.1",
+  "approval": {
+    "status": "APPROVED",
+    "approvedAt": "2026-11-13",
+    "basis": "所有者重新定价指令 · 对标行业竞品"
+  },
+  "prices": [
+    {
+      "plan": "STARTER",
+      "monthlyCents": 8900,
+      "yearlyCents": 89000,
+      "seats": 25,
+      "dodo": {
+        "monthly": "pdt_0NrdGj3pC4ibJ6Oljxn81",
+        "yearly": "pdt_0NrdGjJ4J6YOnJZ4pCdGf"
+      }
+    },
+    {
+      "plan": "GROWTH",
+      "monthlyCents": 19900,
+      "yearlyCents": 199000,
+      "seats": 100,
+      "dodo": {
+        "monthly": "pdt_0NrdGjSPkO55wB1t76sB2",
+        "yearly": "pdt_0NrdGjapl7pWTfInwAvCV"
+      }
+    },
+    {
+      "plan": "SCALE",
+      "monthlyCents": 44900,
+      "yearlyCents": null,
+      "seats": 500,
+      "dodo": {
+        "monthly": "pdt_0NrdGjgAfanjOrHpT1N2s",
+        "yearly": null,
+        "note": ",490 超 Dodo 单笔 $3,000 上限，未建商品"
+      }
+    }
+  ],
+  "dodoSync": [
+    {
+      "sku": "STARTER_MONTHLY",
+      "before": 4900,
+      "after": 8900,
+      "verified": true
+    },
+    {
+      "sku": "STARTER_YEARLY",
+      "before": 49000,
+      "after": 89000,
+      "verified": true
+    },
+    {
+      "sku": "GROWTH_MONTHLY",
+      "before": 14900,
+      "after": 19900,
+      "verified": true
+    },
+    {
+      "sku": "GROWTH_YEARLY",
+      "before": 149000,
+      "after": 199000,
+      "verified": true
+    },
+    {
+      "sku": "SCALE_MONTHLY",
+      "before": 39900,
+      "after": 44900,
+      "verified": true
+    }
+  ],
+  "production": {
+    "plansApi": {
+      "checkoutReady": true,
+      "commercialApproval": "APPROVED",
+      "environment": "live_mode",
+      "missing": []
+    },
+    "rendered": {
+      "desktop": [
+        "$89.00 / 月",
+        "$199.00 / 月",
+        "$449.00 / 月"
+      ],
+      "yearly": [
+        "$890.00 / 年",
+        "$1990.00 / 年"
+      ],
+      "scaleYearly": {
+        "price": "$4490.00 / 年",
+        "button": "年付暂不可用",
+        "disabled": true
+      }
+    },
+    "a11y": {
+      "runs": 8,
+      "seriousOrCritical": 0,
+      "subTwentyFourPx": 0
+    },
+    "frozenRoutesStillHeld": true
+  },
+  "competitorAnchors": [
+    {
+      "vendor": "Circle",
+      "plans": "$89 / $199 / $419",
+      "source": "circle.so/pricing",
+      "checked": "2026-11-13"
+    },
+    {
+      "vendor": "Notion",
+      "plans": "$10 / $20 per seat",
+      "source": "notion.com/pricing",
+      "checked": "2026-11-13"
+    },
+    {
+      "vendor": "Skool",
+      "plans": "$99 flat",
+      "source": "skool.com/pricing",
+      "checked": "2026-11-13"
+    },
+    {
+      "vendor": "Mighty Networks",
+      "plans": "$79",
+      "source": "mightynetworks.com/pricing",
+      "checked": "2026-11-13"
+    },
+    {
+      "vendor": "Discourse",
+      "plans": "$100",
+      "source": "discourse.org/pricing",
+      "checked": "2026-11-13"
+    }
+  ],
+  "caveats": [
+    "改价只影响新订阅；存量按注册时价格续费",
+    "Scale 年付无商品，年度合同走对公",
+    "未做任何真实扣款验证（无测试订单）"
+  ]
+}
