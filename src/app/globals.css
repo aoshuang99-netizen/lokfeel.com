@@ -27,6 +27,10 @@
   --primary: #a3e635;
   --primary-hover: #bef264;
   --primary-muted: rgba(163, 230, 53, 0.15);
+  /* 亮绿底上的前景必须是深色：白字实测 1.5:1，深色 13:1。
+     此前未定义这个变量，Button 的 text-primary-foreground 类不存在，
+     于是文字落到继承的白色上 —— 定价页主按钮因此长期不可读。 */
+  --primary-foreground: #0b0e11;
 
   /* ─── Secondary: Purple — depth, romance ─── */
   --secondary: #4c1d95;
@@ -146,6 +150,7 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-muted: var(--primary-muted);
+  --color-primary-foreground: var(--primary-foreground);
   
   --color-secondary: var(--secondary);
   --color-secondary-hover: var(--secondary-hover);
@@ -1891,6 +1896,8 @@ img {
 
   /* 品牌与语义（深色版，全部按 ≥4.5:1 选值） */
   --primary: #4d6b12; /* 5.6:1 */
+  /* 浅色主题的 primary 本身是深绿，前景用白字 */
+  --primary-foreground: #ffffff;
   --primary-hover: #3d550e;
   --primary-muted: rgba(77, 107, 18, 0.12);
   --cta: #4d6b12;
