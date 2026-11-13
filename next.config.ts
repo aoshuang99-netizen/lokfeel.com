@@ -313,6 +313,22 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
         ],
       },
+      // ─── 冻结中的公开页：绝不允许 CDN 长期缓存（R6-T2 · 2026-11-13）──────
+      //
+      // 实测（`scripts/qa/r6-public-surface-fullchain.mjs`）：
+      //   五个冻结页是**静态预渲染**，响应头是 `s-maxage=31536000` —— 一年。
+      //   页面自己的 metadata 已经是 noindex，但缓存头仍在说"这一年都别来问我"。
+      //   后果不是"看起来不优雅"，而是：审核通过后要撤下占位页，CDN 会继续分发
+      //   旧内容最长一年；反过来，若发现占位页有问题，也无法快速收回。
+      // 所以：冻结期一律 `s-maxage=0`（每次回源），并显式带 `X-Robots-Tag: noindex`。
+      // 与 `src/config/public-surface.ts` 的 FROZEN_ROUTES 必须同名单。
+      ...['/product', '/solutions', '/stories', '/how-it-works', '/help'].map((source) => ({
+        source,
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate, s-maxage=0' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      })),
       // ─── 认证入口页：禁止任何缓存（V18.3 · WB18-35 · 2026-10-23）─────────
       //
       // 起因是生产实测，不是推断：
@@ -463,10 +479,28 @@ const nextConfig: NextConfig = {
   },
 }
 
-// Sentry wrapper
-export default withSentryConfig(nextConfig, {
-  silent: !process.env.CI,
-})
+// Sentry wrapper —— **只在真正配置了 DSN 时才挂**
+//
+// 背景（R6-T7 实测）：`withSentryConfig` 会把浏览器端 SDK 注入共享 chunk，
+// 而本仓**没有任何客户端 Sentry 配置**（无 `sentry.client.config.ts`，
+// `.env*` 里也没有 `NEXT_PUBLIC_SENTRY_DSN`）。也就是说：这一坨代码被下载、
+// 解析、执行，然后因为 `dsn === undefined` 什么也不做——纯占用主线程。
+//
+// 实测归因（`scripts/perf/attribute-tbt.mjs`，`2xt73imog50f2.js` 396KB）：
+//   /product 单页 `EvaluateScript` 1484ms 落在长任务窗口内，
+//   而该 chunk 同时含 react-dom 与 `browserTracingIntegration`/`captureException`。
+//
+// 判据不是"我觉得没人用"，而是"能观测到它就不该删"：
+//   · 有 DSN → 走原来的 withSentryConfig，行为一字不变；
+//   · 无 DSN → 不注入，SDK 不可能被初始化（原本也不会发送任何事件）。
+// 这是**去掉死代码**，不是降低可观测性。
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN
+
+export default sentryDsn
+  ? withSentryConfig(nextConfig, {
+      silent: !process.env.CI,
+    })
+  : nextConfig
 
 // OpenNext Cloudflare adapter: enables Cloudflare bindings during `next dev`.
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'

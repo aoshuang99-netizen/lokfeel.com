@@ -1,0 +1,333 @@
+{
+  "measuredAt": "2026-11-13T07:58:23.091Z",
+  "base": "http://127.0.0.1:3119",
+  "urls": [
+    "http://127.0.0.1:3119/product",
+    "http://127.0.0.1:3119/help"
+  ],
+  "pages": [
+    {
+      "url": "http://127.0.0.1:3119/product",
+      "status": 200,
+      "settleMs": 4000,
+      "profile": "mobile-4g-4xcpu",
+      "mainThread": {
+        "pid": 57088,
+        "tid": 14944225
+      },
+      "taskEventName": "ThreadControllerImpl::RunTask",
+      "longTasks": [
+        {
+          "startMs": 1340504556,
+          "durMs": 72,
+          "blockingMs": 22,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 1
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 0
+            },
+            {
+              "who": "CommitLoad",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1340505268,
+          "durMs": 477,
+          "blockingMs": 427,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 419
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 40
+            },
+            {
+              "who": "Paint",
+              "ms": 12
+            }
+          ]
+        },
+        {
+          "startMs": 1340506157,
+          "durMs": 282,
+          "blockingMs": 232,
+          "top": [
+            {
+              "who": "EvaluateScript @ 002awoxmyucw7.js",
+              "ms": 276
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 275
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 6
+            }
+          ]
+        },
+        {
+          "startMs": 1340506614,
+          "durMs": 53,
+          "blockingMs": 3,
+          "top": [
+            {
+              "who": "z @ 002awoxmyucw7.js",
+              "ms": 53
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 002awoxmyucw7.js",
+              "ms": 0
+            }
+          ]
+        }
+      ],
+      "attribution": [
+        {
+          "who": "Layout",
+          "ms": 420,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 002awoxmyucw7.js",
+          "ms": 276,
+          "inLongTasks": true
+        },
+        {
+          "who": "RunMicrotasks",
+          "ms": 275,
+          "inLongTasks": true
+        },
+        {
+          "who": "z @ 002awoxmyucw7.js",
+          "ms": 53,
+          "inLongTasks": true
+        },
+        {
+          "who": "UpdateLayoutTree",
+          "ms": 40,
+          "inLongTasks": true
+        },
+        {
+          "who": "Paint",
+          "ms": 12,
+          "inLongTasks": true
+        },
+        {
+          "who": "PrePaint",
+          "ms": 8,
+          "inLongTasks": true
+        },
+        {
+          "who": "EventDispatch",
+          "ms": 6,
+          "inLongTasks": true
+        },
+        {
+          "who": "fq @ 002awoxmyucw7.js",
+          "ms": 6,
+          "inLongTasks": true
+        },
+        {
+          "who": "FunctionCall @ 002awoxmyucw7.js",
+          "ms": 4,
+          "inLongTasks": true
+        },
+        {
+          "who": "CommitLoad",
+          "ms": 0,
+          "inLongTasks": true
+        },
+        {
+          "who": "Layerize",
+          "ms": 0,
+          "inLongTasks": true
+        },
+        {
+          "who": "v8.compile",
+          "ms": 0,
+          "inLongTasks": true
+        }
+      ],
+      "tbtMs": 684,
+      "longTaskCount": 4,
+      "events": 37214
+    },
+    {
+      "url": "http://127.0.0.1:3119/help",
+      "status": 200,
+      "settleMs": 4000,
+      "profile": "mobile-4g-4xcpu",
+      "mainThread": {
+        "pid": 57109,
+        "tid": 14944356
+      },
+      "taskEventName": "ThreadControllerImpl::RunTask",
+      "longTasks": [
+        {
+          "startMs": 1340512331,
+          "durMs": 90,
+          "blockingMs": 40,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 1
+            },
+            {
+              "who": "Layout",
+              "ms": 0
+            },
+            {
+              "who": "CommitLoad",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1340513046,
+          "durMs": 530,
+          "blockingMs": 480,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 459
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 41
+            },
+            {
+              "who": "Paint",
+              "ms": 17
+            }
+          ]
+        },
+        {
+          "startMs": 1340513936,
+          "durMs": 294,
+          "blockingMs": 244,
+          "top": [
+            {
+              "who": "EvaluateScript @ 002awoxmyucw7.js",
+              "ms": 289
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 289
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 5
+            }
+          ]
+        },
+        {
+          "startMs": 1340514455,
+          "durMs": 59,
+          "blockingMs": 9,
+          "top": [
+            {
+              "who": "RunMicrotasks",
+              "ms": 52
+            },
+            {
+              "who": "A @ 2dn9ecbd1-yzf.js",
+              "ms": 26
+            },
+            {
+              "who": "IntersectionObserver.rootMargin @ 2dn9ecbd1-yzf.js",
+              "ms": 7
+            }
+          ]
+        }
+      ],
+      "attribution": [
+        {
+          "who": "Layout",
+          "ms": 459,
+          "inLongTasks": true
+        },
+        {
+          "who": "RunMicrotasks",
+          "ms": 341,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 002awoxmyucw7.js",
+          "ms": 289,
+          "inLongTasks": true
+        },
+        {
+          "who": "UpdateLayoutTree",
+          "ms": 43,
+          "inLongTasks": true
+        },
+        {
+          "who": "A @ 2dn9ecbd1-yzf.js",
+          "ms": 26,
+          "inLongTasks": true
+        },
+        {
+          "who": "Paint",
+          "ms": 17,
+          "inLongTasks": true
+        },
+        {
+          "who": "PrePaint",
+          "ms": 12,
+          "inLongTasks": true
+        },
+        {
+          "who": "IntersectionObserver.rootMargin @ 2dn9ecbd1-yzf.js",
+          "ms": 7,
+          "inLongTasks": true
+        },
+        {
+          "who": "EventDispatch",
+          "ms": 5,
+          "inLongTasks": true
+        },
+        {
+          "who": "fq @ 002awoxmyucw7.js",
+          "ms": 5,
+          "inLongTasks": true
+        },
+        {
+          "who": "FunctionCall @ 002awoxmyucw7.js",
+          "ms": 3,
+          "inLongTasks": true
+        },
+        {
+          "who": "Layerize",
+          "ms": 2,
+          "inLongTasks": true
+        },
+        {
+          "who": "CommitLoad",
+          "ms": 0,
+          "inLongTasks": true
+        },
+        {
+          "who": "v8.compile",
+          "ms": 0,
+          "inLongTasks": true
+        }
+      ],
+      "tbtMs": 773,
+      "longTaskCount": 4,
+      "events": 37139
+    }
+  ]
+}

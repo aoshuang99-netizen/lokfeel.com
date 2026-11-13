@@ -311,7 +311,23 @@ function grade(metric, value) {
 function summarize(samples) {
   const ok = samples.filter((s) => !s.error)
   if (!ok.length) {
-    return { verdict: 'FAIL', reason: '全部轮次失败', samples }
+    // R6：这里必须把字段补齐。之前直接 return，调用方打印时读 `cls.toFixed()`
+    // 会抛 TypeError —— 一个**采集失败**的页面把整份报告搞崩，
+    // 结果是"看起来没数据"，而不是"这个页面测不出来"。两者含义完全不同。
+    return {
+      verdict: 'FAIL',
+      reason: '全部轮次失败',
+      lcp: null,
+      cls: null,
+      ttfb: null,
+      jsKB: null,
+      tbt: null,
+      longTasks: null,
+      transferKB: null,
+      inpProxy: null,
+      grades: { lcp: 'NO_DATA', cls: 'NO_DATA', ttfb: 'NO_DATA', jsKB: 'NO_DATA', tbt: 'NO_DATA' },
+      samples,
+    }
   }
   const lcp = median(ok.map((s) => s.lcp))
   const cls = median(ok.map((s) => s.cls))
@@ -497,9 +513,9 @@ async function main() {
       console.log(`\n${url}`)
       console.log(
         `  判定 ${s.verdict}  ·  LCP ${b(s.lcp)}  ·  FCP ${b(median(samples.map((x) => x.fcp)))}  ·  ` +
-          `CLS ${s.cls === null ? '—' : s.cls.toFixed(3)}  ·  TBT ${b(s.tbt)}  ·  ` +
-          `INP代理 ${b(s.inpProxy)}  ·  TTFB ${b(s.ttfb)}  ·  JS ${Math.round(s.jsKB)}KB  ·  ` +
-          `传输 ${Math.round(s.transferKB)}KB`,
+          `CLS ${s.cls === null || s.cls === undefined ? '—' : s.cls.toFixed(3)}  ·  TBT ${b(s.tbt)}  ·  ` +
+          `INP代理 ${b(s.inpProxy)}  ·  TTFB ${b(s.ttfb)}  ·  JS ${s.jsKB === null || s.jsKB === undefined ? '—' : Math.round(s.jsKB) + 'KB'}  ·  ` +
+          `传输 ${s.transferKB === null || s.transferKB === undefined ? '—' : Math.round(s.transferKB) + 'KB'}`,
       )
       console.log(
         `  分项 LCP ${s.grades.lcp} / CLS ${s.grades.cls} / TBT ${s.grades.tbt} / TTFB ${s.grades.ttfb} / JS ${s.grades.jsKB}` +

@@ -1,0 +1,2079 @@
+{
+  "checkedAt": "2026-11-13T07:59:07.936Z",
+  "base": "http://127.0.0.1:3119",
+  "axeVersion": "4.13.0",
+  "cells": [
+    {
+      "viewport": "mobile-360",
+      "route": "/",
+      "status": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 25,
+      "under24": 15,
+      "under44": 20,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Product",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Solutions",
+          "w": 52,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Stories",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "How it works",
+          "w": 73,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        }
+      ],
+      "axeViolations": 1,
+      "axeSerious": 1,
+      "axeSeriousIds": [
+        "color-contrast(3)"
+      ],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "15 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/pricing",
+      "status": 200,
+      "title": "Pricing · LokFeel Connection OS | LokFeel",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 42,
+      "under24": 21,
+      "under44": 38,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "退款政策",
+          "w": 48,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "21 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/product",
+      "status": 200,
+      "title": "Product | LokFeel",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/solutions",
+      "status": 200,
+      "title": "Solutions | LokFeel",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/stories",
+      "status": 200,
+      "title": "Stories | LokFeel",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/how-it-works",
+      "status": 200,
+      "title": "How it works | LokFeel",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/help",
+      "status": 200,
+      "title": "Help center | LokFeel",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/about",
+      "status": 200,
+      "title": "About | LokFeel",
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflowX": 0,
+      "targets": 31,
+      "under24": 20,
+      "under44": 26,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/",
+      "status": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 25,
+      "under24": 15,
+      "under44": 20,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Product",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Solutions",
+          "w": 52,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Stories",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "How it works",
+          "w": 73,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        }
+      ],
+      "axeViolations": 1,
+      "axeSerious": 1,
+      "axeSeriousIds": [
+        "color-contrast(3)"
+      ],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "15 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/pricing",
+      "status": 200,
+      "title": "Pricing · LokFeel Connection OS | LokFeel",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 42,
+      "under24": 20,
+      "under44": 38,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/product",
+      "status": 200,
+      "title": "Product | LokFeel",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/solutions",
+      "status": 200,
+      "title": "Solutions | LokFeel",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/stories",
+      "status": 200,
+      "title": "Stories | LokFeel",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/how-it-works",
+      "status": 200,
+      "title": "How it works | LokFeel",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/help",
+      "status": 200,
+      "title": "Help center | LokFeel",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 32,
+      "under24": 20,
+      "under44": 28,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/about",
+      "status": 200,
+      "title": "About | LokFeel",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflowX": 0,
+      "targets": 31,
+      "under24": 20,
+      "under44": 26,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/",
+      "status": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 30,
+      "under24": 18,
+      "under44": 23,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Product",
+          "w": 47,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "label": "Solutions",
+          "w": 54,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 41,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "label": "Product",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Solutions",
+          "w": 52,
+          "h": 16
+        }
+      ],
+      "axeViolations": 1,
+      "axeSerious": 1,
+      "axeSeriousIds": [
+        "color-contrast(3)"
+      ],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "18 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/pricing",
+      "status": 200,
+      "title": "Pricing · LokFeel Connection OS | LokFeel",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 37,
+      "under24": 18,
+      "under44": 35,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "退款政策",
+          "w": 48,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "18 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/product",
+      "status": 200,
+      "title": "Product | LokFeel",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 17,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/solutions",
+      "status": 200,
+      "title": "Solutions | LokFeel",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 17,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/stories",
+      "status": 200,
+      "title": "Stories | LokFeel",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 17,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/how-it-works",
+      "status": 200,
+      "title": "How it works | LokFeel",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 17,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/help",
+      "status": 200,
+      "title": "Help center | LokFeel",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 17,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/about",
+      "status": 200,
+      "title": "About | LokFeel",
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "overflowX": 0,
+      "targets": 26,
+      "under24": 17,
+      "under44": 23,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/",
+      "status": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 30,
+      "under24": 19,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Product",
+          "w": 47,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "label": "Solutions",
+          "w": 54,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "label": "How it works",
+          "w": 76,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 41,
+          "h": 20
+        },
+        {
+          "tag": "a",
+          "label": "Product",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 1,
+      "axeSerious": 1,
+      "axeSeriousIds": [
+        "color-contrast(3)"
+      ],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "19 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/pricing",
+      "status": 200,
+      "title": "Pricing · LokFeel Connection OS | LokFeel",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 37,
+      "under24": 21,
+      "under44": 35,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "退款政策",
+          "w": 48,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "21 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/product",
+      "status": 200,
+      "title": "Product | LokFeel",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 20,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/solutions",
+      "status": 200,
+      "title": "Solutions | LokFeel",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 20,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/stories",
+      "status": 200,
+      "title": "Stories | LokFeel",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 20,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/how-it-works",
+      "status": 200,
+      "title": "How it works | LokFeel",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 20,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/help",
+      "status": 200,
+      "title": "Help center | LokFeel",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 27,
+      "under24": 20,
+      "under44": 25,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/about",
+      "status": 200,
+      "title": "About | LokFeel",
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflowX": 0,
+      "targets": 26,
+      "under24": 20,
+      "under44": 23,
+      "under24Samples": [
+        {
+          "tag": "a",
+          "label": "Pricing",
+          "w": 40,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "About Us",
+          "w": 53,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Careers",
+          "w": 46,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Press",
+          "w": 31,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "label": "Contact",
+          "w": 46,
+          "h": 16
+        }
+      ],
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeSeriousIds": [],
+      "focus": {
+        "focused": "a",
+        "outlineWidth": 1,
+        "outlineStyle": "auto",
+        "boxShadow": false,
+        "visible": true
+      },
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "viewport": "mobile-360",
+      "route": "/",
+      "issues": [
+        "15 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/pricing",
+      "issues": [
+        "21 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/product",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/solutions",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/stories",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/how-it-works",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/help",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-360",
+      "route": "/about",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/",
+      "issues": [
+        "15 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/pricing",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/product",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/solutions",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/stories",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/how-it-works",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/help",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "mobile-390",
+      "route": "/about",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/",
+      "issues": [
+        "18 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/pricing",
+      "issues": [
+        "18 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/product",
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/solutions",
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/stories",
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/how-it-works",
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/help",
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "tablet-768",
+      "route": "/about",
+      "issues": [
+        "17 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/",
+      "issues": [
+        "19 个指针目标 <24px",
+        "axe serious/critical：color-contrast(3)"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/pricing",
+      "issues": [
+        "21 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/product",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/solutions",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/stories",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/how-it-works",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/help",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    },
+    {
+      "viewport": "desktop-1440",
+      "route": "/about",
+      "issues": [
+        "20 个指针目标 <24px"
+      ]
+    }
+  ],
+  "summary": {
+    "cells": 32,
+    "failedCells": 32,
+    "axeVersion": "4.13.0"
+  },
+  "verdict": "FAIL"
+}

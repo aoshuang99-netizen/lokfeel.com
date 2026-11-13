@@ -8,6 +8,7 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth/auth'
+import AuthProvider from '@/components/providers/auth-provider'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,5 +33,9 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
     redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`)
   }
 
-  return <>{children}</>
+  return (
+    <AuthProvider>
+      {children}
+    </AuthProvider>
+  )
 }

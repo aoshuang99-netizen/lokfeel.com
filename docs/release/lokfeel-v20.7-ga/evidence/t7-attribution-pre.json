@@ -1,0 +1,1184 @@
+{
+  "measuredAt": "2026-11-13T07:07:47.291Z",
+  "base": "http://127.0.0.1:3116",
+  "urls": [
+    "http://127.0.0.1:3116/",
+    "http://127.0.0.1:3116/product"
+  ],
+  "pages": [
+    {
+      "url": "http://127.0.0.1:3116/",
+      "status": 200,
+      "settleMs": 4000,
+      "profile": "mobile-4g-4xcpu",
+      "mainThread": {
+        "pid": 47273,
+        "tid": 14888813
+      },
+      "taskEventName": "ThreadControllerImpl::RunTask",
+      "longTasks": [
+        {
+          "startMs": 1337471141,
+          "durMs": 61,
+          "blockingMs": 11,
+          "top": [
+            {
+              "who": "ParseHTML",
+              "ms": 0
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337471324,
+          "durMs": 591,
+          "blockingMs": 541,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 27
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 21
+            },
+            {
+              "who": "CommitLoad",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337472118,
+          "durMs": 105,
+          "blockingMs": 55,
+          "top": [
+            {
+              "who": "ParseHTML",
+              "ms": 105
+            },
+            {
+              "who": "ParseAuthorStyleSheet",
+              "ms": 5
+            }
+          ]
+        },
+        {
+          "startMs": 1337472516,
+          "durMs": 53,
+          "blockingMs": 3,
+          "top": []
+        },
+        {
+          "startMs": 1337472579,
+          "durMs": 63,
+          "blockingMs": 13,
+          "top": [
+            {
+              "who": "ParseAuthorStyleSheet",
+              "ms": 38
+            }
+          ]
+        },
+        {
+          "startMs": 1337472931,
+          "durMs": 177,
+          "blockingMs": 127,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 129
+            },
+            {
+              "who": "Layout",
+              "ms": 27
+            },
+            {
+              "who": "PrePaint",
+              "ms": 15
+            }
+          ]
+        },
+        {
+          "startMs": 1337473141,
+          "durMs": 284,
+          "blockingMs": 234,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 170
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 53
+            },
+            {
+              "who": "PrePaint",
+              "ms": 28
+            }
+          ]
+        },
+        {
+          "startMs": 1337473438,
+          "durMs": 50,
+          "blockingMs": 0,
+          "top": [
+            {
+              "who": "EvaluateScript @ 0wvs18o7d2avx.js",
+              "ms": 47
+            },
+            {
+              "who": "v8.compile",
+              "ms": 1
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337473586,
+          "durMs": 595,
+          "blockingMs": 545,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 297
+            },
+            {
+              "who": "Paint",
+              "ms": 181
+            },
+            {
+              "who": "PrePaint",
+              "ms": 61
+            }
+          ]
+        },
+        {
+          "startMs": 1337474499,
+          "durMs": 176,
+          "blockingMs": 126,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 61
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 51
+            },
+            {
+              "who": "Paint",
+              "ms": 46
+            }
+          ]
+        },
+        {
+          "startMs": 1337475160,
+          "durMs": 617,
+          "blockingMs": 567,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 437
+            },
+            {
+              "who": "Paint",
+              "ms": 92
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 49
+            }
+          ]
+        },
+        {
+          "startMs": 1337476104,
+          "durMs": 92,
+          "blockingMs": 42,
+          "top": [
+            {
+              "who": "EvaluateScript @ 3v7a73shhkgwt.js",
+              "ms": 92
+            },
+            {
+              "who": "v8.compile",
+              "ms": 6
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337476295,
+          "durMs": 128,
+          "blockingMs": 78,
+          "top": [
+            {
+              "who": "EvaluateScript @ 2xt73imog50f2.js",
+              "ms": 125
+            },
+            {
+              "who": "v8.compile",
+              "ms": 0
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337476429,
+          "durMs": 297,
+          "blockingMs": 247,
+          "top": [
+            {
+              "who": "EvaluateScript @ 0xylpbtrknfne.js",
+              "ms": 297
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 295
+            },
+            {
+              "who": "v8.compile",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337476726,
+          "durMs": 84,
+          "blockingMs": 34,
+          "top": [
+            {
+              "who": "ParseHTML",
+              "ms": 84
+            },
+            {
+              "who": "EvaluateScript @ ",
+              "ms": 83
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 82
+            }
+          ]
+        },
+        {
+          "startMs": 1337476868,
+          "durMs": 241,
+          "blockingMs": 191,
+          "top": [
+            {
+              "who": "EventDispatch",
+              "ms": 22
+            },
+            {
+              "who": "FunctionCall @ ",
+              "ms": 14
+            },
+            {
+              "who": "i @ 2xt73imog50f2.js",
+              "ms": 3
+            }
+          ]
+        },
+        {
+          "startMs": 1337477119,
+          "durMs": 124,
+          "blockingMs": 74,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 124
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337477328,
+          "durMs": 58,
+          "blockingMs": 8,
+          "top": []
+        },
+        {
+          "startMs": 1337477497,
+          "durMs": 330,
+          "blockingMs": 280,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 321
+            },
+            {
+              "who": "MinorGC",
+              "ms": 22
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 9
+            }
+          ]
+        },
+        {
+          "startMs": 1337478077,
+          "durMs": 119,
+          "blockingMs": 69,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 90
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 28
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337478208,
+          "durMs": 59,
+          "blockingMs": 9,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 59
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337478281,
+          "durMs": 146,
+          "blockingMs": 96,
+          "top": [
+            {
+              "who": "RunMicrotasks",
+              "ms": 136
+            },
+            {
+              "who": "C @ 3v7a73shhkgwt.js",
+              "ms": 22
+            },
+            {
+              "who": "IntersectionObserver.rootMargin @ 3v7a73shhkgwt.js",
+              "ms": 10
+            }
+          ]
+        },
+        {
+          "startMs": 1337479644,
+          "durMs": 91,
+          "blockingMs": 41,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 91
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337479739,
+          "durMs": 81,
+          "blockingMs": 31,
+          "top": [
+            {
+              "who": "EventDispatch",
+              "ms": 65
+            },
+            {
+              "who": "dY @ 2xt73imog50f2.js",
+              "ms": 65
+            },
+            {
+              "who": "EvaluateScript @ 03t5ie9_dl8s6.js",
+              "ms": 17
+            }
+          ]
+        },
+        {
+          "startMs": 1337479897,
+          "durMs": 63,
+          "blockingMs": 13,
+          "top": [
+            {
+              "who": "FireAnimationFrame",
+              "ms": 30
+            },
+            {
+              "who": "d @ 3hlio1kqts2it.js",
+              "ms": 29
+            },
+            {
+              "who": "Layerize",
+              "ms": 18
+            }
+          ]
+        },
+        {
+          "startMs": 1337480215,
+          "durMs": 77,
+          "blockingMs": 27,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 21
+            },
+            {
+              "who": "Layerize",
+              "ms": 18
+            },
+            {
+              "who": "PrePaint",
+              "ms": 13
+            }
+          ]
+        },
+        {
+          "startMs": 1337480293,
+          "durMs": 129,
+          "blockingMs": 79,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 68
+            },
+            {
+              "who": "Layerize",
+              "ms": 29
+            },
+            {
+              "who": "FireAnimationFrame",
+              "ms": 3
+            }
+          ]
+        },
+        {
+          "startMs": 1337480422,
+          "durMs": 91,
+          "blockingMs": 41,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 61
+            },
+            {
+              "who": "Paint",
+              "ms": 6
+            },
+            {
+              "who": "FireAnimationFrame",
+              "ms": 6
+            }
+          ]
+        },
+        {
+          "startMs": 1337480525,
+          "durMs": 75,
+          "blockingMs": 25,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 26
+            },
+            {
+              "who": "FireAnimationFrame",
+              "ms": 16
+            },
+            {
+              "who": "PrePaint",
+              "ms": 14
+            }
+          ]
+        },
+        {
+          "startMs": 1337480600,
+          "durMs": 54,
+          "blockingMs": 4,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 17
+            },
+            {
+              "who": "FireAnimationFrame",
+              "ms": 5
+            },
+            {
+              "who": "Paint",
+              "ms": 5
+            }
+          ]
+        },
+        {
+          "startMs": 1337480696,
+          "durMs": 53,
+          "blockingMs": 3,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 33
+            },
+            {
+              "who": "Paint",
+              "ms": 9
+            },
+            {
+              "who": "FireAnimationFrame",
+              "ms": 6
+            }
+          ]
+        },
+        {
+          "startMs": 1337480820,
+          "durMs": 57,
+          "blockingMs": 7,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 15
+            },
+            {
+              "who": "FireAnimationFrame",
+              "ms": 14
+            },
+            {
+              "who": "d @ 3hlio1kqts2it.js",
+              "ms": 10
+            }
+          ]
+        }
+      ],
+      "attribution": [
+        {
+          "who": "Layout",
+          "ms": 1028,
+          "inLongTasks": true
+        },
+        {
+          "who": "O @ 2xt73imog50f2.js",
+          "ms": 684,
+          "inLongTasks": true
+        },
+        {
+          "who": "UpdateLayoutTree",
+          "ms": 591,
+          "inLongTasks": true
+        },
+        {
+          "who": "RunMicrotasks",
+          "ms": 551,
+          "inLongTasks": true
+        },
+        {
+          "who": "Paint",
+          "ms": 361,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 0xylpbtrknfne.js",
+          "ms": 297,
+          "inLongTasks": true
+        },
+        {
+          "who": "PrePaint",
+          "ms": 191,
+          "inLongTasks": true
+        },
+        {
+          "who": "ParseHTML",
+          "ms": 189,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 2xt73imog50f2.js",
+          "ms": 125,
+          "inLongTasks": true
+        },
+        {
+          "who": "Layerize",
+          "ms": 101,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 3v7a73shhkgwt.js",
+          "ms": 92,
+          "inLongTasks": true
+        },
+        {
+          "who": "FireAnimationFrame",
+          "ms": 90,
+          "inLongTasks": true
+        },
+        {
+          "who": "EventDispatch",
+          "ms": 87,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ ",
+          "ms": 83,
+          "inLongTasks": true
+        },
+        {
+          "who": "dY @ 2xt73imog50f2.js",
+          "ms": 65,
+          "inLongTasks": true
+        },
+        {
+          "who": "d @ 3hlio1kqts2it.js",
+          "ms": 53,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 0wvs18o7d2avx.js",
+          "ms": 47,
+          "inLongTasks": true
+        },
+        {
+          "who": "ParseAuthorStyleSheet",
+          "ms": 43,
+          "inLongTasks": true
+        }
+      ],
+      "tbtMs": 3621,
+      "longTaskCount": 32,
+      "events": 37845
+    },
+    {
+      "url": "http://127.0.0.1:3116/product",
+      "status": 200,
+      "settleMs": 4000,
+      "profile": "mobile-4g-4xcpu",
+      "mainThread": {
+        "pid": 47294,
+        "tid": 14889006
+      },
+      "taskEventName": "ThreadControllerImpl::RunTask",
+      "longTasks": [
+        {
+          "startMs": 1337485929,
+          "durMs": 327,
+          "blockingMs": 277,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 3
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 0
+            },
+            {
+              "who": "CommitLoad",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337486940,
+          "durMs": 122,
+          "blockingMs": 72,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 90
+            },
+            {
+              "who": "Layout",
+              "ms": 10
+            },
+            {
+              "who": "PrePaint",
+              "ms": 1
+            }
+          ]
+        },
+        {
+          "startMs": 1337487145,
+          "durMs": 110,
+          "blockingMs": 60,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 37
+            },
+            {
+              "who": "Paint",
+              "ms": 4
+            },
+            {
+              "who": "PrePaint",
+              "ms": 2
+            }
+          ]
+        },
+        {
+          "startMs": 1337487255,
+          "durMs": 85,
+          "blockingMs": 35,
+          "top": []
+        },
+        {
+          "startMs": 1337487372,
+          "durMs": 1317,
+          "blockingMs": 1267,
+          "top": [
+            {
+              "who": "Layout",
+              "ms": 1224
+            },
+            {
+              "who": "PrePaint",
+              "ms": 27
+            },
+            {
+              "who": "Paint",
+              "ms": 24
+            }
+          ]
+        },
+        {
+          "startMs": 1337488945,
+          "durMs": 58,
+          "blockingMs": 8,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 23
+            },
+            {
+              "who": "Layerize",
+              "ms": 1
+            },
+            {
+              "who": "Paint",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337489466,
+          "durMs": 75,
+          "blockingMs": 25,
+          "top": [
+            {
+              "who": "EvaluateScript @ turbopack-0rw29v8dsd-kr.js",
+              "ms": 75
+            },
+            {
+              "who": "v8.compile",
+              "ms": 0
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337489585,
+          "durMs": 81,
+          "blockingMs": 31,
+          "top": [
+            {
+              "who": "Paint",
+              "ms": 43
+            },
+            {
+              "who": "Layerize",
+              "ms": 2
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337489677,
+          "durMs": 139,
+          "blockingMs": 89,
+          "top": [
+            {
+              "who": "EvaluateScript @ 3v7a73shhkgwt.js",
+              "ms": 139
+            },
+            {
+              "who": "v8.compile",
+              "ms": 0
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337489842,
+          "durMs": 1556,
+          "blockingMs": 1506,
+          "top": [
+            {
+              "who": "EvaluateScript @ 2xt73imog50f2.js",
+              "ms": 1484
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 1300
+            },
+            {
+              "who": "EventDispatch",
+              "ms": 68
+            }
+          ]
+        },
+        {
+          "startMs": 1337491404,
+          "durMs": 84,
+          "blockingMs": 34,
+          "top": [
+            {
+              "who": "EventDispatch",
+              "ms": 51
+            },
+            {
+              "who": "dY @ 2xt73imog50f2.js",
+              "ms": 49
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337491510,
+          "durMs": 233,
+          "blockingMs": 183,
+          "top": [
+            {
+              "who": "EventDispatch",
+              "ms": 185
+            },
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 36
+            },
+            {
+              "who": "FunctionCall @ product",
+              "ms": 1
+            }
+          ]
+        },
+        {
+          "startMs": 1337491861,
+          "durMs": 159,
+          "blockingMs": 109,
+          "top": [
+            {
+              "who": "RunMicrotasks",
+              "ms": 145
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 145
+            },
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 14
+            }
+          ]
+        },
+        {
+          "startMs": 1337492052,
+          "durMs": 87,
+          "blockingMs": 37,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 9
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337492214,
+          "durMs": 56,
+          "blockingMs": 6,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 56
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337492332,
+          "durMs": 75,
+          "blockingMs": 25,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 75
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337492487,
+          "durMs": 103,
+          "blockingMs": 53,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 103
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            },
+            {
+              "who": "FunctionCall @ 2xt73imog50f2.js",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337492606,
+          "durMs": 167,
+          "blockingMs": 117,
+          "top": [
+            {
+              "who": "O @ 2xt73imog50f2.js",
+              "ms": 167
+            },
+            {
+              "who": "MinorGC",
+              "ms": 43
+            },
+            {
+              "who": "RunMicrotasks",
+              "ms": 0
+            }
+          ]
+        },
+        {
+          "startMs": 1337492804,
+          "durMs": 208,
+          "blockingMs": 158,
+          "top": [
+            {
+              "who": "RunMicrotasks",
+              "ms": 191
+            },
+            {
+              "who": "C @ 3v7a73shhkgwt.js",
+              "ms": 73
+            },
+            {
+              "who": "IntersectionObserver.rootMargin @ 3v7a73shhkgwt.js",
+              "ms": 15
+            }
+          ]
+        },
+        {
+          "startMs": 1337493472,
+          "durMs": 332,
+          "blockingMs": 282,
+          "top": [
+            {
+              "who": "EventDispatch",
+              "ms": 272
+            },
+            {
+              "who": "dY @ 2xt73imog50f2.js",
+              "ms": 271
+            },
+            {
+              "who": "Paint",
+              "ms": 8
+            }
+          ]
+        },
+        {
+          "startMs": 1337494123,
+          "durMs": 63,
+          "blockingMs": 13,
+          "top": [
+            {
+              "who": "UpdateLayoutTree",
+              "ms": 26
+            },
+            {
+              "who": "Paint",
+              "ms": 2
+            },
+            {
+              "who": "PrePaint",
+              "ms": 2
+            }
+          ]
+        },
+        {
+          "startMs": 1337495083,
+          "durMs": 51,
+          "blockingMs": 1,
+          "top": []
+        }
+      ],
+      "attribution": [
+        {
+          "who": "RunMicrotasks",
+          "ms": 1636,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 2xt73imog50f2.js",
+          "ms": 1484,
+          "inLongTasks": true
+        },
+        {
+          "who": "Layout",
+          "ms": 1237,
+          "inLongTasks": true
+        },
+        {
+          "who": "EventDispatch",
+          "ms": 576,
+          "inLongTasks": true
+        },
+        {
+          "who": "O @ 2xt73imog50f2.js",
+          "ms": 423,
+          "inLongTasks": true
+        },
+        {
+          "who": "dY @ 2xt73imog50f2.js",
+          "ms": 389,
+          "inLongTasks": true
+        },
+        {
+          "who": "UpdateLayoutTree",
+          "ms": 230,
+          "inLongTasks": true
+        },
+        {
+          "who": "FunctionCall @ 2xt73imog50f2.js",
+          "ms": 149,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ 3v7a73shhkgwt.js",
+          "ms": 139,
+          "inLongTasks": true
+        },
+        {
+          "who": "Paint",
+          "ms": 83,
+          "inLongTasks": true
+        },
+        {
+          "who": "EvaluateScript @ turbopack-0rw29v8dsd-kr.js",
+          "ms": 75,
+          "inLongTasks": true
+        },
+        {
+          "who": "C @ 3v7a73shhkgwt.js",
+          "ms": 73,
+          "inLongTasks": true
+        },
+        {
+          "who": "MinorGC",
+          "ms": 43,
+          "inLongTasks": true
+        },
+        {
+          "who": "PrePaint",
+          "ms": 37,
+          "inLongTasks": true
+        },
+        {
+          "who": "IntersectionObserver.rootMargin @ 3v7a73shhkgwt.js",
+          "ms": 15,
+          "inLongTasks": true
+        },
+        {
+          "who": "Layerize",
+          "ms": 10,
+          "inLongTasks": true
+        },
+        {
+          "who": "FunctionCall @ product",
+          "ms": 1,
+          "inLongTasks": true
+        },
+        {
+          "who": "CommitLoad",
+          "ms": 0,
+          "inLongTasks": true
+        }
+      ],
+      "tbtMs": 4388,
+      "longTaskCount": 22,
+      "events": 44361
+    }
+  ]
+}

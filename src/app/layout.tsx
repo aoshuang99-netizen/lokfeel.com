@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit, Sora } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "@/components/providers/auth-provider";
-import { registerServiceWorker } from "@/lib/service-worker";
 
 // Self-hosted fonts via next/font — eliminates Google Fonts CDN dependency
 // Auto-optimizes: no CLS, no layout shift, no external request, works in China
@@ -164,7 +162,13 @@ if ('serviceWorker' in navigator) {
             LazyMotion 已下放到 (dashboard)/dashboard-ui.tsx。
             注意：这里不能再包 LazyMotion，否则下放等于没做（双 provider 会
             掩盖漏挂问题，但 /login 的 JS 不会下降）。 */}
-        <AuthProvider>{children}</AuthProvider>
+        {/* 🔴 R6-T7：SessionProvider 从根布局**下放**到真正用它的四棵子树
+            （dashboard / workspace / console / admin）。
+            实测依据：`useSession` 在 src 里只出现在 dashboard / workspace 组件，
+            公开营销页一个都不用；而根布局挂 SessionProvider 会让每个营销页
+            都下载 next-auth/react、并在水合后打一次 `/api/auth/session`。
+            (dashboard) 本来就已经在 dashboard-ui.tsx 里自带 SessionProvider（且预置了服务端 session）。 */}
+        {children}
       </body>
     </html>
   );

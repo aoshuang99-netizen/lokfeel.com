@@ -16,6 +16,7 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth/auth'
+import AuthProvider from '@/components/providers/auth-provider'
 import {
   capabilitiesOf,
   listTenants,
@@ -88,14 +89,17 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
   }
 
   return (
-    <ConsoleShell
-      organizationName={organizationName}
-      capabilities={capabilities}
-      tenantCount={tenantCount}
-      tenants={tenants}
-      activeOrganizationId={activeOrganizationId}
-    >
-      {children}
-    </ConsoleShell>
+    // R6-T7：SessionProvider 只在组织态子树里挂（sidebar-v2 用 useSession）
+    <AuthProvider>
+      <ConsoleShell
+        organizationName={organizationName}
+        capabilities={capabilities}
+        tenantCount={tenantCount}
+        tenants={tenants}
+        activeOrganizationId={activeOrganizationId}
+      >
+        {children}
+      </ConsoleShell>
+    </AuthProvider>
   )
 }

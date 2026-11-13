@@ -1,0 +1,134 @@
+================================================================================
+LOKFEEL 轻量门禁日检 · 2026-11-13 (CST)
+文件名口径：gates-daily-2026-11-13.log（YYYY-MM-DD，与同目录 evidence 日志命名一致）
+================================================================================
+仓库        : /Users/frankzhao/WorkBuddy/20260402202519/nexus-app
+分支 / HEAD : main @ 0e16959
+执行窗口    : 2026-11-13 09:24:51 ~ 09:27:44 CST
+命令前缀    : env -u NODE_OPTIONS（逐条生效，10/10 项均带该前缀）
+原始 NODE_OPTIONS : --require=".../node-language-shim.cjs"（已由 env -u 移除）
+Node        : v22.22.2
+范围声明    : 仅下列 10 项轻量日检；**未运行全量 116 格 G4 矩阵**
+正式发布结论: NO_GO（沿用，未推进状态词 / 未发布 / 未切流 / 未改生产配置 / 未发生真实扣款）
+本次性质    : 只读检测；未自动修代码、未更新 lint 基线、未放宽阈值、未把失败写成 PASS
+
+--------------------------------------------------------------------------------
+一、逐项结果（退出码 + 结论）
+--------------------------------------------------------------------------------
+[01] FAIL  exit=2   64s  env -u NODE_OPTIONS npx tsc --noEmit
+[02] PASS  exit=0   72s  env -u NODE_OPTIONS npm run lint:gate
+[03] PASS  exit=0   30s  env -u NODE_OPTIONS npm test -- --silent
+[04] PASS  exit=0    0s  env -u NODE_OPTIONS npm run verify:brand-scan
+[05] PASS  exit=0    4s  env -u NODE_OPTIONS npm run check:products
+[06] PASS  exit=0    2s  env -u NODE_OPTIONS npm run check:secrets
+[07] PASS  exit=0    0s  env -u NODE_OPTIONS node --test scripts/qa/b4-g4-verdict.test.mjs
+[08] PASS  exit=0    1s  env -u NODE_OPTIONS node --test scripts/qa/checkout-sentinel-verdict.test.mjs
+[09] PASS  exit=0    0s  env -u NODE_OPTIONS node --test scripts/qa/verify-figma-import-kit.test.mjs
+[10] PASS  exit=0    0s  env -u NODE_OPTIONS node scripts/qa/verify-figma-import-kit.mjs
+
+汇总 : total=10  PASS=9  FAIL=1
+本次日检整体结论 : **FAIL**（因 [01] 失败；未做有利推定、未折算为 PASS）
+
+关键输出摘录（每项末段，完整输出见文末留存说明）
+  [01] 2 条诊断：
+       .next/types/validator.ts(1010,39): TS2307 Cannot find module '../../src/app/(public)/page.js'
+       .next/types/validator.ts(1018,69): TS2344 '__InvalidParamMatchingKeys' 不满足 never 约束
+  [02] ✅ lint 棘轮通过：零新增（债务下降 5 处、清零 17 处）；LINT_GATE_EXIT=0
+  [03] Test Suites: 145 passed, 145 total · Tests: 2730 passed, 2730 total
+  [04] 公开路由扫描 27 个 page/layout · 禁词 12 条 → 27 干净 / 0 命中 / 0 处
+  [05] 商业契约通过（R1–R5 全过；销售入口未指向 /pay.html、/pricing 为真实页面）
+  [06] 扫描 2481 个跟踪文件 → ✅ PASS 无命中
+  [07] node:test  # tests 8 · # pass 8 · # fail 0   （G4 判定层单测，非矩阵）
+  [08] node:test  # tests 6 · # pass 6 · # fail 0   （收银台判定层）
+  [09] node:test  # tests 4 · # pass 4 · # fail 0   （Figma 资产校验，含负控）
+  [10] {"ok":true,"errors":[],"stats":{"frames":20,"colorTokens":33,"components":9,
+        "systems":["landing-light","public-dark","living-connection-os"]}}
+
+--------------------------------------------------------------------------------
+二、FAIL 项新增债定位：[01] npx tsc --noEmit（exit=2）
+--------------------------------------------------------------------------------
+诊断原文（2 条，均落在 Next.js 生成文件而非业务源码）：
+  .next/types/validator.ts(1010,39): error TS2307: Cannot find module
+      '../../src/app/(public)/page.js' or its corresponding type declarations.
+  .next/types/validator.ts(1018,69): error TS2344: Type '__InvalidParamMatchingKeys'
+      does not satisfy the constraint 'never'. Type 'string' is not assignable to type 'never'.
+
+定位链（全部为只读核查，未作任何修改）：
+  1) tsconfig.json 的 include 含 ".next/types/**/*.ts" → 生成文件 validator.ts 纳入 tsc
+     检查范围；exclude 不含 .next。
+  2) .next/types/validator.ts 生成于 2026-11-12 20:00:46；第 1010 行保留
+     typeof import("../../src/app/(public)/page.js")，注释为
+     "Validate ../../src/app/(public)/page.tsx"；第 1018 行的 never 断言即由该 handler
+     类型派生（TS2344 是 TS2307 的连锁派生，不是独立缺陷）。
+  3) 当前工作树中 src/app/(public)/page.tsx 与 page.js 均不存在；git ls-files 亦无该路径；
+     src/app/(public)/ 目录内只有 layout.tsx 与各子路由，无根 page。
+  4) 根首页实际位于 src/app/(landing)/page.tsx（mtime 2026-11-12 20:20:35，晚于生成物）。
+     git 只读核查：提交 dd3db32「B2 官网八页闭环」同一笔内 --diff-filter=D 删除
+     src/app/(public)/page.tsx、--diff-filter=A 新增 src/app/(landing)/page.tsx，
+     即首页由 (public) 路由组迁移到 (landing) 路由组。
+  5) 对 validator.ts 全量审计：306 处 typeof import() 引用中仅 1 处失效
+     （正是 ../../src/app/(public)/page.js）→ 不是生成类型整体陈旧，而是**单条旧路由组残留**。
+
+是否新增债判定：
+  历史基线（同为 env -u NODE_OPTIONS 口径）均为 0 诊断：
+    · gates-b2-2026-11-10.log            : "-- tsc -- EXIT=0（0 诊断）"
+    · gates-b4-2026-11-11.log            : "-- tsc -- EXIT=0（0 诊断）"
+    · gates-2026-11-12-automation.log    : "--- tsc --- TSC_OK"
+  今日 exit=2 / 2 诊断 → 相对历史基线为 **新增红灯（新增债 / 回归）**，记 FAIL。
+  性质：证据指向「.next/types 生成快照早于路由组迁移，残留一条已失效的旧路径校验块」，
+  属构建产物与源码树不同步；但本次为只读日检，**未执行重建或复跑验证**，故不排除
+  其他成因。按 FAIL 如实记录，不做有利推定、不改写为 PASS。
+
+建议动作（仅建议；本任务及本次自动化均不执行任何一项）：
+  A. 由发布负责人在独立受控变更中复核首页路由归属与生成物时序：
+     git log --all --oneline -- "src/app/(public)/page.tsx"、
+     git ls-tree HEAD "src/app/(landing)/"，确认迁移事实与 .next/types 的生成时间。
+  B. 若确认属 stale 生成物：重新生成 .next/types（next build 或清理该生成类型目录）后，
+     复跑 env -u NODE_OPTIONS npx tsc --noEmit，要求 0 诊断；复跑结果另立证据文件，
+     不回填、不覆盖本日志。
+  C. 严禁以「修改 tsconfig.json 的 include 排除 .next/types」、加 @ts-ignore、
+     改 lint 基线或放宽任何阈值的方式消除该红灯 —— 属放宽门禁 / 改动生产配置，禁止。
+  D. 若复核后判定首页路由确有缺口，按真实产品缺口立项，走独立修复 + TDD 回归，
+     不由日检自动修代码。
+  E. 在 tsc 恢复 0 诊断之前，本次日检结论保持 FAIL；不得据此推进任何状态词，
+     正式结论仍为 NO_GO。
+
+--------------------------------------------------------------------------------
+三、观察项（非 FAIL，不改变上述退出码结论）
+--------------------------------------------------------------------------------
+· [03] jest 145 suites / 2730 tests 全绿，但输出含
+  "A worker process has failed to exit gracefully and has been force exited"
+  （疑似 open handle / timer 未 unref 泄漏）。exit=0 仍记 PASS；建议后续单独用
+  --detectOpenHandles 定位，不与本次 FAIL 相互抵销或混淆。
+· [02] lint:gate 输出中仍列有 src/app/(public)/page.tsx 的规则条目，来自 lint 棘轮的
+  **基线历史快照**，不构成该源码文件当前存在的证明（与 [01] 文件缺失不矛盾）。
+  本任务未更新、未重写 lint 基线。
+· [07] b4-g4-verdict.test.mjs 是 G4 判定层单测（8 个子测），不是 116 格矩阵；
+  本次明确未运行全量 G4 矩阵（历史全量结果见 gates-b4-2026-11-11.log，不在本日检范围）。
+
+--------------------------------------------------------------------------------
+四、工作树未提交改动（只报告，不清理）
+--------------------------------------------------------------------------------
+执行前（约 09:24）与执行后（约 09:28）两次 git status --short 结果一致，均为 3 项：
+  M  docs/release/lokfeel-final-20261110/evidence/checkout-sentinel-2026-11-12.log
+     （+10 行，11-12 哨兵追加记录，非本任务产生）
+  ?? .workbuddy/memory/
+  ?? docs/release/lokfeel-final-20261110/evidence/checkout-sentinel-2026-11-13.log
+结论：10 项门禁命令执行**未产生新的工作树改动**，即未自动修代码、未更新 lint 基线、
+      未放宽阈值。本任务自身仅新增本证据日志 gates-daily-2026-11-13.log。
+未执行清理、暂存、提交、回滚、状态词推进或任何生产配置变更。
+
+--------------------------------------------------------------------------------
+五、边界与口径声明
+--------------------------------------------------------------------------------
+· 正式发布结论仍为 NO_GO（锚点：09_GO_NO_GO.md、12_RC_FINAL_GO_NO_GO.md、
+  RELEASE_STATUS.md 为唯一状态页）。本次仅做检测。
+· 未发布、未切流、未改生产配置、未发生真实扣款、未推进状态词。
+· 未自动修代码、未更新 lint 基线、未放宽阈值、未把任何失败写成 PASS。
+· 逐项完整 stdout/stderr 留存于临时目录 /tmp/gates-daily-20261113/{01..10}.out，
+  退出码台账 /tmp/gates-daily-20261113/results.tsv（idx | exit | elapsed_s | cmd）；
+  均为仓库外临时文件，未纳入版本控制。
+
+================================================================================
+本次日检结论：FAIL —— 1/10 项失败（[01] npx tsc --noEmit exit=2）
+================================================================================

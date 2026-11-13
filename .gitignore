@@ -126,3 +126,6 @@ perf-baseline.db-shm
 # 漂移守卫变异自证的临时文件（被打断时会留下，绝不能进仓库）
 tsconfig.drift-probe.json
 .drift-probe-backup
+
+# R6-T8 健康检查脚本的临时 sqlite 库（跑完自删；被打断时别进仓库）
+.r6-tmp/

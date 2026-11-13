@@ -1,0 +1,68 @@
+{
+  "startedAt": "2026-11-13T08:30:58.587Z",
+  "finishedAt": "2026-11-13T08:32:40.171Z",
+  "environment": {
+    "node": "v22.22.2",
+    "dbUrl": "file:<tmp>",
+    "ports": [
+      3210,
+      3211
+    ]
+  },
+  "tables": 63,
+  "criteria": [
+    {
+      "name": "db push（基线 schema）",
+      "pass": true,
+      "detail": "exit=0",
+      "tail": "Datasource \"db\": SQLite database \"health-1794558658586.db\" at \"file:/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/.r6-tmp/health-1794558658586.db\"\n\nSQLite database health-1794558658586.db created at file:/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/.r6-tmp/health-1794558658586.db\n\n🚀  Your database is now in sync with your Prisma schema. Done in 1.21s\n\n"
+    },
+    {
+      "name": "tenancy 迁移（ALL）",
+      "pass": true,
+      "detail": "exit=0"
+    },
+    {
+      "name": "connection 迁移（ALL）",
+      "pass": true,
+      "detail": "exit=0"
+    },
+    {
+      "name": "库里真有表（不是空文件）",
+      "pass": true,
+      "detail": "tables=63"
+    },
+    {
+      "name": "服务就绪（真构建产物）",
+      "pass": true,
+      "detail": "port=3210"
+    },
+    {
+      "name": "健康检查连续 3 次 200",
+      "pass": true,
+      "detail": "codes=200,200,200"
+    },
+    {
+      "name": "status=healthy 且 dbLatency 为有限数",
+      "pass": true,
+      "detail": "latency=2,4,1"
+    },
+    {
+      "name": "health 能报出构建提交（可追溯）",
+      "pass": true,
+      "detail": "commit=0ddee7f"
+    },
+    {
+      "name": "负向服务就绪",
+      "pass": true,
+      "detail": "port=3211"
+    },
+    {
+      "name": "负向对照：库不可用 → 503 且不谎报 healthy",
+      "pass": true,
+      "detail": "status=503 bodyStatus=unhealthy"
+    }
+  ],
+  "verdict": "PASS",
+  "failed": []
+}

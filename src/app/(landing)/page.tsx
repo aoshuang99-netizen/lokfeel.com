@@ -507,7 +507,11 @@ function OrbitGraph() {
       const { px, py } = project(x, y, z);
       lab.style.left = `calc(50% + ${(px + 6).toFixed(1)}px)`;
       lab.style.top = `calc(50% + ${(py + 18).toFixed(1)}px)`;
-      lab.style.opacity = (0.35 + depth * 0.65).toFixed(2);
+      // R6-T2：下限从 0.35 提到 0.7。
+      // 原因（axe 实测，3 个节点）：深度淡出到 0.35 时，8.5px 的白字与深底混合后
+      // 计算色变成 #5f6060/#636565，对比度 3.0–4.06，低于 AA 的 4.5。
+      // 深度感仍保留（0.7→1.0 的差），但文字不再进入"可读性不合格"的区间。
+      lab.style.opacity = (0.7 + depth * 0.3).toFixed(2);
     };
 
     const wrap = wrapRef.current;
@@ -909,7 +913,7 @@ function SiteFooter() {
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-[13px] transition-colors hover:opacity-60"
+                    className="inline-flex min-h-6 items-center text-[13px] transition-colors hover:opacity-60"
                     style={{ color: MUTED }}
                   >
                     {label}
@@ -985,7 +989,7 @@ export default function LandingPage() {
               <a
                 key={href}
                 href={href}
-                className="text-[13.5px] transition-colors hover:opacity-60"
+                className="inline-flex min-h-6 items-center text-[13.5px] transition-colors hover:opacity-60"
                 style={{ color: MUTED }}
               >
                 {label}

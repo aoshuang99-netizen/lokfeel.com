@@ -1,0 +1,338 @@
+{
+  "checkedAt": "2026-11-13T08:28:06.736Z",
+  "base": "http://127.0.0.1:3122",
+  "readOnly": true,
+  "routes": {
+    "/": {
+      "route": "/",
+      "html": {
+        "status": 200,
+        "visibleBytes": 3892,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "LokFeel — Connection OS for AI-native teams",
+        "robots": "index, follow",
+        "description": "Describe an outcome and LokFeel compiles it into a structured workspace — missions, per-field consent and AI agents — then runs the pipeline with your team. Every number traceable, every outcome verified.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "public, s-maxage=300, stale-while-revalidate=86400",
+        "x-robots-tag": null,
+        "age": null,
+        "etag": "\"euutz8ybve16go\""
+      },
+      "issues": []
+    },
+    "/pricing": {
+      "route": "/pricing",
+      "html": {
+        "status": 200,
+        "visibleBytes": 2092,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Pricing · LokFeel Connection OS | LokFeel",
+        "robots": "index, follow",
+        "description": "LokFeel Connection OS 的订阅套餐与价格：Starter / Growth / Scale，月付或年付，14 天试用。",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+        "x-robots-tag": null,
+        "age": null,
+        "etag": null
+      },
+      "issues": []
+    },
+    "/product": {
+      "route": "/product",
+      "html": {
+        "status": 200,
+        "visibleBytes": 535,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Product | LokFeel",
+        "robots": "noindex, nofollow",
+        "description": "One workspace from intent to proof: intent, proposals, consent, approved agent action and three-level outcome verification — plus a machine surface of MCP tools and A2A tasks.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "public, max-age=0, must-revalidate, s-maxage=0",
+        "x-robots-tag": "noindex, nofollow",
+        "age": null,
+        "etag": "\"fxbmhyhj4er0y\""
+      },
+      "issues": []
+    },
+    "/solutions": {
+      "route": "/solutions",
+      "html": {
+        "status": 200,
+        "visibleBytes": 537,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Solutions | LokFeel",
+        "robots": "noindex, nofollow",
+        "description": "LokFeel in practice: professional introductions for communities, goal execution for small teams, and collaboration workflows for hiring and cross-border work.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "public, max-age=0, must-revalidate, s-maxage=0",
+        "x-robots-tag": "noindex, nofollow",
+        "age": null,
+        "etag": "\"65nbgf2uu5qzs\""
+      },
+      "issues": []
+    },
+    "/stories": {
+      "route": "/stories",
+      "html": {
+        "status": 200,
+        "visibleBytes": 535,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Stories | LokFeel",
+        "robots": "noindex, nofollow",
+        "description": "Two complete walkthroughs of LokFeel: a consented professional introduction and a small-team goal executed under approval and externally verified.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "public, max-age=0, must-revalidate, s-maxage=0",
+        "x-robots-tag": "noindex, nofollow",
+        "age": null,
+        "etag": "\"rxx4ntts5mqyi\""
+      },
+      "issues": []
+    },
+    "/how-it-works": {
+      "route": "/how-it-works",
+      "html": {
+        "status": 200,
+        "visibleBytes": 540,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "How it works | LokFeel",
+        "robots": "noindex, nofollow",
+        "description": "From sign-up to your first verified outcome: register, create or join an organization, submit a goal, approve, and check the result — with failure recovery and support along the way.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "public, max-age=0, must-revalidate, s-maxage=0",
+        "x-robots-tag": "noindex, nofollow",
+        "age": null,
+        "etag": "\"xe6q593qbhr2w\""
+      },
+      "issues": []
+    },
+    "/help": {
+      "route": "/help",
+      "html": {
+        "status": 200,
+        "visibleBytes": 539,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Help center | LokFeel",
+        "robots": "noindex, nofollow",
+        "description": "Answers to common questions about accounts, billing, consent and outcomes — plus how to reach the right mailbox when you need a human.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "public, max-age=0, must-revalidate, s-maxage=0",
+        "x-robots-tag": "noindex, nofollow",
+        "age": null,
+        "etag": "\"dpkfcoh6ogqza\""
+      },
+      "issues": []
+    },
+    "/about": {
+      "route": "/about",
+      "html": {
+        "status": 200,
+        "visibleBytes": 3057,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "About | LokFeel",
+        "robots": "index, follow",
+        "description": "LokFeel compiles a plain-language goal into a structured workspace — missions, per-field consent, agents and measurable outcomes. Every number traceable, every outcome verified.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "s-maxage=31536000",
+        "x-robots-tag": null,
+        "age": null,
+        "etag": "\"n897fkyix015ts\""
+      },
+      "issues": []
+    },
+    "/terms": {
+      "route": "/terms",
+      "html": {
+        "status": 200,
+        "visibleBytes": 8835,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Terms of Service | LokFeel",
+        "robots": "index, follow",
+        "description": "Terms governing use of LokFeel — an agent-native workspace that compiles intent into structured, permissioned work.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "s-maxage=31536000",
+        "x-robots-tag": null,
+        "age": null,
+        "etag": "\"uhmd7s1d7x1kpe\""
+      },
+      "issues": []
+    },
+    "/privacy": {
+      "route": "/privacy",
+      "html": {
+        "status": 200,
+        "visibleBytes": 8454,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Privacy Policy | LokFeel",
+        "robots": "index, follow",
+        "description": "How LokFeel collects, uses and safeguards data in an agent-native workspace — including what agents may access and how consent is recorded.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "s-maxage=31536000",
+        "x-robots-tag": null,
+        "age": null,
+        "etag": "\"4qffg6n4wd1nmz\""
+      },
+      "issues": []
+    },
+    "/refunds": {
+      "route": "/refunds",
+      "html": {
+        "status": 200,
+        "visibleBytes": 4029,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Refunds Policy | LokFeel",
+        "robots": "index, follow",
+        "description": "When LokFeel issues refunds for workspace subscriptions, and how to request one.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "s-maxage=31536000",
+        "x-robots-tag": null,
+        "age": null,
+        "etag": "\"x6n8y8h2417kl\""
+      },
+      "issues": []
+    },
+    "/contact": {
+      "route": "/contact",
+      "html": {
+        "status": 200,
+        "visibleBytes": 1506,
+        "hits": []
+      },
+      "rsc": {
+        "status": 307,
+        "bytes": 0,
+        "hits": []
+      },
+      "metadata": {
+        "title": "Contact Us - LokFeel | LokFeel",
+        "robots": "index, follow",
+        "description": "Get in touch with the LokFeel team.",
+        "canonical": "https://app.lokfeel.com",
+        "hits": []
+      },
+      "cache": {
+        "cache-control": "s-maxage=31536000",
+        "x-robots-tag": null,
+        "age": null,
+        "etag": "\"cexgk1zrw115z5\""
+      },
+      "issues": []
+    }
+  },
+  "findings": [],
+  "sitemap": {
+    "status": 200,
+    "count": 13,
+    "frozenListed": []
+  },
+  "verdict": "PASS"
+}
