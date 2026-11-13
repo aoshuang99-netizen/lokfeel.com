@@ -24,23 +24,23 @@
 | 6 | T8 的"本地复现不了 CI 的库" | 上一轮 E2E ① 恒红 | 新增 `r6-db-health-e2e.mjs`（含负向对照） |
 | 7 | 采集脚本：全部轮次失败时 `cls.toFixed()` 抛错，整份报告崩 | 用它测空白页时自爆 | 补齐字段 + 打印兜底 |
 
-## 3. 13 项门禁：**仍然 4/13**（不因"做了很多事"而上调）
+## 3. 13 项门禁：**5/13**（只上调有证据的那一项）
 
 | 门禁 | 上轮 | 本轮 | 变化依据 |
 |---|---|---|---|
 | G0 / G1 / G6 | PASS | PASS | 未变 |
 | G4 a11y | PASS | **PASS（证据加强）** | 从"单矩阵"升级为 4 视口 × 8 路由 + axe |
 | G2 pages-legal | PARTIAL | PARTIAL | 封存已全链路一致，但 **D8 主体未批**、C-31 三条仍 NOT_TESTED |
-| G8 security | PARTIAL | PARTIAL | 本地仍无 gitleaks 二进制（远端 CI 的 secret-scan 才是真证据） |
+| G8 security | PARTIAL | PARTIAL | 远端 `Secret scan (gitleaks)` / `Dependency audit` / `租户作用域审计` 均 **success**；仍差"部署产物复扫"（按门禁文本留到 G13） |
 | G9 infra | PARTIAL | PARTIAL | D6 范围未定 |
 | G10 perf | PARTIAL | PARTIAL | TBT 未达标且**本机不可判定**（见 §4） |
-| G11 same-rc-gates | PARTIAL | PARTIAL | 远端 CI 待本次 rc 分支推送后回填 |
+| G11 same-rc-gates | PARTIAL | **PASS** | 同一 SHA `d4f9e8f` 上远端 CI **13 成功 / 0 失败 / 2 跳过**（含 E2E 冒烟、gitleaks、租户审计、build、jest、tsc、lint 棘轮）；`evidence/g11-remote-ci.json` |
 | G3 / G12 | BLOCKED | BLOCKED | Figma 写权限、D1 定价批准 |
 | G5 | NOT_TESTED | NOT_TESTED | 真人不可替代 |
 | G7 | PASS_CODE_ONLY | PASS_CODE_ONLY | 不计入 PASS（口径未变） |
 | G13 | N/A | N/A | 未发布 |
 
-> **一句实话**：这一轮把"能自己修的缺陷"从 7 个减到 0 个（在可测量范围内），但门禁数没变——因为剩下的每一个都不是代码问题。**用"修了多少 bug"衡量进度正是这次要避免的**。
+> **一句实话**：门禁从 4/13 到 5/13，只涨了一项（G11），因为只有这一项在本轮拿到了**新的、可复核的**证据。其余六项修掉的缺陷（Sentry 死代码、provider 下放、24px、对比度、缓存头、T8 库基线）都不对应"门禁转绿"——它们对应的是"不该红的地方不再红"。**用"修了多少 bug"衡量进度，正是这次要避免的**。
 
 ## 4. T7 的结论为什么必须这么写
 
@@ -55,7 +55,8 @@
 | 阻塞 | 归属 | 需要什么 |
 |---|---|---|
 | TBT 无法在本机判定 | 我 + 你选方案 | 选 CI 测量 / 换机 / 改合同（见 `14_T7_PERFORMANCE.md` §5） |
-| 远端 CI 全绿 | 我（需一次推送） | 已推 `rc/v20.7-ga`（`ci.yml` 只在 `main` / `rc/**` 触发；`release/**` 不触发，这是上一轮"total_count=0"的真因） |
+| ~~远端 CI 全绿~~ | 已闭合 | `rc/v20.7-ga` @ `d4f9e8f` → 13/0/2；上一轮 `total_count=0` 的真因是 `ci.yml` 的 `push.branches=[main,'rc/**']`，`release/**` 不在名单 |
+| Preview **运行时** | 你（CF 环境配置） | 部署 job `success`，但 `lokfeel-preview.aoshuang99.workers.dev` 探到 502 后拒连 ⇒ 缺 preview 的绑定/密钥；构建成功 ≠ 运行可用 |
 | T3 OWNER→503 | 你 | 一个生产/Preview 的 QA OWNER 会话 |
 | T4 Dodo test_mode | 你 / Dodo 后台 | test_mode key + 商户事件订阅清单 |
 | G3 / G5 / G12 / D8 | 你 | Figma 写权限、真人、定价批准、法人信息 |

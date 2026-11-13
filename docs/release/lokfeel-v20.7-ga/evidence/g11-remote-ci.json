@@ -1,0 +1,92 @@
+{
+  "checkedAt": "2026-11-13T09:40:00Z",
+  "repo": "aoshuang99-netizen/lokfeel.com",
+  "branch": "rc/v20.7-ga",
+  "sha": "d4f9e8fa79334c33f678caaadfac0f4a2ea2cdc9",
+  "ci": {
+    "runId": 43396464573,
+    "url": "https://github.com/aoshuang99-netizen/lokfeel.com/actions/runs/43396464573",
+    "status": "completed",
+    "conclusion": "success",
+    "success": 13,
+    "failed": 0,
+    "skipped": 2,
+    "jobs": [
+      {
+        "name": "Lint (ESLint · 棘轮)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Test (Jest)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Typecheck (tsc --noEmit)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Perf SLO 对账（确定性 · AC-24）",
+        "conclusion": "success"
+      },
+      {
+        "name": "cron 方法一致性（防 405 静默失效）",
+        "conclusion": "success"
+      },
+      {
+        "name": "上线预检汇总口径自证",
+        "conclusion": "success"
+      },
+      {
+        "name": "Dependency audit（生产可达 · 棘轮）",
+        "conclusion": "success"
+      },
+      {
+        "name": "E2E（构建产物 · 浏览器冒烟）",
+        "conclusion": "success"
+      },
+      {
+        "name": "Migration（libSQL 文件库 · 全批次）",
+        "conclusion": "success"
+      },
+      {
+        "name": "Secret scan (gitleaks)",
+        "conclusion": "success"
+      },
+      {
+        "name": "租户作用域审计（跨租户风险）",
+        "conclusion": "success"
+      },
+      {
+        "name": "支付凭据灌注自证",
+        "conclusion": "success"
+      },
+      {
+        "name": "Build (next build)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Perf 基线实跑（手动）",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "DCO sign-off check",
+        "conclusion": "skipped"
+      }
+    ],
+    "note": "同一个 SHA 的全部必需 job 通过；skipped 两项是手动/perf 基线（非必需）"
+  },
+  "preview": {
+    "runId": 43396464647,
+    "conclusion": "success",
+    "target": "Cloudflare Worker `lokfeel-preview`",
+    "url": "https://lokfeel-preview.aoshuang99.workers.dev",
+    "runtimeProbe": "UNVERIFIED",
+    "runtimeNote": "首次探测返回 502 Bad Gateway，随后从本机无法建立连接（000）。构建与部署成功 ≠ 运行时可用：preview worker 很可能缺 env/绑定（DATABASE_URL 等）。此项不计 PASS。"
+  },
+  "production": {
+    "commit": "0e16959",
+    "builtAt": "2026-11-12T12:29:15.741Z",
+    "changed": false,
+    "note": "两次推送均带 [skip netlify]，推送后 health.commit/builtAt 未变"
+  }
+}
