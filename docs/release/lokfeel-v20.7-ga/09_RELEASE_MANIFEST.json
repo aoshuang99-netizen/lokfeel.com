@@ -2,8 +2,8 @@
   "release": "lokfeel-v20.7-ga",
   "status": "NO_GO",
   "generatedAt": "2026-11-13T05:45:00Z",
-  "rcSha": null,
-  "rcShaNote": "冻结于本分支提交后回填；文档提交不得改变此值",
+  "rcSha": "39b4ac81c66608dd40c2a5870a83fb193b0fb8b0",
+  "rcShaNote": "GA 候选 = 39b4ac8（release/v20.7-ga）；后续仅有文档提交，不改变此值",
   "branch": "release/v20.7-ga",
   "productionShaBefore": "0e16959",
   "productionShaAfter": null,
@@ -21,8 +21,8 @@
     "fiveHumanUserSessions": "NOT_TESTED",
     "figmaEditableNodes": "BLOCKED",
     "tbt8of8Under200ms": "FAIL",
-    "remoteRequiredCI": "NOT_TESTED",
-    "previewRuntimeAndE2E": "NOT_TESTED",
+    "remoteRequiredCI": "BLOCKED",
+    "previewRuntimeAndE2E": "BLOCKED",
     "safeRollbackDryRun": "PARTIAL",
     "productionG13": "N/A"
   },
@@ -36,7 +36,8 @@
   },
   "authorization": {
     "approvedRcSha": null,
-    "evidence": null
+    "evidence": null,
+    "note": "workflow 未在分支 push 触发（total_count=0），建 PR 需 token"
   },
   "blockingFindings": [
     "D1 定价未获人工批准（G12 BLOCKED）",
@@ -60,7 +61,12 @@
       "src/app/(public)/{terms,privacy,refunds,contact}/page.tsx、src/config/brand.ts（移除未核实法人断言）",
       "scripts/qa/ga-public-claims-audit.mjs、tests/release/public-surface-frozen.test.ts"
     ],
-    "notChanged": ["prisma/**", "next.config.ts", "netlify.toml", "package.json dependencies"]
+    "notChanged": [
+      "prisma/**",
+      "next.config.ts",
+      "netlify.toml",
+      "package.json dependencies"
+    ]
   },
   "evidence": [
     "evidence/t2-public-claims.json",
