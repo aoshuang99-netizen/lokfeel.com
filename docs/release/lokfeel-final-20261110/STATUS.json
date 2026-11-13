@@ -14,8 +14,25 @@
   },
   "strictPass": 4,
   "strictDenominator": 13,
-  "productionCommit": "5a161c4",
-  "shaDrift": true,
+  "productionCommit": "0e16959",
+  "shaDrift": false,
+  "s04": {
+    "authorizedAt": "2026-11-13T12:42:57+08:00",
+    "option": "A",
+    "verifiedAt": "2026-11-13T04:47:00Z",
+    "deployedCommit": "0e16959",
+    "builtAt": "2026-11-12T12:29:15.741Z",
+    "rcSha": "c97c893",
+    "productionVerdict": "PRODUCTION_RISK_CLOSED",
+    "paymentBlobParityWithRc": true,
+    "checkoutReady": false,
+    "commercialApproval": "PENDING_APPROVAL",
+    "anonymousCheckoutStatus": 401,
+    "ownerCheckout503": "NOT_TESTED",
+    "scopeDrift": "SCOPE_DRIFT_B4_PUBLIC_PAGES_LIVE",
+    "evidencePath": "evidence/s04-post-deploy-verify.json",
+    "handPatched": "生成器未重跑（p0-01 快照仍是 11-12 11:42 的 5a161c4）；本块由 S-04 实测手工回填"
+  },
   "command": "node scripts/qa/build-release-status.mjs",
   "exitCode": 0,
   "source": "git + GATES.csv + evidence/p0-01-production-risk.json + evidence/g4-public-matrix.json",
@@ -54,7 +71,8 @@
   "notes": [
     "严格口径：仅字面 PASS 计完成（G0–G12 共 13 项）⇒ 4/13 PASS，未达 100%",
     "不计完成：G2=PARTIAL / G3=BLOCKED / G5=NOT_TESTED / G7=PASS_CODE_ONLY / G8=PARTIAL / G9=PARTIAL / G10=PARTIAL / G11=PARTIAL / G12=BLOCKED；PASS_CODE_ONLY 不是 PASS（检查器仍判 G7_not_PASS）",
-    "生产收银台仍为 RISK_OPEN（D2 未决）；哨兵告警不等于止损",
+    "生产收银台已关闭（S-04 实测：checkoutReady=false / PENDING_APPROVAL / 匿名 401），D2 在支付面上已止损",
+    "生产已上线的页面超出授权范围：B4 五页 404→200（0e16959 头提交漏写 [skip netlify] 造成），待范围决策",
     "G13 是发布后动作，本状态不得提前判 PASS",
     "当前 HEAD c46a03d 为后续纯文档/证据提交；发布候选 rcSha 锁定为 2b52ce0"
   ]

@@ -1,0 +1,146 @@
+{
+  "checkedAt": "2026-11-13T04:47:07.734Z",
+  "base": "https://app.lokfeel.com",
+  "readOnly": true,
+  "rc": {
+    "ref": "c97c893",
+    "sha": "c97c893c450e2139db7e824cfce01e9c34d9b0b0"
+  },
+  "deployed": {
+    "ref": "0e16959",
+    "resolvedSha": "0e1695928195d4bc075184939853e41f0c04ae6b"
+  },
+  "health": {
+    "httpStatus": 200,
+    "bytes": 898,
+    "commit": "0e16959",
+    "builtAt": "2026-11-12T12:29:15.741Z",
+    "version": "0.1.0",
+    "payments": {
+      "configured": false,
+      "charging": true,
+      "channels": {
+        "dodo.checkout": true,
+        "dodo.webhook": true,
+        "creem.checkout": false,
+        "creem.webhook": false,
+        "stripe.card": false,
+        "stripe.refund": false,
+        "stripe.webhook": false
+      },
+      "missing": [
+        "CREEM_API_KEY",
+        "CREEM_WEBHOOK_SECRET",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET"
+      ],
+      "malformed": []
+    },
+    "botModule": {
+      "enabled": true,
+      "enabledSource": "env",
+      "tickIntervalMs": 60000,
+      "maxActionsPerTick": 50,
+      "minActionIntervalMs": 30000,
+      "speedMultiplier": 1,
+      "warnings": []
+    }
+  },
+  "plans": {
+    "httpStatus": 200,
+    "bytes": 2520,
+    "ok": true,
+    "currency": "USD",
+    "catalogVersion": "2026-11-10.1",
+    "checkoutReady": false,
+    "commercialApproval": {
+      "status": "PENDING_APPROVAL",
+      "ref": null
+    },
+    "missing": [],
+    "environment": "live_mode",
+    "planCount": 3
+  },
+  "anonymousCheckout": {
+    "url": "https://app.lokfeel.com/api/payments/dodo/checkout",
+    "httpStatus": 401,
+    "bytes": 35,
+    "code": null,
+    "error": "Unauthorized"
+  },
+  "routes": {
+    "/pricing": {
+      "httpStatus": 200,
+      "bytes": 66275,
+      "ms": 1301,
+      "pricingShows49": true
+    },
+    "/product": {
+      "httpStatus": 200,
+      "bytes": 69565,
+      "ms": 861
+    },
+    "/solutions": {
+      "httpStatus": 200,
+      "bytes": 57965,
+      "ms": 574
+    },
+    "/stories": {
+      "httpStatus": 200,
+      "bytes": 56562,
+      "ms": 963
+    },
+    "/how-it-works": {
+      "httpStatus": 200,
+      "bytes": 58838,
+      "ms": 418
+    },
+    "/help": {
+      "httpStatus": 200,
+      "bytes": 69072,
+      "ms": 716
+    }
+  },
+  "codeParity": {
+    "src/app/api/payments/dodo/checkout/route.ts": true,
+    "src/app/api/payments/dodo/plans/route.ts": true,
+    "src/lib/payments/commercial-gate.ts": true,
+    "src/lib/payments/dodo/events.ts": true,
+    "src/config/products.ts": true
+  },
+  "r15": {
+    "settledKeySplit": true,
+    "source": "0e1695928195d4bc075184939853e41f0c04ae6b:src/lib/payments/dodo/events.ts"
+  },
+  "git": {
+    "remoteMainSha": "0e1695928195d4bc075184939853e41f0c04ae6b"
+  },
+  "verdict": {
+    "verdict": "PRODUCTION_RISK_CLOSED",
+    "reasons": []
+  },
+  "scopeDrift": {
+    "drifted": true,
+    "liveRoutes": [
+      "/product",
+      "/solutions",
+      "/stories",
+      "/how-it-works",
+      "/help"
+    ],
+    "documentedExpectation": "B4 五页在生产应为 404（GA 未发布）",
+    "finding": "SCOPE_DRIFT_B4_PUBLIC_PAGES_LIVE"
+  },
+  "criteria": {
+    "checkoutReadyFalse": true,
+    "commercialPending": true,
+    "anonymousCheckout401": true,
+    "paymentBlobParity": true,
+    "r15SettledKeySplit": true,
+    "healthCommitTraceable": true
+  },
+  "knownDefects": {
+    "pricingShowsAmountBeforeApproval": true,
+    "note": "线上既有缺陷，RC 与 main 同源，非本次引入"
+  }
+}

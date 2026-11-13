@@ -1,6 +1,11 @@
 # 09 · GO / NO-GO（V20.7 B6 + G13 · 2026-11-12）
 
-**结论：`NO_GO`** —— 未达 `READY_FOR_APPROVAL`；未发布、未切流、未改生产配置、无真实扣款。
+**结论：`NO_GO`** —— 未达 `READY_FOR_APPROVAL`；GA 未发布、未切流、无真实扣款。
+
+> **2026-11-13 追加（不覆盖上文时点数据）**：生产运行时已变为 **`0e16959`**（`builtAt=2026-11-12T12:29:15Z`），
+> 支付面实测 `checkoutReady=false` / `PENDING_APPROVAL` / 匿名 checkout 401 ⇒ D2 在支付面上止损；
+> 同时 **B4 五个公开页已 404→200 上线**（头提交漏写 `[skip netlify]` 造成），"未发布"口径对页面已不成立。
+> 详见 `13_S_TRACK_RECORD.md` §4；GA 结论不因此改变。
 完整判定、七问回答与签字单见 **`12_RC_FINAL_GO_NO_GO.md`**（标题 `LOKFEEL RC FINAL GO/NO-GO — Evidence Based`）。
 状态词只用 `PASS / FAIL / PARTIAL / BLOCKED / NOT_TESTED / N/A`；后三者一律不计完成。`PASS_CODE_ONLY` 是 G7 的代码层子状态，同样不计 PASS。
 

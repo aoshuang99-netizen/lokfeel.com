@@ -97,6 +97,7 @@
     "qa:db:snapshot": "node scripts/qa/db-snapshot.mjs",
     "qa:grant-org": "node scripts/qa/grant-qa-org.mjs",
     "qa:probe:login": "node scripts/qa/probe-qa-login.mjs",
+    "qa:s04:verify": "node scripts/qa/s04-post-deploy-verify.mjs --base=https://app.lokfeel.com",
     "qa:refund:e2e": "node scripts/qa/refund-e2e.mjs",
     "qa:refund:testmode": "node scripts/qa/refund-testmode.mjs",
     "qa:upstash:configure": "node scripts/qa/configure-upstash.mjs",

@@ -20,3 +20,29 @@ evidencePath: none
 
 若窗口内无法取得真实交易/账本数据，对应项记 NOT_TESTED，不得用"0 笔交易"
 宣称支付对账 100% 通过。
+
+═══════════════════════════════════════════════════════════════════════
+S-04 热修复观察窗（不是 GA 发布观察窗）
+═══════════════════════════════════════════════════════════════════════
+说明：S-04 部署的是**止损补丁**，不是 GA 发布。以下采集只用于回答
+"收银台是否保持关闭 / 有无新增收款 / R-15 是否再被触发"，
+不得被引用为 G13 通过。
+
+sample #1
+timestamp: 2026-11-13T04:47:00Z
+rcSha: c97c893
+productionCommit: 0e16959 (builtAt 2026-11-12T12:29:15.741Z)
+command: env -u NODE_OPTIONS node scripts/qa/s04-post-deploy-verify.mjs --base=https://app.lokfeel.com --write=.../evidence/s04-post-deploy-verify.json
+exitCode: 0
+source: live HTTP (GET health/plans/pricing/5 routes + 匿名 POST checkout) + git blob 比对 + 全库 SELECT
+verdict: PRODUCTION_RISK_CLOSED（支付面）· SCOPE_DRIFT_B4_PUBLIC_PAGES_LIVE（范围）
+evidencePath: evidence/s04-post-deploy-verify.json; evidence/s04-ledger-audit.json
+  · health.commit=0e16959 · checkoutReady=false · commercialApproval=PENDING_APPROVAL/ref=null
+  · missing=[] · environment=live_mode · 匿名 POST checkout=401
+  · 支付面 5 blob 与 c97c893 逐个相等 · R-15 分态键 present
+  · BillingEvent=0 / CHARGE_*=0 / 旧结算键=0 ⇒ 账本 NO_SAMPLE（不判 PASS）
+  · OWNER→503 实测 = NOT_TESTED（无生产 QA 会话凭据）
+
+下一采样点：2026-11-13T05:17Z（每 30 分钟一次，健康 + plans + 账本计数）。
+窗口内若 checkoutReady 变 true、或 BillingEvent 出现新增行，立即升级为告警并停止打勾。
+
