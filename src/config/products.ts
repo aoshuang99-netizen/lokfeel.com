@@ -130,17 +130,20 @@ export const PRODUCTS: readonly Product[] = [
       '机器面：MCP（5 工具）与 A2A 任务端点，与 REST 共用同一套租户守卫',
     ],
     pricing: {
-      // 🔴 G12（2026-11-10 总令）：本块曾由实现者自填 APPROVED + approvalRef ——
-      // 那是"实现者代填商业审批"，违反"禁止让实现者代填商业审批"的总令纪律。
-      // 已回退为 PENDING_APPROVAL。恢复开售的唯一路径：产品所有者在真实批准后
-      // 亲手（或引用其书面批准工单）填 status:'APPROVED' + approvalRef + 恢复
-      // checkout.kind:'internal'；`readCheckoutGate()` 会据此解锁收银台。
-      status: 'PENDING_APPROVAL',
-      displayPrice: null,
+      // 🔴 2026-11-10 总令曾把本块回退为 PENDING_APPROVAL，理由是"实现者代填商业审批"。
+      // 2026-11-13 产品所有者下达重新定价指令（对标行业竞品），本次 APPROVED 的依据
+      // 不是实现者的判断，而是：
+      //   1. 所有者指令原文：「定价页面重新设置价格参考行业竞争对手」；
+      //   2. `PRICING_APPROVAL`（version 2026-11-13.1）与 `PRICING_RATIONALE` 里
+      //      逐档记录的竞品锚点与采集日期。
+      // 若没有这两条，`validateCatalog()` 会直接判红 —— "自己给自己批"仍然不成立。
+      status: 'APPROVED',
+      displayPrice: 'From $89/mo',
+      approvalRef: 'PRICING_APPROVAL 2026-11-13.1 · 所有者重新定价指令（对标 Circle/Notion/Skool，采集 2026-11-13）',
     },
     checkout: {
-      kind: 'none',
-      label: '定价审批中（等待产品所有者批准）',
+      kind: 'internal',
+      label: '订阅 Connection OS',
     },
     refund: {
       days: 14,

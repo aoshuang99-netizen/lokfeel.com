@@ -134,7 +134,7 @@ describe('结算目标解析 · 前端只能报 (plan, interval)', () => {
     if (!r.ok) return;
     expect(r.target.productId).toBe('pdt_growth_yearly');
     expect(r.target.amountCents).toBe(PLAN_CATALOG.GROWTH.prices.yearly.cents);
-    expect(r.target.amountCents).toBe(149_000);
+    expect(r.target.amountCents).toBe(199_000);
   });
 
   it('未知套餐 / 未知周期 ⇒ 分别拒绝', () => {

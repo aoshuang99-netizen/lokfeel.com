@@ -49,8 +49,9 @@ export default async function PricingPage({
   /**
    * 🔴 G12：页面自己不判"能不能买"，服务端唯一判据是 commercial-gate：
    *   开放 = 技术就绪（Dodo 凭据 + SKU 绑定）AND 人工定价批准（products.ts APPROVED + approvalRef）。
-   * 当前 products.ts 处于 PENDING_APPROVAL（代填审批已按总令回退），
-   * 所以按钮 disabled，文案为"定价审批中" —— 不会出现"点了报错"或"悄悄能绕过"。
+   * 2026-11-13 产品所有者下达重新定价指令后，目录为 APPROVED 且审批留痕可溯源
+   * （`PRICING_APPROVAL` 2026-11-13.1），凭据齐备时按钮才可点。
+   * 缺凭据时不降级成"点了报错"，而是禁用它并说明原因。
    */
   const gate = readCheckoutGate();
   /**

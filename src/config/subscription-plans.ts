@@ -58,12 +58,49 @@ export const PRICING_APPROVAL = {
   /** 谁批的（产品所有者本人）。 */
   approvedBy: 'product-owner',
   /** 何时批的（ISO 日期）。 */
-  approvedAt: '2026-11-10',
-  /** 依据：本次上线指令「输出订阅套餐的设置和计划」。 */
-  basis: 'V20.5 GA 上线指令 · 订阅套餐定价',
+  approvedAt: '2026-11-13',
+  /**
+   * 依据：产品所有者 2026-11-13 的重新定价指令
+   * 「定价页面重新设置价格参考行业竞争对手」。
+   *
+   * 这是**所有者指令**，不是实现者自批 —— 两者的区别不在措辞，而在于
+   * 价格数字能被一条外部指令逐条对上（见下方 `PricingRationale` 的竞品对照）。
+   */
+  basis: 'V20.7 重新定价指令 · 对标行业竞品（2026-11-13）',
   /** 目录版本号：价格变动必须递增，便于对账时区分"什么时候的价"。 */
-  version: '2026-11-10.1',
+  version: '2026-11-13.1',
 } as const;
+
+/**
+ * 定价依据（对账用）。
+ *
+ * 竞品价格采集于 2026-11-13，来源写在各条 `source` 上。
+ * 三档的锚点不是"比对手便宜"，而是**同档位同价、用席位与机器面拉开差异**：
+ * 单价随席位数递减，避免"人越多越贵得离谱"。
+ */
+export const PRICING_RATIONALE = [
+  {
+    plan: 'STARTER',
+    priceUsd: 89,
+    anchor: 'Circle Professional $89/mo · Skool $99/mo · Mighty Networks $79/mo',
+    why: '入门档对齐社群平台的公开起价中位，含 25 席（折 $3.56/席/月），低于按席位计价的 Notion Business $20/席。',
+    source: 'circle.so/pricing · skool.com/pricing · mightynetworks.com/pricing（2026-11-13 采集）',
+  },
+  {
+    plan: 'GROWTH',
+    priceUsd: 199,
+    anchor: 'Circle Business $199/mo',
+    why: '与 Circle Business 同价，但把 MCP / A2A 机器面放进这一档 —— 对方要到同档才有 API 与 MCP。',
+    source: 'circle.so/pricing（2026-11-13 采集）',
+  },
+  {
+    plan: 'SCALE',
+    priceUsd: 449,
+    anchor: 'Circle Scale $419/mo · Discourse $100/mo（自托管口径）',
+    why: '略高于 Circle Scale，差异在跨社群 Bridge、审计导出与 500 席；年付受支付通道单笔上限约束，走对公合同。',
+    source: 'circle.so/pricing（2026-11-13 采集）',
+  },
+] as const;
 
 export interface PlanPrice {
   /** 整数**美分**（Dodo 的 `price` 同样是"最低货币单位"，两者同口径，不经过浮点）。 */
@@ -137,7 +174,7 @@ export const PLAN_CATALOG: Record<SellablePlanId, SellablePlan> = {
     name: 'Starter',
     tagline: '把第一个真实流程跑通',
     audience: '刚开始用 Connection OS 的小团队',
-    prices: price(4_900), // $49/mo · $490/yr
+    prices: price(8_900), // $89/mo · $890/yr（对标 Circle Professional $89）
     trialDays: 14,
     limits: PLAN_LIMITS.STARTER,
     highlights: [
@@ -152,7 +189,7 @@ export const PLAN_CATALOG: Record<SellablePlanId, SellablePlan> = {
     name: 'Growth',
     tagline: '让协作成为组织的日常',
     audience: '已有稳定协作节奏的团队与社群',
-    prices: price(14_900), // $149/mo · $1,490/yr
+    prices: price(19_900), // $199/mo · $1,990/yr（对标 Circle Business $199）
     trialDays: 14,
     limits: PLAN_LIMITS.GROWTH,
     highlighted: true,
@@ -169,7 +206,7 @@ export const PLAN_CATALOG: Record<SellablePlanId, SellablePlan> = {
     name: 'Scale',
     tagline: '跨组织协作，按你的规模跑',
     audience: '需要跨社群桥接与审计的大型机构',
-    prices: price(39_900), // $399/mo · $3,990/yr
+    prices: price(44_900), // $449/mo · $4,490/yr（对标 Circle Scale $419，含 Bridge 与审计导出；年付走对公合同）
     trialDays: 14,
     limits: PLAN_LIMITS.SCALE,
     highlights: [

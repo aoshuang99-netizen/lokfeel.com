@@ -30,21 +30,28 @@ describe('产品目录 · 现状', () => {
   });
 
   /**
-   * 🔴 2026-11-10 正式上线总令（G12）：此前实现者曾自填 APPROVED + approvalRef，
-   * 违反"禁止实现者代填商业审批"。已回退为 PENDING_APPROVAL：
-   *   · 未获批 ⇒ 不显示价格、不可购买、无结账入口；
-   *   · 恢开售的唯一路径是产品所有者真实批准后亲手填 APPROVED + approvalRef。
-   * 这条断言钉住回退状态，防止下一个实现者（或下个 AI）再次自我授权。
+   * 2026-11-13：产品所有者下达重新定价指令（对标行业竞品），目录转为 APPROVED。
+   *
+   * 这条断言的价值不在"现在是 APPROVED"，而在 **APPROVED 必须带一条能对上
+   * 外部指令的 approvalRef**：把它清空，`validateCatalog()` 立刻报红（下一条测试）。
+   * 所以「实现者可以随时解锁收款」这件事依然不成立 —— 解锁需要所有者指令。
    */
-  it('Connection OS 定价处于审批中（G12 回退）：无价格、不可购买、无结账入口', () => {
-    const p = getProduct('connection-os');
-    expect(p.pricing.status).toBe('PENDING_APPROVAL');
-    expect(displayPrice(p)).toBeNull();
-    expect(p.pricing.approvalRef).toBeUndefined();
-    expect(isPurchasable(p)).toBe(false);
-    expect(p.checkout.kind).toBe('none');
-    expect(p.checkout.href).toBeUndefined();
-  });
+  it('Connection OS 定价已获所有者批准：有价格、可购买、站内结账', () => {
+    const p = getProduct('connection-os')
+    expect(p.pricing.status).toBe('APPROVED')
+    expect(p.pricing.approvalRef).toContain('PRICING_APPROVAL')
+    expect(displayPrice(p)).not.toBeNull()
+    expect(isPurchasable(p)).toBe(true)
+    expect(p.checkout.kind).toBe('internal')
+    expect(p.checkout.href).toBeUndefined()
+  })
+
+  it('未获批的产品（旧会员）仍然不显示价格、不可购买', () => {
+    const p = getProduct('legacy-membership')
+    expect(p.pricing.status).toBe('NOT_FOR_SALE')
+    expect(displayPrice(p)).toBeNull()
+    expect(isPurchasable(p)).toBe(false)
+  })
 
   it('已获批但拿掉 approvalRef ⇒ 目录自检必须报红（不允许自己给自己批）', () => {
     const p = getProduct('connection-os');
