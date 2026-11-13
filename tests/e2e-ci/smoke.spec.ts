@@ -111,9 +111,25 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
     // 不导流：任何指向 Hlua 结账页的链接都是回归
     await expect(page.locator('a[href*="pay.html"]'), '不得出现指向 Hlua 结账页的链接').toHaveCount(0);
 
-    // 不乱标价：Connection OS 未获批 ⇒ 页面上不该出现任何金额
+    // 不乱标价：金额显不显示，必须与**商业批准状态**一致，而不是与实现者的偏好一致。
+    // 2026-11-13 重新定价后目录转 APPROVED，页面开始展示 $89 / $199 / $449；
+    // 所以这条断言不能写死"不得有金额"，否则它守的就不是"未获批不得标价"，
+    // 而是"永远不准卖"。改成先读服务端判定，再双向断言 —— 两个方向都能抓：
+    //   · APPROVED 却仍显示"定价尚未公布" ⇒ 页面没跟上目录（客户看不到已公布的价格）
+    //   · 未批准却出现金额 ⇒ 对外承诺了一个还没批的价（这才是原始回归）
+    const plansRes = await page.request.get('/api/payments/dodo/plans');
+    const plans = await plansRes.json();
+    const approved = plans?.commercialApproval?.status === 'APPROVED';
+
     const bodyText = await page.locator('body').innerText();
-    expect(bodyText, '未获批定价 ⇒ 页面上不该有金额').not.toMatch(/\$\s?\d/);
-    expect(bodyText, '应显式说明定价尚未公布').toContain('定价尚未公布');
+    if (approved) {
+      expect(bodyText, '定价已获批 ⇒ 页面必须公布金额').toMatch(/\$\s?\d/);
+      expect(bodyText, '定价已获批却仍写"尚未公布"，说明页面没跟上目录').not.toContain(
+        '定价尚未公布'
+      );
+    } else {
+      expect(bodyText, '未获批定价 ⇒ 页面上不该有金额').not.toMatch(/\$\s?\d/);
+      expect(bodyText, '应显式说明定价尚未公布').toContain('定价尚未公布');
+    }
   });
 });
