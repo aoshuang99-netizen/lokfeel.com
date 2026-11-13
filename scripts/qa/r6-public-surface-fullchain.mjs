@@ -80,17 +80,6 @@ async function get(url, headers = {}) {
   return { status: r.status, headers: Object.fromEntries(r.headers), text }
 }
 
-function selftest() {
-  const dirty = 'Starter plan US$ 49 / month. LokFeel Inc. Wilmington, Delaware.'
-  const hits = scan(dirty)
-  const clean = scan('该页面正在最终审核 我们正在核对定价与法律信息')
-  const okDirty = hits.length === 2
-  const okClean = clean.length === 0
-  console.log(`${okDirty ? 'PASS' : 'FAIL'}  负向对照：脏样本被识别（${hits.map((h) => h.kind).join('+') || '无命中'}）`)
-  console.log(`${okClean ? 'PASS' : 'FAIL'}  正向对照：干净样本不误报`)
-  if (!okDirty || !okClean) process.exit(1)
-}
-
 async function main() {
   const selftestResult = (() => {
     const hits = scan('Starter US$ 49 / month, LokFeel Inc., Delaware')

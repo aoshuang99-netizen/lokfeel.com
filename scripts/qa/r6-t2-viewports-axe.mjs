@@ -145,7 +145,6 @@ async function main() {
           const base = await auditPage(page)
           await page.addScriptTag({ content: axeSource })
           const axe = await page.evaluate(async () => {
-            // eslint-disable-next-line no-undef
             const r = await window.axe.run(document, {
               runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] },
             })
