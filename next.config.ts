@@ -185,10 +185,22 @@ const nextConfig: NextConfig = {
         source: '/dashboard',
         destination: '/workspace',
         permanent: false,
-        // NextAuth v5 cookie name is `authjs.session-token` (v4 used
-        // `next-auth.session-token`). Must match or the logged-in redirect
-        // never fires.
+        // 本地 / HTTP：NextAuth v5 cookie 名是 `authjs.session-token`
+        //（v4 是 `next-auth.session-token`）。
         has: [{ type: 'cookie', key: 'authjs.session-token' }],
+      },
+      // 🔴 生产 / HTTPS：NextAuth 会加 `__Secure-` 前缀，cookie 名变成
+      //    `__Secure-authjs.session-token`。`has` 只做精确键匹配，所以只写上一条时
+      //    产线**已登录用户根本命中不了重定向**，仍被送进旧 dashboard ——
+      //    2026-11-14 生产实测：`authjs.session-token` → 307 /workspace，
+      //    `__Secure-authjs.session-token` → 307 /login?callbackUrl=/dashboard。
+      //    两条规则是 OR 语义（Next 依次匹配），未登录则两条都不命中，
+      //    仍由 `(dashboard)/layout.tsx` 负责回登录页，原行为不变。
+      {
+        source: '/dashboard',
+        destination: '/workspace',
+        permanent: false,
+        has: [{ type: 'cookie', key: '__Secure-authjs.session-token' }],
       },
       // Discover → Explore
       {

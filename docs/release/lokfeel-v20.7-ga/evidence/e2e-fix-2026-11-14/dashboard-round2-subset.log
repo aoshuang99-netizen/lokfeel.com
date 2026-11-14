@@ -1,0 +1,38 @@
+[global-setup] 登录成功（第 1 次尝试），storageState → test-results/authed-state.json
+
+Running 26 tests using 1 worker
+
+  ✓   1 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · Living Workspace /workspace (3.2s)
+  ✓   2 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 组织总览 /console (3.6s)
+  ✓   3 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 任务列表 /console/missions (3.0s)
+  ✓   4 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 连接屏 /console/connections (3.0s)
+  ✓   5 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 智能体屏 /console/agents (3.0s)
+  ✓   6 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 结果屏 /console/outcomes (3.1s)
+  ✓   7 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 成员屏 /console/members (2.3s)
+  ✓   8 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 组织设置 /console/settings (2.7s)
+  ✓   9 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 390×844 · 订阅与取消 /dashboard/subscription (2.6s)
+  ✓  10 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · Living Workspace /workspace (3.1s)
+  ✓  11 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 组织总览 /console (3.0s)
+  ✓  12 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 任务列表 /console/missions (3.2s)
+  ✓  13 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 连接屏 /console/connections (3.6s)
+  ✓  14 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 智能体屏 /console/agents (3.2s)
+  ✓  15 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 结果屏 /console/outcomes (3.0s)
+  ✓  16 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 成员屏 /console/members (3.8s)
+  ✓  17 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 组织设置 /console/settings (2.9s)
+  ✓  18 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:64:11 › 移动端 · 认证面（storageState 登录态） › 360×800 · 订阅与取消 /dashboard/subscription (3.2s)
+  ✓  19 [chromium] › tests/e2e-ci/authed-mobile.spec.ts:96:7 › 默认落点 · 主线守卫 › 已登录访问 /dashboard 必须落到 /workspace，不得再进旧约会线 (2.6s)
+  ✓  20 [chromium] › tests/e2e-ci/smoke.spec.ts:38:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ① 健康检查 200，且数据库真实可达 (139ms)
+  ✓  21 [chromium] › tests/e2e-ci/smoke.spec.ts:54:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ② 匿名访问受保护 API 必须 401（守卫未被构建产物绕开） (55ms)
+  ✓  22 [chromium] › tests/e2e-ci/smoke.spec.ts:61:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ③ 登录页渲染出可交互表单（客户端组件已水合） (3.1s)
+  ✓  23 [chromium] › tests/e2e-ci/smoke.spec.ts:69:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ④ 未知路径必须 404（否则 ①③ 的断言会退化成永真） (191ms)
+  ✓  24 [chromium] › tests/e2e-ci/smoke.spec.ts:74:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ⑤ 根路径可达且返回 HTML (2.6s)
+  ✓  25 [chromium] › tests/e2e-ci/smoke.spec.ts:99:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页） (3.8s)
+  ✓  26 [chromium] › tests/e2e-ci/smoke.spec.ts:147:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ⑦ 子页 canonical 若存在必须等于自身 URL（不得全部指向首页） (9.3s)
+
+  26 passed (1.6m)
+::notice title=E2E 汇总::全部通过
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report test-results/dash-r2/html[39m
+[36m[39m
