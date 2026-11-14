@@ -1,0 +1,52 @@
+{
+  "task": "C03 IntentGateway 真实服务端链路",
+  "base": "http://127.0.0.1:3214",
+  "startedAt": "2026-11-14T10:31:30.135Z",
+  "steps": [
+    {
+      "name": "登录 200 且下发会话 cookie",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "POST /api/v1/agents/runs 2xx 且返回 run",
+      "ok": true,
+      "detail": "HTTP 201 status=PROPOSED provider=workbuddy degrade=null"
+    },
+    {
+      "name": "proposal 形状 = WorkspaceSpec v1.2（version + nodes 数组）",
+      "ok": true,
+      "detail": "title=两周内招募10位目标用户做30分钟深度访谈 nodes=3"
+    },
+    {
+      "name": "归因如实（providerKind ∈ workbuddy/openai/rules）",
+      "ok": true,
+      "detail": "providerKind=workbuddy"
+    },
+    {
+      "name": "同键同体重放 → replayed:true 且 runId 相同",
+      "ok": true,
+      "detail": "HTTP 200 replayed=true"
+    },
+    {
+      "name": "GET /api/v1/agents/runs 列表能读到这条运行",
+      "ok": true,
+      "detail": "HTTP 200 列表 2 条"
+    }
+  ],
+  "verdict": "PASS_AI",
+  "completedAt": "2026-11-14T10:31:34.816Z",
+  "run": {
+    "id": "cmwg9n0yv0001jsk8zhbts0hz",
+    "status": "PROPOSED",
+    "providerKind": "workbuddy",
+    "degradeCode": null,
+    "reason": null,
+    "proposalTitle": "两周内招募10位目标用户做30分钟深度访谈",
+    "proposalNodes": 3,
+    "costMicroCents": 21045,
+    "requiresApproval": false,
+    "injectionFlagged": false
+  },
+  "goal": "两周内约到 10 位目标用户做深度访谈，我们提供产品内测名额作为对价，每人聊 30 分钟。"
+}

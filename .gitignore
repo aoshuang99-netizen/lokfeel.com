@@ -91,6 +91,8 @@ cloudflare-env.d.ts
 
 # QA 测试账号凭据（本地专用，public 仓库绝不入库）
 .qa-credentials.local.json
+.qa-authed-e2e.local.json
+.qa-chat-e2e.local.json
 .wrangler/
 
 # QA 清理脚本的自动备份（含用户数据，不入库）
@@ -129,3 +131,6 @@ tsconfig.drift-probe.json
 
 # R6-T8 健康检查脚本的临时 sqlite 库（跑完自删；被打断时别进仓库）
 .r6-tmp/
+
+# V21 本地 e2e 隔离库与夹具导出（不入库）
+ci-e2e.db*

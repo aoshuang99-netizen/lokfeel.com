@@ -1,0 +1,56 @@
+# V21 首批 · 验证命令与结果（可重放）
+
+环境：本地 `next start` 127.0.0.1:3214，`DATABASE_URL=file:./ci-e2e.db`（隔离库），
+`AUTH_SECRET` 每次运行随机；模型键从 Netlify env 读入**进程环境**（不落仓库）。
+
+```
+
+# 0. 隔离库
+DATABASE_URL=file:./ci-e2e.db npx prisma db push --accept-data-loss
+DATABASE_URL=file:./ci-e2e.db node scripts/tenancy/migrate.mjs apply --batch=ALL --yes
+DATABASE_URL=file:./ci-e2e.db node scripts/connection/migrate.mjs apply --batch=ALL --yes
+DATABASE_URL=file:./ci-e2e.db node scripts/qa/seed-authed-e2e-user.mjs --db=ci-e2e.db --out=.qa-authed-e2e.local.json
+DATABASE_URL=file:./ci-e2e.db node scripts/qa/seed-chat-fixture.mjs --db=ci-e2e.db --out=.qa-chat-e2e.local.json
+
+# 1. 类型 + 单测
+./node_modules/.bin/tsc --noEmit -p tsconfig.json      → exit 0
+npx jest                                                → 2777/2777 passed, 150 suites
+npx jest tests/living                                   → 340/340 passed, 17 suites
+
+# 2. 构建产物
+npm run build                                           → exit 0
+
+# 3. 启动（生产构建）
+npx next start --hostname 127.0.0.1 --port 3214
+#   env: AUTH_SECRET=<random> / DATABASE_URL=file:./ci-e2e.db
+#        WORKBUDDY_LLM_ENDPOINT / _KEY / _MODEL（从 Netlify env 读入，未写入任何文件）
+
+# 4. 浏览器 E2E（CI 同配置）
+E2E_BASE_URL=http://127.0.0.1:3214 PW_CHANNEL=chrome \
+  npx playwright test --config=playwright.ci.config.ts  → 123/123 passed
+
+# 5. 真实链路取证（会真实调用模型 / 写隔离库）
+node scripts/qa/v21-intent-gateway.mjs --base=http://127.0.0.1:3214
+node scripts/qa/v21-mission-loop.mjs   --base=http://127.0.0.1:3214
+
+# 6. 视觉 / a11y
+node scripts/qa/v21-workspace-shots.mjs --base=http://127.0.0.1:3214 \
+  --out=docs/v21/evidence/codex/c02
+```
+
+## 观察记录
+
+- 首次全量 e2e：110 passed / 5 failed / 8 did not run —— 5 条全部是**测试侧**问题
+  （2 条定位器同名、3 条聊天夹具 env 未导出）；修复后 123/123（见 FAILURE_CLASSIFICATION）。
+- 再次全量：120 passed / 1 failed / 2 skipped —— 唯一失败是**测试数据残留**触发的
+  24h 举报去重（复用同一隔离库跑多轮所致）。`seed-chat-fixture --cleanup` 后复跑见下一行。
+- 最终轮（夹具 `--cleanup` 清理测试数据残留后）：全量复跑 8m39s，CI 汇总
+  `::notice title=E2E 汇总::全部通过`；全程唯一非测试侧缺陷 0 条。
+  唯一一次失败（120/1/2 轮）为隔离库测试数据残留触发 24h 举报去重，属测试夹具
+  问题，清理后复跑通过，非产品缺陷。
+
+## 环境备注（本地沙箱）
+
+- `env -u NODE_OPTIONS` 是必需的：注入的 shim 会让 eslint / Next 构建输出 EPIPE。
+- 本地 curl 必须 `--noproxy '*'`：系统代理会劫持 127.0.0.1。
+- 本机无 Playwright 下载版 Chromium 时用 `PW_CHANNEL=chrome`（借用系统 Chrome）。

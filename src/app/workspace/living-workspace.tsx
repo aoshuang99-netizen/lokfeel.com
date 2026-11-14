@@ -34,7 +34,7 @@
  *     `GET /api/v1/bridges/{bridgeId}/discovery`；写操作 approve / revoke / opt-in / opt-out。
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { AlertCircle, Bell, CheckCircle2, Compass, Loader2, Wand2 } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
@@ -64,14 +64,15 @@ import BridgePanel, {
 import { useApiGet } from '@/hooks/use-api'
 import { NOW_SEEDS } from '@/lib/living/now/seeds'
 import { buildEvidenceRows, type EvidenceRow } from '@/lib/living/now/evidence'
+import UnderstandingCard from '@/components/living/now/understanding-card'
+import MissionBoard from '@/components/living/missions/mission-board'
+import { resolveIntent, type IntentOutcome } from '@/lib/living/now/intent-gateway'
 import type { FieldGraphNode } from '@/lib/living/field'
 import {
   MIN_GOAL_LENGTH,
   assembleTenantNodes,
-  compileWorkspaceSpec,
   mergeTenantNodes,
   missionDraftFromSpec,
-  type CompileResult,
   type Source,
   type WorkspaceSpec,
 } from '@/lib/workspace-spec'
@@ -110,27 +111,22 @@ interface OrgOverview {
 }
 
 /**
- * Mission **列表区**尚未接线。
- *
- * 说清楚为什么不是"需要 ACTIVE 社群成员"：那只是**取数时会 403** 的原因，
- * 而这里的问题是**没有这个区**（Mission 创建已在 Studio 完成，画布也在那里）。
- * 把"未接线"写成"需要权限"会让人以为补权限就能用 —— 那是另一回事。
- */
-const MISSIONS_REASON =
-  '任务列表还没做：创建任务和看画布都在 Studio，这里先不重复入口。'
-
-/**
  * 侧栏七项。`hint` 是 hover 提示，写给用户看 —— 不写"2.5D""逐字段披露"这类设计术语：
  * 用户点开的理由永远是"这对我要办的事有什么用"。
+ *
+ * V21：导航按**用户动作**重命名（开始 / 工作区 / 关系网络 / 授权 / 成果 / 执行团队 / 任务）。
+ * `key` 不动 —— URL `?view=` 深链接、历史与外部引用全部不受影响（03_UI_DESIGN_CONTRACT 的
+ * 信息架构迁移要求：改名不改 key，就是迁移与兼容方案）。
+ * 「任务」`ready:true`：服务端列表/详情/迁移端点早已存在（C00 盘点），死入口是纯前端遗留。
  */
 const NAV: LivingNavItem[] = [
-  { key: 'now', label: 'Now', hint: '今天要推进什么', ready: true },
-  { key: 'studio', label: 'Studio', hint: '把一句话编译成能跑的工作区', ready: true },
-  { key: 'field', label: 'Field', hint: '谁认识谁，谁在等你', ready: true },
-  { key: 'consent', label: 'Consent', hint: '谁能看到你的哪个字段', ready: true },
-  { key: 'outcomes', label: 'Outcomes', hint: '做成了什么，怎么核验', ready: true },
-  { key: 'agents', label: 'Agents', hint: 'Agent 干了什么，哪一步等你批', ready: true },
-  { key: 'missions', label: 'Missions', hint: '连接任务', ready: false, reason: MISSIONS_REASON },
+  { key: 'now', label: '开始', hint: '今天要推进什么', ready: true },
+  { key: 'studio', label: '工作区', hint: '把一句话摊成能跑的方案', ready: true },
+  { key: 'field', label: '关系网络', hint: '谁认识谁，谁在等你', ready: true },
+  { key: 'consent', label: '授权', hint: '谁能看到你的哪个字段', ready: true },
+  { key: 'outcomes', label: '成果', hint: '做成了什么，怎么核验', ready: true },
+  { key: 'agents', label: '执行团队', hint: 'Agent 干了什么，哪一步等你批', ready: true },
+  { key: 'missions', label: '任务', hint: '你交代过的事都在这里', ready: true },
 ]
 
 /**
@@ -350,11 +346,23 @@ export default function LivingWorkspace() {
   }, [])
 
   const [draft, setDraft] = useState('')
-  const [compiled, setCompiled] = useState<CompileResult | null>(null)
+  /**
+   * V21 · C03：理解结果改由 IntentGateway 产出（服务端真实链路 + 来源标注）。
+   * `null` = 还没提交过；error 也存进来 —— 用户改一改还能再试，不该把失败态吞掉。
+   */
+  const [outcome, setOutcome] = useState<IntentOutcome | null>(null)
+  /** 理解请求进行中（诚实 pending 态，不用假流式动画冒充过程）。 */
+  const [resolving, setResolving] = useState(false)
+  /** 理解请求的幂等键（同目标重试复用同键；目标换了换新键）。 */
+  const [intentAttempt, setIntentAttempt] = useState<{ sig: string; key: string } | null>(null)
+  /** 理解卡锚点：结果出现在首屏下方时，提交后把它滚进视野（手机尤其必要）。 */
+  const resultRef = useRef<HTMLDivElement>(null)
   const [creating, setCreating] = useState(false)
   const [createResult, setCreateResult] = useState<CreateResult | null>(null)
   /** 幂等键与它所属的请求体指纹（**同体复用、异体换新**）。 */
   const [attempt, setAttempt] = useState<{ sig: string; key: string } | null>(null)
+  /** V21 · C05：任务详情当前选中的 missionId（列表 → 详情联动）。 */
+  const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null)
   /** P2 · Field：当前选中的网络节点（详情面板的输入）。 */
   const [fieldSelection, setFieldSelection] = useState<FieldGraphNode | null>(null)
   /** P2 · Consent：当前选中的意图与字段（详情面板的输入）。 */
@@ -445,25 +453,36 @@ export default function LivingWorkspace() {
     [sources],
   )
 
+  /** 结果出现后滚到视野内：手机上输入框在首屏，方案在下面，不滚等于"没出现"。 */
+  useEffect(() => {
+    if (outcome?.kind !== 'ok' || !resultRef.current) return
+    const reduced =
+      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    resultRef.current.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
+  }, [outcome])
+
+  /** 理解成功的 spec（AI 或规则，来源看 outcome）。 */
+  const specNow: WorkspaceSpec | null = outcome?.kind === 'ok' ? outcome.spec : null
+
   /** 编译结果 + 社群真实节点 → 一张画布（合并后再过一遍契约校验）。 */
   const merged = useMemo(() => {
-    if (!compiled?.ok) return null
-    return mergeTenantNodes(compiled.spec, assembly)
-  }, [compiled, assembly])
+    if (!specNow) return null
+    return mergeTenantNodes(specNow, assembly)
+  }, [specNow, assembly])
   const mergedSpec: WorkspaceSpec | null = merged?.ok ? merged.spec : null
 
   /** 把当前 spec 的动作能力映射为就绪性。未探测到（org 仍加载/失败）→ 不视为就绪。 */
   const capabilityProbe = useMemo(() => {
-    if (!compiled?.ok) return {}
+    if (!specNow) return {}
     const probe: Record<string, boolean> = {}
-    for (const action of compiled.spec.availableActions) {
+    for (const action of specNow.availableActions) {
       probe[action.capability] = capabilities.has(action.capability)
     }
     return probe
-  }, [compiled, capabilities])
+  }, [specNow, capabilities])
 
   /** 创建 Mission 的请求体 + **如实**报出的缺口（缺字段时恒为 null，不凑默认值）。 */
-  const missionDraft = useMemo(() => (compiled?.ok ? missionDraftFromSpec(compiled.spec) : null), [compiled])
+  const missionDraft = useMemo(() => (specNow ? missionDraftFromSpec(specNow) : null), [specNow])
 
   /**
    * 能力之外**由数据本身**决定的阻断。两件事都不该让用户点了才知道：
@@ -471,10 +490,10 @@ export default function LivingWorkspace() {
    *   ② 动作尚未接线（P1 收口只接线了「创建连接任务」）。
    */
   const blockedActions = useMemo(() => {
-    if (!compiled?.ok) return undefined
+    if (!specNow) return undefined
     const out: Record<string, string> = {}
     const missing = missionDraft?.missing ?? []
-    for (const a of compiled.spec.availableActions) {
+    for (const a of specNow.availableActions) {
       if (WIRED_ACTION_KEYS.has(a.key)) {
         if (missing.length > 0) out[a.key] = `还不能创建：缺少 ${missing.join('、')}。`
       } else {
@@ -482,16 +501,30 @@ export default function LivingWorkspace() {
       }
     }
     return out
-  }, [compiled, missionDraft])
+  }, [specNow, missionDraft])
 
   const canCompile = draft.trim().length >= MIN_GOAL_LENGTH
 
-  const runCompile = () => {
-    setCompiled(compileWorkspaceSpec(draft))
+  /**
+   * V21 · C03：提交目标 → 服务端真实理解（模型或规则，来源如实标注）。
+   * 结果**原位**出现在开始屏，不强制跳到工作区（PRD F02：不强行跳复杂配置页）。
+   * 同一份目标重试复用同一把幂等键 —— 理解请求和创建任务一样都是真请求。
+   */
+  const runIntent = useCallback(async () => {
+    if (!canCompile) return
+    const sig = draft.trim()
+    const key = intentAttempt?.sig === sig ? intentAttempt.key : newIdempotencyKey()
+    setIntentAttempt({ sig, key })
+    setResolving(true)
+    setOutcome(null)
     setCreateResult(null)
     setAttempt(null)
-    navigateTo('studio')
-  }
+    try {
+      setOutcome(await resolveIntent(draft, key))
+    } finally {
+      setResolving(false)
+    }
+  }, [canCompile, draft, intentAttempt])
 
   /**
    * 真正创建 Mission。
@@ -571,9 +604,9 @@ export default function LivingWorkspace() {
               unverified: observatoryData.timeline.counts.unverified,
             }
           : null,
-        specReady: compiled?.ok === true,
+        specReady: specNow !== null,
       }),
-    [consentData.board, agentData.board, observatoryData.timeline, compiled],
+    [consentData.board, agentData.board, observatoryData.timeline, specNow],
   )
 
   /**
@@ -642,28 +675,26 @@ export default function LivingWorkspace() {
         </ul>
       </details>
 
-      {compiled && (
+      {outcome && (
         <section>
-          <h2 className="text-[11px] uppercase tracking-wide text-lf-text-faint">本次编译</h2>
-          {compiled.ok ? (
+          <h2 className="text-[11px] uppercase tracking-wide text-lf-text-faint">本次理解</h2>
+          {outcome.kind === 'ok' ? (
             <ul className="mt-2 space-y-1 text-[11px] text-lf-text-muted">
               <li>
-                意图：<span className="text-lf-text">{compiled.intentClass}</span>
+                来源：<span className="text-lf-text">{outcome.provenance === 'ai' ? 'AI 理解' : '规则方案'}</span>
               </li>
               <li>
-                命中词：
-                <span className="text-lf-text">
-                  {compiled.matchedKeywords.length ? compiled.matchedKeywords.join('、') : '（无）'}
-                </span>
+                运行记录：
+                <span className="text-lf-text">{outcome.meta.runId ?? '（本地规则，无服务端运行）'}</span>
               </li>
               <li>
-                节点：<span className="text-lf-text">{compiled.spec.nodes.length}</span> 个
+                节点：<span className="text-lf-text">{outcome.spec.nodes.length}</span> 个
                 {merged?.ok ? ` → 合并社群数据后 ${merged.spec.nodes.length} 个` : ''}
               </li>
             </ul>
           ) : (
             <p className="mt-2 rounded-lf border border-lf-line p-2 text-[11px] text-lf-text-muted">
-              未生成工作区：{compiled.reason}
+              未生成方案：{outcome.reason}
             </p>
           )}
         </section>
@@ -715,32 +746,127 @@ export default function LivingWorkspace() {
           className={`flex gap-2 ${hero ? 'flex-col px-1 sm:flex-row sm:items-center sm:justify-between' : 'items-center justify-between'}`}
         >
           <p className="min-w-0 text-[11px] leading-relaxed text-lf-text-faint">
-            编译在本地完成；只有真正创建任务时才写入服务端。
+            理解先走服务端（AI 或规则，来源会标注）；只有创建任务才写入。
           </p>
-          {/* 编译是纯前端动作 → 只要有足够文本就一定可用；不足则禁用并说明差多少。 */}
+          {/* 提交是一次真实的服务端理解请求 → 请求期间禁用防重复提交；不足则禁用并说明差多少。 */}
           <button
             type="button"
-            disabled={!canCompile}
-            aria-disabled={!canCompile}
-            title={canCompile ? '编译为工作区' : `至少输入 ${MIN_GOAL_LENGTH} 个字符`}
-            onClick={runCompile}
+            data-testid="intent-submit"
+            disabled={!canCompile || resolving}
+            aria-disabled={!canCompile || resolving}
+            title={canCompile ? '让系统理解并生成方案' : `至少输入 ${MIN_GOAL_LENGTH} 个字符`}
+            onClick={() => void runIntent()}
             className={[
               'lf-focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-lf px-3.5 py-2 text-xs font-medium',
               hero ? 'w-full border border-transparent sm:w-auto' : 'border',
-              canCompile
+              canCompile && !resolving
                 ? hero
                   ? 'bg-lf-text text-lf-bg hover:opacity-90'
                   : 'border-lf-line-strong text-lf-text hover:bg-lf-surface-2'
                 : 'cursor-not-allowed border-lf-line text-lf-text-faint',
             ].join(' ')}
           >
-            <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
-            编译工作区
+            {resolving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            {resolving ? '正在理解…' : '开始'}
           </button>
         </div>
       </div>
     )
   }
+
+  /**
+   * 方案区（开始屏与工作区屏**共用**同一份渲染）：画布 + 缺口 + 创建结果。
+   * 抽出来是为了「开始屏原位出现方案，切到工作区屏看到同一份全貌」——
+   * 两处渲染同一个 ReactNode 变量，不存在第二套状态源。
+   */
+  const planSection = specNow ? (
+    <div className="space-y-3">
+      {merged && !merged.ok && (
+        <div
+          className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger"
+          role="alert"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{merged.reason}</span>
+        </div>
+      )}
+
+      {mergedSpec && (
+        <LivingCanvas
+          spec={mergedSpec}
+          capabilityProbe={capabilityProbe}
+          blockedActions={blockedActions}
+          onAction={handleAction}
+          pendingActionKey={creating ? 'create-mission' : null}
+        />
+      )}
+
+      {!tenantSettled && (
+        <p className="flex items-center gap-2 text-xs text-lf-text-muted" role="status" aria-live="polite">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          正在读取社群真实状态（提案 / 任务队列 / 成果）…
+        </p>
+      )}
+
+      {missionDraft && missionDraft.missing.length > 0 && (
+        <div className="rounded-lf border border-lf-line bg-lf-surface p-3">
+          <p className="text-xs font-medium text-lf-text">还不能创建连接任务</p>
+          <ul className="mt-1.5 space-y-1 text-xs text-lf-text-muted">
+            {missionDraft.missing.map((m) => (
+              <li key={m} className="break-words">
+                · {m}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-[11px] text-lf-text-faint">
+            服务端要求这几项都非空。这里<strong className="font-medium">不会</strong>替你编一个默认对价或判据 ——
+            把缺的补进描述里，重新点「开始」即可。
+          </p>
+        </div>
+      )}
+
+      {createResult?.kind === 'ok' && (
+        <div className="rounded-lf border border-lf-signal/40 bg-lf-surface p-3" role="status">
+          <p className="flex items-center gap-2 text-sm text-lf-text">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-lf-signal" aria-hidden="true" />
+            {createResult.replayed ? '服务端判定为重复提交（幂等重放），已返回同一条任务。' : '连接任务已创建。'}
+          </p>
+          <p className="mt-1 break-all text-xs text-lf-text-muted">
+            id <span className="text-lf-text">{createResult.missionId}</span>
+            {createResult.title ? ` · ${createResult.title}` : ''}
+            {createResult.status ? ` · ${createResult.status}` : ''}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedMissionId(createResult.missionId)
+              navigateTo('missions')
+            }}
+            className="lf-focus-ring mt-2 rounded-lf px-2 py-1 text-xs text-lf-signal transition-colors hover:bg-lf-surface-2"
+          >
+            在「任务」里查看 →
+          </button>
+          <p className="mt-1 text-[11px] text-lf-text-faint">
+            幂等键 {attempt?.key ?? '—'}（同一份草稿重试会复用该键，因此不会重复创建）。
+          </p>
+        </div>
+      )}
+
+      {createResult?.kind === 'error' && (
+        <div
+          className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger"
+          role="alert"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="break-words">创建失败：{createResult.message}</span>
+        </div>
+      )}
+    </div>
+  ) : null
 
   /**
    * P2：Field / Consent / Outcomes / Agents 四区各自带详情面板
@@ -831,6 +957,50 @@ export default function LivingWorkspace() {
           </section>
 
           {/*
+            V21 · F02：提交后**原位**出现理解摘要与可执行方案 —— 不强行跳到配置页。
+            pending / error / ok 三态都是真实的：pending 是一次真实的服务端请求，
+            error 带服务端原因与支持的目标类型，ok 标注 AI/规则真实来源。
+          */}
+          {resolving && (
+            <section
+              role="status"
+              aria-live="polite"
+              className="flex items-center gap-2.5 rounded-lf-lg border border-lf-line bg-lf-surface p-4 text-sm text-lf-text-muted"
+              data-testid="intent-resolving"
+            >
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              正在让系统理解你的目标…（AI 或规则方案，来源会明确标注）
+            </section>
+          )}
+
+          {!resolving && outcome?.kind === 'error' && (
+            <section className="space-y-2 rounded-lf-lg border border-lf-line bg-lf-surface p-4" role="alert">
+              <p className="flex items-start gap-2 text-sm text-lf-danger">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{outcome.reason}</span>
+              </p>
+              {outcome.suggestions.length > 0 && (
+                <div>
+                  <p className="text-xs text-lf-text-muted">当前支持的目标类型：</p>
+                  <ul className="mt-1 space-y-1 text-xs text-lf-text-muted">
+                    {outcome.suggestions.map((s) => (
+                      <li key={s} className="break-words">
+                        · {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          )}
+
+          {!resolving && outcome?.kind === 'ok' && (
+            <div className="space-y-3" data-testid="intent-result" ref={resultRef}>
+              <UnderstandingCard outcome={outcome} onReset={() => setOutcome(null)} />
+              {planSection}
+            </div>
+          )}
+          {/*
             V16 · F-05：第三格原来放「我的匹配 · /api/matches」—— B2C 遗留线，
             会让人以为这是个交友产品。现在换成"待你介绍"：双方已同意、等你牵线。
           */}
@@ -900,120 +1070,57 @@ export default function LivingWorkspace() {
 
       {activeKey === 'studio' && (
         <div className="space-y-4">
-          <h1 className="text-lg font-semibold">Mission Studio</h1>
+          <h1 className="text-lg font-semibold">工作区</h1>
           <p className="text-sm text-lf-text-muted">
-            用一句话说清你想推进的事，系统会把它摊成可执行的一步一步：要联系谁、要谁同意、
-            做成什么算完成、结果怎么核验。每一步都会落到真实记录上，不是画给你看的一张图。
+            在「开始」写下目标后，方案会摊在这里：要联系谁、要谁同意、做成什么算完成、
+            结果怎么核验。每一步都会落到真实记录上，不是画给你看的一张图。
           </p>
 
-          {compiled === null && (
+          {outcome === null && (
             <div className="rounded-lf border border-dashed border-lf-line p-6 text-center">
               <Compass className="mx-auto h-6 w-6 text-lf-text-faint" aria-hidden="true" />
-              <p className="mt-2 text-sm text-lf-text-muted">还没有工作区。先写下一个目标。</p>
+              <p className="mt-2 text-sm text-lf-text-muted">还没有方案。先写下一个目标。</p>
               {/* V16 · F-08：空态把主操作拉到眼前，而不是让用户自己找底部悬浮框。 */}
               <button
                 type="button"
-                onClick={() => document.getElementById('lf-composer')?.focus()}
+                onClick={() => {
+                  setActiveKey('now')
+                  document.getElementById('lf-composer')?.focus()
+                }}
                 className="lf-focus-ring mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-lf border border-lf-line-strong px-3 py-1.5 text-xs text-lf-text hover:bg-lf-surface-2"
               >
                 <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
-                开始输入目标
+                去写下目标
               </button>
             </div>
           )}
 
-          {compiled && !compiled.ok && (
+          {outcome?.kind === 'error' && (
             <div className="space-y-2 rounded-lf border border-lf-line bg-lf-surface p-3" role="alert">
               <p className="flex items-start gap-2 text-sm text-lf-danger">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{compiled.reason}</span>
+                <span>{outcome.reason}</span>
               </p>
-              <div>
-                <p className="text-xs text-lf-text-muted">当前支持的目标类型：</p>
-                <ul className="mt-1 space-y-1 text-xs text-lf-text-muted">
-                  {compiled.suggestions.map((s) => (
-                    <li key={s} className="break-words">
-                      · {s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {compiled?.ok && (
-            <div className="space-y-3">
-              {merged && !merged.ok && (
-                <div
-                  className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger"
-                  role="alert"
-                >
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{merged.reason}</span>
-                </div>
-              )}
-
-              {mergedSpec && (
-                <LivingCanvas
-                  spec={mergedSpec}
-                  capabilityProbe={capabilityProbe}
-                  blockedActions={blockedActions}
-                  onAction={handleAction}
-                  pendingActionKey={creating ? 'create-mission' : null}
-                />
-              )}
-
-              {!tenantSettled && (
-                <p className="flex items-center gap-2 text-xs text-lf-text-muted" role="status" aria-live="polite">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                  正在读取社群真实状态（提案 / 任务队列 / 成果）…
-                </p>
-              )}
-
-              {missionDraft && missionDraft.missing.length > 0 && (
-                <div className="rounded-lf border border-lf-line bg-lf-surface p-3">
-                  <p className="text-xs font-medium text-lf-text">还不能创建连接任务</p>
-                  <ul className="mt-1.5 space-y-1 text-xs text-lf-text-muted">
-                    {missionDraft.missing.map((m) => (
-                      <li key={m} className="break-words">
-                        · {m}
+              {outcome.suggestions.length > 0 && (
+                <div>
+                  <p className="text-xs text-lf-text-muted">当前支持的目标类型：</p>
+                  <ul className="mt-1 space-y-1 text-xs text-lf-text-muted">
+                    {outcome.suggestions.map((s) => (
+                      <li key={s} className="break-words">
+                        · {s}
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-1.5 text-[11px] text-lf-text-faint">
-                    服务端要求这三项都非空。这里<strong className="font-medium">不会</strong>替你编一个默认对价或判据 ——
-                    把缺的补进描述里再重新编译即可。
-                  </p>
-                </div>
-              )}
-
-              {createResult?.kind === 'ok' && (
-                <div className="rounded-lf border border-lf-signal/40 bg-lf-surface p-3" role="status">
-                  <p className="flex items-center gap-2 text-sm text-lf-text">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-lf-signal" aria-hidden="true" />
-                    {createResult.replayed ? '服务端判定为重复提交（幂等重放），已返回同一条任务。' : '连接任务已创建。'}
-                  </p>
-                  <p className="mt-1 break-all text-xs text-lf-text-muted">
-                    id <span className="text-lf-text">{createResult.missionId}</span>
-                    {createResult.title ? ` · ${createResult.title}` : ''}
-                    {createResult.status ? ` · ${createResult.status}` : ''}
-                  </p>
-                  <p className="mt-1 text-[11px] text-lf-text-faint">
-                    幂等键 {attempt?.key ?? '—'}（同一份草稿重试会复用该键，因此不会重复创建）。
-                  </p>
-                </div>
-              )}
-
-              {createResult?.kind === 'error' && (
-                <div
-                  className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger"
-                  role="alert"
-                >
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span className="break-words">创建失败：{createResult.message}</span>
                 </div>
               )}
             </div>
+          )}
+
+          {outcome?.kind === 'ok' && (
+            <>
+              <UnderstandingCard outcome={outcome} />
+              {planSection}
+            </>
           )}
         </div>
       )}
@@ -1051,6 +1158,14 @@ export default function LivingWorkspace() {
           data={agentData}
           selectedRunId={selectedAgentRunId}
           onSelectRun={setSelectedAgentRunId}
+        />
+      )}
+
+      {activeKey === 'missions' && (
+        <MissionBoard
+          capabilities={capabilities}
+          selectedMissionId={selectedMissionId}
+          onSelectMission={setSelectedMissionId}
         />
       )}
     </LivingShell>

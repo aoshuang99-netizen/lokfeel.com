@@ -1,0 +1,16 @@
+T+2026-11-14T10:26:5xZ · V21 · C03 阶段1（无 WORKBUDDY 键的环境 · 本地构建产物 127.0.0.1:3214 · 隔离 file: 库）
+
+✓ 登录 200 且下发会话 cookie — HTTP 200
+✓ POST /api/v1/agents/runs 2xx 且返回 run — HTTP 201 status=DEGRADED provider=rules degrade=PROVIDER_UNAVAILABLE
+✓ proposal 形状 = WorkspaceSpec v1.2（version + nodes 数组） — title=调研 / 用户访谈 nodes=2
+✓ 归因如实（providerKind ∈ workbuddy/openai/rules） — providerKind=rules
+  ⚠ 诚实降级：未配置 WORKBUDDY_LLM_ENDPOINT —— 无法定位云端算力端点；未配置 OPENAI_API_KEY —— 不会用任何"假模型"冒充真实调用（T08 同口径：无凭据即明示不可用）。已降级为「规则式」抽取（能力弱于模型路径，结果仍需你确认）。
+✓ 同键同体重放 → replayed:true 且 runId 相同 — HTTP 200 replayed=true
+✓ GET /api/v1/agents/runs 列表能读到这条运行 — HTTP 200 列表 1 条
+
+✅ 规则降级路径真实打通（诚实标注）
+
+说明：该运行的完整 JSON 当时写入 intent-gateway.json 后被阶段2（AI 路径）覆盖；
+本文件是从真实运行的控制台输出逐行留档。阶段2 的完整 JSON 见 intent-gateway-ai.json。
+判定不变：DEGRADED 语义 = 服务端契约内的**诚实**规则降级（src/lib/agent/runtime.ts degrade()），
+UI 徽章按 provenance='rule' 标注，不冒充 AI。

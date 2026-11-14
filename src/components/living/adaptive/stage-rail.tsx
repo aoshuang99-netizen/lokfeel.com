@@ -33,7 +33,9 @@ export default function StageRail({ stages, activeView, onFocusView }: StageRail
   return (
     <nav aria-label="任务阶段" className="mb-4">
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <p className="text-[11px] uppercase tracking-[0.14em] text-lf-text-faint">Mission pipeline</p>
+        {/* V21：这里原来写着「Mission pipeline」—— 用户语言里没有这个词，
+            阶段条对用户的意义是"这件事走到哪一步了"。 */}
+        <p className="text-[11px] uppercase tracking-[0.14em] text-lf-text-faint">事情走到哪一步</p>
         {/* 原来这里写的是"计数口径：四个真实端点"—— 对用户来说那是审计语言。
             同一件事，换成"点进去看它卡在哪"，才是这一步对他有用的地方。 */}
         <p className="text-[11px] text-lf-text-faint">点一步，看它卡在哪</p>

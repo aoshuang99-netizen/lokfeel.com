@@ -1,0 +1,50 @@
+{
+  "task": "C05 Mission 闭环",
+  "base": "http://127.0.0.1:3214",
+  "startedAt": "2026-11-14T10:53:08.648Z",
+  "steps": [
+    {
+      "name": "登录 200 + 会话 cookie",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "POST /api/v1/missions → 201 且返回 id",
+      "ok": true,
+      "detail": "HTTP 201 id=cmwgaeuz80001jpk8fvj3zfvm"
+    },
+    {
+      "name": "同键同体重放 → 头 Idempotent-Replayed + 同 id",
+      "ok": true,
+      "detail": "HTTP 201 replayed=true"
+    },
+    {
+      "name": "列表包含该任务（状态连续）",
+      "ok": true,
+      "detail": "共 3 条"
+    },
+    {
+      "name": "详情字段与创建一致（标题/状态）",
+      "ok": true,
+      "detail": "status=DRAFT"
+    },
+    {
+      "name": "publish → ACTIVE",
+      "ok": true,
+      "detail": "HTTP 200 status=ACTIVE"
+    },
+    {
+      "name": "close → CLOSED",
+      "ok": true,
+      "detail": "HTTP 200 status=CLOSED"
+    },
+    {
+      "name": "CLOSED 再 publish → 409（状态机在服务端裁决）",
+      "ok": true,
+      "detail": "HTTP 409"
+    }
+  ],
+  "completedAt": "2026-11-14T10:53:13.826Z",
+  "missionId": "cmwgaeuz80001jpk8fvj3zfvm",
+  "verdict": "PASS"
+}

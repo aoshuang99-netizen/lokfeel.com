@@ -73,7 +73,10 @@ export default function LivingShell({
   // 主题真值走共享实现（`@/components/theme/living-theme`）—— 与 Console 七屏同一份真值。
   // 服务端快照固定 'field' → 首屏与 SSR 一致，挂载后取真实值，不会 hydration 失配。
   const { theme, toggleTheme } = useLivingTheme(dualWorld)
-  const [inspectorOpen, setInspectorOpen] = useState(true)
+  // V21（03_UI_DESIGN_CONTRACT §栅格）：Inspector **默认不消耗首屏宽度** ——
+  // 首屏要回答"我现在要做什么"，证据是"我怀疑这个数字时再看"。
+  // 面板随时可一键展开（顶栏按钮 aria-pressed），内容与之前完全一致。
+  const [inspectorOpen, setInspectorOpen] = useState(false)
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false)
   // 移动端证据浮层：真实 div 容器（非动画包装），焦点圈定 / Escape / 焦点恢复 / 滚动锁
   // 全部复用 V19.5 的统一 hook —— 不在这里重写第四份焦点逻辑。

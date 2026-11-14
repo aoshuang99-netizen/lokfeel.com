@@ -1,0 +1,129 @@
+{
+  "base": "http://127.0.0.1:3214",
+  "startedAt": "2026-11-14T10:53:52.498Z",
+  "shots": [
+    {
+      "viewport": "360x800",
+      "state": "now-initial",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-initial-360x800.png"
+    },
+    {
+      "viewport": "360x800",
+      "state": "now-result",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-result-360x800.png",
+      "badge": "AI 理解",
+      "overflowPx": 0
+    },
+    {
+      "viewport": "360x800",
+      "state": "missions",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/missions-360x800.png",
+      "text": "事情走到哪一步 点一步，看它卡在哪 提案 0 无待办 同意 0 无待办 执行 0 无待办 成果 0 无待办 四步都空着。写下一个目标，第一步就会出现在这里。 我的任务 从「开始」屏写下目标、创建的任务都会出现在这里；状态每一步都是服务端裁决的。 V21 取证任务：渠道伙伴对接 已结束 30 天内对接 20 家渠道伙伴，"
+    },
+    {
+      "viewport": "390x844",
+      "state": "now-initial",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-initial-390x844.png"
+    },
+    {
+      "viewport": "390x844",
+      "state": "now-result",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-result-390x844.png",
+      "badge": "AI 理解",
+      "overflowPx": 0
+    },
+    {
+      "viewport": "390x844",
+      "state": "missions",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/missions-390x844.png",
+      "text": "事情走到哪一步 点一步，看它卡在哪 提案 0 无待办 同意 0 无待办 执行 0 无待办 成果 0 无待办 四步都空着。写下一个目标，第一步就会出现在这里。 我的任务 从「开始」屏写下目标、创建的任务都会出现在这里；状态每一步都是服务端裁决的。 V21 取证任务：渠道伙伴对接 已结束 30 天内对接 20 家渠道伙伴，"
+    },
+    {
+      "viewport": "768x1024",
+      "state": "now-initial",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-initial-768x1024.png"
+    },
+    {
+      "viewport": "768x1024",
+      "state": "now-result",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-result-768x1024.png",
+      "badge": "AI 理解",
+      "overflowPx": 0
+    },
+    {
+      "viewport": "768x1024",
+      "state": "missions",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/missions-768x1024.png",
+      "text": "事情走到哪一步 点一步，看它卡在哪 提案 0 无待办 同意 0 无待办 执行 0 无待办 成果 0 无待办 四步都空着。写下一个目标，第一步就会出现在这里。 我的任务 从「开始」屏写下目标、创建的任务都会出现在这里；状态每一步都是服务端裁决的。 V21 取证任务：渠道伙伴对接 已结束 30 天内对接 20 家渠道伙伴，"
+    },
+    {
+      "viewport": "1280x800",
+      "state": "now-initial",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-initial-1280x800.png"
+    },
+    {
+      "viewport": "1280x800",
+      "state": "now-result",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-result-1280x800.png",
+      "badge": "AI 理解",
+      "overflowPx": 0
+    },
+    {
+      "viewport": "1280x800",
+      "state": "missions",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/missions-1280x800.png",
+      "text": "事情走到哪一步 点一步，看它卡在哪 提案 0 无待办 同意 0 无待办 执行 0 无待办 成果 0 无待办 四步都空着。写下一个目标，第一步就会出现在这里。 我的任务 从「开始」屏写下目标、创建的任务都会出现在这里；状态每一步都是服务端裁决的。 V21 取证任务：渠道伙伴对接 已结束 30 天内对接 20 家渠道伙伴，"
+    },
+    {
+      "viewport": "1440x900",
+      "state": "now-initial",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-initial-1440x900.png"
+    },
+    {
+      "viewport": "1440x900",
+      "state": "now-result",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-result-1440x900.png",
+      "badge": "AI 理解",
+      "overflowPx": 0
+    },
+    {
+      "viewport": "1440x900",
+      "state": "missions",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/missions-1440x900.png",
+      "text": "事情走到哪一步 点一步，看它卡在哪 提案 0 无待办 同意 0 无待办 执行 0 无待办 成果 0 无待办 四步都空着。写下一个目标，第一步就会出现在这里。 我的任务 从「开始」屏写下目标、创建的任务都会出现在这里；状态每一步都是服务端裁决的。 V21 取证任务：渠道伙伴对接 已结束 30 天内对接 20 家渠道伙伴，"
+    },
+    {
+      "viewport": "1920x1080",
+      "state": "now-initial",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-initial-1920x1080.png"
+    },
+    {
+      "viewport": "1920x1080",
+      "state": "now-result",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/now-result-1920x1080.png",
+      "badge": "AI 理解",
+      "overflowPx": 0
+    },
+    {
+      "viewport": "1920x1080",
+      "state": "missions",
+      "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/evidence/codex/c02/missions-1920x1080.png",
+      "text": "事情走到哪一步 点一步，看它卡在哪 提案 0 无待办 同意 0 无待办 执行 0 无待办 成果 0 无待办 四步都空着。写下一个目标，第一步就会出现在这里。 我的任务 从「开始」屏写下目标、创建的任务都会出现在这里；状态每一步都是服务端裁决的。 V21 取证任务：渠道伙伴对接 已结束 30 天内对接 20 家渠道伙伴，"
+    }
+  ],
+  "axe": [
+    {
+      "viewport": "390x844",
+      "page": "/workspace",
+      "serious": 0,
+      "total": 0
+    },
+    {
+      "viewport": "1280x800",
+      "page": "/workspace",
+      "serious": 0,
+      "total": 0
+    }
+  ],
+  "completedAt": "2026-11-14T10:55:17.594Z"
+}

@@ -24,14 +24,16 @@ import { VIEWPORTS, assertMobileLayout } from './lib/measure';
 
 const AUTHED_STATE = 'test-results/authed-state.json';
 
-/** 与 `src/app/workspace/living-workspace.tsx` 的 `NAV` 保持一致（标签即 accessible name）。 */
+/** 与 `src/app/workspace/living-workspace.tsx` 的 `NAV` 保持一致（标签即 accessible name）。
+ *  V21：导航按用户动作重命名（key 不动，深链接兼容）；「任务」屏 ready 后加入矩阵。 */
 const VIEWS = [
-  { key: 'now', label: 'Now' },
-  { key: 'studio', label: 'Studio' },
-  { key: 'field', label: 'Field' },
-  { key: 'consent', label: 'Consent' },
-  { key: 'outcomes', label: 'Outcomes' },
-  { key: 'agents', label: 'Agents' },
+  { key: 'now', label: '开始' },
+  { key: 'studio', label: '工作区' },
+  { key: 'field', label: '关系网络' },
+  { key: 'consent', label: '授权' },
+  { key: 'outcomes', label: '成果' },
+  { key: 'agents', label: '执行团队' },
+  { key: 'missions', label: '任务' },
 ] as const;
 
 test.use({ storageState: AUTHED_STATE });
