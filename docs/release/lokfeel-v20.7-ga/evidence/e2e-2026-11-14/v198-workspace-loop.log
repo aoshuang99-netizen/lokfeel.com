@@ -1,0 +1,21 @@
+✓ 夹具就绪（v198_org / v198.owner@example.invalid）
+✓ 登录成功
+
+— API 层：Schema / 持久化 / 契约 —
+  ✓ W-00   OWNER 创建 Mission → 2xx — status=201 id=cmwfywz1b000xdbk8uesn41xx
+  ✓ W-01   need<4 字符 → 400（Schema 拒绝） — status=400
+  ✓ W-02   受保护字段 email → 400（AC-03） — status=400
+  ✓ W-03   缺 Idempotency-Key → 400 — status=400
+  ✓ W-JOIN OWNER 经 shareToken 加入自己任务 — status=200
+  ✓ W-04   非法之后合法提交 → 201（错误恢复） — status=201
+  ✓ W-05   GET intents 列表含 W-04（持久化） — items=1
+
+— UI 层：编译 / 创建 / 刷新恢复（390×844） —
+  ✓ U-00   移动端 Intent 输入框可见
+  ✓ W-06   短文本 → 编译禁用 + title 说明 — title="至少输入 8 个字符"
+  ✓ W-07   合法 goal → 编译 → Studio 渲染 WorkspaceSpec — h1=Mission Studio len=782
+  △ 首次创建被诚实禁用：还不能创建：缺少 「可提供的对价」—— 描述里没写，创建任务需要它。
+  ✓ W-08   Studio 创建 → 真实成功态（服务端 id） — id=cmwg027d8001tdbk8aloagubq
+  ✓ W-09   刷新后任务从服务端恢复 — missions=3 uiId=cmwg027d8001tdbk8aloagubq
+
+=== 汇总：12 PASS / 0 BLOCKED / 0 FAIL ===

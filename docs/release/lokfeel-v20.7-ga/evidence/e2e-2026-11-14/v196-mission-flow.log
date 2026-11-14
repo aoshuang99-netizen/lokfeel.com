@@ -1,0 +1,23 @@
+✓ 已清理 v196_ 夹具
+✓ 夹具已写入 ci-e2e-20261114.db（org=v196_org owner/member）
+  ✓ CTRL-1   OWNER 会话被识别 — v196_user_owner
+  ✓ CTRL-2   MEMBER 会话被识别 — v196_user_member
+  ✓ M-01     OWNER 创建 Mission（幂等键） — status=201 id=cmwg02fjc001ydbk8s84sklsh shareToken=yes
+  ✓ M-02     同键重放：不创建第二条 — replayed=true sameId=true occurrences=1
+  ✓ N-01     MEMBER 创建 Mission → 403 — status=403
+  ✓ J-01     MEMBER 经 shareToken 加入 — status=200
+  ✓ I-01     MEMBER 提交 Intent → 201 — status=201 
+  ✓ I-01b    Intent 同键重放 → Replayed — replayed=true
+  ✓ N-02     MEMBER 二次 Intent → 409 — status=409
+  ✓ A-01     OWNER 发起 INTENT_EXTRACTION — status=201 runStatus=FAILED（真实读数，不假设成功）
+  ✓ A-02     运行同键重放 → 同一 id + replayed 标注 — replayed=true sameId=true
+  ✓ N-03     MEMBER 发起运行 → 403 — status=403
+  ✓ C-01     OWNER 发起 INTRO_DRAFT（高风险） — status=201 runStatus=FAILED（真实读数）
+  ✓ C-02     MEMBER 批准 → 403 — status=403
+  □ C-03     OWNER 批准 → APPROVED — 前置运行状态为 FAILED（不可裁决），跳过不判红
+  □ C-04a    OWNER 驳回 → REJECTED — 前置运行未建成或不可裁决（status=201 runStatus=FAILED）
+  □ E-01     执行已批准运行 → 真实终态 — 运行状态 FAILED 不可执行
+  ✓ O-01     GET /api/v1/outcomes → 200 — status=200
+
+══ 结果：15/18 PASS · 3 BLOCKED · 0 FAIL ══
+✓ 已清理 v196_ 夹具

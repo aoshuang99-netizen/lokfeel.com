@@ -1,0 +1,25 @@
+
+━━━ payment-off 契约（支付未接入 = 受支持状态）━━━
+目标   : http://127.0.0.1:3211
+探针   : health=200 · products=503 · checkout=401 · stripe.webhook=503 · creem.webhook=503 · refund=401
+
+  ✅ 基线：/api/health 200 且带 payments 块
+  ✅ 基线：本环境确实是「未接入」（configured=false）
+  ✅ health.payments 结构完整（通道集合 + missing + malformed）
+  ✅ health.payments.missing 含 CREEM_API_KEY
+  ✅ health.payments.missing 含 CREEM_WEBHOOK_SECRET
+  ✅ health.payments.missing 含 STRIPE_SECRET_KEY
+  ✅ health.payments.missing 含 STRIPE_WEBHOOK_SECRET
+  ✅ health 响应不含凭据片段
+  ✅ GET /api/payments/creem/products → 503
+  ✅ products 响应带 code=PAYMENT_NOT_CONFIGURED 与 channel
+  ✅ products 响应回的是变量名而不是 provider 原始报错
+  ✅ products 不是 500（未接入不得被记成服务端故障）
+  ✅ POST /api/payments/creem/checkout（匿名）→ 401
+  ✅ POST /api/webhooks/stripe（带签名头）→ 503 + PAYMENT_NOT_CONFIGURED
+  ✅ POST /api/webhooks/creem（带签名头）→ 503 或 401（绝不 500）
+  ✅ creem webhook 不是 500
+  ✅ POST /api/admin/subscriptions/:id/refund（匿名）→ 401/403，不是 500
+  ✅ 本轮没有任何端点返回 500
+
+结论：18/18 通过

@@ -1,0 +1,34 @@
+
+V18 双组织隔离取证
+  站点：http://127.0.0.1:3211
+  库  ：ci-e2e-20261114.db
+
+  前置：/api/health = 200 ✓
+
+① 造夹具（两个组织 / 三个身份 / 两条 mission）
+
+② 登录（三条真实会话；失败即 BLOCKED）
+  ✓ A / MEM / B 三条会话均建立
+
+②b 会话层（登录 200 ≠ 会话可用）
+  ✓ AUTH-01 三条会话均被 Auth.js 识别（/api/auth/session 有 user.id）
+
+③ 正对照（先证明"能读自己的"，否则拒绝断言无意义）
+  ✓ CTRL-1   A 读自己的 mission — HTTP 200
+  ✓ CTRL-2   B 读自己的 mission — HTTP 200
+
+④ 负向：跨租户读取 / 列表 / 写入 / Agent
+  ✓ SEC-01   A 读 B 的 mission — HTTP 404
+  ✓ SEC-03   A 的列表不含 B 的 mission — HTTP 200
+  ✓ SEC-02   A 改 B 的 mission 不产生副作用 — HTTP 404；库里 title 未变
+  ✓ SEC-07   用 organizationId 选择器越权被拒 + 审计留痕 — HTTP 403；tenant.access_denied 新增 1 条
+  ✓ SEC-04   A 不能对 B 的 mission 起 Agent 运行 — HTTP 400；B 租户 AgentRun 0 → 0
+  ✓ SEC-06   MEMBER 缺 mission.create → 403 — HTTP 403
+  ✓ SEC-05   MCP list_missions 不泄露 B 的 mission — HTTP 200
+  □ SEC-08   Consent 撤销后继续执行被拒 — 需要 Connection/Consent 夹具（跨 4 张表）；本轮无本地库可验证，下一轮用真实流程造数
+
+⑤ 清理夹具
+::warning title=V18 隔离取证 BLOCKED::SEC-08 Consent 撤销后继续执行被拒 — 需要 Connection/Consent 夹具（跨 4 张表）；本轮无本地库可验证，下一轮用真实流程造数
+
+✅ 10 项：9 PASS / 0 FAIL / 1 BLOCKED
+   证据：docs/implementation/v18/test-results/isolation-proof.json
