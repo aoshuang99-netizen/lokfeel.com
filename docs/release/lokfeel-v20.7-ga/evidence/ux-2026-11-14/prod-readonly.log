@@ -1,0 +1,28 @@
+
+Running 17 tests using 1 worker
+
+  ✓   1 [chromium] › tests/e2e-ci/cache-headers.spec.ts:43:9 › 缓存策略 · 认证面不得被公共缓存 › /login 返回 private + no-store (3.6s)
+  ✓   2 [chromium] › tests/e2e-ci/cache-headers.spec.ts:43:9 › 缓存策略 · 认证面不得被公共缓存 › /register 返回 private + no-store (5.9s)
+  ✓   3 [chromium] › tests/e2e-ci/cache-headers.spec.ts:43:9 › 缓存策略 · 认证面不得被公共缓存 › /forgot-password 返回 private + no-store (3.6s)
+  ✓   4 [chromium] › tests/e2e-ci/cache-headers.spec.ts:43:9 › 缓存策略 · 认证面不得被公共缓存 › /reset-password 返回 private + no-store (1.1s)
+  ✓   5 [chromium] › tests/e2e-ci/cache-headers.spec.ts:43:9 › 缓存策略 · 认证面不得被公共缓存 › /verify-request 返回 private + no-store (2.2s)
+  ✓   6 [chromium] › tests/e2e-ci/cache-headers.spec.ts:43:9 › 缓存策略 · 认证面不得被公共缓存 › /auto-login 返回 private + no-store (1.4s)
+  ✓   7 [chromium] › tests/e2e-ci/cache-headers.spec.ts:43:9 › 缓存策略 · 认证面不得被公共缓存 › /admin-login 返回 private + no-store (1.3s)
+  ✓   8 [chromium] › tests/e2e-ci/cache-headers.spec.ts:61:7 › 缓存策略 · 探活与其它敏感端点 › /api/health 不缓存（否则 dbLatency 会是旧快照） (1.3s)
+  ✓   9 [chromium] › tests/e2e-ci/cache-headers.spec.ts:68:7 › 缓存策略 · 探活与其它敏感端点 › /api/auth/session 不缓存（响应里带 Set-Cookie） (1.9s)
+  ✓  10 [chromium] › tests/e2e-ci/cache-headers.spec.ts:84:7 › 缓存策略 · 公开页仍允许 CDN 缓存（防止过度收紧） › / (1.4s)
+  ✓  11 [chromium] › tests/e2e-ci/smoke.spec.ts:38:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ① 健康检查 200，且数据库真实可达 (3.0s)
+  ✓  12 [chromium] › tests/e2e-ci/smoke.spec.ts:54:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ② 匿名访问受保护 API 必须 401（守卫未被构建产物绕开） (1.6s)
+  ✓  13 [chromium] › tests/e2e-ci/smoke.spec.ts:61:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ③ 登录页渲染出可交互表单（客户端组件已水合） (7.0s)
+  ✓  14 [chromium] › tests/e2e-ci/smoke.spec.ts:69:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ④ 未知路径必须 404（否则 ①③ 的断言会退化成永真） (1.3s)
+  ✓  15 [chromium] › tests/e2e-ci/smoke.spec.ts:74:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ⑤ 根路径可达且返回 HTML (4.3s)
+  ✓  16 [chromium] › tests/e2e-ci/smoke.spec.ts:99:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页） (7.4s)
+  ✓  17 [chromium] › tests/e2e-ci/smoke.spec.ts:147:7 › CI 冒烟 · 构建产物可启动且守卫真实生效 › ⑦ 子页 canonical 若存在必须等于自身 URL（不得全部指向首页） (10.8s)
+
+  17 passed (1.1m)
+::notice title=E2E 汇总::全部通过
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report test-results/prod-ux/html[39m
+[36m[39m
