@@ -48,7 +48,7 @@ export default function CheckoutSuccessPage() {
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/console/settings"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-white hover:opacity-90 transition"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground hover:opacity-90 transition"
           >
             查看订阅状态
           </Link>

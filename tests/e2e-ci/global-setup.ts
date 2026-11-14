@@ -97,8 +97,17 @@ export default async function globalSetup(): Promise<void> {
         return;
       } catch (err) {
         const first = String((err as Error).message || '').split('\n')[0];
-        reasons.push(`第 ${attempt} 次：${first}\n  文档足迹：${nav.join(' | ') || '（无）'}`);
-        console.log(`[global-setup] 第 ${attempt} 次登录失败：${first}`);
+        // 2026-11-14 · N-3：把网络层瞬时故障与断言失败分开标注。
+        // `net::ERR_FAILED` 是 Chromium 的兜底码（服务端掐断响应 / 导航被替换 /
+        // 重定向到连不上的地址都可能用它），不等于"登录坏了"。
+        const layer = /ERR_FAILED|net::|timeout/i.test(first) ? '网络或超时层' : '断言层';
+        reasons.push(`第 ${attempt} 次（${layer}）：${first}\n  文档足迹：${nav.join(' | ') || '（无）'}`);
+        console.log(`[global-setup] 第 ${attempt} 次登录失败（${layer}）：${first}`);
+        if (attempt < ATTEMPTS) {
+          // 退避 1s / 2s：此前三次重试零间隔，对"夹具刚写完库、服务端瞬时
+          // 不可用"这类窗口等于只试了一次（实测 3/3 全是 ERR_FAILED，一分钟后首试即成）。
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        }
       } finally {
         await ctx.close().catch(() => {});
       }

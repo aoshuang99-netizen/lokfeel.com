@@ -44,14 +44,17 @@ export const metadata: Metadata = {
   creator: "LokFeel",
   publisher: "LokFeel",
   manifest: "/manifest.json",
-  alternates: {
-    canonical: 'https://app.lokfeel.com',
-  },
+  // 🔴 根布局**不许**声明 canonical / og:url（2026-11-14 · P1-1）。
+  //    此前这里写死 `canonical: 'https://app.lokfeel.com'`，而 metadata 会被所有子页继承 ——
+  //    于是 /pricing、/terms、/faq 等全部对外声明「正本是首页」，等于自请出索引。
+  //    同样地，写死的 `openGraph.url` 会让每个子页的分享卡都指回首页。
+  //    两者都删掉：不声明时搜索引擎以页面自身 URL 为准，比错误声明安全得多。
+  //    需要显式 canonical 的页面请各自在 `export const metadata` 里声明自己的绝对 URL；
+  //    守卫见 `tests/e2e-ci/smoke.spec.ts` ⑦（子页 canonical 若存在，必须等于自身 URL）。
   openGraph: {
     title: "LokFeel — Connection OS for AI-native teams",
     description:
       "Compile a goal into a workspace of missions, consent gates and AI agents — then run it with your team.",
-    url: "https://app.lokfeel.com",
     siteName: "LokFeel",
     type: "website",
     locale: "en_US",

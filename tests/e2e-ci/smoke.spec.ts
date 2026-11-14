@@ -132,4 +132,46 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
       expect(bodyText, '应显式说明定价尚未公布').toContain('定价尚未公布');
     }
   });
+
+  /**
+   * ⑦ 2026-11-14 · P1-1 回归守卫
+   * ────────────────────────────────────────────────────────────────
+   * 根布局曾写死 `canonical: 'https://app.lokfeel.com'`，所有子页继承它，
+   * 等于每页都对外声明"正本是首页"。旧检查只断言「canonical 存在」——
+   * 存在性恒真，是典型的假绿，所以这条必须**比对本页 URL**。
+   *
+   * 现在正确状态是「根布局不声明，各页按需自报」，所以允许 0 个 canonical；
+   * 但为了不让这条守卫退化成恒绿，末尾用注入的错误 canonical 做负向对照：
+   * 检测器必须能把它判成"不等于本页"，否则整条断言作废。
+   */
+  test('⑦ 子页 canonical 若存在必须等于自身 URL（不得全部指向首页）', async ({ page }) => {
+    const pages = ['/pricing', '/about', '/terms', '/faq'];
+    for (const pathname of pages) {
+      const res = await page.goto(pathname, { waitUntil: 'domcontentloaded' });
+      expect(res?.status(), `GET ${pathname} 应 200`).toBe(200);
+      expect(new URL(page.url()).pathname, `${pathname} 不得被重定向到别的页面`).toBe(pathname);
+
+      const links = page.locator('link[rel="canonical"]');
+      const count = await links.count();
+      expect(count, `${pathname} 最多只能有一个 canonical`).toBeLessThanOrEqual(1);
+      if (count === 1) {
+        const href = await links.first().getAttribute('href');
+        expect(href, `${pathname} 的 canonical 必须有 href`).toBeTruthy();
+        expect(
+          new URL(href as string, page.url()).pathname,
+          `${pathname} 的 canonical 指向了别的页面 —— 子页会自请出索引`
+        ).toBe(new URL(page.url()).pathname);
+      }
+    }
+
+    // 负向对照：注入一个"指向首页"的错误 canonical，检测器必须判它为不匹配。
+    // page.url() 仍是最后一个真实子页，所以 '/' 与 '/faq' 必然不等。
+    await page.setContent('<html><head><link rel="canonical" href="/"></head><body>probe</body></html>');
+    const fakeHref = await page.locator('link[rel="canonical"]').first().getAttribute('href');
+    expect(fakeHref, '注入的对照样本必须能被读到（否则守卫是恒绿摆设）').toBe('/');
+    expect(
+      new URL(fakeHref as string, page.url()).pathname,
+      '负向对照：错误 canonical 必须被判成不等于本页'
+    ).not.toBe(new URL(page.url()).pathname);
+  });
 });

@@ -110,7 +110,7 @@ export function ERPFilter({
         </button>
         <button
           onClick={onSearch}
-          className="text-[11px] px-3 py-1.5 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
+          className="text-[11px] px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           搜索
         </button>

@@ -1,0 +1,15 @@
+[2026-11-14] /checkout/success 主按钮对比度复验（本地新构建 3212 · Chrome 1440×900）
+
+方法：Playwright `channel=chrome` 取 `<a href="/console/settings">` 的 computed color/backgroundColor，
+按 WCAG 相对亮度公式计算；再注入仓内 axe-core 跑 `color-contrast` 规则。
+
+结果：
+  color = rgb(11, 14, 17)        (= --primary-foreground 深色主题值)
+  background = rgb(163, 230, 53) (= --primary)
+  contrast = 12.83 : 1          （修复前 text-white 为 1.5 : 1，要求 >= 4.5 : 1）
+  axe color-contrast violations = 0，nodes = 0
+
+附：同一提交把全站 8 处 `bg-primary` + `text-white` 共现节点统一改为
+`text-primary-foreground`（checkout/success、tabs、location-picker ×2、
+admin-header、erp/panels、paywall、analytics-report）。
+保留未改的是 `bg-white/20 text-white`（半透明白底，不属于该问题）。

@@ -105,7 +105,7 @@ export function TabTrigger({
       isActive ? "text-foreground" : "text-foreground-muted hover:text-foreground"
     }`,
     pill: `${base} rounded-full ${
-      isActive ? "bg-primary text-white" : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
+      isActive ? "bg-primary text-primary-foreground" : "text-foreground-muted hover:text-foreground hover:bg-background-tertiary"
     }`,
     bordered: `${base} rounded-lg ${
       isActive ? "bg-card text-foreground shadow-sm" : "text-foreground-muted hover:text-foreground"

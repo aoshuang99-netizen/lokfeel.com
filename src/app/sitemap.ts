@@ -97,6 +97,44 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.4,
     },
+    // 2026-11-14 · P3-5：这 6 页站内可点、返回 200，却长期不在 sitemap 里。
+    // 根布局的错误 canonical 已删除（P1-1），此时 sitemap 是爬虫拿到这些 URL 的主要通道。
+    {
+      url: `${baseUrl}/refunds`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/support`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/careers`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/dmca`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+    {
+      url: `${baseUrl}/cancellations-policy`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+    {
+      url: `${baseUrl}/content-removal-appeals-policy`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
     {
       url: `${baseUrl}/community-guidelines`,
       lastModified: new Date(),

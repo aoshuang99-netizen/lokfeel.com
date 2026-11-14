@@ -256,7 +256,7 @@ export function SubscriptionCard({
       }`}
     >
       {isPopular && (
-        <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">
+        <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg">
           POPULAR
         </div>
       )}

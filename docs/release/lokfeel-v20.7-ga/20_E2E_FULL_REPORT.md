@@ -26,11 +26,19 @@
 | 租户隔离探针 | 10 项 | 9 PASS / **1 BLOCKED** / 0 FAIL |
 | 支付未接入面 | 18 项 | **18 PASS** |
 
-但这不是“全绿可以收工”。本轮同时确认了 **5 项新缺陷**（2 项 P2、3 项 P3），其中最严重的一条是：
+> **⚠️ 勘误（2026-11-14 14:10）**：本报告初版把「E2E 未进 CI」列为最严重缺陷，**这是误判，已撤销**。
+> `.github/workflows/ci.yml:352` 起就有完整的 `e2e` job：一次性 file 库 + 双迁移 → 生产构建 →
+> 认证/聊天夹具 → `npx playwright test --config=playwright.ci.config.ts` → axe 四视口棘轮 →
+> 五个探针 → `if: always()` 夹具清理，一条不缺。误判来源是「只按文件名找 `e2e.yml`，没找到就下结论」，
+> **没有读 `ci.yml` 内部** —— 正是本报告自己反复强调的「集合断言先证前置非空」反例。
+> 详见 `21_E2E_FIX_AND_REGRESSION.md`，文内 N-5 已改标为勘误，其余结论不受影响。
 
-> **这 113 条用例从未进入 CI。** `.github/workflows/` 里没有任何 Playwright 步骤，它们只能在人工记得的时候在本机跑一次。门禁不存在，绿灯就是一次性的。
+本轮确认的是 **4 项真实缺陷**（2 项 P2、2 项 P3）+ 1 项报告勘误。最严重的一条是：
+**本地没有模型凭据，三条最高风险的「批准 / 驳回 / 执行」链永远测不到终态**（N-2），
+其次是「同一套用例连跑第二次必然红」（N-1）。
 
-另有 3 条 P1 从页面正确性报告继承下来，**至今未修**（canonical 全站指向首页、内页 logo 仍是旧品牌、`/checkout/success` 主按钮 1.5:1）。
+另有 3 条 P1 从页面正确性报告继承下来，其中 canonical（P1-1）与对比度（P1-3）
+已于本轮修复并上线回归，内页旧品牌（P1-2）仍待品牌口径确认。
 
 ---
 
@@ -91,7 +99,9 @@
 
 - **文件**：`tests/e2e-ci/auth-dialogs.spec.ts:245-258`
 - **现象**：用例先断言 `/api/reports?type=my-reports` 长度为 0。服务端去重是 **per（举报人, 被举报人）24 小时**，不是 per 原因；⑦ 自己会写入一条举报，于是**下一次全量运行的前置必然不干净**。
-- **代价**：任何“跑两遍确认稳定”的做法都会得到假红；CI 一旦挂上，每天第一次跑绿、重跑红。
+- **代价**：任何“复用同一个本地库、跑两遍确认稳定”的做法都会得到假红。
+  **范围修正**：CI 每轮 `prisma db push` 新建库 + 重新 seed，前置天然干净，所以 N-1 **不会让 CI 每天红**；
+  它影响的是本地复跑/复验，以及任何复用库的取证场景（本轮 r2 → r6 正是被它咬到）。
 - **修法**（二选一）：
   1. 给 ⑦ 单独造一个只被它举报的目标用户（`e2e_user_chat_b2`），生命周期跟着 `seed-chat-fixture` 走；
   2. 或加 `test.afterEach` 直连 DB 删除本用例写入的 `UserReport`（`--db` 已在夹具脚本里，连接串可取）。
@@ -114,14 +124,27 @@
 
 - **证据**：`npx playwright install chromium-headless-shell` → `ERROR: Playwright does not support chromium-headless-shell on mac13`；本机缓存最高 `chromium-1223`，而 1.64 需要 `1248`。
 - **现状**：`playwright.ci.config.ts` 的 `launchOptions` 已支持 `PW_CHANNEL=chrome` 借道本机 Chrome（配置里有注释），本轮所有浏览器用例都靠它跑通。
-- **风险**：如果哪天把 E2E 挂到 `macos-13` runner 上，会 100% 全红，且报错看起来像产品挂了。
-- **修法**：CI 固定 `ubuntu-latest`（或 `macos-14+`）。
+- **风险边界**：复核确认 CI 本来就跑在 `ubuntu-latest`（`ci.yml:353`），
+  所以这**只影响本地取证**，不影响门禁。若将来把 runner 换成 `macos-13` 才会 100% 全红。
+- **修法**：保持 `ubuntu-latest`；本地一律 `PW_CHANNEL=chrome`（配置与 seed 脚本均已支持）。
 
-### N-5 · P2 · E2E 根本没有进门禁
+### C-1 · 勘误（原 N-5「E2E 没进 CI」→ 撤销）
 
-- **证据**：`.github/workflows/` 全目录检索无 `playwright`、无 `e2e` job。
-- **含义**：本报告这 113 条的价值，取决于“有人记得手动跑”。回归保护为零。
-- **修法**：新增 job：`ubuntu-latest` + `prisma db push`（file 库）+ 两个迁移脚本 + `next build && next start` + 夹具 seed（`GITHUB_ENV`）+ `PW_CHANNEL` 不设 + 三键注入 + 失败上传 HTML/trace。约 10 分钟，与现有 CI 并行不冲突。
+- **原结论**：`.github/workflows/` 无 Playwright 步骤、无 e2e job。
+- **复核后的事实**：`.github/workflows/ci.yml:352` 的 `e2e` job 覆盖完整，关键步骤为
+  `npx prisma db push` → 两个迁移脚本 → `npm run build` → `next start` →
+  `verify-payment-off` / `v18-isolation-proof` / `v196-mission-flow` / `v198-workspace-loop` →
+  `seed-authed-e2e-user` + `seed-chat-fixture` → `npx playwright test --config=playwright.ci.config.ts`
+  → `v196-axe-scan --gate` → `if: always()` 双夹具清理；浏览器安装带缓存与 8 分钟硬上限。
+  运行器是 `ubuntu-latest`（所以 N-4 的 mac13 风险**不影响 CI**），`PW_CHANNEL` 未设置，走下载版 Chromium。
+- **误判原因**：只看 `.github/workflows/` 的**文件名列表**（确实没有 `e2e.yml`），没有读取
+  `ci.yml` 内部就下了全称否定结论。这恰好是「集合断言先证前置非空」的反例：**空结果**
+  既可能是"真的没有"，也可能是"搜错了地方"，不做正面对照就不能判。
+- **仍然成立的剩余问题**（不再叫 N-5，降级为改进项）：
+  1. CI 未注入 `WORKBUDDY_LLM_*`，所以 N-2 的 3 条 BLOCKED 在 CI 里也是常态；
+  2. CI 没有「同一轮连跑两次」的幂等检查，N-1 若在复用库的场景发作不会被门禁抓到；
+  3. CI 的 `seed-chat-fixture` 未先 `--cleanup`（新库无需，但本地复用库需要）。
+- **修法**：不是"新建 job"，而是在现有 `e2e` job 上补三键注入与一次 `auth-dialogs` 复跑。
 
 ---
 
@@ -129,9 +152,9 @@
 
 | 编号 | 严重度 | 问题 | 状态 |
 | --- | --- | --- | --- |
-| P1-1 | P1 | 全站 canonical 写死首页（`src/app/layout.tsx:48`），子页等于自请出索引 | **未修** |
+| P1-1 | P1 | 全站 canonical 写死首页（`src/app/layout.tsx:48`），子页等于自请出索引 | **已修**（本轮，21 号报告） |
 | P1-2 | P1 | 内页导航 logo 仍是旧品牌 `LokFee!`（26/35 页） | **未修**，待定品牌口径 |
-| P1-3 | P1 | `/checkout/success` 主按钮 `text-white` on `bg-primary` = 1.5:1 | **未修** |
+| P1-3 | P1 | `/checkout/success` 主按钮 `text-white` on `bg-primary` = 1.5:1 | **已修**（本轮，21 号报告） |
 | P2-1 | P2 | `/dmca` 等三页仍写 `LokFeel Inc. Wilmington, Delaware` | **未修**，待法人主体 |
 | P2-2 | P2 | `/blocked` 整页旧约会文案 + 2.69:1 对比度 | **未修** |
 | P2-3 | P2 | `/admin-login` 四处对比度不足 | **未修** |
@@ -154,10 +177,10 @@
 
 | 序 | 动作 | 归属 | 预计 |
 | --- | --- | --- | --- |
-| 1 | 把 E2E 挂进 CI（N-5），同时修 N-1 幂等、N-3 退避 | 我 | 一次提交 |
-| 2 | 修 P1-1 canonical + P1-3 对比度（机械改动，各 1 行 + 断言） | 我 | 一次提交 |
-| 3 | 注入 LLM 三键跑通 A/C/E 终态（N-2） | 我（需三键） | 一轮 |
-| 4 | P1-2 品牌字面量收敛到 `BRAND.name` + CI grep 守卫 | 需你确认品牌写法 | 一次提交 |
-| 5 | P2-1 法人地址 / P2-2 `/blocked` 去留 | 需你给真实主体与地址 | 待定 |
+| 1 | ~~把 E2E 挂进 CI~~ → **撤销（勘误 C-1）**；改为修 N-1 幂等 + N-3 退避 | 我 | **已完成**，见 21 号报告 |
+| 2 | 修 P1-1 canonical + P1-3 对比度 + 补 sitemap 6 页 + 加回归断言 | 我 | **已完成**，见 21 号报告 |
+| 3 | 在现有 `e2e` job 注入 LLM 三键，跑通 A/C/E 终态（N-2） | 我（需三键） | 未完成 |
+| 4 | P1-2 品牌字面量收敛到 `BRAND.name` + CI grep 守卫 | 需你确认品牌写法 | 未动 |
+| 5 | P2-1 法人地址 / P2-2 `/blocked` 去留 | 需你给真实主体与地址 | 未动 |
 
-> 第 1、2 项我可以直接做完并复跑回归；第 3 项缺凭据；第 4、5 项涉及对外口径，不擅自改。
+> 第 1、2 项已做完并连跑两轮回归；第 3 项缺凭据；第 4、5 项涉及对外口径，不擅自改。

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { createClient } from '@libsql/client';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -25,6 +26,47 @@ import path from 'node:path';
  */
 
 const STATE_PATH = path.join('test-results', 'chat-authed-state.json');
+
+/**
+ * ⑦ 的可重复前置（2026-11-14 · N-1）
+ * ────────────────────────────────────────────────────────────────
+ * `/api/reports` 的去重是 **per（举报人, 被举报人）24 小时**，而 ⑦ 自己会写一条。
+ * 于是"复用同一个本地库连跑第二次"时，⑦ 的"前置必须干净"断言必然红，
+ * 连带 serial 块里的 ⑧⑨ 不执行 —— 这是确定性失败，不是偶发。
+ *
+ * CI 每次用 `prisma db push` 新建库，天然干净；但本地复跑/复验不该依赖"记得
+ * 手动 cleanup+reseed"。所以每轮套件开始前，只删**本夹具**写的那几行举报
+ * （`reporterId = e2e_user_chat_a`），不碰任何其它数据。
+ *
+ * 三条边界：
+ *   · 只对本地 `file:` 库动手，远程库一律跳过（与两个 seed 脚本同一闸门）；
+ *   · 失败不静默吞掉，也不劫持结论 —— ⑦ 自己的前置断言会如实报红并给出指令；
+ *   · 生产只读跑法（没有 DATABASE_URL）直接跳过，不影响那 16 条。
+ */
+async function resetReportPair(): Promise<void> {
+  const raw = process.env.DATABASE_URL ?? '';
+  if (!raw.startsWith('file:')) {
+    console.warn('[fixture] DATABASE_URL 不是本地 file: 库 —— 跳过举报前置重置（生产只读跑法不受影响）');
+    return;
+  }
+  const url = raw.startsWith('file:./')
+    ? `file:${path.resolve(process.cwd(), raw.slice('file:'.length))}`
+    : raw;
+  const db = createClient({ url });
+  try {
+    await db.execute({
+      sql: 'DELETE FROM "UserReport" WHERE "reporterId" = ?',
+      args: ['e2e_user_chat_a'],
+    });
+    console.log('[fixture] 已重置 userA 的举报前置 —— 本轮可从干净状态重跑 ⑦');
+  } catch (err) {
+    console.warn(
+      `[fixture] 举报前置重置失败，⑦ 的前置断言会如实报红：${String((err as Error).message)}`
+    );
+  } finally {
+    db.close();
+  }
+}
 
 const ENV_A_EMAIL = process.env.E2E_CHAT_A_EMAIL ?? '';
 const ENV_A_PASSWORD = process.env.E2E_CHAT_A_PASSWORD ?? '';
@@ -152,6 +194,7 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
 
   test.beforeAll(async ({ browser: b }) => {
     requireFixture();
+    await resetReportPair();
     browser = b;
     fs.mkdirSync('test-results', { recursive: true });
     const state = await loginViaHttp(browser, ENV_A_EMAIL, ENV_A_PASSWORD);
@@ -254,7 +297,8 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
     expect(
       priorReports.length,
       '24h 内该用户对已有举报（去重是 per 用户对）—— 前置不干净。' +
-        '请先 `node scripts/qa/seed-chat-fixture.mjs --cleanup` 再重新 seed 后重跑',
+        'beforeAll 应已自动重置；若仍红，检查 DATABASE_URL 是否与本轮服务指向同一个 file: 库，' +
+        '或手工执行 `node scripts/qa/seed-chat-fixture.mjs --cleanup` 后重跑',
     ).toBe(0);
 
     const reason = 'HARASSMENT';
@@ -274,9 +318,13 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
     expect(res.status()).toBe(200);
     const data = (await res.json()) as { reports: Array<{ reason: string }> };
     expect(
+      data.reports.length,
+      '举报必须真实写入 UserReport（前后对比，不把环境干净当成被测行为）',
+    ).toBe(priorReports.length + 1);
+    expect(
       data.reports.filter((r) => r.reason === reason).length,
-      '举报必须真实写入 UserReport',
-    ).toBeGreaterThanOrEqual(1);
+      '写入的记录必须是本次选择的原因',
+    ).toBe(1);
   });
 
   test('⑧ 重复举报 429：错误在弹窗内以 role=alert 播报', async ({ page }) => {

@@ -151,7 +151,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
             <button
               type="button"
               onClick={tryBrowserGeo}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
             >
               <Navigation className="w-4 h-4" />
               Allow Location
@@ -207,7 +207,7 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
           <button
             type="button"
             onClick={handleConfirmDetected}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
           >
             Confirm
           </button>

@@ -364,7 +364,7 @@ export function AnalyticsReport() {
               onClick={() => setTimeRange(range)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                 timeRange === range
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "text-foreground-muted hover:text-foreground"
               }`}
             >
