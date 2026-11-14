@@ -175,7 +175,9 @@ export default function LivingShell({
                   className="flex shrink-0 cursor-not-allowed flex-col items-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] text-lf-text-faint lg:w-full lg:px-1"
                 >
                   <span className="font-medium">{item.label}</span>
-                  <span className="whitespace-nowrap text-[10px] text-lf-text-faint">未就绪</span>
+                  {/* 「未就绪」是验收文档的口径（相对 ready 而言）。对用户只说一句：
+                      这项现在没有，原因在 title 里。 */}
+                  <span className="whitespace-nowrap text-[10px] text-lf-text-faint">暂未提供</span>
                 </button>
               )
             }

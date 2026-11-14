@@ -36,7 +36,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { AlertCircle, Bell, CheckCircle2, Compass, Loader2, MessageSquare, Wand2 } from 'lucide-react'
+import { AlertCircle, Bell, CheckCircle2, Compass, Loader2, Wand2 } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
 import StageRail from '@/components/living/adaptive/stage-rail'
 import { buildOsStages } from '@/lib/living/adaptive/stages'
@@ -62,6 +62,8 @@ import BridgePanel, {
   useBridgePanelData,
 } from '@/components/living/bridge/bridge-panel'
 import { useApiGet } from '@/hooks/use-api'
+import { NOW_SEEDS } from '@/lib/living/now/seeds'
+import { buildEvidenceRows, type EvidenceRow } from '@/lib/living/now/evidence'
 import type { FieldGraphNode } from '@/lib/living/field'
 import {
   MIN_GOAL_LENGTH,
@@ -115,15 +117,19 @@ interface OrgOverview {
  * 把"未接线"写成"需要权限"会让人以为补权限就能用 —— 那是另一回事。
  */
 const MISSIONS_REASON =
-  '任务列表区尚未接线：创建与画布已在 Studio 提供，这里不做重复入口（待收敛时一并做）。'
+  '任务列表还没做：创建任务和看画布都在 Studio，这里先不重复入口。'
 
+/**
+ * 侧栏七项。`hint` 是 hover 提示，写给用户看 —— 不写"2.5D""逐字段披露"这类设计术语：
+ * 用户点开的理由永远是"这对我要办的事有什么用"。
+ */
 const NAV: LivingNavItem[] = [
-  { key: 'now', label: 'Now', hint: '今日工作台', ready: true },
-  { key: 'studio', label: 'Studio', hint: '目标编译器（自然语言 → 工作区）', ready: true },
-  { key: 'field', label: 'Field', hint: '连接场 · 2.5D 关系网络', ready: true },
-  { key: 'consent', label: 'Consent', hint: '同意与逐字段披露', ready: true },
-  { key: 'outcomes', label: 'Outcomes', hint: '成果时间轴与指标', ready: true },
-  { key: 'agents', label: 'Agents', hint: 'Agent 运行与审批', ready: true },
+  { key: 'now', label: 'Now', hint: '今天要推进什么', ready: true },
+  { key: 'studio', label: 'Studio', hint: '把一句话编译成能跑的工作区', ready: true },
+  { key: 'field', label: 'Field', hint: '谁认识谁，谁在等你', ready: true },
+  { key: 'consent', label: 'Consent', hint: '谁能看到你的哪个字段', ready: true },
+  { key: 'outcomes', label: 'Outcomes', hint: '做成了什么，怎么核验', ready: true },
+  { key: 'agents', label: 'Agents', hint: 'Agent 干了什么，哪一步等你批', ready: true },
   { key: 'missions', label: 'Missions', hint: '连接任务', ready: false, reason: MISSIONS_REASON },
 ]
 
@@ -209,25 +215,47 @@ function Loadable({
   return <>{children}</>
 }
 
-function StatCard({
+/**
+ * 一个数字 + 一句人话。
+ *
+ * 🔴 这里**不写数据来源**（"来自 /api/notifications" 之类）。首屏要回答的是
+ *    "有没有事等我做"，不是"这个数字从哪个端点来" —— 后者属于右侧证据面板。
+ *    `null` 一律写「暂时读不到」，不写 0：读不到和没有是两件事。
+ */
+function MetricCell({
   label,
   value,
-  hint,
-  icon: Icon,
+  unit,
+  line,
 }: {
   label: string
   value: number | null
-  hint: string
-  icon: typeof Bell
+  unit: string
+  line: string
 }) {
   return (
-    <div className="rounded-lf border border-lf-line bg-lf-surface p-3">
-      <div className="flex items-center gap-2 text-xs text-lf-text-muted">
-        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-        {label}
+    <div className="px-4 py-3.5">
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold tabular-nums text-lf-text">
+          {value === null ? '—' : value}
+        </span>
+        {value !== null && <span className="text-[11px] text-lf-text-muted">{unit}</span>}
       </div>
-      <div className="mt-1 text-2xl font-semibold tabular-nums">{value === null ? '—' : value}</div>
-      <div className="mt-0.5 text-[11px] text-lf-text-faint">{hint}</div>
+      <p className="mt-1 text-xs text-lf-text">{label}</p>
+      <p className="mt-0.5 text-[11px] leading-relaxed text-lf-text-faint">{line}</p>
+    </div>
+  )
+}
+
+/** 证据面板的一行：人话在上，接口只在折叠层里（见 `@/lib/living/now/evidence`）。 */
+function EvidenceRowView({ row }: { row: EvidenceRow }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="min-w-0 text-lf-text-muted">{row.label}</dt>
+      <dd className="shrink-0 text-right">
+        <span className={row.ok ? 'tabular-nums text-lf-text' : 'text-lf-text-faint'}>{row.value}</span>
+        {row.detail && <span className="mt-0.5 block text-[10px] text-lf-text-faint">{row.detail}</span>}
+      </dd>
     </div>
   )
 }
@@ -528,56 +556,99 @@ export default function LivingWorkspace() {
     [runCreateMission],
   )
 
+  /**
+   * 阶段条：把「提案 → 同意 → 执行 → 成果」四个**已接线**的真实端点折成一条轨道。
+   * 纯函数 `buildOsStages` 只做计数与打标，不发请求；读不到的段落显示「—」而不是 0。
+   */
+  const stages = useMemo(
+    () =>
+      buildOsStages({
+        proposals: consentData.board?.rows ?? null,
+        runs: agentData.board?.runs ?? null,
+        outcomes: observatoryData.timeline
+          ? {
+              total: observatoryData.timeline.counts.total,
+              unverified: observatoryData.timeline.counts.unverified,
+            }
+          : null,
+        specReady: compiled?.ok === true,
+      }),
+    [consentData.board, agentData.board, observatoryData.timeline, compiled],
+  )
+
+  /**
+   * 证据面板（右侧）—— 三层，默认只露第一层：
+   *   ① 人话：六个数字 + 取不到的真实原因
+   *   ② 折叠：接口与原始值（可追源，但不占用首屏注意力）
+   *   ③ 折叠：尚未接通的能力（诚实清单，不是感叹号）
+   *
+   * 🔴 顺序不是排版偏好：能力探测排第一，因为后面几行为什么"读不到"，
+   *    答案通常是它（非成员 → 403）。先因果，后现象。
+   */
+  const evidenceRows: EvidenceRow[] = buildEvidenceRows({
+    unreadNotifications,
+    unreadChats,
+    totalChats: chats.data?.totalChats ?? null,
+    capabilities: org.isLoading
+      ? { state: 'pending', count: 0 }
+      : org.error
+        ? { state: 'error', count: 0, error: org.error }
+        : { state: 'ready', count: capabilities.size },
+    pendingProposals: stages.find((s) => s.key === 'proposal')?.count ?? null,
+    awaitingApproval: stages.find((s) => s.key === 'execution')?.count ?? null,
+    unverifiedOutcomes: stages.find((s) => s.key === 'outcome')?.count ?? null,
+  })
+  const notWired = NAV.filter((n) => !n.ready)
+
   const evidenceInspector = (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <section>
-        <h3 className="text-xs font-medium uppercase tracking-wide text-lf-text-muted">Evidence Lens · 这些数字从哪来</h3>
-        <ul className="mt-2 space-y-2 text-xs text-lf-text-muted">
-          <li>
-            <code className="text-lf-signal">GET /api/notifications</code> → 未读 {unreadNotifications ?? '—'}
-          </li>
-          <li>
-            <code className="text-lf-signal">GET /api/chats/unread-count</code> → 未读 {unreadChats ?? '—'} / 会话{' '}
-            {chats.data?.totalChats ?? '—'}
-          </li>
-          <li>
-            <code className="text-lf-signal">GET /api/v1/org</code> → 能力{' '}
-            {org.isLoading ? '探测中…' : org.error ? `探测失败（${org.error}）` : `${capabilities.size} 项`}
-          </li>
-          <li>
-            <code className="text-lf-signal">GET /api/v1/connections/proposals</code> →{' '}
-            {sources.proposals === null
-              ? '读取中…'
-              : sources.proposals.ok
-                ? `${sources.proposals.items.length} 条提案`
-                : `未展示（${sources.proposals.reason}）`}
-          </li>
-          <li>
-            <code className="text-lf-signal">GET /api/v1/workflow/jobs</code> →{' '}
-            {sources.jobs === null
-              ? '读取中…'
-              : sources.jobs.ok
-                ? `${sources.jobs.items.length} 个任务`
-                : `未展示（${sources.jobs.reason}）`}
-          </li>
-          <li>
-            <code className="text-lf-signal">GET /api/v1/outcomes</code> →{' '}
-            {sources.outcomes === null
-              ? '读取中…'
-              : sources.outcomes.ok
-                ? `${sources.outcomes.items.length} 条成果`
-                : `未展示（${sources.outcomes.reason}）`}
-          </li>
-        </ul>
+        <h2 className="text-sm font-semibold text-lf-text">这屏的数字，从哪来</h2>
+        <p className="mt-1 text-[11px] leading-relaxed text-lf-text-muted">
+          每个数字都直接读接口：读到的写数，读不到的写读不到。
+        </p>
+        <dl className="mt-3 space-y-2.5 text-xs">
+          {evidenceRows.map((row) => (
+            <EvidenceRowView key={row.key} row={row} />
+          ))}
+        </dl>
       </section>
+
+      <details className="rounded-lf border border-lf-line bg-lf-surface-2/40">
+        <summary className="cursor-pointer px-3 py-2 text-[11px] text-lf-text-muted transition-colors hover:text-lf-text">
+          接口与原始值（{evidenceRows.length} 个）
+        </summary>
+        <ul className="space-y-2 border-t border-lf-line px-3 py-2.5 text-[11px] text-lf-text-muted">
+          {evidenceRows.map((row) => (
+            <li key={row.key}>
+              <code className="text-lf-signal">{row.endpoint}</code>
+              <span className="ml-1">→ {row.value}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
+
+      <details className="rounded-lf border border-lf-line bg-lf-surface-2/40">
+        <summary className="cursor-pointer px-3 py-2 text-[11px] text-lf-text-muted transition-colors hover:text-lf-text">
+          {notWired.length} 项能力尚未接通
+        </summary>
+        <ul className="space-y-2 border-t border-lf-line px-3 py-2.5 text-[11px]">
+          {notWired.map((n) => (
+            <li key={n.key}>
+              <span className="font-medium text-lf-text">{n.label}</span>
+              <p className="mt-0.5 leading-relaxed text-lf-text-muted">{n.reason}</p>
+            </li>
+          ))}
+        </ul>
+      </details>
 
       {compiled && (
         <section>
-          <h3 className="text-xs font-medium uppercase tracking-wide text-lf-text-muted">编译结果</h3>
+          <h2 className="text-[11px] uppercase tracking-wide text-lf-text-faint">本次编译</h2>
           {compiled.ok ? (
-            <ul className="mt-2 space-y-1 text-xs text-lf-text-muted">
+            <ul className="mt-2 space-y-1 text-[11px] text-lf-text-muted">
               <li>
-                意图类型：<span className="text-lf-text">{compiled.intentClass}</span>
+                意图：<span className="text-lf-text">{compiled.intentClass}</span>
               </li>
               <li>
                 命中词：
@@ -586,18 +657,12 @@ export default function LivingWorkspace() {
                 </span>
               </li>
               <li>
-                节点：草稿 <span className="text-lf-text">{compiled.spec.nodes.length}</span> 个
-                {merged?.ok ? (
-                  <>
-                    {' '}
-                    → 合并社群数据后 <span className="text-lf-text">{merged.spec.nodes.length}</span> 个
-                  </>
-                ) : null}{' '}
-                · 契约 v{compiled.spec.version}
+                节点：<span className="text-lf-text">{compiled.spec.nodes.length}</span> 个
+                {merged?.ok ? ` → 合并社群数据后 ${merged.spec.nodes.length} 个` : ''}
               </li>
             </ul>
           ) : (
-            <p className="mt-2 rounded-lf border border-lf-line p-2 text-xs text-lf-text-muted">
+            <p className="mt-2 rounded-lf border border-lf-line p-2 text-[11px] text-lf-text-muted">
               未生成工作区：{compiled.reason}
             </p>
           )}
@@ -605,68 +670,77 @@ export default function LivingWorkspace() {
       )}
 
       <section>
-        <h3 className="text-xs font-medium uppercase tracking-wide text-lf-text-muted">尚未接通（不会假装可用）</h3>
-        <ul className="mt-2 space-y-2 text-xs">
-          {NAV.filter((n) => !n.ready).map((n) => (
-            <li key={n.key} className="rounded-lf border border-lf-line p-2">
-              <span className="font-medium text-lf-text-faint">{n.label}</span>
-              <p className="mt-1 text-lf-text-muted">{n.reason}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h3 className="text-xs font-medium uppercase tracking-wide text-lf-text-muted">身份</h3>
-        <p className="mt-2 break-all text-xs text-lf-text-muted">{session?.user?.email ?? '（未取到会话）'}</p>
+        <h2 className="text-[11px] uppercase tracking-wide text-lf-text-faint">身份</h2>
+        <p className="mt-2 break-all text-[11px] text-lf-text-muted">{session?.user?.email ?? '（未取到会话）'}</p>
         {orgOverview && (
-          <p className="mt-1 text-xs text-lf-text-muted">
+          <p className="mt-1 text-[11px] text-lf-text-muted">
             角色 <span className="text-lf-text">{orgOverview.myRole}</span> · 社群{' '}
-            <span className="text-lf-text">{orgOverview.organization.name}</span>（{orgOverview.organization.status}）
+            <span className="text-lf-text">{orgOverview.organization.name}</span>（
+            {orgOverview.organization.status}）
           </p>
         )}
       </section>
     </div>
   )
 
-  const composer = (
-    <div className="space-y-2">
-      <label htmlFor="lf-composer" className="sr-only">
-        描述你的目标
-      </label>
-      <textarea
-        id="lf-composer"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        rows={2}
-        placeholder="你想完成什么目标？例如：帮助我们社群在 30 天内促成 20 次高质量的渠道合作…"
-        className="lf-focus-ring w-full resize-none rounded-lf bg-lf-surface-2 p-2 text-sm text-lf-text placeholder:text-lf-text-faint"
-        style={{ transitionDuration: 'var(--lf-dur-fast)' }}
-      />
-      <div className="flex items-center justify-between gap-2">
-        <p className="min-w-0 text-[11px] text-lf-text-faint">
-          编译在本地完成；只有真正创建任务时才会写入服务端。
-        </p>
-        {/* 编译是纯前端动作 → 只要有足够文本就一定可用；不足则**禁用并说明差多少**。 */}
-        <button
-          type="button"
-          disabled={!canCompile}
-          aria-disabled={!canCompile}
-          title={canCompile ? '编译为工作区' : `至少输入 ${MIN_GOAL_LENGTH} 个字符`}
-          onClick={runCompile}
-          className={[
-            'lf-focus-ring inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lf border px-3 py-1.5 text-xs',
-            canCompile
-              ? 'border-lf-line-strong text-lf-text hover:bg-lf-surface-2'
-              : 'cursor-not-allowed border-lf-line text-lf-text-faint',
-          ].join(' ')}
+  /**
+   * 输入框只有一个实例，两个位置：
+   *   · `hero` —— Now 屏的正中（首屏主操作）；
+   *   · `bar`  —— 其余五屏沿用底部悬浮条。
+   *
+   * 🔴 不能两处同时渲染：同名 id 会让 label、焦点与自动化断言指向不确定的那一个。
+   *    所以由 render 处二选一，而不是 CSS 隐藏。
+   */
+  const composer = (variant: 'hero' | 'bar') => {
+    const hero = variant === 'hero'
+    return (
+      <div className={hero ? 'space-y-1' : 'space-y-2'}>
+        <label htmlFor="lf-composer" className="sr-only">
+          描述你的目标
+        </label>
+        <textarea
+          id="lf-composer"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={hero ? 3 : 2}
+          placeholder="例如：30 天内对接 20 家渠道伙伴，我们提供联名内容和场地…"
+          className={
+            hero
+              ? 'lf-focus-ring w-full resize-none bg-transparent px-1 py-1 text-[15px] leading-relaxed text-lf-text outline-none placeholder:text-lf-text-faint'
+              : 'lf-focus-ring w-full resize-none rounded-lf bg-lf-surface-2 p-2 text-sm text-lf-text placeholder:text-lf-text-faint'
+          }
+          style={{ transitionDuration: 'var(--lf-dur-fast)' }}
+        />
+        <div
+          className={`flex gap-2 ${hero ? 'flex-col px-1 sm:flex-row sm:items-center sm:justify-between' : 'items-center justify-between'}`}
         >
-          <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
-          编译工作区
-        </button>
+          <p className="min-w-0 text-[11px] leading-relaxed text-lf-text-faint">
+            编译在本地完成；只有真正创建任务时才写入服务端。
+          </p>
+          {/* 编译是纯前端动作 → 只要有足够文本就一定可用；不足则禁用并说明差多少。 */}
+          <button
+            type="button"
+            disabled={!canCompile}
+            aria-disabled={!canCompile}
+            title={canCompile ? '编译为工作区' : `至少输入 ${MIN_GOAL_LENGTH} 个字符`}
+            onClick={runCompile}
+            className={[
+              'lf-focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-lf px-3.5 py-2 text-xs font-medium',
+              hero ? 'w-full border border-transparent sm:w-auto' : 'border',
+              canCompile
+                ? hero
+                  ? 'bg-lf-text text-lf-bg hover:opacity-90'
+                  : 'border-lf-line-strong text-lf-text hover:bg-lf-surface-2'
+                : 'cursor-not-allowed border-lf-line text-lf-text-faint',
+            ].join(' ')}
+          >
+            <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+            编译工作区
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   /**
    * P2：Field / Consent / Outcomes / Agents 四区各自带详情面板
@@ -689,26 +763,6 @@ export default function LivingWorkspace() {
     return evidenceInspector
   })()
 
-  /**
-   * 阶段条：把「提案 → 同意 → 执行 → 成果」四个**已接线**的真实端点折成一条轨道。
-   * 纯函数 `buildOsStages` 只做计数与打标，不发请求；读不到的段落显示「—」而不是 0。
-   */
-  const stages = useMemo(
-    () =>
-      buildOsStages({
-        proposals: consentData.board?.rows ?? null,
-        runs: agentData.board?.runs ?? null,
-        outcomes: observatoryData.timeline
-          ? {
-              total: observatoryData.timeline.counts.total,
-              unverified: observatoryData.timeline.counts.unverified,
-            }
-          : null,
-        specReady: compiled?.ok === true,
-      }),
-    [consentData.board, agentData.board, observatoryData.timeline, compiled],
-  )
-
   return (
     <LivingShell
       nav={NAV}
@@ -724,39 +778,115 @@ export default function LivingWorkspace() {
         </span>
       }
       inspector={inspector}
-      composer={composer}
+      // Now 屏的输入框在画布正中，其余屏沿用底部悬浮条 —— 只渲染一个。
+      composer={activeKey === 'now' ? undefined : composer('bar')}
     >
       {activeKey === 'now' && (
         <div className="space-y-4">
-          <h1 className="text-lg font-semibold">今日工作台</h1>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <StatCard label="未读通知" value={unreadNotifications} hint="来自 /api/notifications" icon={Bell} />
-            <StatCard label="未读消息" value={unreadChats} hint="来自 /api/chats/unread-count" icon={MessageSquare} />
-            {/*
-              V16 · F-05：这里原来放的是「我的匹配 · /api/matches」—— 那是 B2C 遗留线，
-              对 Connection OS 的用户来说不但没用，还会让人以为这是个交友产品。
-              现在改成「待你介绍」：数字来自双方已同意但还没介绍的提案，是真正需要动手的事。
-            */}
-            <StatCard
-              label="待你介绍"
-              value={stages.find((s) => s.key === 'consent')?.count ?? null}
-              hint="来自 /api/v1/connections/proposals（双方已同意、尚未介绍）"
-              icon={Compass}
+          {/*
+            Now 屏的范式：**输入在前，状态在后**。
+            生成式产品的第一屏不是仪表盘（尤其是仪表盘上全是 0 的时候），
+            而是一个"说出你要什么"的入口。三个真实计数退到它下面，只回答
+            "有没有事等我"，不再解释自己来自哪个端点。
+          */}
+          <section className="relative overflow-hidden rounded-lf-lg border border-lf-line bg-lf-surface p-5 lg:p-7">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, var(--lf-signal), transparent)' }}
             />
-          </div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-lf-text-faint">
+              Now · 你的工作区
+            </p>
+            <h1 className="mt-3 text-[1.7rem] font-semibold leading-[1.15] tracking-[-0.02em] text-lf-text lg:text-[2.1rem]">
+              今天想推进什么？
+            </h1>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-lf-text-muted">
+              一句话说清结果、期限，和你愿意拿出的东西。它会摊成一张能跑的工作区：
+              谁提案、谁点头、Agent 做什么、什么算成交。
+            </p>
+
+            <div className="mt-5 rounded-lf border border-lf-line bg-lf-bg/40 px-2 pb-1 pt-2 transition-colors focus-within:border-lf-signal/60">
+              {composer('hero')}
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-[11px] text-lf-text-faint">没想好？从这里开始</span>
+              {NOW_SEEDS.map((seed) => (
+                <button
+                  key={seed.id}
+                  type="button"
+                  data-testid="now-seed"
+                  onClick={() => {
+                    setDraft(seed.goal)
+                    document.getElementById('lf-composer')?.focus()
+                  }}
+                  className="lf-focus-ring min-h-9 rounded-full border border-lf-line px-3 text-[12px] text-lf-text-muted transition-colors hover:border-lf-line-strong hover:text-lf-text"
+                  style={{ transitionDuration: 'var(--lf-dur-fast)' }}
+                >
+                  {seed.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/*
+            V16 · F-05：第三格原来放「我的匹配 · /api/matches」—— B2C 遗留线，
+            会让人以为这是个交友产品。现在换成"待你介绍"：双方已同意、等你牵线。
+          */}
+          <section className="overflow-hidden rounded-lf-lg border border-lf-line bg-lf-surface">
+            <div className="grid grid-cols-1 divide-y divide-lf-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <MetricCell
+                label="未读消息"
+                value={unreadChats}
+                unit="条"
+                line={
+                  unreadChats === null ? '暂时读不到' : unreadChats === 0 ? '没有新消息' : '还没读'
+                }
+              />
+              <MetricCell
+                label="未读通知"
+                value={unreadNotifications}
+                unit="条"
+                line={
+                  unreadNotifications === null
+                    ? '暂时读不到'
+                    : unreadNotifications === 0
+                      ? '没有新动静'
+                      : '还没看'
+                }
+              />
+              <MetricCell
+                label="待你介绍"
+                value={stages.find((s) => s.key === 'consent')?.count ?? null}
+                unit="位"
+                line={
+                  (stages.find((s) => s.key === 'consent')?.count ?? null) === null
+                    ? '需要社群数据，当前读不到'
+                    : (stages.find((s) => s.key === 'consent')?.count ?? 0) === 0
+                      ? '没有等你牵线的'
+                      : '双方都点头了，等你牵线'
+                }
+              />
+            </div>
+          </section>
 
           <section className="space-y-3">
-            <h2 className="text-sm font-medium text-lf-text-muted">待处理</h2>
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="text-sm font-medium text-lf-text">待处理</h2>
+              {/* 一句就够的诚实：这页只列真实通知，不补占位。不写成一段自辩。 */}
+              <span className="text-[11px] text-lf-text-faint">只列真实通知</span>
+            </div>
             <Loadable
               isLoading={notifications.isLoading}
               error={notifications.error}
               empty={latestNotifications.length === 0}
-              emptyText="没有待处理事项。这是真实结果 —— 本页不会为了填满而生成内容。"
+              emptyText="没有需要你处理的事。新的批准、提案和提醒会先出现在这里。"
             >
               <ul className="space-y-2">
                 {latestNotifications.map((n) => (
                   <li key={n.id} className="rounded-lf border border-lf-line bg-lf-surface p-3">
-                    <p className="text-sm">{n.title || n.message || n.body || '（无标题）'}</p>
+                    <p className="text-sm text-lf-text">{n.title || n.message || n.body || '（无标题）'}</p>
                     {n.createdAt && (
                       <p className="mt-1 text-[11px] text-lf-text-faint">{new Date(n.createdAt).toLocaleString()}</p>
                     )}

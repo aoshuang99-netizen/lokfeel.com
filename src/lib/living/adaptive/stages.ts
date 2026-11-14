@@ -167,8 +167,10 @@ export function focusStage(stages: readonly OsStage[]): OsStageKey | null {
 
 /** 供阶段条文案用：把「在等我」与「等对方」分开的说法。 */
 export function stageStatusLabel(stage: OsStage, isFocused: boolean): string {
-  if (!stage.ready) return '未就绪'
+  // 「未就绪」是工程口径（相对于"就绪状态"而言）。用户此刻看到的只有
+  // "这一步的数字没有" —— 说「读不到」，既准确又不暗示产品坏了。
+  if (!stage.ready) return '读不到'
   if (stage.attention) return isFocused ? '在等你' : '待处理'
-  if (stage.count === null) return '未就绪'
+  if (stage.count === null) return '读不到'
   return stage.count === 0 ? '无待办' : `${stage.count} 项`
 }

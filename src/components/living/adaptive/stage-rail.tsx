@@ -34,9 +34,9 @@ export default function StageRail({ stages, activeView, onFocusView }: StageRail
     <nav aria-label="任务阶段" className="mb-4">
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <p className="text-[11px] uppercase tracking-[0.14em] text-lf-text-faint">Mission pipeline</p>
-        <p className="text-[11px] text-lf-text-faint">
-          计数口径：提案 / 同意 / 执行 / 成果 四个真实端点
-        </p>
+        {/* 原来这里写的是"计数口径：四个真实端点"—— 对用户来说那是审计语言。
+            同一件事，换成"点进去看它卡在哪"，才是这一步对他有用的地方。 */}
+        <p className="text-[11px] text-lf-text-faint">点一步，看它卡在哪</p>
       </div>
 
       <ol className="flex items-stretch gap-1.5 overflow-x-auto pb-1">
@@ -45,22 +45,15 @@ export default function StageRail({ stages, activeView, onFocusView }: StageRail
           const isHere = stage.view === activeView
           const status = stageStatusLabel(stage, isFocused)
           const label = `${stage.label}：${
-            stage.count === null ? '数据未就绪' : `${stage.count} 项`
+            stage.count === null ? '数据读不到' : `${stage.count} 项`
           }${isFocused ? '，当前阶段' : ''}${isHere ? '，你正在这一屏' : ''}`
 
           const body = (
             <>
               <span className="flex items-center gap-1.5">
-                {isFocused ? (
-                  <CircleDot className="h-3 w-3 shrink-0 text-lf-signal" aria-hidden="true" />
-                ) : (
-                  <span
-                    className="inline-flex h-3 w-3 shrink-0 items-center justify-center rounded-full border border-lf-line text-[8px] leading-none text-lf-text-faint"
-                    aria-hidden="true"
-                  >
-                    {index + 1}
-                  </span>
-                )}
+                {/* 这里原来还有一个序号圆圈（1/2/3/4）。它紧挨着阶段名，读起来像
+                    "1 提案" —— 和右边的真实计数（0）打架。顺序已经由箭头表达了。 */}
+                {isFocused && <CircleDot className="h-3 w-3 shrink-0 text-lf-signal" aria-hidden="true" />}
                 <span className="text-xs font-medium">{stage.label}</span>
                 <span className="ml-auto text-sm tabular-nums text-lf-text">
                   {stage.count === null ? '—' : stage.count}
@@ -112,11 +105,20 @@ export default function StageRail({ stages, activeView, onFocusView }: StageRail
         })}
       </ol>
 
-      {focused && (
-        <p className="mt-2 text-[11px] text-lf-text-muted">
-          下一步：{stages.find((s) => s.key === focused)?.hint}
-        </p>
-      )}
+      {/*
+        没有在跑的事时，别写"下一步：等对手方确认" —— 那一句在四段全空时是假话
+        （没有任何记录在等确认）。空的时候只该说一件事：写个目标，从头开始。
+      */}
+      {focused &&
+        (stages.every((s) => s.count === null || s.count === 0) ? (
+          <p className="mt-2 text-[11px] text-lf-text-muted">
+            四步都空着。写下一个目标，第一步就会出现在这里。
+          </p>
+        ) : (
+          <p className="mt-2 text-[11px] text-lf-text-muted">
+            下一步：{stages.find((s) => s.key === focused)?.hint}
+          </p>
+        ))}
     </nav>
   )
 }

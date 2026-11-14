@@ -1036,24 +1036,21 @@ export default function LandingPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: SIGNAL }} aria-hidden />
-              <Eyebrow>AI-native workspace · teams &amp; agents</Eyebrow>
+              <Eyebrow>Connection OS · for teams and their agents</Eyebrow>
             </div>
 
             <h1
-              className="mt-5 font-display text-[2.7rem] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-[3.5rem] lg:text-[3.9rem]"
+              className="mt-5 font-display text-[2.8rem] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-[3.3rem] lg:text-[3.6rem]"
               style={{ color: INK }}
             >
-              Turn collaboration intent
+              Your goal,
               <br />
-              into <span style={{ color: SIGNAL_DEEP }}>approved action</span>
-              <br />
-              and verifiable outcomes.
+              <span style={{ color: SIGNAL_DEEP }}>compiled.</span>
             </h1>
 
             <p className="mt-5 max-w-md text-[16px] leading-[1.6]" style={{ color: MUTED }}>
-              For teams, professional communities and industry networks: record what you want to
-              achieve, get explicit consent, let agents act under approval — and prove what came
-              out of it.
+              One sentence in, a runnable workspace out: who proposes, who has to agree, which
+              agent drafts, and what counts as done. Every step leaves a record you can check.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -1062,7 +1059,7 @@ export default function LandingPage() {
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-3 text-[14.5px] font-medium text-white transition-transform duration-200 hover:-translate-y-px"
                 style={{ background: INK }}
               >
-                Start your first collaboration
+                Start with one goal
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -1091,7 +1088,7 @@ export default function LandingPage() {
           <div>
             <Eyebrow>What it does</Eyebrow>
             <h2 className="mt-3 font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.025em] sm:text-[2.5rem]">
-              Three things. Done properly.
+              Three things. Nothing decorative.
             </h2>
           </div>
         </div>
@@ -1099,17 +1096,17 @@ export default function LandingPage() {
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           <FeatureCard
             title="Compile goals, not slides"
-            line="One sentence becomes a validated WorkspaceSpec — rendered from a fixed node allow-list."
+            line="One sentence in, a validated plan out. The canvas renders only what the server allows — no invented steps."
             diagram={<DiagramCompile />}
           />
           <FeatureCard
             title="Agents with guardrails"
-            line="Model drafts, humans approve. Output stays inside the server's projection — structurally."
+            line="They draft. You approve. Nothing goes out under your name without a human click."
             diagram={<DiagramAgents />}
           />
           <FeatureCard
             title="Field-level consent"
-            line="Every field discloses per audience. Absence means no — fail-closed, forever."
+            line="Share the field, not the profile. Silence means no, and it stays that way."
             diagram={<DiagramConsent />}
           />
         </div>
@@ -1148,8 +1145,8 @@ export default function LandingPage() {
             </ul>
 
             <p className="mt-7 border-t pt-5 text-[12px] leading-relaxed" style={{ borderColor: "rgba(242,241,236,0.12)", color: "rgba(242,241,236,0.75)" }}>
-              Every call is metered and attributable. Missing credentials degrade to rules — never
-              to a pretend model.
+              Every call is metered and attributable. No credentials? It falls back to rules
+              instead of pretending to be a model.
             </p>
           </div>
 
@@ -1194,9 +1191,9 @@ export default function LandingPage() {
         </div>
 
         <p className="mt-4 text-[11px] leading-relaxed" style={{ color: FAINT }}>
-          Illustrative runs computed with the product&apos;s own metering rates (introduction USD
-          5.00 · outcome USD 3.00 · proposal USD 0.20 · verification USD 1.00). Not customer claims
-          — live missions replace these numbers as they verify.
+          Illustrative runs costed with the product&apos;s own rates (introduction USD 5.00 ·
+          outcome USD 3.00 · proposal USD 0.20 · verification USD 1.00). Not customer claims —
+          live missions replace these numbers as they verify.
         </p>
       </section>
 
@@ -1272,7 +1269,7 @@ REST  /api/v1/missions · /intents · /connections · /outcomes`}
             <div>
               <Eyebrow dark>Start with one real goal</Eyebrow>
               <h2 className="mt-3 max-w-xl font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.5rem]">
-                Bring the outcome you are chasing.
+                Bring one goal. Leave with a workspace.
               </h2>
             </div>
             <div className="flex flex-wrap gap-3">

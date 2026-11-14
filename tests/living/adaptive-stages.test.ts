@@ -25,7 +25,10 @@ describe('buildOsStages · 数据未就绪', () => {
     for (const s of stages) {
       expect(s.count).toBeNull()
       expect(s.ready).toBe(false)
-      expect(stageStatusLabel(s, false)).toBe('未就绪')
+      // 文案是给用户看的：原来写「未就绪」（工程口径），现在写「读不到」。
+      // 这里同时钉住"不许退回工程口径"，否则改文案时这条会静默漂回去。
+      expect(stageStatusLabel(s, false)).toBe('读不到')
+      expect(stageStatusLabel(s, false)).not.toBe('未就绪')
     }
   })
 
@@ -124,7 +127,7 @@ describe('focusStage · 变形驱动', () => {
     const focusedStage = stages[3]
     expect(stageStatusLabel(focusedStage, true)).toBe('在等你')
     expect(stageStatusLabel(focusedStage, false)).toBe('待处理')
-    expect(stageStatusLabel(stages[0], false)).toBe('未就绪')
+    expect(stageStatusLabel(stages[0], false)).toBe('读不到')
   })
 })
 
