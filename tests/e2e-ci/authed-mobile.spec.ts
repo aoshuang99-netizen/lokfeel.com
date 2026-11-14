@@ -80,3 +80,29 @@ test.describe('移动端 · 认证面（storageState 登录态）', () => {
     }
   }
 });
+
+/**
+ * 默认落点守卫（2026-11-14 · 用户报「dashboard 没更新到最新版本」）
+ * ────────────────────────────────────────────────────────────────
+ * 根因不是部署没生效，而是 `next.config.ts` 的已登录重定向把 `/dashboard`
+ * 送进了 `/dashboard/explore`（旧 B2C 约会线）。所有写死 `callbackUrl=/dashboard`
+ * 的登录入口因此登录后第一屏都是 "Discover people / No more profiles"。
+ *
+ * 这条用例钉住「登录后默认家 = 主线 /workspace」。它同时是负向对照：
+ * 只要重定向被改回旧线，URL 断言立刻红，不会退化成恒绿。
+ * legacy 子页（/dashboard/chats 等）仍可直达，由 legacy-mobile.spec.ts 覆盖。
+ */
+test.describe('默认落点 · 主线守卫', () => {
+  test('已登录访问 /dashboard 必须落到 /workspace，不得再进旧约会线', async ({ page }) => {
+    const res = await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    expect(res?.status(), 'GET /dashboard（登录态）不应是错误状态').toBeLessThan(400);
+    expect(
+      new URL(page.url()).pathname,
+      '默认落点必须是主线 /workspace；若回到 /dashboard 或 /login，先查重定向规则与 storageState',
+    ).toBe('/workspace');
+
+    const text = await page.locator('body').innerText();
+    expect(text, '这一屏必须是 Living Workspace').toContain('My Workspace');
+    expect(text, '不得再出现旧约会线发现页的文案').not.toContain('No more profiles');
+  });
+});

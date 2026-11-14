@@ -170,10 +170,20 @@ const nextConfig: NextConfig = {
   // Redirect old navigation routes to new optimized routes
   async redirects() {
     return [
-      // Home → Explore (primary navigation)
+      // 登录后默认落点 → 主线 Living Workspace（2026-11-14）
+      // ────────────────────────────────────────────────────────────────
+      // 此前这里把 `/dashboard` 送到 `/dashboard/explore`（旧 B2C 约会线），
+      // 于是所有写死 `callbackUrl=/dashboard` 的登录入口（邮箱口令、OAuth、
+      // 快速登录、注册完成）登录后第一屏都是 "Discover people / No more profiles"。
+      // 产品主线是 `/workspace`（个人态六屏）+ `/console`（组织态七屏），
+      // dashboard 线是 legacy，**不该再是默认家**。
+      //
+      // 只改这一处能覆盖全部入口，且刻意保留 `/dashboard/*` 子页可直达：
+      // legacy 线仍被 27 条移动端 E2E 覆盖，不破坏既有证据面。
+      // `/workspace` 的守卫只要求登录、不要求组织，对任何账号都安全。
       {
         source: '/dashboard',
-        destination: '/dashboard/explore',
+        destination: '/workspace',
         permanent: false,
         // NextAuth v5 cookie name is `authjs.session-token` (v4 used
         // `next-auth.session-token`). Must match or the logged-in redirect

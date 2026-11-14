@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BRAND } from "@/config/brand";
 
 /**
  * Dashboard Footer — 精简版
@@ -23,12 +24,14 @@ export default function DashboardFooter() {
       <div className="px-8 py-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-4">
+            {/* 2026-11-14：清掉旧约会产品的品牌与法人表述。
+                对外只写 BRAND.name；真实法律主体未核验前不得声称 "Inc."（D8）。 */}
             <p className="text-foreground-subtle text-xs">
-              &copy; {new Date().getFullYear()} LokFee! Inc.
+              &copy; {new Date().getFullYear()} {BRAND.name}
             </p>
             <span className="text-foreground-faint">·</span>
             <p className="text-foreground-subtle text-xs">
-              Made with care for people who value real connection.
+              {BRAND.tagline}
             </p>
           </div>
           <div className="flex items-center gap-4">
