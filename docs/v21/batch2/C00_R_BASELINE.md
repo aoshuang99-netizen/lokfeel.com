@@ -16,6 +16,7 @@
 | 本地分支 | `v21/batch2`（本批新建，从 `f666564` 切出） | `git branch --show-current` |
 | 远端 main | `cad717e`（与首批一致，**未推送**） | `git ls-remote origin refs/heads/main` |
 | 生产 | `b50e53e`（`/api/health` `commitSource=env`，`status=healthy`） | `curl https://app.lokfeel.com/api/health` |
+| 本批发布候选（工程完成后回填） | `dbb95a7182256ed693e12066f630885f3082fa1d`（`dbb95a7`） | `git log -1 --format=%H` on `v21/batch2`；详见 `RELEASE_CANDIDATE.md` |
 | 结论 | **首批 `f666564` 未上线**；生产仍是 `b50e53e`；本批全程未推送 / 未部署 / 未改生产 | — |
 
 ## 2. 四条只读盘点结论（推翻/修正了任务书的部分预设）

@@ -20,7 +20,7 @@
 - **G15 性能实测不达标**：`batch2/PERF_ANALYSIS.md` + `batch2/perf-trace.json`，
   Chrome Trace 9 页 ×3 轮 **9/9 MISS、0 ALL_MEET**（TBT 522–2712ms 全超 200ms）；
   脚本退出码 0 只代表采集成功。历史 TBT 债维持 P1，不放水、不以「本地 lab ≠ 生产」改判 PASS。
-- **发布候选 SHA**：见 `batch2/RELEASE_CANDIDATE.md`（本地提交，未推送）。
+- **发布候选 SHA**：`dbb95a7182256ed693e12066f630885f3082fa1d`（`dbb95a7`），见 `batch2/RELEASE_CANDIDATE.md`；**本地提交，未推送、未部署**，生产仍 `b50e53e`、远端 main 仍 `cad717e`。
 
 下方「首批交付后」的表格为**历史快照**（2026-11-14），保留供追溯，不再作为当前状态。
 

@@ -6,7 +6,7 @@
 |---|---|
 | 基线 | 首批 `f666564`；远端 main `cad717e`；生产 `b50e53e`（healthy） |
 | 本批分支 | `v21/batch2`（本地） |
-| 发布候选 SHA | 见文末「发布候选 SHA 回填」（**提交 ≠ 推送 ≠ 发布**） |
+| 发布候选 SHA | **`dbb95a7182256ed693e12066f630885f3082fa1d`**（短 `dbb95a7`，本地代码树；见 `RELEASE_CANDIDATE.md`）（**提交 ≠ 推送 ≠ 发布**） |
 | 运行环境 | 本地 `next start 127.0.0.1:3214`，隔离库 `file:./ci-e2e.db`，模型键只注入进程 |
 | 证据根 | `docs/v21/batch2/` + `docs/v21/evidence/independent/` |
 
