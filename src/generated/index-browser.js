@@ -364,6 +364,7 @@ exports.Prisma.MissionScalarFieldEnum = {
   id: 'id',
   organizationId: 'organizationId',
   ownerId: 'ownerId',
+  sourceRunId: 'sourceRunId',
   title: 'title',
   goal: 'goal',
   offer: 'offer',
@@ -417,6 +418,7 @@ exports.Prisma.IdempotencyRecordScalarFieldEnum = {
   requestHash: 'requestHash',
   resourceType: 'resourceType',
   resourceId: 'resourceId',
+  actorId: 'actorId',
   createdAt: 'createdAt'
 };
 
@@ -1102,6 +1104,44 @@ exports.Prisma.TenantAuditEventScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.MissionSpecRevisionScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  missionId: 'missionId',
+  version: 'version',
+  specJson: 'specJson',
+  goal: 'goal',
+  offer: 'offer',
+  successCriteria: 'successCriteria',
+  expiresAt: 'expiresAt',
+  changeNote: 'changeNote',
+  actorId: 'actorId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ExecutionVerificationScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  missionId: 'missionId',
+  runId: 'runId',
+  receiptRef: 'receiptRef',
+  verdict: 'verdict',
+  criteriaJson: 'criteriaJson',
+  evidenceNote: 'evidenceNote',
+  verifierId: 'verifierId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AgentRunStageEventScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  runId: 'runId',
+  seq: 'seq',
+  stage: 'stage',
+  at: 'at',
+  detail: 'detail'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1676,7 +1716,10 @@ exports.Prisma.ModelName = {
   OrganizationInvitation: 'OrganizationInvitation',
   Organization: 'Organization',
   Membership: 'Membership',
-  TenantAuditEvent: 'TenantAuditEvent'
+  TenantAuditEvent: 'TenantAuditEvent',
+  MissionSpecRevision: 'MissionSpecRevision',
+  ExecutionVerification: 'ExecutionVerification',
+  AgentRunStageEvent: 'AgentRunStageEvent'
 };
 
 /**

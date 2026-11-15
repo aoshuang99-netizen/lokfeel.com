@@ -1,0 +1,44 @@
+{
+  "casePrefix": "C4",
+  "label": "alt-execute-before-approval",
+  "at": "2026-11-15T07:44:54.093Z",
+  "method": "POST",
+  "url": "/api/v1/agents/runs/cmwhj4j1h0025xlk8mxn0x1oy/execute",
+  "reqHeaders": {
+    "Cookie": "<redacted: session cookie present>"
+  },
+  "reqBody": null,
+  "status": 409,
+  "respHeaders": {
+    "x-frame-options": "DENY",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(self), microphone=(self), geolocation=(self)",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "x-xss-protection": "1; mode=block",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com; connect-src 'self' https://cloudflareinsights.com https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com; frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com; base-uri 'self'; form-action 'self' https://accounts.google.com https://twitter.com; object-src 'none'",
+    "cache-control": "no-store, max-age=0",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "content-type": "application/json",
+    "date": "Sun, 15 Nov 2026 07:44:54 GMT",
+    "connection": "keep-alive",
+    "keep-alive": "timeout=5",
+    "transfer-encoding": "chunked"
+  },
+  "rawBody": "{\"success\":false,\"data\":null,\"error\":{\"code\":\"CONFLICT\",\"message\":\"需要人工批准后才能执行（当前状态：AWAITING_APPROVAL）\",\"details\":{\"code\":\"STATUS_NOT_EXECUTABLE\",\"status\":\"AWAITING_APPROVAL\",\"skill\":\"INTENT_EXTRACTION\",\"requiresApproval\":true}}}",
+  "json": {
+    "success": false,
+    "data": null,
+    "error": {
+      "code": "CONFLICT",
+      "message": "需要人工批准后才能执行（当前状态：AWAITING_APPROVAL）",
+      "details": {
+        "code": "STATUS_NOT_EXECUTABLE",
+        "status": "AWAITING_APPROVAL",
+        "skill": "INTENT_EXTRACTION",
+        "requiresApproval": true
+      }
+    }
+  },
+  "setCookiePresent": false
+}

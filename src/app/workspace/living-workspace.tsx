@@ -67,6 +67,7 @@ import { buildEvidenceRows, type EvidenceRow } from '@/lib/living/now/evidence'
 import UnderstandingCard from '@/components/living/now/understanding-card'
 import MissionBoard from '@/components/living/missions/mission-board'
 import { resolveIntent, type IntentOutcome } from '@/lib/living/now/intent-gateway'
+import { createLatestIntentController } from '@/lib/living/now/intent-race'
 import type { FieldGraphNode } from '@/lib/living/field'
 import {
   MIN_GOAL_LENGTH,
@@ -137,6 +138,9 @@ const READY_VIEW_KEYS: readonly string[] = NAV.filter((item) => item.ready).map(
 
 /** 已接线到真实端点的动作。其余动作**显式禁用**（不允许"点了没反应"）。 */
 const WIRED_ACTION_KEYS: ReadonlySet<string> = new Set(['create-mission', 'create-mission-2'])
+
+/** 单次「理解」请求上限：超时即作废，诚实报「请重新提交」，不卡在永久 pending。 */
+const INTENT_TIMEOUT_MS = 30_000
 
 /** 幂等键：稳定 → 重试复用同一键（真幂等）；草稿变了 → 换新键（是新一次创建）。 */
 function newIdempotencyKey(): string {
@@ -357,6 +361,21 @@ export default function LivingWorkspace() {
   const [intentAttempt, setIntentAttempt] = useState<{ sig: string; key: string } | null>(null)
   /** 理解卡锚点：结果出现在首屏下方时，提交后把它滚进视野（手机尤其必要）。 */
   const resultRef = useRef<HTMLDivElement>(null)
+  /**
+   * V21 第二批 · 异步竞态：A 慢 B 快时，旧 A 的响应不许覆盖 B。
+   * 这是**状态层**归属判定（不是只靠按钮 disabled 的 UI 串行化）：新提交会 abort
+   * 旧请求，晚到响应先过 isCurrent/finish 两道守卫才允许写入 outcome。
+   * 注意：这是请求归属判定，**不是模型流式**。
+   */
+  const intentRace = useMemo(() => createLatestIntentController(), [])
+  /**
+   * 在途请求的目标指纹：**同一目标重复提交直接忽略**（按钮 disabled 被程序化绕过
+   * 也不会发第二个请求）；目标变了则允许新提交，由 intentRace 保证旧结果不上屏。
+   */
+  const inFlightSigRef = useRef<string | null>(null)
+  // 卸载时只中止在途请求：不能用 dispose()（StrictMode 双挂载会二次 cleanup，
+  // 被 dispose 的控制器之后所有 begin 都失效，理解功能会整体失灵）。
+  useEffect(() => () => intentRace.abortAll(), [intentRace])
   const [creating, setCreating] = useState(false)
   const [createResult, setCreateResult] = useState<CreateResult | null>(null)
   /** 幂等键与它所属的请求体指纹（**同体复用、异体换新**）。 */
@@ -513,18 +532,33 @@ export default function LivingWorkspace() {
   const runIntent = useCallback(async () => {
     if (!canCompile) return
     const sig = draft.trim()
+    // 🔴 同一目标已有在途请求 → 忽略（真重复点击防护，不依赖 DOM disabled）。
+    //    目标不同（A→B）则放行，交给下面的过期守卫处理乱序。
+    if (inFlightSigRef.current === sig) return
+    inFlightSigRef.current = sig
     const key = intentAttempt?.sig === sig ? intentAttempt.key : newIdempotencyKey()
+    const attempt = intentRace.begin()
+    const cancelTimeout = intentRace.withTimeout(INTENT_TIMEOUT_MS)
     setIntentAttempt({ sig, key })
     setResolving(true)
     setOutcome(null)
     setCreateResult(null)
     setAttempt(null)
     try {
-      setOutcome(await resolveIntent(draft, key))
+      const result = await resolveIntent(draft, key, { signal: attempt.signal })
+      // 🔴 两道过期守卫：旧 A 晚到会被「已被 B 取代」或「已取消/超时」挡下，
+      //    绝不写入 outcome，也绝不提前把 resolving 清零（按钮不解禁 ⇒ 不产生重复提交）。
+      if (!intentRace.isCurrent(attempt.token)) return
+      if (!intentRace.finish(attempt.token)) return
+      setOutcome(result)
     } finally {
-      setResolving(false)
+      cancelTimeout()
+      if (intentRace.isCurrent(attempt.token)) {
+        inFlightSigRef.current = null
+        setResolving(false)
+      }
     }
-  }, [canCompile, draft, intentAttempt])
+  }, [canCompile, draft, intentAttempt, intentRace])
 
   /**
    * 真正创建 Mission。
@@ -542,7 +576,12 @@ export default function LivingWorkspace() {
       return
     }
 
-    const sig = JSON.stringify(body)
+    // V21 第二批：把真实意图运行的 runId 作为关联锚点随创建请求提交
+    // （服务端带组织谓词回查，只接受真实 INTENT_EXTRACTION run）。
+    // 规则兜底没有 runId ⇒ 不传，任务仍可创建，详情页会如实显示「无关联运行」。
+    const sourceRunId = outcome?.kind === 'ok' ? outcome.meta.runId : null
+    const payload: Record<string, unknown> = sourceRunId ? { ...body, sourceRunId } : { ...body }
+    const sig = JSON.stringify(payload)
     const key = attempt?.sig === sig ? attempt.key : newIdempotencyKey()
     setAttempt({ sig, key })
     setCreating(true)
@@ -576,7 +615,7 @@ export default function LivingWorkspace() {
     } finally {
       setCreating(false)
     }
-  }, [missionDraft, attempt])
+  }, [missionDraft, attempt, outcome])
 
   const handleAction = useCallback(
     (key: string) => {

@@ -59,6 +59,8 @@ export const POST = withTenant('proposal.create')(async (req: NextRequest, tenan
 
     const { resource, replayed } = await withIdempotency({
       organizationId: tenant.organizationId,
+      // V21/R3：发起人身份取自服务端会话，键空间按用户分区。
+      actorId: tenant.userId,
       scope: 'proposal.create',
       key,
       requestHash: hashRequest(input),

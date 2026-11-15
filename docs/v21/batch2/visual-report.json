@@ -1,0 +1,500 @@
+{
+  "task": "V21 第二批 · P1-06 七屏 UI/UX 视觉与无障碍取证",
+  "base": "http://127.0.0.1:3214",
+  "startedAt": "2026-11-15T07:45:16.711Z",
+  "completedAt": "2026-11-15T07:46:51.877Z",
+  "policy": {
+    "viewports": [
+      "360x800",
+      "390x844",
+      "768x1024",
+      "1280x800",
+      "1440x900",
+      "1920x1080"
+    ],
+    "axeViewports": [
+      "390x844",
+      "1280x800"
+    ],
+    "axeTags": [
+      "wcag2a",
+      "wcag2aa",
+      "wcag21a",
+      "wcag21aa"
+    ],
+    "overflowRule": "documentElement.scrollWidth <= documentElement.clientWidth（overflowPx=0）",
+    "zoom200": {
+      "method": "CSS zoom=2 on documentElement（等效文本放大 200%）",
+      "assert": "zoom 后 scrollWidth <= clientWidth",
+      "note": "deviceScaleFactor 仅改变像素密度、不改变 CSS 布局宽度，故不作为独立溢出判据；context 以 deviceScaleFactor=1 记录。"
+    },
+    "keyboard": {
+      "intentSubmit": "[data-testid=\"intent-submit\"]",
+      "missionDetailButton": "[data-testid=\"mission-item\"]（点击进入 [data-testid=\"mission-detail\"]）",
+      "method": "blur 当前焦点后顺序 press Tab，扫描 activeElement 的 data-testid/aria-label"
+    },
+    "login": ".qa-authed-e2e.local.json + POST /api/auth/login（node:http 直连，等价 --noproxy '*'）；失败回退真实表单登录",
+    "boundaryMock": "POST **/api/v1/agents/runs → 合法 WorkspaceSpec v1.2 / DEGRADED / rules；missions 详情无 mock（真实夹具）",
+    "proxy": "chromium args: --proxy-server=direct:// --proxy-bypass-list=*（等价 curl --noproxy '*'）"
+  },
+  "verdict": "PASS",
+  "exitCode": 0,
+  "failures": [],
+  "blocked": [],
+  "viewports": [
+    {
+      "id": "360x800",
+      "width": 360,
+      "height": 800,
+      "deviceScaleFactor": 1,
+      "loginMethod": "api-cookie",
+      "states": [
+        {
+          "state": "now-initial",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-initial-360x800.png",
+          "scrollWidth": 360,
+          "clientWidth": 360,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "now-result",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-result-360x800.png",
+          "badge": "规则方案",
+          "scrollWidth": 360,
+          "clientWidth": 360,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "missions-detail",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/missions-detail-360x800.png",
+          "scrollWidth": 360,
+          "clientWidth": 360,
+          "overflowPx": 0,
+          "detailReached": true,
+          "fixture": "REAL",
+          "executionPanel": 1,
+          "specSection": 1,
+          "specEditor": 0,
+          "note": "夹具任务暂无可编辑 spec（spec-editor 按数据渲染，不计缺陷）",
+          "pass": true
+        }
+      ],
+      "keyboard": {
+        "intentSubmit": {
+          "reachable": true,
+          "tabsScanned": 175,
+          "hit": {
+            "testid": "intent-submit",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "开始"
+          }
+        },
+        "missionDetailButton": {
+          "reachable": true,
+          "tabsScanned": 177,
+          "hit": {
+            "testid": "mission-item",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "红队-R3-共享幂等键草稿验证同一把幂等键在两个同租户账号之"
+          }
+        }
+      },
+      "zoom200": {
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "overflowPx": 0,
+        "pass": true
+      },
+      "axe": [],
+      "pass": true
+    },
+    {
+      "id": "390x844",
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "loginMethod": "api-cookie",
+      "states": [
+        {
+          "state": "now-initial",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-initial-390x844.png",
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "now-result",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-result-390x844.png",
+          "badge": "规则方案",
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "missions-detail",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/missions-detail-390x844.png",
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "overflowPx": 0,
+          "detailReached": true,
+          "fixture": "REAL",
+          "executionPanel": 1,
+          "specSection": 1,
+          "specEditor": 0,
+          "note": "夹具任务暂无可编辑 spec（spec-editor 按数据渲染，不计缺陷）",
+          "pass": true
+        }
+      ],
+      "keyboard": {
+        "intentSubmit": {
+          "reachable": true,
+          "tabsScanned": 175,
+          "hit": {
+            "testid": "intent-submit",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "开始"
+          }
+        },
+        "missionDetailButton": {
+          "reachable": true,
+          "tabsScanned": 177,
+          "hit": {
+            "testid": "mission-item",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "红队-R3-共享幂等键草稿验证同一把幂等键在两个同租户账号之"
+          }
+        }
+      },
+      "zoom200": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflowPx": 0,
+        "pass": true
+      },
+      "axe": [
+        {
+          "state": "now-initial",
+          "total": 0,
+          "serious": 0,
+          "violations": [],
+          "passes": 24,
+          "incomplete": 1
+        },
+        {
+          "state": "missions-detail",
+          "total": 0,
+          "serious": 0,
+          "violations": [],
+          "passes": 26,
+          "incomplete": 1
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "768x1024",
+      "width": 768,
+      "height": 1024,
+      "deviceScaleFactor": 1,
+      "loginMethod": "api-cookie",
+      "states": [
+        {
+          "state": "now-initial",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-initial-768x1024.png",
+          "scrollWidth": 768,
+          "clientWidth": 768,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "now-result",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-result-768x1024.png",
+          "badge": "规则方案",
+          "scrollWidth": 768,
+          "clientWidth": 768,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "missions-detail",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/missions-detail-768x1024.png",
+          "scrollWidth": 768,
+          "clientWidth": 768,
+          "overflowPx": 0,
+          "detailReached": true,
+          "fixture": "REAL",
+          "executionPanel": 1,
+          "specSection": 1,
+          "specEditor": 0,
+          "note": "夹具任务暂无可编辑 spec（spec-editor 按数据渲染，不计缺陷）",
+          "pass": true
+        }
+      ],
+      "keyboard": {
+        "intentSubmit": {
+          "reachable": true,
+          "tabsScanned": 175,
+          "hit": {
+            "testid": "intent-submit",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "开始"
+          }
+        },
+        "missionDetailButton": {
+          "reachable": true,
+          "tabsScanned": 177,
+          "hit": {
+            "testid": "mission-item",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "红队-R3-共享幂等键草稿验证同一把幂等键在两个同租户账号之"
+          }
+        }
+      },
+      "zoom200": {
+        "scrollWidth": 768,
+        "clientWidth": 768,
+        "overflowPx": 0,
+        "pass": true
+      },
+      "axe": [],
+      "pass": true
+    },
+    {
+      "id": "1280x800",
+      "width": 1280,
+      "height": 800,
+      "deviceScaleFactor": 1,
+      "loginMethod": "api-cookie",
+      "states": [
+        {
+          "state": "now-initial",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-initial-1280x800.png",
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "now-result",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-result-1280x800.png",
+          "badge": "规则方案",
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "missions-detail",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/missions-detail-1280x800.png",
+          "scrollWidth": 1280,
+          "clientWidth": 1280,
+          "overflowPx": 0,
+          "detailReached": true,
+          "fixture": "REAL",
+          "executionPanel": 1,
+          "specSection": 1,
+          "specEditor": 0,
+          "note": "夹具任务暂无可编辑 spec（spec-editor 按数据渲染，不计缺陷）",
+          "pass": true
+        }
+      ],
+      "keyboard": {
+        "intentSubmit": {
+          "reachable": true,
+          "tabsScanned": 175,
+          "hit": {
+            "testid": "intent-submit",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "开始"
+          }
+        },
+        "missionDetailButton": {
+          "reachable": true,
+          "tabsScanned": 177,
+          "hit": {
+            "testid": "mission-item",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "红队-R3-共享幂等键草稿验证同一把幂等键在两个同租户账号之"
+          }
+        }
+      },
+      "zoom200": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "overflowPx": 0,
+        "pass": true
+      },
+      "axe": [
+        {
+          "state": "now-initial",
+          "total": 0,
+          "serious": 0,
+          "violations": [],
+          "passes": 23,
+          "incomplete": 0
+        },
+        {
+          "state": "missions-detail",
+          "total": 0,
+          "serious": 0,
+          "violations": [],
+          "passes": 25,
+          "incomplete": 0
+        }
+      ],
+      "pass": true
+    },
+    {
+      "id": "1440x900",
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 1,
+      "loginMethod": "api-cookie",
+      "states": [
+        {
+          "state": "now-initial",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-initial-1440x900.png",
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "now-result",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-result-1440x900.png",
+          "badge": "规则方案",
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "missions-detail",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/missions-detail-1440x900.png",
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "overflowPx": 0,
+          "detailReached": true,
+          "fixture": "REAL",
+          "executionPanel": 1,
+          "specSection": 1,
+          "specEditor": 0,
+          "note": "夹具任务暂无可编辑 spec（spec-editor 按数据渲染，不计缺陷）",
+          "pass": true
+        }
+      ],
+      "keyboard": {
+        "intentSubmit": {
+          "reachable": true,
+          "tabsScanned": 175,
+          "hit": {
+            "testid": "intent-submit",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "开始"
+          }
+        },
+        "missionDetailButton": {
+          "reachable": true,
+          "tabsScanned": 177,
+          "hit": {
+            "testid": "mission-item",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "红队-R3-共享幂等键草稿验证同一把幂等键在两个同租户账号之"
+          }
+        }
+      },
+      "zoom200": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowPx": 0,
+        "pass": true
+      },
+      "axe": [],
+      "pass": true
+    },
+    {
+      "id": "1920x1080",
+      "width": 1920,
+      "height": 1080,
+      "deviceScaleFactor": 1,
+      "loginMethod": "api-cookie",
+      "states": [
+        {
+          "state": "now-initial",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-initial-1920x1080.png",
+          "scrollWidth": 1920,
+          "clientWidth": 1920,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "now-result",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/now-result-1920x1080.png",
+          "badge": "规则方案",
+          "scrollWidth": 1920,
+          "clientWidth": 1920,
+          "overflowPx": 0,
+          "pass": true
+        },
+        {
+          "state": "missions-detail",
+          "file": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/docs/v21/batch2/shots/missions-detail-1920x1080.png",
+          "scrollWidth": 1920,
+          "clientWidth": 1920,
+          "overflowPx": 0,
+          "detailReached": true,
+          "fixture": "REAL",
+          "executionPanel": 1,
+          "specSection": 1,
+          "specEditor": 0,
+          "note": "夹具任务暂无可编辑 spec（spec-editor 按数据渲染，不计缺陷）",
+          "pass": true
+        }
+      ],
+      "keyboard": {
+        "intentSubmit": {
+          "reachable": true,
+          "tabsScanned": 175,
+          "hit": {
+            "testid": "intent-submit",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "开始"
+          }
+        },
+        "missionDetailButton": {
+          "reachable": true,
+          "tabsScanned": 177,
+          "hit": {
+            "testid": "mission-item",
+            "ariaLabel": null,
+            "tag": "BUTTON",
+            "text": "红队-R3-共享幂等键草稿验证同一把幂等键在两个同租户账号之"
+          }
+        }
+      },
+      "zoom200": {
+        "scrollWidth": 1920,
+        "clientWidth": 1920,
+        "overflowPx": 0,
+        "pass": true
+      },
+      "axe": [],
+      "pass": true
+    }
+  ]
+}

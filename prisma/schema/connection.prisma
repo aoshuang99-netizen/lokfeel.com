@@ -42,6 +42,13 @@ model Mission {
   organizationId String
   /// 任务发起人。契约 persons 同义于本仓 `User`。
   ownerId        String
+  /// V21 · Mission ↔ AgentRun **真实关联锚点**（纯新增、可选）。
+  /// 仅接受本组织内真实存在且 `skill=INTENT_EXTRACTION` 的 run —— 校验在
+  /// `createMission()` 里带 `{ id, organizationId, skill }` 谓词回查，绝不采信
+  /// 客户端传来的其它身份字段。软引用（不建 FK）：运行记录是证据，不应因
+  /// 关联任务被清理而反向受约束；租户隔离由 organizationId 谓词保证。
+  /// null = 该任务不是由意图抽取运行派生（旧数据全部为 null）。
+  sourceRunId    String?
 
   title String
   goal  String
@@ -225,6 +232,10 @@ model IdempotencyRecord {
   requestHash String
   resourceType String
   resourceId   String?
+  /// V21/R3：发起人身份（服务端会话 userId），纯新增可选列；旧数据一律为 null。
+  /// 不改 @@unique([organizationId, scope, key])（会破坏迁移与旧数据）：键空间按用户
+  /// 分区由 `scope` 后缀实现，本列只作「命中后校验」的纵深防御，不参与唯一约束。
+  actorId      String?
   createdAt    DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)

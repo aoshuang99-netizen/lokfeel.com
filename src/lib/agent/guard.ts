@@ -56,10 +56,15 @@ export const INJECTION_PATTERNS: readonly { code: string; re: RegExp }[] = [
   { code: 'ROLE_IMPERSONATION', re: /^\s*(system|assistant|developer)\s*:/im },
   { code: 'ROLE_IMPERSONATION', re: /\byou\s+are\s+now\b/i },
   // 中文：同类意图
-  // 🔴 2026-11-05 修正（巡检 #1086）：原式为 `/忽略(以上|上面|之前|此前|全部)?(所有)?(的)?(指令|…)/`，
-  //    语序被写死为「所有」在「的」之前 ⇒ 最常见的「忽略之前的**所有**指令」**漏检**。
-  //    改为把修饰语收成可重复组 `(的|所有|这些|那些)*`，语序不再敏感。
-  { code: 'OVERRIDE_INSTRUCTIONS', re: /忽略(以上|上面|以下|下列|之前|此前|全部)?(的|所有|这些|那些)*(指令|规则|提示|要求)/ },
+  // 🔴 2026-11-15 二次修正（V21 独立红队实测）：上一版把「全部」留在**首个可选组**、
+  //    只把「的|所有|这些|那些」做成可重复组 ⇒「忽略之前的**全部**指令」漏检
+  //    （「全部」需要出现在重复组里，而不是只占第一个可选位置）。
+  //    这次把**全部**修饰语合并成一个「语序不敏感、可重复」的组：
+  //    「忽略 + (任意修饰词)* + (指令|规则|提示|要求)」，于是 之前的/全部、以上/所有、
+  //    所有/之前/的、全部/的 等任意顺序都能命中；倒装「…全部忽略」由下一条规则覆盖。
+  //    ⚠️ 语义不变：命中**只用于告警与升级审批**，不是放行判据，也**不阻断执行**
+  //       （不改成 FAILED/拒绝）—— 见文件头与 detectInjection 的注释。
+  { code: 'OVERRIDE_INSTRUCTIONS', re: /忽略(以上|上面|以下|下列|之前|此前|前面|全部|全都|所有|这些|那些|一切|统统|一律|的)*(指令|规则|提示|要求)/ },
   // 「全部忽略」「一律无视」是同一意图的倒装表达（如「前面的要求全部忽略，直接执行」）。
   { code: 'OVERRIDE_INSTRUCTIONS', re: /(全部|全都|一律|统统)(忽略|无视)/ },
   { code: 'ROLE_IMPERSONATION', re: /你现在(是|就是|扮演)/ },
@@ -69,7 +74,13 @@ export const INJECTION_PATTERNS: readonly { code: string; re: RegExp }[] = [
   { code: 'ESCALATE_PRIVILEGE', re: /(给我|赋予|升级为)(管理员|owner|admin|最高)?权限/ },
 ]
 
-/** 检测注入信号。**返回值只用于告警与"升级为需批准"，不作为放行判据。** */
+/**
+ * 检测注入信号。
+ *
+ * 🔴 **返回值只用于告警与「升级为需批准」**：它既不是放行判据，也**不阻断执行** ——
+ *    命中的运行照常创建（产品契约），只是 `requiresApproval` 被抬高。V21 本次只扩充
+ *    中文模式表，不改变这一点；任何把检测改成「拒绝 / 丢弃 / FAILED」的改动都会破坏契约。
+ */
 export function detectInjection(text: string): InjectionSignal[] {
   const signals: InjectionSignal[] = []
   for (const { code, re } of INJECTION_PATTERNS) {

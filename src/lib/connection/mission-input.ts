@@ -53,6 +53,12 @@ export interface ParsedMissionCreate {
   maxParticipants: number | null
   publicPreview: boolean
   publish: boolean
+  /**
+   * V21：Mission ↔ AgentRun 真实关联锚点。
+   * 可选：缺省时**不出现在输出对象里**（保持旧幂等请求指纹逐字不变）。
+   * 真实性与 skill=INTENT_EXTRACTION 校验在 `createMission` 里带租户谓词回查。
+   */
+  sourceRunId?: string
 }
 
 export function parseMissionCreate(body: unknown, now: Date = new Date()): ParsedMissionCreate {
@@ -72,7 +78,7 @@ export function parseMissionCreate(body: unknown, now: Date = new Date()): Parse
   const title =
     optionalString(b.title, 'title', LIMITS.titleMax) ?? goal.slice(0, 80)
 
-  return {
+  const out: ParsedMissionCreate = {
     title,
     goal,
     offer,
@@ -90,6 +96,19 @@ export function parseMissionCreate(body: unknown, now: Date = new Date()): Parse
     // 语义映射：discoverable=true ⇔ 立即 ACTIVE；缺省先落 DRAFT（保守：不自动对外可见）。
     publish: optionalBool(b.publish, 'publish') ?? optionalBool(b.discoverable, 'discoverable') ?? false,
   }
+
+  // V21：唯一被接受的身份锚点。这里只做**形状**校验（纯函数，不碰 DB）；
+  // 「该组织内真实存在且 skill=INTENT_EXTRACTION」由 createMission() 带租户谓词回查。
+  // 缺省时**不写这个键**，以保证旧请求的幂等指纹逐字不变。
+  if ('sourceRunId' in b) {
+    const raw = b.sourceRunId
+    if (typeof raw !== 'string') fail('sourceRunId', 'sourceRunId must be a non-empty string')
+    const trimmed = (raw as string).trim()
+    if (!trimmed) fail('sourceRunId', 'sourceRunId must be a non-empty string')
+    out.sourceRunId = trimmed
+  }
+
+  return out
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -105,6 +124,11 @@ export interface ParsedMissionPatch {
   expiresAt?: Date | null
   maxParticipants?: number | null
   publicPreview?: boolean
+  /**
+   * V21：可选乐观锁。ISO 字符串；提供时才与 DB 当前 updatedAt 比较（409）。
+   * 缺省时 PATCH 行为与旧版逐字一致。
+   */
+  expectedUpdatedAt?: string
 }
 
 export function parseMissionPatch(body: unknown, now: Date = new Date()): ParsedMissionPatch {
@@ -139,7 +163,21 @@ export function parseMissionPatch(body: unknown, now: Date = new Date()): Parsed
     patch.publicPreview = optionalBool(b.publicPreview, 'publicPreview')
   }
 
-  if (Object.keys(patch).length === 0) {
+  // V21：可选乐观锁。只做形状校验；与 DB 当前 updatedAt 的比较在 updateMission()。
+  if ('expectedUpdatedAt' in b) {
+    const raw = b.expectedUpdatedAt
+    if (typeof raw !== 'string') {
+      fail('expectedUpdatedAt', 'expectedUpdatedAt must be an ISO-8601 datetime string')
+    }
+    if (Number.isNaN(Date.parse(raw as string))) {
+      fail('expectedUpdatedAt', 'expectedUpdatedAt must be an ISO-8601 datetime string')
+    }
+    patch.expectedUpdatedAt = raw as string
+  }
+
+  // expectedUpdatedAt 是**控制字段**而非可改字段：仅提交它不构成一次编辑。
+  const updatableKeys = Object.keys(patch).filter((key) => key !== 'expectedUpdatedAt')
+  if (updatableKeys.length === 0) {
     throw new ValidationError('Patch must contain at least one updatable field')
   }
   return patch

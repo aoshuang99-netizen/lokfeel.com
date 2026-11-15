@@ -1,4 +1,32 @@
-# V21 状态页（2026-11-14 · 首批交付后）
+# V21 状态页
+
+## 🔴 第二批更新（2026-11-15）—— 唯一权威在 `batch2/RC_APPROVAL_PACKAGE.md`
+
+**结论仍为 NO-GO（未发布、未推送、未部署）**。第二批在本地分支 `v21/batch2` 完成了
+「意图理解 → 方案字段级编辑/版本 → 带 `sourceRunId` 创建任务 → 批准/执行 → 真实回执 →
+第二人独立成果核验」的**真实 HTTP + DB + Audit + 阶段事件四重证据闭环**，
+并按用户三条反向验收做了可复现竞态测试、列表信封非空契约测试、独立红队真实复现。
+
+- 门禁逐条状态（G01–G20）、发布候选 SHA、Preview/回滚、9 项 Owner 授权需求：
+  **`docs/v21/batch2/RC_APPROVAL_PACKAGE.md`**（本批唯一状态页）。
+- 变更总表与 D1–D5 缺陷闭环：`docs/v21/batch2/BATCH2_CHANGES.md`；
+  基线与四条契约硬边界：`docs/v21/batch2/C00_R_BASELINE.md`；
+  可重放命令：`docs/v21/batch2/TEST_COMMANDS.md`。
+- **重大发布差异**：本批**含 Prisma 变更**（3 张新表 + 2 个可选列 + `src/generated`），
+  发布铁律改为 **先迁移后发版**；CI 不重跑 `prisma generate`。
+- **诚实边界**：现有 execute 的真实效果只有 IN_APP 站内回执（RECEIPT），
+  **未执行外部动作**；因此 G09 只能 PARTIAL。G02 Figma BLOCKED、G04 真人 UNTESTED、
+  G20 外部独立复核未做，整体 NO-GO。
+- **G15 性能实测不达标**：`batch2/PERF_ANALYSIS.md` + `batch2/perf-trace.json`，
+  Chrome Trace 9 页 ×3 轮 **9/9 MISS、0 ALL_MEET**（TBT 522–2712ms 全超 200ms）；
+  脚本退出码 0 只代表采集成功。历史 TBT 债维持 P1，不放水、不以「本地 lab ≠ 生产」改判 PASS。
+- **发布候选 SHA**：见 `batch2/RELEASE_CANDIDATE.md`（本地提交，未推送）。
+
+下方「首批交付后」的表格为**历史快照**（2026-11-14），保留供追溯，不再作为当前状态。
+
+---
+
+## 历史快照：首批（2026-11-14）
 
 **结论：NO-GO（未发布）**。本批完成了 C02 + C03 + C05 的**代码与本地真实证据**，
 但 20 项门禁中**没有任何一项**达到"独立复核 + Owner 批准"的最终形态。

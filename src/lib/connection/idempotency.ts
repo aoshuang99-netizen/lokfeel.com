@@ -7,6 +7,8 @@
  *   - **同一个键** + **不同请求体** → 409。这是刻意的：键被复用于不同意图时，
  *     静默返回旧资源会让调用方以为新动作成功了 —— 比报错危险得多。
  *   - 键的作用域是 `(organizationId, scope, key)`，跨租户/跨业务动作互不干扰。
+ *     V21/R3：带 `actorId` 的调用会把 scope 按用户分区（见 `scopedToActor`），
+ *     于是**同租户不同用户**复用同一把键也互不干扰 —— 绝不回放他人创建的资源。
  *
  * 并发安全：
  *   两个请求同时带同一把键进来时，都查不到旧记录 → 都执行 create → 第二条
@@ -73,6 +75,16 @@ export interface WithIdempotencyOptions<T> {
   organizationId: string
   /** 业务动作标识，如 `mission.create`。 */
   scope: string
+  /**
+   * 发起人身份（服务端会话里的 `userId`，**绝不**取自请求体）。
+   *
+   * V21/R3：传入后键空间按用户分区（scope 加 `:${actorId}` 后缀）、落库记录带上
+   * actorId，命中时二次校验归属 —— 防止同租户用户 B 用同一把 key 拿到 A 的资源。
+   *
+   * 可选：未提供的调用方沿用修复前的 `(organizationId, scope, key)` 语义，
+   * 兼容未接线的内部调用与历史单测。三个 HTTP/服务调用点必须传。
+   */
+  actorId?: string
   /** 已规范化的键（调用方先过 `requireIdempotencyKey`）。 */
   key: string
   /** 请求体指纹（调用方先过 `hashRequest`）。 */
@@ -95,19 +107,56 @@ export interface IdempotencyOutcome<T> {
   replayed: boolean
 }
 
+/**
+ * V21/R3 · 把键的作用域按发起人分区。
+ *
+ * ⚠️ **不改** `@@unique([organizationId, scope, key])`（改组合键会破坏迁移与旧数据）：
+ *    让不同用户的记录落到不同的 `scope` 值上，才能既共用同一把客户端 key、
+ *    又让 `create` 不撞唯一约束 —— 否则「命中后判为不归属 → 继续 create」会撞键，
+ *    落入补偿/重读分支，反而可能回放他人资源或抛 409。
+ *
+ * 兼容旧数据：修复前落库的记录 scope 是原始值且 actorId 为 null。带 actorId 的请求
+ * 用分区后的 scope 查询，**天然查不到**那些旧记录 ⇒ 视为「不同用户」，新建独立资源，
+ * 绝不静默回放（安全；代价是最多一次额外创建）。
+ */
+function scopedToActor(scope: string, actorId: string | undefined): string {
+  return actorId ? `${scope}:${actorId}` : scope
+}
+
+/**
+ * V21/R3 · 命中记录是否属于当前发起人（纵深防御，配合 scope 分区）。
+ *
+ * 只有「记录上写了**另一个**明确的非空 actorId」才判为不归属 —— 此时绝不回放，抛 409。
+ * 记录 actorId 为 null/undefined（旧数据 / 测试替身缺列）时视为可回放：
+ *   1. 真实旧数据根本不会被分区 scope 查询命中（见 `scopedToActor`），不依赖此判据；
+ *   2. 未传 actorId 的旧调用保持修复前语义，现有单测不变红。
+ */
+function belongsToActor(
+  existingActorId: string | null | undefined,
+  actorId: string | undefined
+): boolean {
+  if (!existingActorId) return true
+  return existingActorId === actorId
+}
+
 export async function withIdempotency<T>(
   opts: WithIdempotencyOptions<T>
 ): Promise<IdempotencyOutcome<T>> {
+  const effectiveScope = scopedToActor(opts.scope, opts.actorId)
   const where = {
     organizationId_scope_key: {
       organizationId: opts.organizationId,
-      scope: opts.scope,
+      scope: effectiveScope,
       key: opts.key,
     },
   }
 
   const existing = await db.idempotencyRecord.findUnique({ where })
   if (existing) {
+    // V21/R3：纵深防御 —— 万一命中了不属于当前发起人的记录，绝不回放，明确 409。
+    if (!belongsToActor(existing.actorId, opts.actorId)) {
+      throw new ConflictError('Idempotency-Key belongs to a different actor')
+    }
     if (existing.requestHash !== opts.requestHash) {
       throw new ConflictError(
         'Idempotency-Key was already used with a different request body'
@@ -128,11 +177,12 @@ export async function withIdempotency<T>(
     await db.idempotencyRecord.create({
       data: {
         organizationId: opts.organizationId,
-        scope: opts.scope,
+        scope: effectiveScope,
         key: opts.key,
         requestHash: opts.requestHash,
         resourceType: opts.resourceType,
         resourceId,
+        actorId: opts.actorId ?? null,
       },
     })
   } catch (err) {
@@ -154,6 +204,10 @@ export async function withIdempotency<T>(
     }
 
     if (winner) {
+      // V21/R3：并发重读的胜者也必须属于当前发起人，否则绝不回放。
+      if (!belongsToActor(winner.actorId, opts.actorId)) {
+        throw new ConflictError('Idempotency-Key belongs to a different actor')
+      }
       if (winner.requestHash !== opts.requestHash) {
         throw new ConflictError(
           'Idempotency-Key was already used with a different request body'

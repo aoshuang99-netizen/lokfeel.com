@@ -43,6 +43,9 @@ export const POST = withTenant('mission.create')(async (req: NextRequest, tenant
 
     const { resource, replayed } = await withIdempotency({
       organizationId: tenant.organizationId,
+      // V21/R3：发起人身份取自服务端会话，键空间按用户分区 —— 同租户不同用户
+      // 复用同一把 Idempotency-Key 也不会拿到彼此创建的资源。
+      actorId: tenant.userId,
       scope: 'mission.create',
       key,
       requestHash: hashRequest(input),

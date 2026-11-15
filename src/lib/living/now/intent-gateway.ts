@@ -55,6 +55,12 @@ export type IntentOutcome =
 export interface IntentGatewayDeps {
   /** 注入以便单测在系统边界 mock；缺省用全局 fetch。 */
   fetchImpl?: typeof fetch
+  /**
+   * V21 第二批 · 异步竞态：由「最新提交获胜」控制器注入。
+   * 新目标提交 / 取消 / 超时都会 abort 它；**被取消的请求不许降级成规则成功**
+   * （那会用一份旧方案冒充本次理解结果）。
+   */
+  signal?: AbortSignal
 }
 
 /** 服务端 run 响应里客户端会消费的字段（AgentRunDto 的子集）。 */
@@ -121,8 +127,14 @@ export async function resolveIntent(
       method: 'POST',
       headers: { 'content-type': 'application/json', 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify({ skill: 'INTENT_EXTRACTION', input: { goal: trimmed } }),
+      ...(deps.signal ? { signal: deps.signal } : {}),
     })
   } catch {
+    // 🔴 取消 ≠ 网络故障：被新提交取代/超时的请求绝不走本地规则兜底，
+    //    否则旧 A 的「规则方案」会覆盖新 B 的结果（用户点名的异步串台风险）。
+    if (deps.signal?.aborted) {
+      return { kind: 'error', reason: '这次理解已取消或超时，请重新提交。', suggestions: [] }
+    }
     // 网络不可达：产品仍可用（本地规则），但来源必须写清。
     return localRuleFallback(trimmed, '服务端暂不可达')
   }

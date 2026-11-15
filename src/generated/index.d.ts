@@ -407,6 +407,34 @@ export type Membership = $Result.DefaultSelection<Prisma.$MembershipPayload>
  * 收敛计划见 REUSE_MATRIX.md B5（M5 之后）。
  */
 export type TenantAuditEvent = $Result.DefaultSelection<Prisma.$TenantAuditEventPayload>
+/**
+ * Model MissionSpecRevision
+ * C04 · Mission 字段级编辑的**版本化**留痕。
+ * 
+ * 🔴 `@@unique([missionId, version])` 是并发保护的核心：两个都读到
+ * `currentVersion = N` 的请求同时写 `N+1`，第二条撞唯一键 → 409
+ * `SPEC_VERSION_CONFLICT`，而不是静默覆盖掉一次编辑。
+ */
+export type MissionSpecRevision = $Result.DefaultSelection<Prisma.$MissionSpecRevisionPayload>
+/**
+ * Model ExecutionVerification
+ * G09 · 独立成果核验（与 AgentRun **无** Outcome 依赖，不复用 Outcome 表）。
+ * 
+ * 🔴 `verdict` / `verificationLevel` 由**服务端派生**，不接受客户端入参：
+ * 核验的证据是真实 `AgentExecution` 回执行（deliveryId / deliveryStatus），
+ * **不是**模型输出。响应只陈述事实，不宣布目标达成。
+ */
+export type ExecutionVerification = $Result.DefaultSelection<Prisma.$ExecutionVerificationPayload>
+/**
+ * Model AgentRunStageEvent
+ * C03 · Agent 运行**编排阶段事件**。
+ * 
+ * ⚠️ 语义边界（必须在代码与响应里写清）：这些是**编排阶段**
+ * （QUOTA_CHECK / MODEL_CALL / SCHEMA_VALIDATE / PERSISTED / DEGRADED），
+ * **不是模型 token 流**，也不宣称模型生成过程被实时转发或可被逐字回放。
+ * 每条只记录「服务端编排走到哪一步、当时的事实是什么」。
+ */
+export type AgentRunStageEvent = $Result.DefaultSelection<Prisma.$AgentRunStageEventPayload>
 
 /**
  * Enums
@@ -2113,6 +2141,36 @@ export class PrismaClient<
     * ```
     */
   get tenantAuditEvent(): Prisma.TenantAuditEventDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.missionSpecRevision`: Exposes CRUD operations for the **MissionSpecRevision** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MissionSpecRevisions
+    * const missionSpecRevisions = await prisma.missionSpecRevision.findMany()
+    * ```
+    */
+  get missionSpecRevision(): Prisma.MissionSpecRevisionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.executionVerification`: Exposes CRUD operations for the **ExecutionVerification** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ExecutionVerifications
+    * const executionVerifications = await prisma.executionVerification.findMany()
+    * ```
+    */
+  get executionVerification(): Prisma.ExecutionVerificationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.agentRunStageEvent`: Exposes CRUD operations for the **AgentRunStageEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AgentRunStageEvents
+    * const agentRunStageEvents = await prisma.agentRunStageEvent.findMany()
+    * ```
+    */
+  get agentRunStageEvent(): Prisma.AgentRunStageEventDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -2622,7 +2680,10 @@ export namespace Prisma {
     OrganizationInvitation: 'OrganizationInvitation',
     Organization: 'Organization',
     Membership: 'Membership',
-    TenantAuditEvent: 'TenantAuditEvent'
+    TenantAuditEvent: 'TenantAuditEvent',
+    MissionSpecRevision: 'MissionSpecRevision',
+    ExecutionVerification: 'ExecutionVerification',
+    AgentRunStageEvent: 'AgentRunStageEvent'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -2638,7 +2699,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "communityBridge" | "bridgeMemberOptIn" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organizationInvitation" | "organization" | "membership" | "tenantAuditEvent"
+      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "communityBridge" | "bridgeMemberOptIn" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organizationInvitation" | "organization" | "membership" | "tenantAuditEvent" | "missionSpecRevision" | "executionVerification" | "agentRunStageEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -7304,6 +7365,228 @@ export namespace Prisma {
           }
         }
       }
+      MissionSpecRevision: {
+        payload: Prisma.$MissionSpecRevisionPayload<ExtArgs>
+        fields: Prisma.MissionSpecRevisionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MissionSpecRevisionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MissionSpecRevisionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>
+          }
+          findFirst: {
+            args: Prisma.MissionSpecRevisionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MissionSpecRevisionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>
+          }
+          findMany: {
+            args: Prisma.MissionSpecRevisionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>[]
+          }
+          create: {
+            args: Prisma.MissionSpecRevisionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>
+          }
+          createMany: {
+            args: Prisma.MissionSpecRevisionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MissionSpecRevisionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>[]
+          }
+          delete: {
+            args: Prisma.MissionSpecRevisionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>
+          }
+          update: {
+            args: Prisma.MissionSpecRevisionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>
+          }
+          deleteMany: {
+            args: Prisma.MissionSpecRevisionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MissionSpecRevisionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MissionSpecRevisionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>[]
+          }
+          upsert: {
+            args: Prisma.MissionSpecRevisionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissionSpecRevisionPayload>
+          }
+          aggregate: {
+            args: Prisma.MissionSpecRevisionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMissionSpecRevision>
+          }
+          groupBy: {
+            args: Prisma.MissionSpecRevisionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MissionSpecRevisionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MissionSpecRevisionCountArgs<ExtArgs>
+            result: $Utils.Optional<MissionSpecRevisionCountAggregateOutputType> | number
+          }
+        }
+      }
+      ExecutionVerification: {
+        payload: Prisma.$ExecutionVerificationPayload<ExtArgs>
+        fields: Prisma.ExecutionVerificationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ExecutionVerificationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ExecutionVerificationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>
+          }
+          findFirst: {
+            args: Prisma.ExecutionVerificationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ExecutionVerificationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>
+          }
+          findMany: {
+            args: Prisma.ExecutionVerificationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>[]
+          }
+          create: {
+            args: Prisma.ExecutionVerificationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>
+          }
+          createMany: {
+            args: Prisma.ExecutionVerificationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ExecutionVerificationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>[]
+          }
+          delete: {
+            args: Prisma.ExecutionVerificationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>
+          }
+          update: {
+            args: Prisma.ExecutionVerificationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>
+          }
+          deleteMany: {
+            args: Prisma.ExecutionVerificationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ExecutionVerificationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ExecutionVerificationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>[]
+          }
+          upsert: {
+            args: Prisma.ExecutionVerificationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExecutionVerificationPayload>
+          }
+          aggregate: {
+            args: Prisma.ExecutionVerificationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateExecutionVerification>
+          }
+          groupBy: {
+            args: Prisma.ExecutionVerificationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ExecutionVerificationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ExecutionVerificationCountArgs<ExtArgs>
+            result: $Utils.Optional<ExecutionVerificationCountAggregateOutputType> | number
+          }
+        }
+      }
+      AgentRunStageEvent: {
+        payload: Prisma.$AgentRunStageEventPayload<ExtArgs>
+        fields: Prisma.AgentRunStageEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AgentRunStageEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AgentRunStageEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>
+          }
+          findFirst: {
+            args: Prisma.AgentRunStageEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AgentRunStageEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>
+          }
+          findMany: {
+            args: Prisma.AgentRunStageEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>[]
+          }
+          create: {
+            args: Prisma.AgentRunStageEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>
+          }
+          createMany: {
+            args: Prisma.AgentRunStageEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AgentRunStageEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>[]
+          }
+          delete: {
+            args: Prisma.AgentRunStageEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>
+          }
+          update: {
+            args: Prisma.AgentRunStageEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.AgentRunStageEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AgentRunStageEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AgentRunStageEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.AgentRunStageEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentRunStageEventPayload>
+          }
+          aggregate: {
+            args: Prisma.AgentRunStageEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAgentRunStageEvent>
+          }
+          groupBy: {
+            args: Prisma.AgentRunStageEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AgentRunStageEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AgentRunStageEventCountArgs<ExtArgs>
+            result: $Utils.Optional<AgentRunStageEventCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -7490,6 +7773,9 @@ export namespace Prisma {
     organization?: OrganizationOmit
     membership?: MembershipOmit
     tenantAuditEvent?: TenantAuditEventOmit
+    missionSpecRevision?: MissionSpecRevisionOmit
+    executionVerification?: ExecutionVerificationOmit
+    agentRunStageEvent?: AgentRunStageEventOmit
   }
 
   /* Types for Logging */
@@ -26480,6 +26766,7 @@ export namespace Prisma {
     id: string | null
     organizationId: string | null
     ownerId: string | null
+    sourceRunId: string | null
     title: string | null
     goal: string | null
     offer: string | null
@@ -26500,6 +26787,7 @@ export namespace Prisma {
     id: string | null
     organizationId: string | null
     ownerId: string | null
+    sourceRunId: string | null
     title: string | null
     goal: string | null
     offer: string | null
@@ -26520,6 +26808,7 @@ export namespace Prisma {
     id: number
     organizationId: number
     ownerId: number
+    sourceRunId: number
     title: number
     goal: number
     offer: number
@@ -26550,6 +26839,7 @@ export namespace Prisma {
     id?: true
     organizationId?: true
     ownerId?: true
+    sourceRunId?: true
     title?: true
     goal?: true
     offer?: true
@@ -26570,6 +26860,7 @@ export namespace Prisma {
     id?: true
     organizationId?: true
     ownerId?: true
+    sourceRunId?: true
     title?: true
     goal?: true
     offer?: true
@@ -26590,6 +26881,7 @@ export namespace Prisma {
     id?: true
     organizationId?: true
     ownerId?: true
+    sourceRunId?: true
     title?: true
     goal?: true
     offer?: true
@@ -26697,6 +26989,7 @@ export namespace Prisma {
     id: string
     organizationId: string
     ownerId: string
+    sourceRunId: string | null
     title: string
     goal: string
     offer: string
@@ -26736,6 +27029,7 @@ export namespace Prisma {
     id?: boolean
     organizationId?: boolean
     ownerId?: boolean
+    sourceRunId?: boolean
     title?: boolean
     goal?: boolean
     offer?: boolean
@@ -26762,6 +27056,7 @@ export namespace Prisma {
     id?: boolean
     organizationId?: boolean
     ownerId?: boolean
+    sourceRunId?: boolean
     title?: boolean
     goal?: boolean
     offer?: boolean
@@ -26784,6 +27079,7 @@ export namespace Prisma {
     id?: boolean
     organizationId?: boolean
     ownerId?: boolean
+    sourceRunId?: boolean
     title?: boolean
     goal?: boolean
     offer?: boolean
@@ -26806,6 +27102,7 @@ export namespace Prisma {
     id?: boolean
     organizationId?: boolean
     ownerId?: boolean
+    sourceRunId?: boolean
     title?: boolean
     goal?: boolean
     offer?: boolean
@@ -26822,7 +27119,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type MissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "ownerId" | "title" | "goal" | "offer" | "constraints" | "successCriteria" | "status" | "shareToken" | "publicPreview" | "maxParticipants" | "expiresAt" | "publishedAt" | "closedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["mission"]>
+  export type MissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "ownerId" | "sourceRunId" | "title" | "goal" | "offer" | "constraints" | "successCriteria" | "status" | "shareToken" | "publicPreview" | "maxParticipants" | "expiresAt" | "publishedAt" | "closedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["mission"]>
   export type MissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     owner?: boolean | UserDefaultArgs<ExtArgs>
@@ -26859,6 +27156,15 @@ export namespace Prisma {
        * 任务发起人。契约 persons 同义于本仓 `User`。
        */
       ownerId: string
+      /**
+       * V21 · Mission ↔ AgentRun **真实关联锚点**（纯新增、可选）。
+       * 仅接受本组织内真实存在且 `skill=INTENT_EXTRACTION` 的 run —— 校验在
+       * `createMission()` 里带 `{ id, organizationId, skill }` 谓词回查，绝不采信
+       * 客户端传来的其它身份字段。软引用（不建 FK）：运行记录是证据，不应因
+       * 关联任务被清理而反向受约束；租户隔离由 organizationId 谓词保证。
+       * null = 该任务不是由意图抽取运行派生（旧数据全部为 null）。
+       */
+      sourceRunId: string | null
       title: string
       goal: string
       offer: string
@@ -27320,6 +27626,7 @@ export namespace Prisma {
     readonly id: FieldRef<"Mission", 'String'>
     readonly organizationId: FieldRef<"Mission", 'String'>
     readonly ownerId: FieldRef<"Mission", 'String'>
+    readonly sourceRunId: FieldRef<"Mission", 'String'>
     readonly title: FieldRef<"Mission", 'String'>
     readonly goal: FieldRef<"Mission", 'String'>
     readonly offer: FieldRef<"Mission", 'String'>
@@ -30200,6 +30507,7 @@ export namespace Prisma {
     requestHash: string | null
     resourceType: string | null
     resourceId: string | null
+    actorId: string | null
     createdAt: Date | null
   }
 
@@ -30211,6 +30519,7 @@ export namespace Prisma {
     requestHash: string | null
     resourceType: string | null
     resourceId: string | null
+    actorId: string | null
     createdAt: Date | null
   }
 
@@ -30222,6 +30531,7 @@ export namespace Prisma {
     requestHash: number
     resourceType: number
     resourceId: number
+    actorId: number
     createdAt: number
     _all: number
   }
@@ -30235,6 +30545,7 @@ export namespace Prisma {
     requestHash?: true
     resourceType?: true
     resourceId?: true
+    actorId?: true
     createdAt?: true
   }
 
@@ -30246,6 +30557,7 @@ export namespace Prisma {
     requestHash?: true
     resourceType?: true
     resourceId?: true
+    actorId?: true
     createdAt?: true
   }
 
@@ -30257,6 +30569,7 @@ export namespace Prisma {
     requestHash?: true
     resourceType?: true
     resourceId?: true
+    actorId?: true
     createdAt?: true
     _all?: true
   }
@@ -30341,6 +30654,7 @@ export namespace Prisma {
     requestHash: string
     resourceType: string
     resourceId: string | null
+    actorId: string | null
     createdAt: Date
     _count: IdempotencyRecordCountAggregateOutputType | null
     _min: IdempotencyRecordMinAggregateOutputType | null
@@ -30369,6 +30683,7 @@ export namespace Prisma {
     requestHash?: boolean
     resourceType?: boolean
     resourceId?: boolean
+    actorId?: boolean
     createdAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["idempotencyRecord"]>
@@ -30381,6 +30696,7 @@ export namespace Prisma {
     requestHash?: boolean
     resourceType?: boolean
     resourceId?: boolean
+    actorId?: boolean
     createdAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["idempotencyRecord"]>
@@ -30393,6 +30709,7 @@ export namespace Prisma {
     requestHash?: boolean
     resourceType?: boolean
     resourceId?: boolean
+    actorId?: boolean
     createdAt?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["idempotencyRecord"]>
@@ -30405,10 +30722,11 @@ export namespace Prisma {
     requestHash?: boolean
     resourceType?: boolean
     resourceId?: boolean
+    actorId?: boolean
     createdAt?: boolean
   }
 
-  export type IdempotencyRecordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "scope" | "key" | "requestHash" | "resourceType" | "resourceId" | "createdAt", ExtArgs["result"]["idempotencyRecord"]>
+  export type IdempotencyRecordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "scope" | "key" | "requestHash" | "resourceType" | "resourceId" | "actorId" | "createdAt", ExtArgs["result"]["idempotencyRecord"]>
   export type IdempotencyRecordInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }
@@ -30441,6 +30759,12 @@ export namespace Prisma {
       requestHash: string
       resourceType: string
       resourceId: string | null
+      /**
+       * V21/R3：发起人身份（服务端会话 userId），纯新增可选列；旧数据一律为 null。
+       * 不改 @@unique([organizationId, scope, key])（会破坏迁移与旧数据）：键空间按用户
+       * 分区由 `scope` 后缀实现，本列只作「命中后校验」的纵深防御，不参与唯一约束。
+       */
+      actorId: string | null
       createdAt: Date
     }, ExtArgs["result"]["idempotencyRecord"]>
     composites: {}
@@ -30873,6 +31197,7 @@ export namespace Prisma {
     readonly requestHash: FieldRef<"IdempotencyRecord", 'String'>
     readonly resourceType: FieldRef<"IdempotencyRecord", 'String'>
     readonly resourceId: FieldRef<"IdempotencyRecord", 'String'>
+    readonly actorId: FieldRef<"IdempotencyRecord", 'String'>
     readonly createdAt: FieldRef<"IdempotencyRecord", 'DateTime'>
   }
     
@@ -85079,6 +85404,3288 @@ export namespace Prisma {
 
 
   /**
+   * Model MissionSpecRevision
+   */
+
+  export type AggregateMissionSpecRevision = {
+    _count: MissionSpecRevisionCountAggregateOutputType | null
+    _avg: MissionSpecRevisionAvgAggregateOutputType | null
+    _sum: MissionSpecRevisionSumAggregateOutputType | null
+    _min: MissionSpecRevisionMinAggregateOutputType | null
+    _max: MissionSpecRevisionMaxAggregateOutputType | null
+  }
+
+  export type MissionSpecRevisionAvgAggregateOutputType = {
+    version: number | null
+  }
+
+  export type MissionSpecRevisionSumAggregateOutputType = {
+    version: number | null
+  }
+
+  export type MissionSpecRevisionMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    version: number | null
+    specJson: string | null
+    goal: string | null
+    offer: string | null
+    successCriteria: string | null
+    expiresAt: string | null
+    changeNote: string | null
+    actorId: string | null
+    createdAt: Date | null
+  }
+
+  export type MissionSpecRevisionMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    version: number | null
+    specJson: string | null
+    goal: string | null
+    offer: string | null
+    successCriteria: string | null
+    expiresAt: string | null
+    changeNote: string | null
+    actorId: string | null
+    createdAt: Date | null
+  }
+
+  export type MissionSpecRevisionCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    missionId: number
+    version: number
+    specJson: number
+    goal: number
+    offer: number
+    successCriteria: number
+    expiresAt: number
+    changeNote: number
+    actorId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type MissionSpecRevisionAvgAggregateInputType = {
+    version?: true
+  }
+
+  export type MissionSpecRevisionSumAggregateInputType = {
+    version?: true
+  }
+
+  export type MissionSpecRevisionMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    version?: true
+    specJson?: true
+    goal?: true
+    offer?: true
+    successCriteria?: true
+    expiresAt?: true
+    changeNote?: true
+    actorId?: true
+    createdAt?: true
+  }
+
+  export type MissionSpecRevisionMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    version?: true
+    specJson?: true
+    goal?: true
+    offer?: true
+    successCriteria?: true
+    expiresAt?: true
+    changeNote?: true
+    actorId?: true
+    createdAt?: true
+  }
+
+  export type MissionSpecRevisionCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    version?: true
+    specJson?: true
+    goal?: true
+    offer?: true
+    successCriteria?: true
+    expiresAt?: true
+    changeNote?: true
+    actorId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type MissionSpecRevisionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MissionSpecRevision to aggregate.
+     */
+    where?: MissionSpecRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionSpecRevisions to fetch.
+     */
+    orderBy?: MissionSpecRevisionOrderByWithRelationInput | MissionSpecRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MissionSpecRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionSpecRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionSpecRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MissionSpecRevisions
+    **/
+    _count?: true | MissionSpecRevisionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MissionSpecRevisionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MissionSpecRevisionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MissionSpecRevisionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MissionSpecRevisionMaxAggregateInputType
+  }
+
+  export type GetMissionSpecRevisionAggregateType<T extends MissionSpecRevisionAggregateArgs> = {
+        [P in keyof T & keyof AggregateMissionSpecRevision]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMissionSpecRevision[P]>
+      : GetScalarType<T[P], AggregateMissionSpecRevision[P]>
+  }
+
+
+
+
+  export type MissionSpecRevisionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissionSpecRevisionWhereInput
+    orderBy?: MissionSpecRevisionOrderByWithAggregationInput | MissionSpecRevisionOrderByWithAggregationInput[]
+    by: MissionSpecRevisionScalarFieldEnum[] | MissionSpecRevisionScalarFieldEnum
+    having?: MissionSpecRevisionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MissionSpecRevisionCountAggregateInputType | true
+    _avg?: MissionSpecRevisionAvgAggregateInputType
+    _sum?: MissionSpecRevisionSumAggregateInputType
+    _min?: MissionSpecRevisionMinAggregateInputType
+    _max?: MissionSpecRevisionMaxAggregateInputType
+  }
+
+  export type MissionSpecRevisionGroupByOutputType = {
+    id: string
+    organizationId: string
+    missionId: string
+    version: number
+    specJson: string
+    goal: string | null
+    offer: string | null
+    successCriteria: string | null
+    expiresAt: string | null
+    changeNote: string | null
+    actorId: string
+    createdAt: Date
+    _count: MissionSpecRevisionCountAggregateOutputType | null
+    _avg: MissionSpecRevisionAvgAggregateOutputType | null
+    _sum: MissionSpecRevisionSumAggregateOutputType | null
+    _min: MissionSpecRevisionMinAggregateOutputType | null
+    _max: MissionSpecRevisionMaxAggregateOutputType | null
+  }
+
+  type GetMissionSpecRevisionGroupByPayload<T extends MissionSpecRevisionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MissionSpecRevisionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MissionSpecRevisionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MissionSpecRevisionGroupByOutputType[P]>
+            : GetScalarType<T[P], MissionSpecRevisionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MissionSpecRevisionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    version?: boolean
+    specJson?: boolean
+    goal?: boolean
+    offer?: boolean
+    successCriteria?: boolean
+    expiresAt?: boolean
+    changeNote?: boolean
+    actorId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["missionSpecRevision"]>
+
+  export type MissionSpecRevisionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    version?: boolean
+    specJson?: boolean
+    goal?: boolean
+    offer?: boolean
+    successCriteria?: boolean
+    expiresAt?: boolean
+    changeNote?: boolean
+    actorId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["missionSpecRevision"]>
+
+  export type MissionSpecRevisionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    version?: boolean
+    specJson?: boolean
+    goal?: boolean
+    offer?: boolean
+    successCriteria?: boolean
+    expiresAt?: boolean
+    changeNote?: boolean
+    actorId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["missionSpecRevision"]>
+
+  export type MissionSpecRevisionSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    version?: boolean
+    specJson?: boolean
+    goal?: boolean
+    offer?: boolean
+    successCriteria?: boolean
+    expiresAt?: boolean
+    changeNote?: boolean
+    actorId?: boolean
+    createdAt?: boolean
+  }
+
+  export type MissionSpecRevisionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "missionId" | "version" | "specJson" | "goal" | "offer" | "successCriteria" | "expiresAt" | "changeNote" | "actorId" | "createdAt", ExtArgs["result"]["missionSpecRevision"]>
+
+  export type $MissionSpecRevisionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MissionSpecRevision"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * 租户谓词。**不可省**（T01 铁律）。
+       */
+      organizationId: string
+      missionId: string
+      version: number
+      /**
+       * 经 `WorkspaceSpecSchema.safeParse` 校验后的**完整** spec（JSON 文本）。
+       */
+      specJson: string
+      /**
+       * 从 spec 的 intent 节点投影出的业务字段（可选）：便于不解析 JSON
+       * 就能回答「哪一版改了目标」。找不到对应节点时为 null。
+       */
+      goal: string | null
+      offer: string | null
+      successCriteria: string | null
+      expiresAt: string | null
+      changeNote: string | null
+      /**
+       * 编辑者（服务端会话派生，不采信请求体）。
+       */
+      actorId: string
+      createdAt: Date
+    }, ExtArgs["result"]["missionSpecRevision"]>
+    composites: {}
+  }
+
+  type MissionSpecRevisionGetPayload<S extends boolean | null | undefined | MissionSpecRevisionDefaultArgs> = $Result.GetResult<Prisma.$MissionSpecRevisionPayload, S>
+
+  type MissionSpecRevisionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MissionSpecRevisionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MissionSpecRevisionCountAggregateInputType | true
+    }
+
+  export interface MissionSpecRevisionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MissionSpecRevision'], meta: { name: 'MissionSpecRevision' } }
+    /**
+     * Find zero or one MissionSpecRevision that matches the filter.
+     * @param {MissionSpecRevisionFindUniqueArgs} args - Arguments to find a MissionSpecRevision
+     * @example
+     * // Get one MissionSpecRevision
+     * const missionSpecRevision = await prisma.missionSpecRevision.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MissionSpecRevisionFindUniqueArgs>(args: SelectSubset<T, MissionSpecRevisionFindUniqueArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MissionSpecRevision that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MissionSpecRevisionFindUniqueOrThrowArgs} args - Arguments to find a MissionSpecRevision
+     * @example
+     * // Get one MissionSpecRevision
+     * const missionSpecRevision = await prisma.missionSpecRevision.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MissionSpecRevisionFindUniqueOrThrowArgs>(args: SelectSubset<T, MissionSpecRevisionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MissionSpecRevision that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionSpecRevisionFindFirstArgs} args - Arguments to find a MissionSpecRevision
+     * @example
+     * // Get one MissionSpecRevision
+     * const missionSpecRevision = await prisma.missionSpecRevision.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MissionSpecRevisionFindFirstArgs>(args?: SelectSubset<T, MissionSpecRevisionFindFirstArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MissionSpecRevision that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionSpecRevisionFindFirstOrThrowArgs} args - Arguments to find a MissionSpecRevision
+     * @example
+     * // Get one MissionSpecRevision
+     * const missionSpecRevision = await prisma.missionSpecRevision.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MissionSpecRevisionFindFirstOrThrowArgs>(args?: SelectSubset<T, MissionSpecRevisionFindFirstOrThrowArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MissionSpecRevisions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionSpecRevisionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MissionSpecRevisions
+     * const missionSpecRevisions = await prisma.missionSpecRevision.findMany()
+     * 
+     * // Get first 10 MissionSpecRevisions
+     * const missionSpecRevisions = await prisma.missionSpecRevision.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const missionSpecRevisionWithIdOnly = await prisma.missionSpecRevision.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MissionSpecRevisionFindManyArgs>(args?: SelectSubset<T, MissionSpecRevisionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MissionSpecRevision.
+     * @param {MissionSpecRevisionCreateArgs} args - Arguments to create a MissionSpecRevision.
+     * @example
+     * // Create one MissionSpecRevision
+     * const MissionSpecRevision = await prisma.missionSpecRevision.create({
+     *   data: {
+     *     // ... data to create a MissionSpecRevision
+     *   }
+     * })
+     * 
+     */
+    create<T extends MissionSpecRevisionCreateArgs>(args: SelectSubset<T, MissionSpecRevisionCreateArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MissionSpecRevisions.
+     * @param {MissionSpecRevisionCreateManyArgs} args - Arguments to create many MissionSpecRevisions.
+     * @example
+     * // Create many MissionSpecRevisions
+     * const missionSpecRevision = await prisma.missionSpecRevision.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MissionSpecRevisionCreateManyArgs>(args?: SelectSubset<T, MissionSpecRevisionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MissionSpecRevisions and returns the data saved in the database.
+     * @param {MissionSpecRevisionCreateManyAndReturnArgs} args - Arguments to create many MissionSpecRevisions.
+     * @example
+     * // Create many MissionSpecRevisions
+     * const missionSpecRevision = await prisma.missionSpecRevision.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MissionSpecRevisions and only return the `id`
+     * const missionSpecRevisionWithIdOnly = await prisma.missionSpecRevision.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MissionSpecRevisionCreateManyAndReturnArgs>(args?: SelectSubset<T, MissionSpecRevisionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MissionSpecRevision.
+     * @param {MissionSpecRevisionDeleteArgs} args - Arguments to delete one MissionSpecRevision.
+     * @example
+     * // Delete one MissionSpecRevision
+     * const MissionSpecRevision = await prisma.missionSpecRevision.delete({
+     *   where: {
+     *     // ... filter to delete one MissionSpecRevision
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MissionSpecRevisionDeleteArgs>(args: SelectSubset<T, MissionSpecRevisionDeleteArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MissionSpecRevision.
+     * @param {MissionSpecRevisionUpdateArgs} args - Arguments to update one MissionSpecRevision.
+     * @example
+     * // Update one MissionSpecRevision
+     * const missionSpecRevision = await prisma.missionSpecRevision.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MissionSpecRevisionUpdateArgs>(args: SelectSubset<T, MissionSpecRevisionUpdateArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MissionSpecRevisions.
+     * @param {MissionSpecRevisionDeleteManyArgs} args - Arguments to filter MissionSpecRevisions to delete.
+     * @example
+     * // Delete a few MissionSpecRevisions
+     * const { count } = await prisma.missionSpecRevision.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MissionSpecRevisionDeleteManyArgs>(args?: SelectSubset<T, MissionSpecRevisionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MissionSpecRevisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionSpecRevisionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MissionSpecRevisions
+     * const missionSpecRevision = await prisma.missionSpecRevision.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MissionSpecRevisionUpdateManyArgs>(args: SelectSubset<T, MissionSpecRevisionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MissionSpecRevisions and returns the data updated in the database.
+     * @param {MissionSpecRevisionUpdateManyAndReturnArgs} args - Arguments to update many MissionSpecRevisions.
+     * @example
+     * // Update many MissionSpecRevisions
+     * const missionSpecRevision = await prisma.missionSpecRevision.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MissionSpecRevisions and only return the `id`
+     * const missionSpecRevisionWithIdOnly = await prisma.missionSpecRevision.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MissionSpecRevisionUpdateManyAndReturnArgs>(args: SelectSubset<T, MissionSpecRevisionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MissionSpecRevision.
+     * @param {MissionSpecRevisionUpsertArgs} args - Arguments to update or create a MissionSpecRevision.
+     * @example
+     * // Update or create a MissionSpecRevision
+     * const missionSpecRevision = await prisma.missionSpecRevision.upsert({
+     *   create: {
+     *     // ... data to create a MissionSpecRevision
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MissionSpecRevision we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MissionSpecRevisionUpsertArgs>(args: SelectSubset<T, MissionSpecRevisionUpsertArgs<ExtArgs>>): Prisma__MissionSpecRevisionClient<$Result.GetResult<Prisma.$MissionSpecRevisionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MissionSpecRevisions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionSpecRevisionCountArgs} args - Arguments to filter MissionSpecRevisions to count.
+     * @example
+     * // Count the number of MissionSpecRevisions
+     * const count = await prisma.missionSpecRevision.count({
+     *   where: {
+     *     // ... the filter for the MissionSpecRevisions we want to count
+     *   }
+     * })
+    **/
+    count<T extends MissionSpecRevisionCountArgs>(
+      args?: Subset<T, MissionSpecRevisionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MissionSpecRevisionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MissionSpecRevision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionSpecRevisionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MissionSpecRevisionAggregateArgs>(args: Subset<T, MissionSpecRevisionAggregateArgs>): Prisma.PrismaPromise<GetMissionSpecRevisionAggregateType<T>>
+
+    /**
+     * Group by MissionSpecRevision.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissionSpecRevisionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MissionSpecRevisionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MissionSpecRevisionGroupByArgs['orderBy'] }
+        : { orderBy?: MissionSpecRevisionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MissionSpecRevisionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMissionSpecRevisionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MissionSpecRevision model
+   */
+  readonly fields: MissionSpecRevisionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MissionSpecRevision.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MissionSpecRevisionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MissionSpecRevision model
+   */
+  interface MissionSpecRevisionFieldRefs {
+    readonly id: FieldRef<"MissionSpecRevision", 'String'>
+    readonly organizationId: FieldRef<"MissionSpecRevision", 'String'>
+    readonly missionId: FieldRef<"MissionSpecRevision", 'String'>
+    readonly version: FieldRef<"MissionSpecRevision", 'Int'>
+    readonly specJson: FieldRef<"MissionSpecRevision", 'String'>
+    readonly goal: FieldRef<"MissionSpecRevision", 'String'>
+    readonly offer: FieldRef<"MissionSpecRevision", 'String'>
+    readonly successCriteria: FieldRef<"MissionSpecRevision", 'String'>
+    readonly expiresAt: FieldRef<"MissionSpecRevision", 'String'>
+    readonly changeNote: FieldRef<"MissionSpecRevision", 'String'>
+    readonly actorId: FieldRef<"MissionSpecRevision", 'String'>
+    readonly createdAt: FieldRef<"MissionSpecRevision", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MissionSpecRevision findUnique
+   */
+  export type MissionSpecRevisionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * Filter, which MissionSpecRevision to fetch.
+     */
+    where: MissionSpecRevisionWhereUniqueInput
+  }
+
+  /**
+   * MissionSpecRevision findUniqueOrThrow
+   */
+  export type MissionSpecRevisionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * Filter, which MissionSpecRevision to fetch.
+     */
+    where: MissionSpecRevisionWhereUniqueInput
+  }
+
+  /**
+   * MissionSpecRevision findFirst
+   */
+  export type MissionSpecRevisionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * Filter, which MissionSpecRevision to fetch.
+     */
+    where?: MissionSpecRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionSpecRevisions to fetch.
+     */
+    orderBy?: MissionSpecRevisionOrderByWithRelationInput | MissionSpecRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MissionSpecRevisions.
+     */
+    cursor?: MissionSpecRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionSpecRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionSpecRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissionSpecRevisions.
+     */
+    distinct?: MissionSpecRevisionScalarFieldEnum | MissionSpecRevisionScalarFieldEnum[]
+  }
+
+  /**
+   * MissionSpecRevision findFirstOrThrow
+   */
+  export type MissionSpecRevisionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * Filter, which MissionSpecRevision to fetch.
+     */
+    where?: MissionSpecRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionSpecRevisions to fetch.
+     */
+    orderBy?: MissionSpecRevisionOrderByWithRelationInput | MissionSpecRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MissionSpecRevisions.
+     */
+    cursor?: MissionSpecRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionSpecRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionSpecRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissionSpecRevisions.
+     */
+    distinct?: MissionSpecRevisionScalarFieldEnum | MissionSpecRevisionScalarFieldEnum[]
+  }
+
+  /**
+   * MissionSpecRevision findMany
+   */
+  export type MissionSpecRevisionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * Filter, which MissionSpecRevisions to fetch.
+     */
+    where?: MissionSpecRevisionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissionSpecRevisions to fetch.
+     */
+    orderBy?: MissionSpecRevisionOrderByWithRelationInput | MissionSpecRevisionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MissionSpecRevisions.
+     */
+    cursor?: MissionSpecRevisionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissionSpecRevisions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissionSpecRevisions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissionSpecRevisions.
+     */
+    distinct?: MissionSpecRevisionScalarFieldEnum | MissionSpecRevisionScalarFieldEnum[]
+  }
+
+  /**
+   * MissionSpecRevision create
+   */
+  export type MissionSpecRevisionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * The data needed to create a MissionSpecRevision.
+     */
+    data: XOR<MissionSpecRevisionCreateInput, MissionSpecRevisionUncheckedCreateInput>
+  }
+
+  /**
+   * MissionSpecRevision createMany
+   */
+  export type MissionSpecRevisionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MissionSpecRevisions.
+     */
+    data: MissionSpecRevisionCreateManyInput | MissionSpecRevisionCreateManyInput[]
+  }
+
+  /**
+   * MissionSpecRevision createManyAndReturn
+   */
+  export type MissionSpecRevisionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * The data used to create many MissionSpecRevisions.
+     */
+    data: MissionSpecRevisionCreateManyInput | MissionSpecRevisionCreateManyInput[]
+  }
+
+  /**
+   * MissionSpecRevision update
+   */
+  export type MissionSpecRevisionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * The data needed to update a MissionSpecRevision.
+     */
+    data: XOR<MissionSpecRevisionUpdateInput, MissionSpecRevisionUncheckedUpdateInput>
+    /**
+     * Choose, which MissionSpecRevision to update.
+     */
+    where: MissionSpecRevisionWhereUniqueInput
+  }
+
+  /**
+   * MissionSpecRevision updateMany
+   */
+  export type MissionSpecRevisionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MissionSpecRevisions.
+     */
+    data: XOR<MissionSpecRevisionUpdateManyMutationInput, MissionSpecRevisionUncheckedUpdateManyInput>
+    /**
+     * Filter which MissionSpecRevisions to update
+     */
+    where?: MissionSpecRevisionWhereInput
+    /**
+     * Limit how many MissionSpecRevisions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MissionSpecRevision updateManyAndReturn
+   */
+  export type MissionSpecRevisionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * The data used to update MissionSpecRevisions.
+     */
+    data: XOR<MissionSpecRevisionUpdateManyMutationInput, MissionSpecRevisionUncheckedUpdateManyInput>
+    /**
+     * Filter which MissionSpecRevisions to update
+     */
+    where?: MissionSpecRevisionWhereInput
+    /**
+     * Limit how many MissionSpecRevisions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MissionSpecRevision upsert
+   */
+  export type MissionSpecRevisionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * The filter to search for the MissionSpecRevision to update in case it exists.
+     */
+    where: MissionSpecRevisionWhereUniqueInput
+    /**
+     * In case the MissionSpecRevision found by the `where` argument doesn't exist, create a new MissionSpecRevision with this data.
+     */
+    create: XOR<MissionSpecRevisionCreateInput, MissionSpecRevisionUncheckedCreateInput>
+    /**
+     * In case the MissionSpecRevision was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MissionSpecRevisionUpdateInput, MissionSpecRevisionUncheckedUpdateInput>
+  }
+
+  /**
+   * MissionSpecRevision delete
+   */
+  export type MissionSpecRevisionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+    /**
+     * Filter which MissionSpecRevision to delete.
+     */
+    where: MissionSpecRevisionWhereUniqueInput
+  }
+
+  /**
+   * MissionSpecRevision deleteMany
+   */
+  export type MissionSpecRevisionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MissionSpecRevisions to delete
+     */
+    where?: MissionSpecRevisionWhereInput
+    /**
+     * Limit how many MissionSpecRevisions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MissionSpecRevision without action
+   */
+  export type MissionSpecRevisionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissionSpecRevision
+     */
+    select?: MissionSpecRevisionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissionSpecRevision
+     */
+    omit?: MissionSpecRevisionOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ExecutionVerification
+   */
+
+  export type AggregateExecutionVerification = {
+    _count: ExecutionVerificationCountAggregateOutputType | null
+    _min: ExecutionVerificationMinAggregateOutputType | null
+    _max: ExecutionVerificationMaxAggregateOutputType | null
+  }
+
+  export type ExecutionVerificationMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    runId: string | null
+    receiptRef: string | null
+    verdict: string | null
+    criteriaJson: string | null
+    evidenceNote: string | null
+    verifierId: string | null
+    createdAt: Date | null
+  }
+
+  export type ExecutionVerificationMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    missionId: string | null
+    runId: string | null
+    receiptRef: string | null
+    verdict: string | null
+    criteriaJson: string | null
+    evidenceNote: string | null
+    verifierId: string | null
+    createdAt: Date | null
+  }
+
+  export type ExecutionVerificationCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    missionId: number
+    runId: number
+    receiptRef: number
+    verdict: number
+    criteriaJson: number
+    evidenceNote: number
+    verifierId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ExecutionVerificationMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    runId?: true
+    receiptRef?: true
+    verdict?: true
+    criteriaJson?: true
+    evidenceNote?: true
+    verifierId?: true
+    createdAt?: true
+  }
+
+  export type ExecutionVerificationMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    runId?: true
+    receiptRef?: true
+    verdict?: true
+    criteriaJson?: true
+    evidenceNote?: true
+    verifierId?: true
+    createdAt?: true
+  }
+
+  export type ExecutionVerificationCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    missionId?: true
+    runId?: true
+    receiptRef?: true
+    verdict?: true
+    criteriaJson?: true
+    evidenceNote?: true
+    verifierId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ExecutionVerificationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ExecutionVerification to aggregate.
+     */
+    where?: ExecutionVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExecutionVerifications to fetch.
+     */
+    orderBy?: ExecutionVerificationOrderByWithRelationInput | ExecutionVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ExecutionVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExecutionVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExecutionVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ExecutionVerifications
+    **/
+    _count?: true | ExecutionVerificationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ExecutionVerificationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ExecutionVerificationMaxAggregateInputType
+  }
+
+  export type GetExecutionVerificationAggregateType<T extends ExecutionVerificationAggregateArgs> = {
+        [P in keyof T & keyof AggregateExecutionVerification]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateExecutionVerification[P]>
+      : GetScalarType<T[P], AggregateExecutionVerification[P]>
+  }
+
+
+
+
+  export type ExecutionVerificationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ExecutionVerificationWhereInput
+    orderBy?: ExecutionVerificationOrderByWithAggregationInput | ExecutionVerificationOrderByWithAggregationInput[]
+    by: ExecutionVerificationScalarFieldEnum[] | ExecutionVerificationScalarFieldEnum
+    having?: ExecutionVerificationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ExecutionVerificationCountAggregateInputType | true
+    _min?: ExecutionVerificationMinAggregateInputType
+    _max?: ExecutionVerificationMaxAggregateInputType
+  }
+
+  export type ExecutionVerificationGroupByOutputType = {
+    id: string
+    organizationId: string
+    missionId: string
+    runId: string
+    receiptRef: string | null
+    verdict: string
+    criteriaJson: string
+    evidenceNote: string | null
+    verifierId: string
+    createdAt: Date
+    _count: ExecutionVerificationCountAggregateOutputType | null
+    _min: ExecutionVerificationMinAggregateOutputType | null
+    _max: ExecutionVerificationMaxAggregateOutputType | null
+  }
+
+  type GetExecutionVerificationGroupByPayload<T extends ExecutionVerificationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ExecutionVerificationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ExecutionVerificationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ExecutionVerificationGroupByOutputType[P]>
+            : GetScalarType<T[P], ExecutionVerificationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ExecutionVerificationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    runId?: boolean
+    receiptRef?: boolean
+    verdict?: boolean
+    criteriaJson?: boolean
+    evidenceNote?: boolean
+    verifierId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["executionVerification"]>
+
+  export type ExecutionVerificationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    runId?: boolean
+    receiptRef?: boolean
+    verdict?: boolean
+    criteriaJson?: boolean
+    evidenceNote?: boolean
+    verifierId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["executionVerification"]>
+
+  export type ExecutionVerificationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    runId?: boolean
+    receiptRef?: boolean
+    verdict?: boolean
+    criteriaJson?: boolean
+    evidenceNote?: boolean
+    verifierId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["executionVerification"]>
+
+  export type ExecutionVerificationSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    missionId?: boolean
+    runId?: boolean
+    receiptRef?: boolean
+    verdict?: boolean
+    criteriaJson?: boolean
+    evidenceNote?: boolean
+    verifierId?: boolean
+    createdAt?: boolean
+  }
+
+  export type ExecutionVerificationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "missionId" | "runId" | "receiptRef" | "verdict" | "criteriaJson" | "evidenceNote" | "verifierId" | "createdAt", ExtArgs["result"]["executionVerification"]>
+
+  export type $ExecutionVerificationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ExecutionVerification"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      missionId: string
+      /**
+       * 被核验的运行 = `Mission.sourceRunId`（创建时已由服务端校验锚点）。
+       */
+      runId: string
+      /**
+       * 真实回执引用：`AgentExecution.deliveryId`（软引用）。
+       */
+      receiptRef: string | null
+      /**
+       * enum-ish 判定值（当前恒为服务端派生的 'CONFIRMED'）。
+       */
+      verdict: string
+      /**
+       * 验收判据（JSON 文本数组）：逐条 `{ label, confirmed, note? }`。
+       */
+      criteriaJson: string
+      /**
+       * 人对事实的补充说明（**不是**模型输出；模型输出键在入口即被拒）。
+       */
+      evidenceNote: string | null
+      /**
+       * 第二人核验者（服务端会话派生）。**必须 !== AgentRun.requestedBy**。
+       */
+      verifierId: string
+      createdAt: Date
+    }, ExtArgs["result"]["executionVerification"]>
+    composites: {}
+  }
+
+  type ExecutionVerificationGetPayload<S extends boolean | null | undefined | ExecutionVerificationDefaultArgs> = $Result.GetResult<Prisma.$ExecutionVerificationPayload, S>
+
+  type ExecutionVerificationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ExecutionVerificationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ExecutionVerificationCountAggregateInputType | true
+    }
+
+  export interface ExecutionVerificationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ExecutionVerification'], meta: { name: 'ExecutionVerification' } }
+    /**
+     * Find zero or one ExecutionVerification that matches the filter.
+     * @param {ExecutionVerificationFindUniqueArgs} args - Arguments to find a ExecutionVerification
+     * @example
+     * // Get one ExecutionVerification
+     * const executionVerification = await prisma.executionVerification.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ExecutionVerificationFindUniqueArgs>(args: SelectSubset<T, ExecutionVerificationFindUniqueArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ExecutionVerification that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ExecutionVerificationFindUniqueOrThrowArgs} args - Arguments to find a ExecutionVerification
+     * @example
+     * // Get one ExecutionVerification
+     * const executionVerification = await prisma.executionVerification.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ExecutionVerificationFindUniqueOrThrowArgs>(args: SelectSubset<T, ExecutionVerificationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ExecutionVerification that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExecutionVerificationFindFirstArgs} args - Arguments to find a ExecutionVerification
+     * @example
+     * // Get one ExecutionVerification
+     * const executionVerification = await prisma.executionVerification.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ExecutionVerificationFindFirstArgs>(args?: SelectSubset<T, ExecutionVerificationFindFirstArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ExecutionVerification that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExecutionVerificationFindFirstOrThrowArgs} args - Arguments to find a ExecutionVerification
+     * @example
+     * // Get one ExecutionVerification
+     * const executionVerification = await prisma.executionVerification.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ExecutionVerificationFindFirstOrThrowArgs>(args?: SelectSubset<T, ExecutionVerificationFindFirstOrThrowArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ExecutionVerifications that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExecutionVerificationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ExecutionVerifications
+     * const executionVerifications = await prisma.executionVerification.findMany()
+     * 
+     * // Get first 10 ExecutionVerifications
+     * const executionVerifications = await prisma.executionVerification.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const executionVerificationWithIdOnly = await prisma.executionVerification.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ExecutionVerificationFindManyArgs>(args?: SelectSubset<T, ExecutionVerificationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ExecutionVerification.
+     * @param {ExecutionVerificationCreateArgs} args - Arguments to create a ExecutionVerification.
+     * @example
+     * // Create one ExecutionVerification
+     * const ExecutionVerification = await prisma.executionVerification.create({
+     *   data: {
+     *     // ... data to create a ExecutionVerification
+     *   }
+     * })
+     * 
+     */
+    create<T extends ExecutionVerificationCreateArgs>(args: SelectSubset<T, ExecutionVerificationCreateArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ExecutionVerifications.
+     * @param {ExecutionVerificationCreateManyArgs} args - Arguments to create many ExecutionVerifications.
+     * @example
+     * // Create many ExecutionVerifications
+     * const executionVerification = await prisma.executionVerification.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ExecutionVerificationCreateManyArgs>(args?: SelectSubset<T, ExecutionVerificationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ExecutionVerifications and returns the data saved in the database.
+     * @param {ExecutionVerificationCreateManyAndReturnArgs} args - Arguments to create many ExecutionVerifications.
+     * @example
+     * // Create many ExecutionVerifications
+     * const executionVerification = await prisma.executionVerification.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ExecutionVerifications and only return the `id`
+     * const executionVerificationWithIdOnly = await prisma.executionVerification.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ExecutionVerificationCreateManyAndReturnArgs>(args?: SelectSubset<T, ExecutionVerificationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ExecutionVerification.
+     * @param {ExecutionVerificationDeleteArgs} args - Arguments to delete one ExecutionVerification.
+     * @example
+     * // Delete one ExecutionVerification
+     * const ExecutionVerification = await prisma.executionVerification.delete({
+     *   where: {
+     *     // ... filter to delete one ExecutionVerification
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ExecutionVerificationDeleteArgs>(args: SelectSubset<T, ExecutionVerificationDeleteArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ExecutionVerification.
+     * @param {ExecutionVerificationUpdateArgs} args - Arguments to update one ExecutionVerification.
+     * @example
+     * // Update one ExecutionVerification
+     * const executionVerification = await prisma.executionVerification.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ExecutionVerificationUpdateArgs>(args: SelectSubset<T, ExecutionVerificationUpdateArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ExecutionVerifications.
+     * @param {ExecutionVerificationDeleteManyArgs} args - Arguments to filter ExecutionVerifications to delete.
+     * @example
+     * // Delete a few ExecutionVerifications
+     * const { count } = await prisma.executionVerification.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ExecutionVerificationDeleteManyArgs>(args?: SelectSubset<T, ExecutionVerificationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ExecutionVerifications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExecutionVerificationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ExecutionVerifications
+     * const executionVerification = await prisma.executionVerification.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ExecutionVerificationUpdateManyArgs>(args: SelectSubset<T, ExecutionVerificationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ExecutionVerifications and returns the data updated in the database.
+     * @param {ExecutionVerificationUpdateManyAndReturnArgs} args - Arguments to update many ExecutionVerifications.
+     * @example
+     * // Update many ExecutionVerifications
+     * const executionVerification = await prisma.executionVerification.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ExecutionVerifications and only return the `id`
+     * const executionVerificationWithIdOnly = await prisma.executionVerification.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ExecutionVerificationUpdateManyAndReturnArgs>(args: SelectSubset<T, ExecutionVerificationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ExecutionVerification.
+     * @param {ExecutionVerificationUpsertArgs} args - Arguments to update or create a ExecutionVerification.
+     * @example
+     * // Update or create a ExecutionVerification
+     * const executionVerification = await prisma.executionVerification.upsert({
+     *   create: {
+     *     // ... data to create a ExecutionVerification
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ExecutionVerification we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ExecutionVerificationUpsertArgs>(args: SelectSubset<T, ExecutionVerificationUpsertArgs<ExtArgs>>): Prisma__ExecutionVerificationClient<$Result.GetResult<Prisma.$ExecutionVerificationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ExecutionVerifications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExecutionVerificationCountArgs} args - Arguments to filter ExecutionVerifications to count.
+     * @example
+     * // Count the number of ExecutionVerifications
+     * const count = await prisma.executionVerification.count({
+     *   where: {
+     *     // ... the filter for the ExecutionVerifications we want to count
+     *   }
+     * })
+    **/
+    count<T extends ExecutionVerificationCountArgs>(
+      args?: Subset<T, ExecutionVerificationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ExecutionVerificationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ExecutionVerification.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExecutionVerificationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ExecutionVerificationAggregateArgs>(args: Subset<T, ExecutionVerificationAggregateArgs>): Prisma.PrismaPromise<GetExecutionVerificationAggregateType<T>>
+
+    /**
+     * Group by ExecutionVerification.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExecutionVerificationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ExecutionVerificationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ExecutionVerificationGroupByArgs['orderBy'] }
+        : { orderBy?: ExecutionVerificationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ExecutionVerificationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetExecutionVerificationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ExecutionVerification model
+   */
+  readonly fields: ExecutionVerificationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ExecutionVerification.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ExecutionVerificationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ExecutionVerification model
+   */
+  interface ExecutionVerificationFieldRefs {
+    readonly id: FieldRef<"ExecutionVerification", 'String'>
+    readonly organizationId: FieldRef<"ExecutionVerification", 'String'>
+    readonly missionId: FieldRef<"ExecutionVerification", 'String'>
+    readonly runId: FieldRef<"ExecutionVerification", 'String'>
+    readonly receiptRef: FieldRef<"ExecutionVerification", 'String'>
+    readonly verdict: FieldRef<"ExecutionVerification", 'String'>
+    readonly criteriaJson: FieldRef<"ExecutionVerification", 'String'>
+    readonly evidenceNote: FieldRef<"ExecutionVerification", 'String'>
+    readonly verifierId: FieldRef<"ExecutionVerification", 'String'>
+    readonly createdAt: FieldRef<"ExecutionVerification", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ExecutionVerification findUnique
+   */
+  export type ExecutionVerificationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * Filter, which ExecutionVerification to fetch.
+     */
+    where: ExecutionVerificationWhereUniqueInput
+  }
+
+  /**
+   * ExecutionVerification findUniqueOrThrow
+   */
+  export type ExecutionVerificationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * Filter, which ExecutionVerification to fetch.
+     */
+    where: ExecutionVerificationWhereUniqueInput
+  }
+
+  /**
+   * ExecutionVerification findFirst
+   */
+  export type ExecutionVerificationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * Filter, which ExecutionVerification to fetch.
+     */
+    where?: ExecutionVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExecutionVerifications to fetch.
+     */
+    orderBy?: ExecutionVerificationOrderByWithRelationInput | ExecutionVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ExecutionVerifications.
+     */
+    cursor?: ExecutionVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExecutionVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExecutionVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ExecutionVerifications.
+     */
+    distinct?: ExecutionVerificationScalarFieldEnum | ExecutionVerificationScalarFieldEnum[]
+  }
+
+  /**
+   * ExecutionVerification findFirstOrThrow
+   */
+  export type ExecutionVerificationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * Filter, which ExecutionVerification to fetch.
+     */
+    where?: ExecutionVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExecutionVerifications to fetch.
+     */
+    orderBy?: ExecutionVerificationOrderByWithRelationInput | ExecutionVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ExecutionVerifications.
+     */
+    cursor?: ExecutionVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExecutionVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExecutionVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ExecutionVerifications.
+     */
+    distinct?: ExecutionVerificationScalarFieldEnum | ExecutionVerificationScalarFieldEnum[]
+  }
+
+  /**
+   * ExecutionVerification findMany
+   */
+  export type ExecutionVerificationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * Filter, which ExecutionVerifications to fetch.
+     */
+    where?: ExecutionVerificationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExecutionVerifications to fetch.
+     */
+    orderBy?: ExecutionVerificationOrderByWithRelationInput | ExecutionVerificationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ExecutionVerifications.
+     */
+    cursor?: ExecutionVerificationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExecutionVerifications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExecutionVerifications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ExecutionVerifications.
+     */
+    distinct?: ExecutionVerificationScalarFieldEnum | ExecutionVerificationScalarFieldEnum[]
+  }
+
+  /**
+   * ExecutionVerification create
+   */
+  export type ExecutionVerificationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ExecutionVerification.
+     */
+    data: XOR<ExecutionVerificationCreateInput, ExecutionVerificationUncheckedCreateInput>
+  }
+
+  /**
+   * ExecutionVerification createMany
+   */
+  export type ExecutionVerificationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ExecutionVerifications.
+     */
+    data: ExecutionVerificationCreateManyInput | ExecutionVerificationCreateManyInput[]
+  }
+
+  /**
+   * ExecutionVerification createManyAndReturn
+   */
+  export type ExecutionVerificationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * The data used to create many ExecutionVerifications.
+     */
+    data: ExecutionVerificationCreateManyInput | ExecutionVerificationCreateManyInput[]
+  }
+
+  /**
+   * ExecutionVerification update
+   */
+  export type ExecutionVerificationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ExecutionVerification.
+     */
+    data: XOR<ExecutionVerificationUpdateInput, ExecutionVerificationUncheckedUpdateInput>
+    /**
+     * Choose, which ExecutionVerification to update.
+     */
+    where: ExecutionVerificationWhereUniqueInput
+  }
+
+  /**
+   * ExecutionVerification updateMany
+   */
+  export type ExecutionVerificationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ExecutionVerifications.
+     */
+    data: XOR<ExecutionVerificationUpdateManyMutationInput, ExecutionVerificationUncheckedUpdateManyInput>
+    /**
+     * Filter which ExecutionVerifications to update
+     */
+    where?: ExecutionVerificationWhereInput
+    /**
+     * Limit how many ExecutionVerifications to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ExecutionVerification updateManyAndReturn
+   */
+  export type ExecutionVerificationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * The data used to update ExecutionVerifications.
+     */
+    data: XOR<ExecutionVerificationUpdateManyMutationInput, ExecutionVerificationUncheckedUpdateManyInput>
+    /**
+     * Filter which ExecutionVerifications to update
+     */
+    where?: ExecutionVerificationWhereInput
+    /**
+     * Limit how many ExecutionVerifications to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ExecutionVerification upsert
+   */
+  export type ExecutionVerificationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ExecutionVerification to update in case it exists.
+     */
+    where: ExecutionVerificationWhereUniqueInput
+    /**
+     * In case the ExecutionVerification found by the `where` argument doesn't exist, create a new ExecutionVerification with this data.
+     */
+    create: XOR<ExecutionVerificationCreateInput, ExecutionVerificationUncheckedCreateInput>
+    /**
+     * In case the ExecutionVerification was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ExecutionVerificationUpdateInput, ExecutionVerificationUncheckedUpdateInput>
+  }
+
+  /**
+   * ExecutionVerification delete
+   */
+  export type ExecutionVerificationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+    /**
+     * Filter which ExecutionVerification to delete.
+     */
+    where: ExecutionVerificationWhereUniqueInput
+  }
+
+  /**
+   * ExecutionVerification deleteMany
+   */
+  export type ExecutionVerificationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ExecutionVerifications to delete
+     */
+    where?: ExecutionVerificationWhereInput
+    /**
+     * Limit how many ExecutionVerifications to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ExecutionVerification without action
+   */
+  export type ExecutionVerificationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExecutionVerification
+     */
+    select?: ExecutionVerificationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExecutionVerification
+     */
+    omit?: ExecutionVerificationOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AgentRunStageEvent
+   */
+
+  export type AggregateAgentRunStageEvent = {
+    _count: AgentRunStageEventCountAggregateOutputType | null
+    _avg: AgentRunStageEventAvgAggregateOutputType | null
+    _sum: AgentRunStageEventSumAggregateOutputType | null
+    _min: AgentRunStageEventMinAggregateOutputType | null
+    _max: AgentRunStageEventMaxAggregateOutputType | null
+  }
+
+  export type AgentRunStageEventAvgAggregateOutputType = {
+    seq: number | null
+  }
+
+  export type AgentRunStageEventSumAggregateOutputType = {
+    seq: number | null
+  }
+
+  export type AgentRunStageEventMinAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    runId: string | null
+    seq: number | null
+    stage: string | null
+    at: Date | null
+    detail: string | null
+  }
+
+  export type AgentRunStageEventMaxAggregateOutputType = {
+    id: string | null
+    organizationId: string | null
+    runId: string | null
+    seq: number | null
+    stage: string | null
+    at: Date | null
+    detail: string | null
+  }
+
+  export type AgentRunStageEventCountAggregateOutputType = {
+    id: number
+    organizationId: number
+    runId: number
+    seq: number
+    stage: number
+    at: number
+    detail: number
+    _all: number
+  }
+
+
+  export type AgentRunStageEventAvgAggregateInputType = {
+    seq?: true
+  }
+
+  export type AgentRunStageEventSumAggregateInputType = {
+    seq?: true
+  }
+
+  export type AgentRunStageEventMinAggregateInputType = {
+    id?: true
+    organizationId?: true
+    runId?: true
+    seq?: true
+    stage?: true
+    at?: true
+    detail?: true
+  }
+
+  export type AgentRunStageEventMaxAggregateInputType = {
+    id?: true
+    organizationId?: true
+    runId?: true
+    seq?: true
+    stage?: true
+    at?: true
+    detail?: true
+  }
+
+  export type AgentRunStageEventCountAggregateInputType = {
+    id?: true
+    organizationId?: true
+    runId?: true
+    seq?: true
+    stage?: true
+    at?: true
+    detail?: true
+    _all?: true
+  }
+
+  export type AgentRunStageEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentRunStageEvent to aggregate.
+     */
+    where?: AgentRunStageEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentRunStageEvents to fetch.
+     */
+    orderBy?: AgentRunStageEventOrderByWithRelationInput | AgentRunStageEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AgentRunStageEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentRunStageEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentRunStageEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AgentRunStageEvents
+    **/
+    _count?: true | AgentRunStageEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AgentRunStageEventAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AgentRunStageEventSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AgentRunStageEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AgentRunStageEventMaxAggregateInputType
+  }
+
+  export type GetAgentRunStageEventAggregateType<T extends AgentRunStageEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateAgentRunStageEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAgentRunStageEvent[P]>
+      : GetScalarType<T[P], AggregateAgentRunStageEvent[P]>
+  }
+
+
+
+
+  export type AgentRunStageEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentRunStageEventWhereInput
+    orderBy?: AgentRunStageEventOrderByWithAggregationInput | AgentRunStageEventOrderByWithAggregationInput[]
+    by: AgentRunStageEventScalarFieldEnum[] | AgentRunStageEventScalarFieldEnum
+    having?: AgentRunStageEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AgentRunStageEventCountAggregateInputType | true
+    _avg?: AgentRunStageEventAvgAggregateInputType
+    _sum?: AgentRunStageEventSumAggregateInputType
+    _min?: AgentRunStageEventMinAggregateInputType
+    _max?: AgentRunStageEventMaxAggregateInputType
+  }
+
+  export type AgentRunStageEventGroupByOutputType = {
+    id: string
+    organizationId: string
+    runId: string
+    seq: number
+    stage: string
+    at: Date
+    detail: string | null
+    _count: AgentRunStageEventCountAggregateOutputType | null
+    _avg: AgentRunStageEventAvgAggregateOutputType | null
+    _sum: AgentRunStageEventSumAggregateOutputType | null
+    _min: AgentRunStageEventMinAggregateOutputType | null
+    _max: AgentRunStageEventMaxAggregateOutputType | null
+  }
+
+  type GetAgentRunStageEventGroupByPayload<T extends AgentRunStageEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AgentRunStageEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AgentRunStageEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AgentRunStageEventGroupByOutputType[P]>
+            : GetScalarType<T[P], AgentRunStageEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AgentRunStageEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    seq?: boolean
+    stage?: boolean
+    at?: boolean
+    detail?: boolean
+  }, ExtArgs["result"]["agentRunStageEvent"]>
+
+  export type AgentRunStageEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    seq?: boolean
+    stage?: boolean
+    at?: boolean
+    detail?: boolean
+  }, ExtArgs["result"]["agentRunStageEvent"]>
+
+  export type AgentRunStageEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    seq?: boolean
+    stage?: boolean
+    at?: boolean
+    detail?: boolean
+  }, ExtArgs["result"]["agentRunStageEvent"]>
+
+  export type AgentRunStageEventSelectScalar = {
+    id?: boolean
+    organizationId?: boolean
+    runId?: boolean
+    seq?: boolean
+    stage?: boolean
+    at?: boolean
+    detail?: boolean
+  }
+
+  export type AgentRunStageEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "organizationId" | "runId" | "seq" | "stage" | "at" | "detail", ExtArgs["result"]["agentRunStageEvent"]>
+
+  export type $AgentRunStageEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AgentRunStageEvent"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      organizationId: string
+      runId: string
+      /**
+       * 运行内序号，从 1 开始；`@@unique([runId, seq])` 保证重放不插重复行，
+       * 也是 SSE `Last-Event-ID` 断点续传的基准。
+       */
+      seq: number
+      stage: string
+      at: Date
+      /**
+       * 阶段事实（JSON 文本，脱敏后的结构性信息）。
+       */
+      detail: string | null
+    }, ExtArgs["result"]["agentRunStageEvent"]>
+    composites: {}
+  }
+
+  type AgentRunStageEventGetPayload<S extends boolean | null | undefined | AgentRunStageEventDefaultArgs> = $Result.GetResult<Prisma.$AgentRunStageEventPayload, S>
+
+  type AgentRunStageEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AgentRunStageEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AgentRunStageEventCountAggregateInputType | true
+    }
+
+  export interface AgentRunStageEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AgentRunStageEvent'], meta: { name: 'AgentRunStageEvent' } }
+    /**
+     * Find zero or one AgentRunStageEvent that matches the filter.
+     * @param {AgentRunStageEventFindUniqueArgs} args - Arguments to find a AgentRunStageEvent
+     * @example
+     * // Get one AgentRunStageEvent
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AgentRunStageEventFindUniqueArgs>(args: SelectSubset<T, AgentRunStageEventFindUniqueArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AgentRunStageEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AgentRunStageEventFindUniqueOrThrowArgs} args - Arguments to find a AgentRunStageEvent
+     * @example
+     * // Get one AgentRunStageEvent
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AgentRunStageEventFindUniqueOrThrowArgs>(args: SelectSubset<T, AgentRunStageEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentRunStageEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentRunStageEventFindFirstArgs} args - Arguments to find a AgentRunStageEvent
+     * @example
+     * // Get one AgentRunStageEvent
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AgentRunStageEventFindFirstArgs>(args?: SelectSubset<T, AgentRunStageEventFindFirstArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AgentRunStageEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentRunStageEventFindFirstOrThrowArgs} args - Arguments to find a AgentRunStageEvent
+     * @example
+     * // Get one AgentRunStageEvent
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AgentRunStageEventFindFirstOrThrowArgs>(args?: SelectSubset<T, AgentRunStageEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AgentRunStageEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentRunStageEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AgentRunStageEvents
+     * const agentRunStageEvents = await prisma.agentRunStageEvent.findMany()
+     * 
+     * // Get first 10 AgentRunStageEvents
+     * const agentRunStageEvents = await prisma.agentRunStageEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const agentRunStageEventWithIdOnly = await prisma.agentRunStageEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AgentRunStageEventFindManyArgs>(args?: SelectSubset<T, AgentRunStageEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AgentRunStageEvent.
+     * @param {AgentRunStageEventCreateArgs} args - Arguments to create a AgentRunStageEvent.
+     * @example
+     * // Create one AgentRunStageEvent
+     * const AgentRunStageEvent = await prisma.agentRunStageEvent.create({
+     *   data: {
+     *     // ... data to create a AgentRunStageEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends AgentRunStageEventCreateArgs>(args: SelectSubset<T, AgentRunStageEventCreateArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AgentRunStageEvents.
+     * @param {AgentRunStageEventCreateManyArgs} args - Arguments to create many AgentRunStageEvents.
+     * @example
+     * // Create many AgentRunStageEvents
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AgentRunStageEventCreateManyArgs>(args?: SelectSubset<T, AgentRunStageEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AgentRunStageEvents and returns the data saved in the database.
+     * @param {AgentRunStageEventCreateManyAndReturnArgs} args - Arguments to create many AgentRunStageEvents.
+     * @example
+     * // Create many AgentRunStageEvents
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AgentRunStageEvents and only return the `id`
+     * const agentRunStageEventWithIdOnly = await prisma.agentRunStageEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AgentRunStageEventCreateManyAndReturnArgs>(args?: SelectSubset<T, AgentRunStageEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AgentRunStageEvent.
+     * @param {AgentRunStageEventDeleteArgs} args - Arguments to delete one AgentRunStageEvent.
+     * @example
+     * // Delete one AgentRunStageEvent
+     * const AgentRunStageEvent = await prisma.agentRunStageEvent.delete({
+     *   where: {
+     *     // ... filter to delete one AgentRunStageEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AgentRunStageEventDeleteArgs>(args: SelectSubset<T, AgentRunStageEventDeleteArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AgentRunStageEvent.
+     * @param {AgentRunStageEventUpdateArgs} args - Arguments to update one AgentRunStageEvent.
+     * @example
+     * // Update one AgentRunStageEvent
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AgentRunStageEventUpdateArgs>(args: SelectSubset<T, AgentRunStageEventUpdateArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AgentRunStageEvents.
+     * @param {AgentRunStageEventDeleteManyArgs} args - Arguments to filter AgentRunStageEvents to delete.
+     * @example
+     * // Delete a few AgentRunStageEvents
+     * const { count } = await prisma.agentRunStageEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AgentRunStageEventDeleteManyArgs>(args?: SelectSubset<T, AgentRunStageEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentRunStageEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentRunStageEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AgentRunStageEvents
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AgentRunStageEventUpdateManyArgs>(args: SelectSubset<T, AgentRunStageEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentRunStageEvents and returns the data updated in the database.
+     * @param {AgentRunStageEventUpdateManyAndReturnArgs} args - Arguments to update many AgentRunStageEvents.
+     * @example
+     * // Update many AgentRunStageEvents
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AgentRunStageEvents and only return the `id`
+     * const agentRunStageEventWithIdOnly = await prisma.agentRunStageEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AgentRunStageEventUpdateManyAndReturnArgs>(args: SelectSubset<T, AgentRunStageEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AgentRunStageEvent.
+     * @param {AgentRunStageEventUpsertArgs} args - Arguments to update or create a AgentRunStageEvent.
+     * @example
+     * // Update or create a AgentRunStageEvent
+     * const agentRunStageEvent = await prisma.agentRunStageEvent.upsert({
+     *   create: {
+     *     // ... data to create a AgentRunStageEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AgentRunStageEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AgentRunStageEventUpsertArgs>(args: SelectSubset<T, AgentRunStageEventUpsertArgs<ExtArgs>>): Prisma__AgentRunStageEventClient<$Result.GetResult<Prisma.$AgentRunStageEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AgentRunStageEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentRunStageEventCountArgs} args - Arguments to filter AgentRunStageEvents to count.
+     * @example
+     * // Count the number of AgentRunStageEvents
+     * const count = await prisma.agentRunStageEvent.count({
+     *   where: {
+     *     // ... the filter for the AgentRunStageEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends AgentRunStageEventCountArgs>(
+      args?: Subset<T, AgentRunStageEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AgentRunStageEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AgentRunStageEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentRunStageEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AgentRunStageEventAggregateArgs>(args: Subset<T, AgentRunStageEventAggregateArgs>): Prisma.PrismaPromise<GetAgentRunStageEventAggregateType<T>>
+
+    /**
+     * Group by AgentRunStageEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentRunStageEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AgentRunStageEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AgentRunStageEventGroupByArgs['orderBy'] }
+        : { orderBy?: AgentRunStageEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AgentRunStageEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAgentRunStageEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AgentRunStageEvent model
+   */
+  readonly fields: AgentRunStageEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AgentRunStageEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AgentRunStageEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AgentRunStageEvent model
+   */
+  interface AgentRunStageEventFieldRefs {
+    readonly id: FieldRef<"AgentRunStageEvent", 'String'>
+    readonly organizationId: FieldRef<"AgentRunStageEvent", 'String'>
+    readonly runId: FieldRef<"AgentRunStageEvent", 'String'>
+    readonly seq: FieldRef<"AgentRunStageEvent", 'Int'>
+    readonly stage: FieldRef<"AgentRunStageEvent", 'String'>
+    readonly at: FieldRef<"AgentRunStageEvent", 'DateTime'>
+    readonly detail: FieldRef<"AgentRunStageEvent", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AgentRunStageEvent findUnique
+   */
+  export type AgentRunStageEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentRunStageEvent to fetch.
+     */
+    where: AgentRunStageEventWhereUniqueInput
+  }
+
+  /**
+   * AgentRunStageEvent findUniqueOrThrow
+   */
+  export type AgentRunStageEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentRunStageEvent to fetch.
+     */
+    where: AgentRunStageEventWhereUniqueInput
+  }
+
+  /**
+   * AgentRunStageEvent findFirst
+   */
+  export type AgentRunStageEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentRunStageEvent to fetch.
+     */
+    where?: AgentRunStageEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentRunStageEvents to fetch.
+     */
+    orderBy?: AgentRunStageEventOrderByWithRelationInput | AgentRunStageEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentRunStageEvents.
+     */
+    cursor?: AgentRunStageEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentRunStageEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentRunStageEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentRunStageEvents.
+     */
+    distinct?: AgentRunStageEventScalarFieldEnum | AgentRunStageEventScalarFieldEnum[]
+  }
+
+  /**
+   * AgentRunStageEvent findFirstOrThrow
+   */
+  export type AgentRunStageEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentRunStageEvent to fetch.
+     */
+    where?: AgentRunStageEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentRunStageEvents to fetch.
+     */
+    orderBy?: AgentRunStageEventOrderByWithRelationInput | AgentRunStageEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentRunStageEvents.
+     */
+    cursor?: AgentRunStageEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentRunStageEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentRunStageEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentRunStageEvents.
+     */
+    distinct?: AgentRunStageEventScalarFieldEnum | AgentRunStageEventScalarFieldEnum[]
+  }
+
+  /**
+   * AgentRunStageEvent findMany
+   */
+  export type AgentRunStageEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * Filter, which AgentRunStageEvents to fetch.
+     */
+    where?: AgentRunStageEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentRunStageEvents to fetch.
+     */
+    orderBy?: AgentRunStageEventOrderByWithRelationInput | AgentRunStageEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AgentRunStageEvents.
+     */
+    cursor?: AgentRunStageEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentRunStageEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentRunStageEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentRunStageEvents.
+     */
+    distinct?: AgentRunStageEventScalarFieldEnum | AgentRunStageEventScalarFieldEnum[]
+  }
+
+  /**
+   * AgentRunStageEvent create
+   */
+  export type AgentRunStageEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AgentRunStageEvent.
+     */
+    data: XOR<AgentRunStageEventCreateInput, AgentRunStageEventUncheckedCreateInput>
+  }
+
+  /**
+   * AgentRunStageEvent createMany
+   */
+  export type AgentRunStageEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AgentRunStageEvents.
+     */
+    data: AgentRunStageEventCreateManyInput | AgentRunStageEventCreateManyInput[]
+  }
+
+  /**
+   * AgentRunStageEvent createManyAndReturn
+   */
+  export type AgentRunStageEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many AgentRunStageEvents.
+     */
+    data: AgentRunStageEventCreateManyInput | AgentRunStageEventCreateManyInput[]
+  }
+
+  /**
+   * AgentRunStageEvent update
+   */
+  export type AgentRunStageEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AgentRunStageEvent.
+     */
+    data: XOR<AgentRunStageEventUpdateInput, AgentRunStageEventUncheckedUpdateInput>
+    /**
+     * Choose, which AgentRunStageEvent to update.
+     */
+    where: AgentRunStageEventWhereUniqueInput
+  }
+
+  /**
+   * AgentRunStageEvent updateMany
+   */
+  export type AgentRunStageEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AgentRunStageEvents.
+     */
+    data: XOR<AgentRunStageEventUpdateManyMutationInput, AgentRunStageEventUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentRunStageEvents to update
+     */
+    where?: AgentRunStageEventWhereInput
+    /**
+     * Limit how many AgentRunStageEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentRunStageEvent updateManyAndReturn
+   */
+  export type AgentRunStageEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * The data used to update AgentRunStageEvents.
+     */
+    data: XOR<AgentRunStageEventUpdateManyMutationInput, AgentRunStageEventUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentRunStageEvents to update
+     */
+    where?: AgentRunStageEventWhereInput
+    /**
+     * Limit how many AgentRunStageEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentRunStageEvent upsert
+   */
+  export type AgentRunStageEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AgentRunStageEvent to update in case it exists.
+     */
+    where: AgentRunStageEventWhereUniqueInput
+    /**
+     * In case the AgentRunStageEvent found by the `where` argument doesn't exist, create a new AgentRunStageEvent with this data.
+     */
+    create: XOR<AgentRunStageEventCreateInput, AgentRunStageEventUncheckedCreateInput>
+    /**
+     * In case the AgentRunStageEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AgentRunStageEventUpdateInput, AgentRunStageEventUncheckedUpdateInput>
+  }
+
+  /**
+   * AgentRunStageEvent delete
+   */
+  export type AgentRunStageEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+    /**
+     * Filter which AgentRunStageEvent to delete.
+     */
+    where: AgentRunStageEventWhereUniqueInput
+  }
+
+  /**
+   * AgentRunStageEvent deleteMany
+   */
+  export type AgentRunStageEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentRunStageEvents to delete
+     */
+    where?: AgentRunStageEventWhereInput
+    /**
+     * Limit how many AgentRunStageEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AgentRunStageEvent without action
+   */
+  export type AgentRunStageEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentRunStageEvent
+     */
+    select?: AgentRunStageEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AgentRunStageEvent
+     */
+    omit?: AgentRunStageEventOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -85381,6 +88988,7 @@ export namespace Prisma {
     id: 'id',
     organizationId: 'organizationId',
     ownerId: 'ownerId',
+    sourceRunId: 'sourceRunId',
     title: 'title',
     goal: 'goal',
     offer: 'offer',
@@ -85443,6 +89051,7 @@ export namespace Prisma {
     requestHash: 'requestHash',
     resourceType: 'resourceType',
     resourceId: 'resourceId',
+    actorId: 'actorId',
     createdAt: 'createdAt'
   };
 
@@ -86261,6 +89870,53 @@ export namespace Prisma {
   };
 
   export type TenantAuditEventScalarFieldEnum = (typeof TenantAuditEventScalarFieldEnum)[keyof typeof TenantAuditEventScalarFieldEnum]
+
+
+  export const MissionSpecRevisionScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    missionId: 'missionId',
+    version: 'version',
+    specJson: 'specJson',
+    goal: 'goal',
+    offer: 'offer',
+    successCriteria: 'successCriteria',
+    expiresAt: 'expiresAt',
+    changeNote: 'changeNote',
+    actorId: 'actorId',
+    createdAt: 'createdAt'
+  };
+
+  export type MissionSpecRevisionScalarFieldEnum = (typeof MissionSpecRevisionScalarFieldEnum)[keyof typeof MissionSpecRevisionScalarFieldEnum]
+
+
+  export const ExecutionVerificationScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    missionId: 'missionId',
+    runId: 'runId',
+    receiptRef: 'receiptRef',
+    verdict: 'verdict',
+    criteriaJson: 'criteriaJson',
+    evidenceNote: 'evidenceNote',
+    verifierId: 'verifierId',
+    createdAt: 'createdAt'
+  };
+
+  export type ExecutionVerificationScalarFieldEnum = (typeof ExecutionVerificationScalarFieldEnum)[keyof typeof ExecutionVerificationScalarFieldEnum]
+
+
+  export const AgentRunStageEventScalarFieldEnum: {
+    id: 'id',
+    organizationId: 'organizationId',
+    runId: 'runId',
+    seq: 'seq',
+    stage: 'stage',
+    at: 'at',
+    detail: 'detail'
+  };
+
+  export type AgentRunStageEventScalarFieldEnum = (typeof AgentRunStageEventScalarFieldEnum)[keyof typeof AgentRunStageEventScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -88222,6 +91878,7 @@ export namespace Prisma {
     id?: StringFilter<"Mission"> | string
     organizationId?: StringFilter<"Mission"> | string
     ownerId?: StringFilter<"Mission"> | string
+    sourceRunId?: StringNullableFilter<"Mission"> | string | null
     title?: StringFilter<"Mission"> | string
     goal?: StringFilter<"Mission"> | string
     offer?: StringFilter<"Mission"> | string
@@ -88247,6 +91904,7 @@ export namespace Prisma {
     id?: SortOrder
     organizationId?: SortOrder
     ownerId?: SortOrder
+    sourceRunId?: SortOrderInput | SortOrder
     title?: SortOrder
     goal?: SortOrder
     offer?: SortOrder
@@ -88276,6 +91934,7 @@ export namespace Prisma {
     NOT?: MissionWhereInput | MissionWhereInput[]
     organizationId?: StringFilter<"Mission"> | string
     ownerId?: StringFilter<"Mission"> | string
+    sourceRunId?: StringNullableFilter<"Mission"> | string | null
     title?: StringFilter<"Mission"> | string
     goal?: StringFilter<"Mission"> | string
     offer?: StringFilter<"Mission"> | string
@@ -88300,6 +91959,7 @@ export namespace Prisma {
     id?: SortOrder
     organizationId?: SortOrder
     ownerId?: SortOrder
+    sourceRunId?: SortOrderInput | SortOrder
     title?: SortOrder
     goal?: SortOrder
     offer?: SortOrder
@@ -88328,6 +91988,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Mission"> | string
     organizationId?: StringWithAggregatesFilter<"Mission"> | string
     ownerId?: StringWithAggregatesFilter<"Mission"> | string
+    sourceRunId?: StringNullableWithAggregatesFilter<"Mission"> | string | null
     title?: StringWithAggregatesFilter<"Mission"> | string
     goal?: StringWithAggregatesFilter<"Mission"> | string
     offer?: StringWithAggregatesFilter<"Mission"> | string
@@ -88544,6 +92205,7 @@ export namespace Prisma {
     requestHash?: StringFilter<"IdempotencyRecord"> | string
     resourceType?: StringFilter<"IdempotencyRecord"> | string
     resourceId?: StringNullableFilter<"IdempotencyRecord"> | string | null
+    actorId?: StringNullableFilter<"IdempotencyRecord"> | string | null
     createdAt?: DateTimeFilter<"IdempotencyRecord"> | Date | string
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
   }
@@ -88556,6 +92218,7 @@ export namespace Prisma {
     requestHash?: SortOrder
     resourceType?: SortOrder
     resourceId?: SortOrderInput | SortOrder
+    actorId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     organization?: OrganizationOrderByWithRelationInput
   }
@@ -88572,6 +92235,7 @@ export namespace Prisma {
     requestHash?: StringFilter<"IdempotencyRecord"> | string
     resourceType?: StringFilter<"IdempotencyRecord"> | string
     resourceId?: StringNullableFilter<"IdempotencyRecord"> | string | null
+    actorId?: StringNullableFilter<"IdempotencyRecord"> | string | null
     createdAt?: DateTimeFilter<"IdempotencyRecord"> | Date | string
     organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
   }, "id" | "organizationId_scope_key">
@@ -88584,6 +92248,7 @@ export namespace Prisma {
     requestHash?: SortOrder
     resourceType?: SortOrder
     resourceId?: SortOrderInput | SortOrder
+    actorId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: IdempotencyRecordCountOrderByAggregateInput
     _max?: IdempotencyRecordMaxOrderByAggregateInput
@@ -88601,6 +92266,7 @@ export namespace Prisma {
     requestHash?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
     resourceType?: StringWithAggregatesFilter<"IdempotencyRecord"> | string
     resourceId?: StringNullableWithAggregatesFilter<"IdempotencyRecord"> | string | null
+    actorId?: StringNullableWithAggregatesFilter<"IdempotencyRecord"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"IdempotencyRecord"> | Date | string
   }
 
@@ -92992,6 +96658,239 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"TenantAuditEvent"> | Date | string
   }
 
+  export type MissionSpecRevisionWhereInput = {
+    AND?: MissionSpecRevisionWhereInput | MissionSpecRevisionWhereInput[]
+    OR?: MissionSpecRevisionWhereInput[]
+    NOT?: MissionSpecRevisionWhereInput | MissionSpecRevisionWhereInput[]
+    id?: StringFilter<"MissionSpecRevision"> | string
+    organizationId?: StringFilter<"MissionSpecRevision"> | string
+    missionId?: StringFilter<"MissionSpecRevision"> | string
+    version?: IntFilter<"MissionSpecRevision"> | number
+    specJson?: StringFilter<"MissionSpecRevision"> | string
+    goal?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    offer?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    successCriteria?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    expiresAt?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    changeNote?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    actorId?: StringFilter<"MissionSpecRevision"> | string
+    createdAt?: DateTimeFilter<"MissionSpecRevision"> | Date | string
+  }
+
+  export type MissionSpecRevisionOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    version?: SortOrder
+    specJson?: SortOrder
+    goal?: SortOrderInput | SortOrder
+    offer?: SortOrderInput | SortOrder
+    successCriteria?: SortOrderInput | SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    changeNote?: SortOrderInput | SortOrder
+    actorId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MissionSpecRevisionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    missionId_version?: MissionSpecRevisionMissionIdVersionCompoundUniqueInput
+    AND?: MissionSpecRevisionWhereInput | MissionSpecRevisionWhereInput[]
+    OR?: MissionSpecRevisionWhereInput[]
+    NOT?: MissionSpecRevisionWhereInput | MissionSpecRevisionWhereInput[]
+    organizationId?: StringFilter<"MissionSpecRevision"> | string
+    missionId?: StringFilter<"MissionSpecRevision"> | string
+    version?: IntFilter<"MissionSpecRevision"> | number
+    specJson?: StringFilter<"MissionSpecRevision"> | string
+    goal?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    offer?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    successCriteria?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    expiresAt?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    changeNote?: StringNullableFilter<"MissionSpecRevision"> | string | null
+    actorId?: StringFilter<"MissionSpecRevision"> | string
+    createdAt?: DateTimeFilter<"MissionSpecRevision"> | Date | string
+  }, "id" | "missionId_version">
+
+  export type MissionSpecRevisionOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    version?: SortOrder
+    specJson?: SortOrder
+    goal?: SortOrderInput | SortOrder
+    offer?: SortOrderInput | SortOrder
+    successCriteria?: SortOrderInput | SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    changeNote?: SortOrderInput | SortOrder
+    actorId?: SortOrder
+    createdAt?: SortOrder
+    _count?: MissionSpecRevisionCountOrderByAggregateInput
+    _avg?: MissionSpecRevisionAvgOrderByAggregateInput
+    _max?: MissionSpecRevisionMaxOrderByAggregateInput
+    _min?: MissionSpecRevisionMinOrderByAggregateInput
+    _sum?: MissionSpecRevisionSumOrderByAggregateInput
+  }
+
+  export type MissionSpecRevisionScalarWhereWithAggregatesInput = {
+    AND?: MissionSpecRevisionScalarWhereWithAggregatesInput | MissionSpecRevisionScalarWhereWithAggregatesInput[]
+    OR?: MissionSpecRevisionScalarWhereWithAggregatesInput[]
+    NOT?: MissionSpecRevisionScalarWhereWithAggregatesInput | MissionSpecRevisionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MissionSpecRevision"> | string
+    organizationId?: StringWithAggregatesFilter<"MissionSpecRevision"> | string
+    missionId?: StringWithAggregatesFilter<"MissionSpecRevision"> | string
+    version?: IntWithAggregatesFilter<"MissionSpecRevision"> | number
+    specJson?: StringWithAggregatesFilter<"MissionSpecRevision"> | string
+    goal?: StringNullableWithAggregatesFilter<"MissionSpecRevision"> | string | null
+    offer?: StringNullableWithAggregatesFilter<"MissionSpecRevision"> | string | null
+    successCriteria?: StringNullableWithAggregatesFilter<"MissionSpecRevision"> | string | null
+    expiresAt?: StringNullableWithAggregatesFilter<"MissionSpecRevision"> | string | null
+    changeNote?: StringNullableWithAggregatesFilter<"MissionSpecRevision"> | string | null
+    actorId?: StringWithAggregatesFilter<"MissionSpecRevision"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"MissionSpecRevision"> | Date | string
+  }
+
+  export type ExecutionVerificationWhereInput = {
+    AND?: ExecutionVerificationWhereInput | ExecutionVerificationWhereInput[]
+    OR?: ExecutionVerificationWhereInput[]
+    NOT?: ExecutionVerificationWhereInput | ExecutionVerificationWhereInput[]
+    id?: StringFilter<"ExecutionVerification"> | string
+    organizationId?: StringFilter<"ExecutionVerification"> | string
+    missionId?: StringFilter<"ExecutionVerification"> | string
+    runId?: StringFilter<"ExecutionVerification"> | string
+    receiptRef?: StringNullableFilter<"ExecutionVerification"> | string | null
+    verdict?: StringFilter<"ExecutionVerification"> | string
+    criteriaJson?: StringFilter<"ExecutionVerification"> | string
+    evidenceNote?: StringNullableFilter<"ExecutionVerification"> | string | null
+    verifierId?: StringFilter<"ExecutionVerification"> | string
+    createdAt?: DateTimeFilter<"ExecutionVerification"> | Date | string
+  }
+
+  export type ExecutionVerificationOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    runId?: SortOrder
+    receiptRef?: SortOrderInput | SortOrder
+    verdict?: SortOrder
+    criteriaJson?: SortOrder
+    evidenceNote?: SortOrderInput | SortOrder
+    verifierId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ExecutionVerificationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    missionId_runId?: ExecutionVerificationMissionIdRunIdCompoundUniqueInput
+    AND?: ExecutionVerificationWhereInput | ExecutionVerificationWhereInput[]
+    OR?: ExecutionVerificationWhereInput[]
+    NOT?: ExecutionVerificationWhereInput | ExecutionVerificationWhereInput[]
+    organizationId?: StringFilter<"ExecutionVerification"> | string
+    missionId?: StringFilter<"ExecutionVerification"> | string
+    runId?: StringFilter<"ExecutionVerification"> | string
+    receiptRef?: StringNullableFilter<"ExecutionVerification"> | string | null
+    verdict?: StringFilter<"ExecutionVerification"> | string
+    criteriaJson?: StringFilter<"ExecutionVerification"> | string
+    evidenceNote?: StringNullableFilter<"ExecutionVerification"> | string | null
+    verifierId?: StringFilter<"ExecutionVerification"> | string
+    createdAt?: DateTimeFilter<"ExecutionVerification"> | Date | string
+  }, "id" | "missionId_runId">
+
+  export type ExecutionVerificationOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    runId?: SortOrder
+    receiptRef?: SortOrderInput | SortOrder
+    verdict?: SortOrder
+    criteriaJson?: SortOrder
+    evidenceNote?: SortOrderInput | SortOrder
+    verifierId?: SortOrder
+    createdAt?: SortOrder
+    _count?: ExecutionVerificationCountOrderByAggregateInput
+    _max?: ExecutionVerificationMaxOrderByAggregateInput
+    _min?: ExecutionVerificationMinOrderByAggregateInput
+  }
+
+  export type ExecutionVerificationScalarWhereWithAggregatesInput = {
+    AND?: ExecutionVerificationScalarWhereWithAggregatesInput | ExecutionVerificationScalarWhereWithAggregatesInput[]
+    OR?: ExecutionVerificationScalarWhereWithAggregatesInput[]
+    NOT?: ExecutionVerificationScalarWhereWithAggregatesInput | ExecutionVerificationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ExecutionVerification"> | string
+    organizationId?: StringWithAggregatesFilter<"ExecutionVerification"> | string
+    missionId?: StringWithAggregatesFilter<"ExecutionVerification"> | string
+    runId?: StringWithAggregatesFilter<"ExecutionVerification"> | string
+    receiptRef?: StringNullableWithAggregatesFilter<"ExecutionVerification"> | string | null
+    verdict?: StringWithAggregatesFilter<"ExecutionVerification"> | string
+    criteriaJson?: StringWithAggregatesFilter<"ExecutionVerification"> | string
+    evidenceNote?: StringNullableWithAggregatesFilter<"ExecutionVerification"> | string | null
+    verifierId?: StringWithAggregatesFilter<"ExecutionVerification"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ExecutionVerification"> | Date | string
+  }
+
+  export type AgentRunStageEventWhereInput = {
+    AND?: AgentRunStageEventWhereInput | AgentRunStageEventWhereInput[]
+    OR?: AgentRunStageEventWhereInput[]
+    NOT?: AgentRunStageEventWhereInput | AgentRunStageEventWhereInput[]
+    id?: StringFilter<"AgentRunStageEvent"> | string
+    organizationId?: StringFilter<"AgentRunStageEvent"> | string
+    runId?: StringFilter<"AgentRunStageEvent"> | string
+    seq?: IntFilter<"AgentRunStageEvent"> | number
+    stage?: StringFilter<"AgentRunStageEvent"> | string
+    at?: DateTimeFilter<"AgentRunStageEvent"> | Date | string
+    detail?: StringNullableFilter<"AgentRunStageEvent"> | string | null
+  }
+
+  export type AgentRunStageEventOrderByWithRelationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    seq?: SortOrder
+    stage?: SortOrder
+    at?: SortOrder
+    detail?: SortOrderInput | SortOrder
+  }
+
+  export type AgentRunStageEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    runId_seq?: AgentRunStageEventRunIdSeqCompoundUniqueInput
+    AND?: AgentRunStageEventWhereInput | AgentRunStageEventWhereInput[]
+    OR?: AgentRunStageEventWhereInput[]
+    NOT?: AgentRunStageEventWhereInput | AgentRunStageEventWhereInput[]
+    organizationId?: StringFilter<"AgentRunStageEvent"> | string
+    runId?: StringFilter<"AgentRunStageEvent"> | string
+    seq?: IntFilter<"AgentRunStageEvent"> | number
+    stage?: StringFilter<"AgentRunStageEvent"> | string
+    at?: DateTimeFilter<"AgentRunStageEvent"> | Date | string
+    detail?: StringNullableFilter<"AgentRunStageEvent"> | string | null
+  }, "id" | "runId_seq">
+
+  export type AgentRunStageEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    seq?: SortOrder
+    stage?: SortOrder
+    at?: SortOrder
+    detail?: SortOrderInput | SortOrder
+    _count?: AgentRunStageEventCountOrderByAggregateInput
+    _avg?: AgentRunStageEventAvgOrderByAggregateInput
+    _max?: AgentRunStageEventMaxOrderByAggregateInput
+    _min?: AgentRunStageEventMinOrderByAggregateInput
+    _sum?: AgentRunStageEventSumOrderByAggregateInput
+  }
+
+  export type AgentRunStageEventScalarWhereWithAggregatesInput = {
+    AND?: AgentRunStageEventScalarWhereWithAggregatesInput | AgentRunStageEventScalarWhereWithAggregatesInput[]
+    OR?: AgentRunStageEventScalarWhereWithAggregatesInput[]
+    NOT?: AgentRunStageEventScalarWhereWithAggregatesInput | AgentRunStageEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AgentRunStageEvent"> | string
+    organizationId?: StringWithAggregatesFilter<"AgentRunStageEvent"> | string
+    runId?: StringWithAggregatesFilter<"AgentRunStageEvent"> | string
+    seq?: IntWithAggregatesFilter<"AgentRunStageEvent"> | number
+    stage?: StringWithAggregatesFilter<"AgentRunStageEvent"> | string
+    at?: DateTimeWithAggregatesFilter<"AgentRunStageEvent"> | Date | string
+    detail?: StringNullableWithAggregatesFilter<"AgentRunStageEvent"> | string | null
+  }
+
   export type AgentRunCreateInput = {
     id?: string
     skill: string
@@ -94702,6 +98601,7 @@ export namespace Prisma {
 
   export type MissionCreateInput = {
     id?: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -94727,6 +98627,7 @@ export namespace Prisma {
     id?: string
     organizationId: string
     ownerId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -94748,6 +98649,7 @@ export namespace Prisma {
 
   export type MissionUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -94773,6 +98675,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -94796,6 +98699,7 @@ export namespace Prisma {
     id?: string
     organizationId: string
     ownerId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -94814,6 +98718,7 @@ export namespace Prisma {
 
   export type MissionUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -94834,6 +98739,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -95054,6 +98960,7 @@ export namespace Prisma {
     requestHash: string
     resourceType: string
     resourceId?: string | null
+    actorId?: string | null
     createdAt?: Date | string
     organization: OrganizationCreateNestedOneWithoutIdempotencyRecordsInput
   }
@@ -95066,6 +98973,7 @@ export namespace Prisma {
     requestHash: string
     resourceType: string
     resourceId?: string | null
+    actorId?: string | null
     createdAt?: Date | string
   }
 
@@ -95076,6 +98984,7 @@ export namespace Prisma {
     requestHash?: StringFieldUpdateOperationsInput | string
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutIdempotencyRecordsNestedInput
   }
@@ -95088,6 +98997,7 @@ export namespace Prisma {
     requestHash?: StringFieldUpdateOperationsInput | string
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -95099,6 +99009,7 @@ export namespace Prisma {
     requestHash: string
     resourceType: string
     resourceId?: string | null
+    actorId?: string | null
     createdAt?: Date | string
   }
 
@@ -95109,6 +99020,7 @@ export namespace Prisma {
     requestHash?: StringFieldUpdateOperationsInput | string
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -95120,6 +99032,7 @@ export namespace Prisma {
     requestHash?: StringFieldUpdateOperationsInput | string
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -100133,6 +104046,272 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type MissionSpecRevisionCreateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    version: number
+    specJson: string
+    goal?: string | null
+    offer?: string | null
+    successCriteria?: string | null
+    expiresAt?: string | null
+    changeNote?: string | null
+    actorId: string
+    createdAt?: Date | string
+  }
+
+  export type MissionSpecRevisionUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    version: number
+    specJson: string
+    goal?: string | null
+    offer?: string | null
+    successCriteria?: string | null
+    expiresAt?: string | null
+    changeNote?: string | null
+    actorId: string
+    createdAt?: Date | string
+  }
+
+  export type MissionSpecRevisionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    version?: IntFieldUpdateOperationsInput | number
+    specJson?: StringFieldUpdateOperationsInput | string
+    goal?: NullableStringFieldUpdateOperationsInput | string | null
+    offer?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionSpecRevisionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    version?: IntFieldUpdateOperationsInput | number
+    specJson?: StringFieldUpdateOperationsInput | string
+    goal?: NullableStringFieldUpdateOperationsInput | string | null
+    offer?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionSpecRevisionCreateManyInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    version: number
+    specJson: string
+    goal?: string | null
+    offer?: string | null
+    successCriteria?: string | null
+    expiresAt?: string | null
+    changeNote?: string | null
+    actorId: string
+    createdAt?: Date | string
+  }
+
+  export type MissionSpecRevisionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    version?: IntFieldUpdateOperationsInput | number
+    specJson?: StringFieldUpdateOperationsInput | string
+    goal?: NullableStringFieldUpdateOperationsInput | string | null
+    offer?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissionSpecRevisionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    version?: IntFieldUpdateOperationsInput | number
+    specJson?: StringFieldUpdateOperationsInput | string
+    goal?: NullableStringFieldUpdateOperationsInput | string | null
+    offer?: NullableStringFieldUpdateOperationsInput | string | null
+    successCriteria?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: NullableStringFieldUpdateOperationsInput | string | null
+    changeNote?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExecutionVerificationCreateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    runId: string
+    receiptRef?: string | null
+    verdict: string
+    criteriaJson: string
+    evidenceNote?: string | null
+    verifierId: string
+    createdAt?: Date | string
+  }
+
+  export type ExecutionVerificationUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    runId: string
+    receiptRef?: string | null
+    verdict: string
+    criteriaJson: string
+    evidenceNote?: string | null
+    verifierId: string
+    createdAt?: Date | string
+  }
+
+  export type ExecutionVerificationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    receiptRef?: NullableStringFieldUpdateOperationsInput | string | null
+    verdict?: StringFieldUpdateOperationsInput | string
+    criteriaJson?: StringFieldUpdateOperationsInput | string
+    evidenceNote?: NullableStringFieldUpdateOperationsInput | string | null
+    verifierId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExecutionVerificationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    receiptRef?: NullableStringFieldUpdateOperationsInput | string | null
+    verdict?: StringFieldUpdateOperationsInput | string
+    criteriaJson?: StringFieldUpdateOperationsInput | string
+    evidenceNote?: NullableStringFieldUpdateOperationsInput | string | null
+    verifierId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExecutionVerificationCreateManyInput = {
+    id?: string
+    organizationId: string
+    missionId: string
+    runId: string
+    receiptRef?: string | null
+    verdict: string
+    criteriaJson: string
+    evidenceNote?: string | null
+    verifierId: string
+    createdAt?: Date | string
+  }
+
+  export type ExecutionVerificationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    receiptRef?: NullableStringFieldUpdateOperationsInput | string | null
+    verdict?: StringFieldUpdateOperationsInput | string
+    criteriaJson?: StringFieldUpdateOperationsInput | string
+    evidenceNote?: NullableStringFieldUpdateOperationsInput | string | null
+    verifierId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExecutionVerificationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    missionId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    receiptRef?: NullableStringFieldUpdateOperationsInput | string | null
+    verdict?: StringFieldUpdateOperationsInput | string
+    criteriaJson?: StringFieldUpdateOperationsInput | string
+    evidenceNote?: NullableStringFieldUpdateOperationsInput | string | null
+    verifierId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentRunStageEventCreateInput = {
+    id?: string
+    organizationId: string
+    runId: string
+    seq: number
+    stage: string
+    at: Date | string
+    detail?: string | null
+  }
+
+  export type AgentRunStageEventUncheckedCreateInput = {
+    id?: string
+    organizationId: string
+    runId: string
+    seq: number
+    stage: string
+    at: Date | string
+    detail?: string | null
+  }
+
+  export type AgentRunStageEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    stage?: StringFieldUpdateOperationsInput | string
+    at?: DateTimeFieldUpdateOperationsInput | Date | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AgentRunStageEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    stage?: StringFieldUpdateOperationsInput | string
+    at?: DateTimeFieldUpdateOperationsInput | Date | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AgentRunStageEventCreateManyInput = {
+    id?: string
+    organizationId: string
+    runId: string
+    seq: number
+    stage: string
+    at: Date | string
+    detail?: string | null
+  }
+
+  export type AgentRunStageEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    stage?: StringFieldUpdateOperationsInput | string
+    at?: DateTimeFieldUpdateOperationsInput | Date | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AgentRunStageEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    runId?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    stage?: StringFieldUpdateOperationsInput | string
+    at?: DateTimeFieldUpdateOperationsInput | Date | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -101577,6 +105756,7 @@ export namespace Prisma {
     id?: SortOrder
     organizationId?: SortOrder
     ownerId?: SortOrder
+    sourceRunId?: SortOrder
     title?: SortOrder
     goal?: SortOrder
     offer?: SortOrder
@@ -101601,6 +105781,7 @@ export namespace Prisma {
     id?: SortOrder
     organizationId?: SortOrder
     ownerId?: SortOrder
+    sourceRunId?: SortOrder
     title?: SortOrder
     goal?: SortOrder
     offer?: SortOrder
@@ -101621,6 +105802,7 @@ export namespace Prisma {
     id?: SortOrder
     organizationId?: SortOrder
     ownerId?: SortOrder
+    sourceRunId?: SortOrder
     title?: SortOrder
     goal?: SortOrder
     offer?: SortOrder
@@ -101801,6 +105983,7 @@ export namespace Prisma {
     requestHash?: SortOrder
     resourceType?: SortOrder
     resourceId?: SortOrder
+    actorId?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -101812,6 +105995,7 @@ export namespace Prisma {
     requestHash?: SortOrder
     resourceType?: SortOrder
     resourceId?: SortOrder
+    actorId?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -101823,6 +106007,7 @@ export namespace Prisma {
     requestHash?: SortOrder
     resourceType?: SortOrder
     resourceId?: SortOrder
+    actorId?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -105342,6 +109527,151 @@ export namespace Prisma {
     resourceId?: SortOrder
     safeMetadata?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type MissionSpecRevisionMissionIdVersionCompoundUniqueInput = {
+    missionId: string
+    version: number
+  }
+
+  export type MissionSpecRevisionCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    version?: SortOrder
+    specJson?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    successCriteria?: SortOrder
+    expiresAt?: SortOrder
+    changeNote?: SortOrder
+    actorId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MissionSpecRevisionAvgOrderByAggregateInput = {
+    version?: SortOrder
+  }
+
+  export type MissionSpecRevisionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    version?: SortOrder
+    specJson?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    successCriteria?: SortOrder
+    expiresAt?: SortOrder
+    changeNote?: SortOrder
+    actorId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MissionSpecRevisionMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    version?: SortOrder
+    specJson?: SortOrder
+    goal?: SortOrder
+    offer?: SortOrder
+    successCriteria?: SortOrder
+    expiresAt?: SortOrder
+    changeNote?: SortOrder
+    actorId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type MissionSpecRevisionSumOrderByAggregateInput = {
+    version?: SortOrder
+  }
+
+  export type ExecutionVerificationMissionIdRunIdCompoundUniqueInput = {
+    missionId: string
+    runId: string
+  }
+
+  export type ExecutionVerificationCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    runId?: SortOrder
+    receiptRef?: SortOrder
+    verdict?: SortOrder
+    criteriaJson?: SortOrder
+    evidenceNote?: SortOrder
+    verifierId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ExecutionVerificationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    runId?: SortOrder
+    receiptRef?: SortOrder
+    verdict?: SortOrder
+    criteriaJson?: SortOrder
+    evidenceNote?: SortOrder
+    verifierId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ExecutionVerificationMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    missionId?: SortOrder
+    runId?: SortOrder
+    receiptRef?: SortOrder
+    verdict?: SortOrder
+    criteriaJson?: SortOrder
+    evidenceNote?: SortOrder
+    verifierId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentRunStageEventRunIdSeqCompoundUniqueInput = {
+    runId: string
+    seq: number
+  }
+
+  export type AgentRunStageEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    seq?: SortOrder
+    stage?: SortOrder
+    at?: SortOrder
+    detail?: SortOrder
+  }
+
+  export type AgentRunStageEventAvgOrderByAggregateInput = {
+    seq?: SortOrder
+  }
+
+  export type AgentRunStageEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    seq?: SortOrder
+    stage?: SortOrder
+    at?: SortOrder
+    detail?: SortOrder
+  }
+
+  export type AgentRunStageEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    organizationId?: SortOrder
+    runId?: SortOrder
+    seq?: SortOrder
+    stage?: SortOrder
+    at?: SortOrder
+    detail?: SortOrder
+  }
+
+  export type AgentRunStageEventSumOrderByAggregateInput = {
+    seq?: SortOrder
   }
 
   export type OrganizationCreateNestedOneWithoutAgentRunsInput = {
@@ -114067,6 +118397,7 @@ export namespace Prisma {
 
   export type MissionCreateWithoutSocialIntentsInput = {
     id?: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -114091,6 +118422,7 @@ export namespace Prisma {
     id?: string
     organizationId: string
     ownerId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -114315,6 +118647,7 @@ export namespace Prisma {
 
   export type MissionUpdateWithoutSocialIntentsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -114339,6 +118672,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -114547,6 +118881,7 @@ export namespace Prisma {
 
   export type MissionCreateWithoutParticipationsInput = {
     id?: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -114571,6 +118906,7 @@ export namespace Prisma {
     id?: string
     organizationId: string
     ownerId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -114795,6 +119131,7 @@ export namespace Prisma {
 
   export type MissionUpdateWithoutParticipationsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -114819,6 +119156,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -115163,6 +119501,7 @@ export namespace Prisma {
 
   export type MissionCreateWithoutProposalsInput = {
     id?: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -115187,6 +119526,7 @@ export namespace Prisma {
     id?: string
     organizationId: string
     ownerId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -115582,6 +119922,7 @@ export namespace Prisma {
 
   export type MissionUpdateWithoutProposalsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -115606,6 +119947,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -118032,6 +122374,7 @@ export namespace Prisma {
 
   export type MissionCreateWithoutOwnerInput = {
     id?: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -118055,6 +122398,7 @@ export namespace Prisma {
   export type MissionUncheckedCreateWithoutOwnerInput = {
     id?: string
     organizationId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -119418,6 +123762,7 @@ export namespace Prisma {
     id?: StringFilter<"Mission"> | string
     organizationId?: StringFilter<"Mission"> | string
     ownerId?: StringFilter<"Mission"> | string
+    sourceRunId?: StringNullableFilter<"Mission"> | string | null
     title?: StringFilter<"Mission"> | string
     goal?: StringFilter<"Mission"> | string
     offer?: StringFilter<"Mission"> | string
@@ -129775,6 +134120,7 @@ export namespace Prisma {
 
   export type MissionCreateWithoutOrganizationInput = {
     id?: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -129798,6 +134144,7 @@ export namespace Prisma {
   export type MissionUncheckedCreateWithoutOrganizationInput = {
     id?: string
     ownerId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -129862,6 +134209,7 @@ export namespace Prisma {
     requestHash: string
     resourceType: string
     resourceId?: string | null
+    actorId?: string | null
     createdAt?: Date | string
   }
 
@@ -129872,6 +134220,7 @@ export namespace Prisma {
     requestHash: string
     resourceType: string
     resourceId?: string | null
+    actorId?: string | null
     createdAt?: Date | string
   }
 
@@ -130638,6 +134987,7 @@ export namespace Prisma {
     requestHash?: StringFilter<"IdempotencyRecord"> | string
     resourceType?: StringFilter<"IdempotencyRecord"> | string
     resourceId?: StringNullableFilter<"IdempotencyRecord"> | string | null
+    actorId?: StringNullableFilter<"IdempotencyRecord"> | string | null
     createdAt?: DateTimeFilter<"IdempotencyRecord"> | Date | string
   }
 
@@ -132293,6 +136643,7 @@ export namespace Prisma {
   export type MissionCreateManyOwnerInput = {
     id?: string
     organizationId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -133595,6 +137946,7 @@ export namespace Prisma {
 
   export type MissionUpdateWithoutOwnerInput = {
     id?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -133618,6 +137970,7 @@ export namespace Prisma {
   export type MissionUncheckedUpdateWithoutOwnerInput = {
     id?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -133640,6 +137993,7 @@ export namespace Prisma {
   export type MissionUncheckedUpdateManyWithoutOwnerInput = {
     id?: StringFieldUpdateOperationsInput | string
     organizationId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -134702,6 +139056,7 @@ export namespace Prisma {
   export type MissionCreateManyOrganizationInput = {
     id?: string
     ownerId: string
+    sourceRunId?: string | null
     title: string
     goal: string
     offer: string
@@ -134735,6 +139090,7 @@ export namespace Prisma {
     requestHash: string
     resourceType: string
     resourceId?: string | null
+    actorId?: string | null
     createdAt?: Date | string
   }
 
@@ -135070,6 +139426,7 @@ export namespace Prisma {
 
   export type MissionUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -135093,6 +139450,7 @@ export namespace Prisma {
   export type MissionUncheckedUpdateWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -135115,6 +139473,7 @@ export namespace Prisma {
   export type MissionUncheckedUpdateManyWithoutOrganizationInput = {
     id?: StringFieldUpdateOperationsInput | string
     ownerId?: StringFieldUpdateOperationsInput | string
+    sourceRunId?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
     goal?: StringFieldUpdateOperationsInput | string
     offer?: StringFieldUpdateOperationsInput | string
@@ -135168,6 +139527,7 @@ export namespace Prisma {
     requestHash?: StringFieldUpdateOperationsInput | string
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -135178,6 +139538,7 @@ export namespace Prisma {
     requestHash?: StringFieldUpdateOperationsInput | string
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -135188,6 +139549,7 @@ export namespace Prisma {
     requestHash?: StringFieldUpdateOperationsInput | string
     resourceType?: StringFieldUpdateOperationsInput | string
     resourceId?: NullableStringFieldUpdateOperationsInput | string | null
+    actorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

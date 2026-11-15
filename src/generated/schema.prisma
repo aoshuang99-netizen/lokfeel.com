@@ -990,11 +990,18 @@ enum MissionParticipationStatus {
 
 /// 连接任务。对应契约 missions 表。
 model Mission {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   /// 租户归属。**必填**（T01 起新表直接带上，不再走加列批次）。
   organizationId String
   /// 任务发起人。契约 persons 同义于本仓 `User`。
   ownerId        String
+  /// V21 · Mission ↔ AgentRun **真实关联锚点**（纯新增、可选）。
+  /// 仅接受本组织内真实存在且 `skill=INTENT_EXTRACTION` 的 run —— 校验在
+  /// `createMission()` 里带 `{ id, organizationId, skill }` 谓词回查，绝不采信
+  /// 客户端传来的其它身份字段。软引用（不建 FK）：运行记录是证据，不应因
+  /// 关联任务被清理而反向受约束；租户隔离由 organizationId 谓词保证。
+  /// null = 该任务不是由意图抽取运行派生（旧数据全部为 null）。
+  sourceRunId    String?
 
   title           String
   goal            String
@@ -1178,6 +1185,10 @@ model IdempotencyRecord {
   requestHash    String
   resourceType   String
   resourceId     String?
+  /// V21/R3：发起人身份（服务端会话 userId），纯新增可选列；旧数据一律为 null。
+  /// 不改 @@unique([organizationId, scope, key])（会破坏迁移与旧数据）：键空间按用户
+  /// 分区由 `scope` 后缀实现，本列只作「命中后校验」的纵深防御，不参与唯一约束。
+  actorId        String?
   createdAt      DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -3387,4 +3398,109 @@ model TenantAuditEvent {
   @@index([organizationId, createdAt])
   @@index([organizationId, eventType])
   @@index([resourceType, resourceId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// V21 · 第二批「服务端真实闭环」—— 纯新增表
+//
+// 对齐：
+//   - C04 字段级编辑持久化 + 版本 + 并发保护（MissionSpecRevision）
+//   - G09 独立成果核验（ExecutionVerification）
+//   - C03 服务端真实编排阶段事件（AgentRunStageEvent）
+//
+// 设计约束（继承同目录各 .prisma 文件的同一套）：
+//   1. **纯新增** —— 不改动任何既有模型的列语义；既有表的唯一改动是
+//      connection.prisma 里给 Mission 追加**可选**列 `sourceRunId`。
+//   2. **方言无关** —— 不含任何 `@db.*` 原生类型标注（SQLite / PG 同构）。
+//   3. **软引用，刻意不建 relation** —— 三张表都只存 `organizationId` 字符串。
+//      若给它们加 `Organization @relation(...)`，就必须在 tenancy.prisma 的
+//      `Organization` 上补反向关系字段 —— 那会改动本批次之外的既有模型，
+//      与「只做扩展、不碰其它线」相冲突。租户隔离**一律**由服务端
+//      `where: { organizationId, ... }` 谓词保证（新 API 全部过 `withTenant`）。
+//   4. **只增不改** —— 版本/核验/阶段事件都是「已发生事实」的留痕，
+//      不做 UPDATE；并发唯一性靠 `@@unique` 在库级兜底。
+// ═══════════════════════════════════════════════════════════════
+
+/// C04 · Mission 字段级编辑的**版本化**留痕。
+///
+/// 🔴 `@@unique([missionId, version])` 是并发保护的核心：两个都读到
+///    `currentVersion = N` 的请求同时写 `N+1`，第二条撞唯一键 → 409
+///    `SPEC_VERSION_CONFLICT`，而不是静默覆盖掉一次编辑。
+model MissionSpecRevision {
+  id             String @id @default(cuid())
+  /// 租户谓词。**不可省**（T01 铁律）。
+  organizationId String
+  missionId      String
+  version        Int
+
+  /// 经 `WorkspaceSpecSchema.safeParse` 校验后的**完整** spec（JSON 文本）。
+  specJson String
+
+  /// 从 spec 的 intent 节点投影出的业务字段（可选）：便于不解析 JSON
+  /// 就能回答「哪一版改了目标」。找不到对应节点时为 null。
+  goal            String?
+  offer           String?
+  successCriteria String?
+  expiresAt       String?
+  changeNote      String?
+
+  /// 编辑者（服务端会话派生，不采信请求体）。
+  actorId   String
+  createdAt DateTime @default(now())
+
+  @@unique([missionId, version])
+  @@index([organizationId, missionId, version])
+}
+
+/// G09 · 独立成果核验（与 AgentRun **无** Outcome 依赖，不复用 Outcome 表）。
+///
+/// 🔴 `verdict` / `verificationLevel` 由**服务端派生**，不接受客户端入参：
+///    核验的证据是真实 `AgentExecution` 回执行（deliveryId / deliveryStatus），
+///    **不是**模型输出。响应只陈述事实，不宣布目标达成。
+model ExecutionVerification {
+  id             String @id @default(cuid())
+  organizationId String
+  missionId      String
+  /// 被核验的运行 = `Mission.sourceRunId`（创建时已由服务端校验锚点）。
+  runId          String
+
+  /// 真实回执引用：`AgentExecution.deliveryId`（软引用）。
+  receiptRef String?
+
+  /// enum-ish 判定值（当前恒为服务端派生的 'CONFIRMED'）。
+  verdict      String
+  /// 验收判据（JSON 文本数组）：逐条 `{ label, confirmed, note? }`。
+  criteriaJson String
+  /// 人对事实的补充说明（**不是**模型输出；模型输出键在入口即被拒）。
+  evidenceNote String?
+
+  /// 第二人核验者（服务端会话派生）。**必须 !== AgentRun.requestedBy**。
+  verifierId String
+  createdAt  DateTime @default(now())
+
+  /// 一个 mission 的同一个 run 只核一次；重复提交不产生第二条。
+  @@unique([missionId, runId])
+  @@index([organizationId, missionId])
+}
+
+/// C03 · Agent 运行**编排阶段事件**。
+///
+/// ⚠️ 语义边界（必须在代码与响应里写清）：这些是**编排阶段**
+///    （QUOTA_CHECK / MODEL_CALL / SCHEMA_VALIDATE / PERSISTED / DEGRADED），
+///    **不是模型 token 流**，也不宣称模型生成过程被实时转发或可被逐字回放。
+///    每条只记录「服务端编排走到哪一步、当时的事实是什么」。
+model AgentRunStageEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  runId          String
+  /// 运行内序号，从 1 开始；`@@unique([runId, seq])` 保证重放不插重复行，
+  /// 也是 SSE `Last-Event-ID` 断点续传的基准。
+  seq            Int
+  stage          String
+  at             DateTime
+  /// 阶段事实（JSON 文本，脱敏后的结构性信息）。
+  detail         String?
+
+  @@unique([runId, seq])
+  @@index([organizationId, runId, seq])
 }

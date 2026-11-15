@@ -1,0 +1,49 @@
+{
+  "casePrefix": "P0",
+  "label": "login-owner",
+  "at": "2026-11-15T07:44:45.951Z",
+  "method": "POST",
+  "url": "/api/auth/login",
+  "reqHeaders": {
+    "Origin": "http://127.0.0.1:3214",
+    "Referer": "http://127.0.0.1:3214/login",
+    "Accept": "application/json"
+  },
+  "reqBody": {
+    "email": "e2e.authed@example.invalid",
+    "password": "<redacted: from .qa-authed-e2e.local.json>"
+  },
+  "status": 200,
+  "respHeaders": {
+    "x-frame-options": "DENY",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(self), microphone=(self), geolocation=(self)",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "x-xss-protection": "1; mode=block",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com; connect-src 'self' https://cloudflareinsights.com https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com; frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com; base-uri 'self'; form-action 'self' https://accounts.google.com https://twitter.com; object-src 'none'",
+    "cache-control": "no-store, max-age=0",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "content-type": "application/json",
+    "set-cookie": [
+      "authjs.session-token=<redacted:606 chars>; <attributes omitted>"
+    ],
+    "date": "Sun, 15 Nov 2026 07:44:45 GMT",
+    "connection": "keep-alive",
+    "keep-alive": "timeout=5",
+    "transfer-encoding": "chunked"
+  },
+  "rawBody": "{\"success\":true,\"redirectUrl\":\"/dashboard\",\"role\":\"USER\",\"user\":{\"id\":\"e2e_user_authed\",\"email\":\"e2e.authed@example.invalid\",\"name\":\"E2E Authed User\",\"role\":\"USER\"}}",
+  "json": {
+    "success": true,
+    "redirectUrl": "/dashboard",
+    "role": "USER",
+    "user": {
+      "id": "e2e_user_authed",
+      "email": "e2e.authed@example.invalid",
+      "name": "E2E Authed User",
+      "role": "USER"
+    }
+  },
+  "setCookiePresent": true
+}

@@ -1,0 +1,33 @@
+{
+  "casePrefix": "ENV",
+  "label": "probe--api-v1-agents-runs-cmwhj4gss001vxlk80c4rws4z-events",
+  "at": "2026-11-15T07:45:02.948Z",
+  "method": "GET",
+  "url": "/api/v1/agents/runs/cmwhj4gss001vxlk80c4rws4z/events",
+  "reqHeaders": {
+    "Cookie": "<redacted: session cookie present>"
+  },
+  "reqBody": null,
+  "status": 200,
+  "respHeaders": {
+    "x-frame-options": "DENY",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(self), microphone=(self), geolocation=(self)",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "x-xss-protection": "1; mode=block",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com; connect-src 'self' https://cloudflareinsights.com https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com; frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com; base-uri 'self'; form-action 'self' https://accounts.google.com https://twitter.com; object-src 'none'",
+    "cache-control": "no-store, max-age=0",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "content-type": "text/event-stream; charset=utf-8",
+    "x-event-stream": "orchestration-stages",
+    "x-stage-semantics": "orchestration-stages-not-token-stream",
+    "date": "Sun, 15 Nov 2026 07:45:02 GMT",
+    "connection": "keep-alive",
+    "keep-alive": "timeout=5",
+    "transfer-encoding": "chunked"
+  },
+  "rawBody": ": V21 C03 编排阶段事件（编排阶段事件，不是模型 token 流）；Last-Event-ID=0\n\nid: 1\nevent: stage\ndata: {\"id\":\"cmwhj4gt0001xxlk8d4z2g3g1\",\"seq\":1,\"stage\":\"QUOTA_CHECK\",\"at\":\"2026-11-15T07:44:48.692Z\",\"detail\":{\"checked\":true,\"blocked\":false},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 2\nevent: stage\ndata: {\"id\":\"cmwhj4gt0001yxlk8y4f1twz6\",\"seq\":2,\"stage\":\"MODEL_CALL\",\"at\":\"2026-11-15T07:44:48.692Z\",\"detail\":{\"providerKind\":\"workbuddy\",\"callCount\":1},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 3\nevent: stage\ndata: {\"id\":\"cmwhj4gt0001zxlk81kgcs7yx\",\"seq\":3,\"stage\":\"SCHEMA_VALIDATE\",\"at\":\"2026-11-15T07:44:48.692Z\",\"detail\":{\"schemaValid\":true},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 4\nevent: stage\ndata: {\"id\":\"cmwhj4gt00020xlk8w75dsy7a\",\"seq\":4,\"stage\":\"PERSISTED\",\"at\":\"2026-11-15T07:44:48.692Z\",\"detail\":{\"runId\":\"cmwhj4gss001vxlk80c4rws4z\",\"status\":\"AWAITING_APPROVAL\"},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nevent: done\ndata: {\"note\":\"编排阶段事件，不是模型 token 流\",\"lastEventId\":4}\n\n",
+  "json": null,
+  "setCookiePresent": false
+}

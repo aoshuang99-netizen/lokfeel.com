@@ -18,7 +18,7 @@
  */
 
 import { db } from '@/lib/db'
-import { ConflictError, NotFoundError } from '@/lib/errors'
+import { ConflictError, NotFoundError, ValidationError } from '@/lib/errors'
 import type { TenantContext } from '@/lib/tenancy'
 import { resolveTenantForUser } from '@/lib/tenancy'
 import { writeTenantAudit } from '@/lib/tenancy/audit'
@@ -56,6 +56,11 @@ export interface MissionDto {
   createdAt: string
   updatedAt: string
   participantCount: number
+  /**
+   * V21 · Mission ↔ AgentRun 真实关联锚点。null = 不是由意图抽取运行派生。
+   * 只读：由 `POST /missions` 在创建时一次性写入，PATCH 不可改。
+   */
+  sourceRunId: string | null
 }
 
 interface MissionRow {
@@ -76,6 +81,8 @@ interface MissionRow {
   closedAt: Date | null
   createdAt: Date
   updatedAt: Date
+  /** 可选：兼容尚未带该列的旧行/测试夹具（toMissionDto 用 ?? null 收敛）。 */
+  sourceRunId?: string | null
 }
 
 export function toMissionDto(row: MissionRow, participantCount: number): MissionDto {
@@ -99,6 +106,7 @@ export function toMissionDto(row: MissionRow, participantCount: number): Mission
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     participantCount,
+    sourceRunId: row.sourceRunId ?? null,
   }
 }
 
@@ -120,6 +128,7 @@ const MISSION_SELECT = {
   closedAt: true,
   createdAt: true,
   updatedAt: true,
+  sourceRunId: true,
 } as const
 
 // ═══════════════════════════════════════════════════════════
@@ -232,6 +241,26 @@ export async function createMission(
 ): Promise<MissionDto> {
   const now = new Date()
 
+  // V21：sourceRunId 的**真实性**在这里强制校验（parseMissionCreate 只验形状）。
+  // 三件事同时成立才接受：字符串、属于本租户、skill=INTENT_EXTRACTION。
+  // 组织的唯一来源是 ctx.organizationId（会话派生），不采信请求体里的任何身份字段。
+  if (input.sourceRunId !== undefined) {
+    const run = await db.agentRun.findFirst({
+      where: {
+        id: input.sourceRunId,
+        organizationId: ctx.organizationId,
+        skill: 'INTENT_EXTRACTION',
+      },
+      select: { id: true },
+    })
+    if (!run) {
+      throw new ValidationError(
+        'sourceRunId must reference a real INTENT_EXTRACTION run in this organization',
+        { field: 'sourceRunId' }
+      )
+    }
+  }
+
   let row: MissionRow | null = null
   let lastErr: unknown = null
 
@@ -252,6 +281,8 @@ export async function createMission(
           publicPreview: input.publicPreview,
           maxParticipants: input.maxParticipants,
           expiresAt: input.expiresAt,
+          // 纯新增列：缺省不写（保持旧行/旧测试夹具的形状）。
+          ...(input.sourceRunId !== undefined ? { sourceRunId: input.sourceRunId } : {}),
         },
         select: MISSION_SELECT,
       })) as MissionRow
@@ -307,12 +338,25 @@ export async function updateMission(
 ): Promise<MissionDto> {
   const current = await db.mission.findFirst({
     where: { id: missionId, organizationId: ctx.organizationId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, updatedAt: true },
   })
   if (!current) throw new NotFoundError('Mission not found')
   // CLOSED 是终态：可读不可改。要改必须先显式"重开"（本任务不提供，避免隐式复活）。
   if (current.status === 'CLOSED') {
     throw new ConflictError('Closed missions are read-only')
+  }
+
+  // V21：可选乐观锁。**只有**请求显式带了 expectedUpdatedAt 才比较 ——
+  // 不带该字段的旧 PATCH 行为逐字不变（旧 E2E 必须全绿）。
+  if (patch.expectedUpdatedAt !== undefined) {
+    const expected = new Date(patch.expectedUpdatedAt).getTime()
+    if (expected !== current.updatedAt.getTime()) {
+      throw new ConflictError('Mission was modified by another request', {
+        code: 'MISSION_VERSION_CONFLICT',
+        expectedUpdatedAt: patch.expectedUpdatedAt,
+        actualUpdatedAt: current.updatedAt.toISOString(),
+      })
+    }
   }
 
   const data: Record<string, unknown> = {}

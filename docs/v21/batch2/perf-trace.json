@@ -1,0 +1,1886 @@
+{
+  "task": "V21 第二批 · P0-07 真实浏览器性能 Trace / Web Vitals 取证",
+  "base": "http://127.0.0.1:3214",
+  "startedAt": "2026-11-15T07:47:05.580Z",
+  "completedAt": "2026-11-15T07:51:37.807Z",
+  "profile": {
+    "name": "mobile-4g-4xcpu (lab)",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "deviceScaleFactor": 3,
+    "network": {
+      "offline": false,
+      "latency": 150,
+      "downloadThroughput": 209715.2,
+      "uploadThroughput": 96000
+    },
+    "cpuThrottlingRate": 4,
+    "runsPerPage": 3,
+    "traceCategories": "toplevel,devtools.timeline,v8.execute,blink.user_timing",
+    "note": "与 scripts/perf/measure-vitals.mjs、attribute-tbt.mjs 同档，保证可比；是 lab 节流，不是某一次真实 4G/某台真机。"
+  },
+  "thresholds": {
+    "tbtMs": 200,
+    "lcpMs": 2500,
+    "cls": 0.1,
+    "source": "旧 GA 目标（V21 G15 / G19 引用的历史门禁）"
+  },
+  "disclaimer": [
+    "本结果为本地 next start + 隔离库 + lab 节流的测量值，不是生产环境字段数据（RUM）。",
+    "逐页 MEET/MISS 只描述「本本地 lab 档位下是否落在旧 GA 目标内」，不代表生产达标。",
+    "不构成 GA 发布批准：V21 总状态仍为 NO-GO（G20 未推送/未部署/Owner 未批准）。",
+    "INP 为 lab 单次交互代理值，非字段 p75；Trace TBT 与 longtask TBT 口径不同，均如实列出。",
+    "Trace 采集失败的页标 BLOCKED 并保留失败证据，不以 0 或估算值顶替。"
+  ],
+  "verdict": "MEASURED",
+  "pageCount": 9,
+  "pages": [
+    {
+      "id": "now-initial",
+      "label": "Now 初始",
+      "url": "http://127.0.0.1:3214/workspace",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 3000,
+        "cls": 0.019880545423968752,
+        "tbtMs": 1318,
+        "traceTbtMs": 2778,
+        "inpProxyMs": 168,
+        "fcpMs": 2500,
+        "longTasks": 8
+      },
+      "gates": {
+        "tbt": {
+          "value": 1318,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 3000,
+          "target": 2500,
+          "verdict": "MISS"
+        },
+        "cls": {
+          "value": 0.019880545423968752,
+          "target": 0.1,
+          "verdict": "MEET"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 42171,
+            "error": null,
+            "mainThread": {
+              "pid": 20321,
+              "tid": 16809334
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 15,
+            "traceTbtMs": 2778,
+            "longTasksTop": [
+              {
+                "startMs": 1512627245,
+                "durMs": 75,
+                "blockingMs": 25
+              },
+              {
+                "startMs": 1512632317,
+                "durMs": 280,
+                "blockingMs": 230
+              },
+              {
+                "startMs": 1512632736,
+                "durMs": 53,
+                "blockingMs": 3
+              },
+              {
+                "startMs": 1512633194,
+                "durMs": 96,
+                "blockingMs": 46
+              },
+              {
+                "startMs": 1512633304,
+                "durMs": 1374,
+                "blockingMs": 1324
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 7484,
+            "lcpEl": "P",
+            "cls": 0.019880545423968752,
+            "clsShifts": 1,
+            "fcpMs": 7484,
+            "tbtMs": 1318,
+            "longTasks": 13,
+            "traceTbtMs": 2778,
+            "inpProxyMs": 808,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 31670,
+            "error": null,
+            "mainThread": {
+              "pid": 20382,
+              "tid": 16809762
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 15,
+            "traceTbtMs": 3755,
+            "longTasksTop": [
+              {
+                "startMs": 1512643898,
+                "durMs": 52,
+                "blockingMs": 2
+              },
+              {
+                "startMs": 1512644124,
+                "durMs": 226,
+                "blockingMs": 176
+              },
+              {
+                "startMs": 1512644459,
+                "durMs": 59,
+                "blockingMs": 9
+              },
+              {
+                "startMs": 1512644895,
+                "durMs": 85,
+                "blockingMs": 35
+              },
+              {
+                "startMs": 1512645000,
+                "durMs": 1401,
+                "blockingMs": 1351
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3000,
+            "lcpEl": "P",
+            "cls": 0,
+            "clsShifts": 0,
+            "fcpMs": 2500,
+            "tbtMs": 1614,
+            "longTasks": 8,
+            "traceTbtMs": 3755,
+            "inpProxyMs": 168,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 38081,
+            "error": null,
+            "mainThread": {
+              "pid": 20402,
+              "tid": 16809976
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 10,
+            "traceTbtMs": 1932,
+            "longTasksTop": [
+              {
+                "startMs": 1512656114,
+                "durMs": 134,
+                "blockingMs": 84
+              },
+              {
+                "startMs": 1512656277,
+                "durMs": 1096,
+                "blockingMs": 1046
+              },
+              {
+                "startMs": 1512657497,
+                "durMs": 113,
+                "blockingMs": 63
+              },
+              {
+                "startMs": 1512657643,
+                "durMs": 184,
+                "blockingMs": 134
+              },
+              {
+                "startMs": 1512657947,
+                "durMs": 62,
+                "blockingMs": 12
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 2332,
+            "lcpEl": "P",
+            "cls": 0.01999152733455085,
+            "clsShifts": 2,
+            "fcpMs": 1204,
+            "tbtMs": 721,
+            "longTasks": 8,
+            "traceTbtMs": 1932,
+            "inpProxyMs": 120,
+            "interactions": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "now-result",
+      "label": "Now 结果",
+      "url": "http://127.0.0.1:3214/workspace",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 3248,
+        "cls": 0.685107546481954,
+        "tbtMs": 2712,
+        "traceTbtMs": 4607,
+        "inpProxyMs": 448,
+        "fcpMs": 1512,
+        "longTasks": 14
+      },
+      "gates": {
+        "tbt": {
+          "value": 2712,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 3248,
+          "target": 2500,
+          "verdict": "MISS"
+        },
+        "cls": {
+          "value": 0.685107546481954,
+          "target": 0.1,
+          "verdict": "MISS"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 39153,
+            "error": null,
+            "mainThread": {
+              "pid": 20425,
+              "tid": 16810152
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 22,
+            "traceTbtMs": 3520,
+            "longTasksTop": [
+              {
+                "startMs": 1512664738,
+                "durMs": 219,
+                "blockingMs": 169
+              },
+              {
+                "startMs": 1512665690,
+                "durMs": 114,
+                "blockingMs": 64
+              },
+              {
+                "startMs": 1512665824,
+                "durMs": 984,
+                "blockingMs": 934
+              },
+              {
+                "startMs": 1512667355,
+                "durMs": 68,
+                "blockingMs": 18
+              },
+              {
+                "startMs": 1512667438,
+                "durMs": 236,
+                "blockingMs": 186
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 2308,
+            "lcpEl": "P",
+            "cls": 0.685107546481954,
+            "clsShifts": 1,
+            "fcpMs": 1272,
+            "tbtMs": 2254,
+            "longTasks": 14,
+            "traceTbtMs": 3520,
+            "inpProxyMs": 416,
+            "interactions": 6
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 42677,
+            "error": null,
+            "mainThread": {
+              "pid": 20454,
+              "tid": 16810439
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 19,
+            "traceTbtMs": 4607,
+            "longTasksTop": [
+              {
+                "startMs": 1512678108,
+                "durMs": 239,
+                "blockingMs": 189
+              },
+              {
+                "startMs": 1512678470,
+                "durMs": 101,
+                "blockingMs": 51
+              },
+              {
+                "startMs": 1512678585,
+                "durMs": 1701,
+                "blockingMs": 1651
+              },
+              {
+                "startMs": 1512680715,
+                "durMs": 561,
+                "blockingMs": 511
+              },
+              {
+                "startMs": 1512681305,
+                "durMs": 223,
+                "blockingMs": 173
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3248,
+            "lcpEl": "P",
+            "cls": 0.6856929227866538,
+            "clsShifts": 2,
+            "fcpMs": 1512,
+            "tbtMs": 2712,
+            "longTasks": 14,
+            "traceTbtMs": 4607,
+            "inpProxyMs": 448,
+            "interactions": 6
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 47521,
+            "error": null,
+            "mainThread": {
+              "pid": 20477,
+              "tid": 16810670
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 29,
+            "traceTbtMs": 7035,
+            "longTasksTop": [
+              {
+                "startMs": 1512691518,
+                "durMs": 338,
+                "blockingMs": 288
+              },
+              {
+                "startMs": 1512692631,
+                "durMs": 135,
+                "blockingMs": 85
+              },
+              {
+                "startMs": 1512692791,
+                "durMs": 2165,
+                "blockingMs": 2115
+              },
+              {
+                "startMs": 1512695709,
+                "durMs": 1250,
+                "blockingMs": 1200
+              },
+              {
+                "startMs": 1512696959,
+                "durMs": 59,
+                "blockingMs": 9
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3740,
+            "lcpEl": "P",
+            "cls": 0.685107546481954,
+            "clsShifts": 1,
+            "fcpMs": 1520,
+            "tbtMs": 4026,
+            "longTasks": 22,
+            "traceTbtMs": 7035,
+            "inpProxyMs": 456,
+            "interactions": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "missions-list",
+      "label": "Missions 列表",
+      "url": "http://127.0.0.1:3214/workspace?view=missions",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 2436,
+        "cls": 0.01999152733455085,
+        "tbtMs": 579,
+        "traceTbtMs": 2006,
+        "inpProxyMs": 216,
+        "fcpMs": 2436,
+        "longTasks": 5
+      },
+      "gates": {
+        "tbt": {
+          "value": 579,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 2436,
+          "target": 2500,
+          "verdict": "MEET"
+        },
+        "cls": {
+          "value": 0.01999152733455085,
+          "target": 0.1,
+          "verdict": "MEET"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 34774,
+            "error": null,
+            "mainThread": {
+              "pid": 20548,
+              "tid": 16811160
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 25,
+            "traceTbtMs": 4411,
+            "longTasksTop": [
+              {
+                "startMs": 1512710035,
+                "durMs": 272,
+                "blockingMs": 222
+              },
+              {
+                "startMs": 1512710756,
+                "durMs": 66,
+                "blockingMs": 16
+              },
+              {
+                "startMs": 1512710920,
+                "durMs": 1324,
+                "blockingMs": 1274
+              },
+              {
+                "startMs": 1512712352,
+                "durMs": 317,
+                "blockingMs": 267
+              },
+              {
+                "startMs": 1512712721,
+                "durMs": 571,
+                "blockingMs": 521
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3012,
+            "lcpEl": "P",
+            "cls": 0.020012692800113342,
+            "clsShifts": 3,
+            "fcpMs": 2516,
+            "tbtMs": 1797,
+            "longTasks": 14,
+            "traceTbtMs": 4411,
+            "inpProxyMs": 440,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 32393,
+            "error": null,
+            "mainThread": {
+              "pid": 20585,
+              "tid": 16811520
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 12,
+            "traceTbtMs": 2006,
+            "longTasksTop": [
+              {
+                "startMs": 1512724501,
+                "durMs": 87,
+                "blockingMs": 37
+              },
+              {
+                "startMs": 1512724751,
+                "durMs": 67,
+                "blockingMs": 17
+              },
+              {
+                "startMs": 1512725632,
+                "durMs": 1280,
+                "blockingMs": 1230
+              },
+              {
+                "startMs": 1512726941,
+                "durMs": 77,
+                "blockingMs": 27
+              },
+              {
+                "startMs": 1512727065,
+                "durMs": 266,
+                "blockingMs": 216
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 2436,
+            "lcpEl": "P",
+            "cls": 0.01999152733455085,
+            "clsShifts": 2,
+            "fcpMs": 2436,
+            "tbtMs": 539,
+            "longTasks": 5,
+            "traceTbtMs": 2006,
+            "inpProxyMs": 160,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30853,
+            "error": null,
+            "mainThread": {
+              "pid": 20613,
+              "tid": 16811770
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 9,
+            "traceTbtMs": 1616,
+            "longTasksTop": [
+              {
+                "startMs": 1512735234,
+                "durMs": 68,
+                "blockingMs": 18
+              },
+              {
+                "startMs": 1512735965,
+                "durMs": 852,
+                "blockingMs": 802
+              },
+              {
+                "startMs": 1512736838,
+                "durMs": 138,
+                "blockingMs": 88
+              },
+              {
+                "startMs": 1512737179,
+                "durMs": 258,
+                "blockingMs": 208
+              },
+              {
+                "startMs": 1512737551,
+                "durMs": 158,
+                "blockingMs": 108
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 1800,
+            "lcpEl": "P",
+            "cls": 0.019955540643741155,
+            "clsShifts": 3,
+            "fcpMs": 1800,
+            "tbtMs": 579,
+            "longTasks": 4,
+            "traceTbtMs": 1616,
+            "inpProxyMs": 216,
+            "interactions": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "missions-detail",
+      "label": "Missions 详情",
+      "url": "http://127.0.0.1:3214/workspace?view=missions",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 1692,
+        "cls": 0.01996762619656872,
+        "tbtMs": 611,
+        "traceTbtMs": 1573,
+        "inpProxyMs": 72,
+        "fcpMs": 1680,
+        "longTasks": 6
+      },
+      "gates": {
+        "tbt": {
+          "value": 611,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 1692,
+          "target": 2500,
+          "verdict": "MEET"
+        },
+        "cls": {
+          "value": 0.01996762619656872,
+          "target": 0.1,
+          "verdict": "MEET"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 34715,
+            "error": null,
+            "mainThread": {
+              "pid": 20637,
+              "tid": 16812018
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 11,
+            "traceTbtMs": 1573,
+            "longTasksTop": [
+              {
+                "startMs": 1512743648,
+                "durMs": 137,
+                "blockingMs": 87
+              },
+              {
+                "startMs": 1512744414,
+                "durMs": 699,
+                "blockingMs": 649
+              },
+              {
+                "startMs": 1512745598,
+                "durMs": 260,
+                "blockingMs": 210
+              },
+              {
+                "startMs": 1512745917,
+                "durMs": 116,
+                "blockingMs": 66
+              },
+              {
+                "startMs": 1512746142,
+                "durMs": 314,
+                "blockingMs": 264
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 1680,
+            "lcpEl": "P",
+            "cls": 0.02007155295196332,
+            "clsShifts": 3,
+            "fcpMs": 1680,
+            "tbtMs": 611,
+            "longTasks": 5,
+            "traceTbtMs": 1573,
+            "inpProxyMs": 96,
+            "interactions": 6
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 33521,
+            "error": null,
+            "mainThread": {
+              "pid": 20655,
+              "tid": 16812200
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 12,
+            "traceTbtMs": 1519,
+            "longTasksTop": [
+              {
+                "startMs": 1512752852,
+                "durMs": 103,
+                "blockingMs": 53
+              },
+              {
+                "startMs": 1512753553,
+                "durMs": 446,
+                "blockingMs": 396
+              },
+              {
+                "startMs": 1512754044,
+                "durMs": 339,
+                "blockingMs": 289
+              },
+              {
+                "startMs": 1512754785,
+                "durMs": 234,
+                "blockingMs": 184
+              },
+              {
+                "startMs": 1512755126,
+                "durMs": 140,
+                "blockingMs": 90
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 1752,
+            "lcpEl": "P",
+            "cls": 0.019851613888346553,
+            "clsShifts": 2,
+            "fcpMs": 1344,
+            "tbtMs": 581,
+            "longTasks": 6,
+            "traceTbtMs": 1519,
+            "inpProxyMs": 72,
+            "interactions": 6
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 33317,
+            "error": null,
+            "mainThread": {
+              "pid": 20662,
+              "tid": 16812389
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 11,
+            "traceTbtMs": 1613,
+            "longTasksTop": [
+              {
+                "startMs": 1512762036,
+                "durMs": 81,
+                "blockingMs": 31
+              },
+              {
+                "startMs": 1512762700,
+                "durMs": 797,
+                "blockingMs": 747
+              },
+              {
+                "startMs": 1512763930,
+                "durMs": 278,
+                "blockingMs": 228
+              },
+              {
+                "startMs": 1512764291,
+                "durMs": 87,
+                "blockingMs": 37
+              },
+              {
+                "startMs": 1512764408,
+                "durMs": 327,
+                "blockingMs": 277
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 1692,
+            "lcpEl": "P",
+            "cls": 0.01996762619656872,
+            "clsShifts": 2,
+            "fcpMs": 1692,
+            "tbtMs": 672,
+            "longTasks": 6,
+            "traceTbtMs": 1613,
+            "inpProxyMs": 64,
+            "interactions": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "studio",
+      "label": "Studio（工作区）",
+      "url": "http://127.0.0.1:3214/workspace?view=studio",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 3128,
+        "cls": 0.010033301772312578,
+        "tbtMs": 522,
+        "traceTbtMs": 1279,
+        "inpProxyMs": 72,
+        "fcpMs": 1720,
+        "longTasks": 5
+      },
+      "gates": {
+        "tbt": {
+          "value": 522,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 3128,
+          "target": 2500,
+          "verdict": "MISS"
+        },
+        "cls": {
+          "value": 0.010033301772312578,
+          "target": 0.1,
+          "verdict": "MEET"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30829,
+            "error": null,
+            "mainThread": {
+              "pid": 20682,
+              "tid": 16812550
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 10,
+            "traceTbtMs": 1424,
+            "longTasksTop": [
+              {
+                "startMs": 1512771299,
+                "durMs": 144,
+                "blockingMs": 94
+              },
+              {
+                "startMs": 1512772023,
+                "durMs": 771,
+                "blockingMs": 721
+              },
+              {
+                "startMs": 1512773249,
+                "durMs": 216,
+                "blockingMs": 166
+              },
+              {
+                "startMs": 1512773528,
+                "durMs": 164,
+                "blockingMs": 114
+              },
+              {
+                "startMs": 1512773698,
+                "durMs": 63,
+                "blockingMs": 13
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3308,
+            "lcpEl": "P",
+            "cls": 0.010033301772312578,
+            "clsShifts": 3,
+            "fcpMs": 1724,
+            "tbtMs": 574,
+            "longTasks": 6,
+            "traceTbtMs": 1424,
+            "inpProxyMs": 64,
+            "interactions": 1
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 29717,
+            "error": null,
+            "mainThread": {
+              "pid": 20702,
+              "tid": 16812732
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 7,
+            "traceTbtMs": 1248,
+            "longTasksTop": [
+              {
+                "startMs": 1512780308,
+                "durMs": 791,
+                "blockingMs": 741
+              },
+              {
+                "startMs": 1512781573,
+                "durMs": 241,
+                "blockingMs": 191
+              },
+              {
+                "startMs": 1512781878,
+                "durMs": 123,
+                "blockingMs": 73
+              },
+              {
+                "startMs": 1512782064,
+                "durMs": 257,
+                "blockingMs": 207
+              },
+              {
+                "startMs": 1512782490,
+                "durMs": 58,
+                "blockingMs": 8
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3104,
+            "lcpEl": "P",
+            "cls": 0.009953276154900109,
+            "clsShifts": 2,
+            "fcpMs": 1664,
+            "tbtMs": 432,
+            "longTasks": 5,
+            "traceTbtMs": 1248,
+            "inpProxyMs": 72,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 29261,
+            "error": null,
+            "mainThread": {
+              "pid": 20722,
+              "tid": 16812893
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 7,
+            "traceTbtMs": 1279,
+            "longTasksTop": [
+              {
+                "startMs": 1512787523,
+                "durMs": 60,
+                "blockingMs": 10
+              },
+              {
+                "startMs": 1512788236,
+                "durMs": 782,
+                "blockingMs": 732
+              },
+              {
+                "startMs": 1512789466,
+                "durMs": 275,
+                "blockingMs": 225
+              },
+              {
+                "startMs": 1512789911,
+                "durMs": 330,
+                "blockingMs": 280
+              },
+              {
+                "startMs": 1512790383,
+                "durMs": 57,
+                "blockingMs": 7
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3128,
+            "lcpEl": "P",
+            "cls": 0.010033301772312578,
+            "clsShifts": 3,
+            "fcpMs": 1720,
+            "tbtMs": 522,
+            "longTasks": 4,
+            "traceTbtMs": 1279,
+            "inpProxyMs": 72,
+            "interactions": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "field",
+      "label": "Field（关系网络）",
+      "url": "http://127.0.0.1:3214/workspace?view=field",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 1684,
+        "cls": 0.01974635349264738,
+        "tbtMs": 559,
+        "traceTbtMs": 1336,
+        "inpProxyMs": 64,
+        "fcpMs": 1684,
+        "longTasks": 6
+      },
+      "gates": {
+        "tbt": {
+          "value": 559,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 1684,
+          "target": 2500,
+          "verdict": "MEET"
+        },
+        "cls": {
+          "value": 0.01974635349264738,
+          "target": 0.1,
+          "verdict": "MEET"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30580,
+            "error": null,
+            "mainThread": {
+              "pid": 20740,
+              "tid": 16813069
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 10,
+            "traceTbtMs": 1336,
+            "longTasksTop": [
+              {
+                "startMs": 1512796226,
+                "durMs": 712,
+                "blockingMs": 662
+              },
+              {
+                "startMs": 1512797422,
+                "durMs": 234,
+                "blockingMs": 184
+              },
+              {
+                "startMs": 1512797721,
+                "durMs": 83,
+                "blockingMs": 33
+              },
+              {
+                "startMs": 1512797934,
+                "durMs": 351,
+                "blockingMs": 301
+              },
+              {
+                "startMs": 1512798493,
+                "durMs": 50,
+                "blockingMs": 0
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 1668,
+            "lcpEl": "P",
+            "cls": 0.01974635349264738,
+            "clsShifts": 4,
+            "fcpMs": 1668,
+            "tbtMs": 613,
+            "longTasks": 6,
+            "traceTbtMs": 1336,
+            "inpProxyMs": 64,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 31273,
+            "error": null,
+            "mainThread": {
+              "pid": 20770,
+              "tid": 16813366
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 8,
+            "traceTbtMs": 1353,
+            "longTasksTop": [
+              {
+                "startMs": 1512803796,
+                "durMs": 56,
+                "blockingMs": 6
+              },
+              {
+                "startMs": 1512804531,
+                "durMs": 834,
+                "blockingMs": 784
+              },
+              {
+                "startMs": 1512805719,
+                "durMs": 301,
+                "blockingMs": 251
+              },
+              {
+                "startMs": 1512806085,
+                "durMs": 53,
+                "blockingMs": 3
+              },
+              {
+                "startMs": 1512806294,
+                "durMs": 284,
+                "blockingMs": 234
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 1780,
+            "lcpEl": "P",
+            "cls": 0.01974635349264738,
+            "clsShifts": 4,
+            "fcpMs": 1780,
+            "tbtMs": 559,
+            "longTasks": 6,
+            "traceTbtMs": 1353,
+            "inpProxyMs": 120,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30651,
+            "error": null,
+            "mainThread": {
+              "pid": 20774,
+              "tid": 16813528
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 11,
+            "traceTbtMs": 1282,
+            "longTasksTop": [
+              {
+                "startMs": 1512812233,
+                "durMs": 63,
+                "blockingMs": 13
+              },
+              {
+                "startMs": 1512812920,
+                "durMs": 785,
+                "blockingMs": 735
+              },
+              {
+                "startMs": 1512814159,
+                "durMs": 205,
+                "blockingMs": 155
+              },
+              {
+                "startMs": 1512814416,
+                "durMs": 73,
+                "blockingMs": 23
+              },
+              {
+                "startMs": 1512814521,
+                "durMs": 110,
+                "blockingMs": 60
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 1684,
+            "lcpEl": "P",
+            "cls": 0.01974635349264738,
+            "clsShifts": 4,
+            "fcpMs": 1684,
+            "tbtMs": 458,
+            "longTasks": 7,
+            "traceTbtMs": 1282,
+            "inpProxyMs": 56,
+            "interactions": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "consent",
+      "label": "Consent（授权）",
+      "url": "http://127.0.0.1:3214/workspace?view=consent",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 3132,
+        "cls": 0.028429406549142177,
+        "tbtMs": 672,
+        "traceTbtMs": 1489,
+        "inpProxyMs": 72,
+        "fcpMs": 1664,
+        "longTasks": 6
+      },
+      "gates": {
+        "tbt": {
+          "value": 672,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 3132,
+          "target": 2500,
+          "verdict": "MISS"
+        },
+        "cls": {
+          "value": 0.028429406549142177,
+          "target": 0.1,
+          "verdict": "MEET"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30410,
+            "error": null,
+            "mainThread": {
+              "pid": 20793,
+              "tid": 16813700
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 7,
+            "traceTbtMs": 1297,
+            "longTasksTop": [
+              {
+                "startMs": 1512820295,
+                "durMs": 52,
+                "blockingMs": 2
+              },
+              {
+                "startMs": 1512821030,
+                "durMs": 767,
+                "blockingMs": 717
+              },
+              {
+                "startMs": 1512822206,
+                "durMs": 250,
+                "blockingMs": 200
+              },
+              {
+                "startMs": 1512822605,
+                "durMs": 362,
+                "blockingMs": 312
+              },
+              {
+                "startMs": 1512823145,
+                "durMs": 72,
+                "blockingMs": 22
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3132,
+            "lcpEl": "P",
+            "cls": 0.028429406549142177,
+            "clsShifts": 4,
+            "fcpMs": 1724,
+            "tbtMs": 579,
+            "longTasks": 5,
+            "traceTbtMs": 1297,
+            "inpProxyMs": 72,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30618,
+            "error": null,
+            "mainThread": {
+              "pid": 20811,
+              "tid": 16813855
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 8,
+            "traceTbtMs": 1489,
+            "longTasksTop": [
+              {
+                "startMs": 1512828187,
+                "durMs": 99,
+                "blockingMs": 49
+              },
+              {
+                "startMs": 1512828872,
+                "durMs": 770,
+                "blockingMs": 720
+              },
+              {
+                "startMs": 1512830116,
+                "durMs": 259,
+                "blockingMs": 209
+              },
+              {
+                "startMs": 1512830518,
+                "durMs": 315,
+                "blockingMs": 265
+              },
+              {
+                "startMs": 1512830993,
+                "durMs": 73,
+                "blockingMs": 23
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3084,
+            "lcpEl": "P",
+            "cls": 0.028429406549142177,
+            "clsShifts": 4,
+            "fcpMs": 1664,
+            "tbtMs": 718,
+            "longTasks": 6,
+            "traceTbtMs": 1489,
+            "inpProxyMs": 72,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30512,
+            "error": null,
+            "mainThread": {
+              "pid": 20830,
+              "tid": 16814023
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 9,
+            "traceTbtMs": 1505,
+            "longTasksTop": [
+              {
+                "startMs": 1512836790,
+                "durMs": 737,
+                "blockingMs": 687
+              },
+              {
+                "startMs": 1512838047,
+                "durMs": 308,
+                "blockingMs": 258
+              },
+              {
+                "startMs": 1512838437,
+                "durMs": 176,
+                "blockingMs": 126
+              },
+              {
+                "startMs": 1512838614,
+                "durMs": 313,
+                "blockingMs": 263
+              },
+              {
+                "startMs": 1512839090,
+                "durMs": 72,
+                "blockingMs": 22
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3256,
+            "lcpEl": "P",
+            "cls": 0.029696785988058645,
+            "clsShifts": 4,
+            "fcpMs": 1628,
+            "tbtMs": 672,
+            "longTasks": 6,
+            "traceTbtMs": 1505,
+            "inpProxyMs": 80,
+            "interactions": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "agents",
+      "label": "Agents（执行团队）",
+      "url": "http://127.0.0.1:3214/workspace?view=agents",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 3244,
+        "cls": 0.3652459743860431,
+        "tbtMs": 620,
+        "traceTbtMs": 1447,
+        "inpProxyMs": 80,
+        "fcpMs": 1620,
+        "longTasks": 5
+      },
+      "gates": {
+        "tbt": {
+          "value": 620,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 3244,
+          "target": 2500,
+          "verdict": "MISS"
+        },
+        "cls": {
+          "value": 0.3652459743860431,
+          "target": 0.1,
+          "verdict": "MISS"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30742,
+            "error": null,
+            "mainThread": {
+              "pid": 20851,
+              "tid": 16814234
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 9,
+            "traceTbtMs": 1447,
+            "longTasksTop": [
+              {
+                "startMs": 1512844426,
+                "durMs": 107,
+                "blockingMs": 57
+              },
+              {
+                "startMs": 1512845112,
+                "durMs": 720,
+                "blockingMs": 670
+              },
+              {
+                "startMs": 1512846360,
+                "durMs": 318,
+                "blockingMs": 268
+              },
+              {
+                "startMs": 1512846776,
+                "durMs": 372,
+                "blockingMs": 322
+              },
+              {
+                "startMs": 1512847149,
+                "durMs": 55,
+                "blockingMs": 5
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3216,
+            "lcpEl": "P",
+            "cls": 0.3652459743860431,
+            "clsShifts": 5,
+            "fcpMs": 1620,
+            "tbtMs": 620,
+            "longTasks": 5,
+            "traceTbtMs": 1447,
+            "inpProxyMs": 80,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 31318,
+            "error": null,
+            "mainThread": {
+              "pid": 20855,
+              "tid": 16814376
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 8,
+            "traceTbtMs": 1315,
+            "longTasksTop": [
+              {
+                "startMs": 1512852423,
+                "durMs": 98,
+                "blockingMs": 48
+              },
+              {
+                "startMs": 1512853165,
+                "durMs": 735,
+                "blockingMs": 685
+              },
+              {
+                "startMs": 1512854368,
+                "durMs": 269,
+                "blockingMs": 219
+              },
+              {
+                "startMs": 1512854766,
+                "durMs": 96,
+                "blockingMs": 46
+              },
+              {
+                "startMs": 1512855019,
+                "durMs": 268,
+                "blockingMs": 218
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3244,
+            "lcpEl": "P",
+            "cls": 0.3652459743860431,
+            "clsShifts": 5,
+            "fcpMs": 1696,
+            "tbtMs": 533,
+            "longTasks": 5,
+            "traceTbtMs": 1315,
+            "inpProxyMs": 88,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 31160,
+            "error": null,
+            "mainThread": {
+              "pid": 20873,
+              "tid": 16814538
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 16,
+            "traceTbtMs": 2212,
+            "longTasksTop": [
+              {
+                "startMs": 1512860644,
+                "durMs": 54,
+                "blockingMs": 4
+              },
+              {
+                "startMs": 1512861377,
+                "durMs": 653,
+                "blockingMs": 603
+              },
+              {
+                "startMs": 1512862061,
+                "durMs": 75,
+                "blockingMs": 25
+              },
+              {
+                "startMs": 1512862545,
+                "durMs": 405,
+                "blockingMs": 355
+              },
+              {
+                "startMs": 1512863012,
+                "durMs": 381,
+                "blockingMs": 331
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3780,
+            "lcpEl": "P",
+            "cls": 0.5257235367608141,
+            "clsShifts": 4,
+            "fcpMs": 1608,
+            "tbtMs": 1298,
+            "longTasks": 10,
+            "traceTbtMs": 2212,
+            "inpProxyMs": 80,
+            "interactions": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "outcomes",
+      "label": "Outcomes（成果）· 附加",
+      "url": "http://127.0.0.1:3214/workspace?view=outcomes",
+      "runs": 3,
+      "status": "MEASURED",
+      "usableRuns": 3,
+      "metrics": {
+        "lcpMs": 3176,
+        "cls": 0.5794850053475197,
+        "tbtMs": 528,
+        "traceTbtMs": 1307,
+        "inpProxyMs": 72,
+        "fcpMs": 1692,
+        "longTasks": 3
+      },
+      "gates": {
+        "tbt": {
+          "value": 528,
+          "target": 200,
+          "verdict": "MISS"
+        },
+        "lcp": {
+          "value": 3176,
+          "target": 2500,
+          "verdict": "MISS"
+        },
+        "cls": {
+          "value": 0.5794850053475197,
+          "target": 0.1,
+          "verdict": "MISS"
+        }
+      },
+      "verdict": "MISS",
+      "inpNote": "INP 为 lab 单次交互代理值（event timing 最大处理时长），非字段 p75，不进达标判定",
+      "tbtNote": "TBT 双源：tbtMs=PerformanceObserver longtask 口径（用于门槛）；traceTbtMs=Chrome Trace RunTask 口径（交叉参考，口径可能不同）",
+      "samples": [
+        {
+          "run": 1,
+          "trace": {
+            "status": "OK",
+            "eventCount": 31060,
+            "error": null,
+            "mainThread": {
+              "pid": 20902,
+              "tid": 16814823
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 7,
+            "traceTbtMs": 1202,
+            "longTasksTop": [
+              {
+                "startMs": 1512871142,
+                "durMs": 750,
+                "blockingMs": 700
+              },
+              {
+                "startMs": 1512872340,
+                "durMs": 195,
+                "blockingMs": 145
+              },
+              {
+                "startMs": 1512872664,
+                "durMs": 154,
+                "blockingMs": 104
+              },
+              {
+                "startMs": 1512872965,
+                "durMs": 237,
+                "blockingMs": 187
+              },
+              {
+                "startMs": 1512873325,
+                "durMs": 67,
+                "blockingMs": 17
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3176,
+            "lcpEl": "P",
+            "cls": 0.5795669027407983,
+            "clsShifts": 3,
+            "fcpMs": 1708,
+            "tbtMs": 347,
+            "longTasks": 3,
+            "traceTbtMs": 1202,
+            "inpProxyMs": 88,
+            "interactions": 3
+          }
+        },
+        {
+          "run": 2,
+          "trace": {
+            "status": "OK",
+            "eventCount": 32666,
+            "error": null,
+            "mainThread": {
+              "pid": 20922,
+              "tid": 16814984
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 16,
+            "traceTbtMs": 1980,
+            "longTasksTop": [
+              {
+                "startMs": 1512878750,
+                "durMs": 58,
+                "blockingMs": 8
+              },
+              {
+                "startMs": 1512879434,
+                "durMs": 658,
+                "blockingMs": 608
+              },
+              {
+                "startMs": 1512880673,
+                "durMs": 271,
+                "blockingMs": 221
+              },
+              {
+                "startMs": 1512881054,
+                "durMs": 136,
+                "blockingMs": 86
+              },
+              {
+                "startMs": 1512881317,
+                "durMs": 282,
+                "blockingMs": 232
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3340,
+            "lcpEl": "P",
+            "cls": 0.5794850053475197,
+            "clsShifts": 2,
+            "fcpMs": 1560,
+            "tbtMs": 1331,
+            "longTasks": 12,
+            "traceTbtMs": 1980,
+            "inpProxyMs": 56,
+            "interactions": 1
+          }
+        },
+        {
+          "run": 3,
+          "trace": {
+            "status": "OK",
+            "eventCount": 30422,
+            "error": null,
+            "mainThread": {
+              "pid": 20940,
+              "tid": 16815181
+            },
+            "taskEventName": "ThreadControllerImpl::RunTask",
+            "longTaskCount": 7,
+            "traceTbtMs": 1307,
+            "longTasksTop": [
+              {
+                "startMs": 1512888460,
+                "durMs": 104,
+                "blockingMs": 54
+              },
+              {
+                "startMs": 1512889161,
+                "durMs": 759,
+                "blockingMs": 709
+              },
+              {
+                "startMs": 1512890397,
+                "durMs": 269,
+                "blockingMs": 219
+              },
+              {
+                "startMs": 1512890749,
+                "durMs": 61,
+                "blockingMs": 11
+              },
+              {
+                "startMs": 1512890810,
+                "durMs": 348,
+                "blockingMs": 298
+              }
+            ]
+          },
+          "setupError": null,
+          "metrics": {
+            "lcpMs": 3020,
+            "lcpEl": "P",
+            "cls": 0.10727568997977904,
+            "clsShifts": 4,
+            "fcpMs": 1692,
+            "tbtMs": 528,
+            "longTasks": 3,
+            "traceTbtMs": 1307,
+            "inpProxyMs": 72,
+            "interactions": 3
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "measured": 9,
+    "blocked": 0,
+    "allMeet": 0,
+    "miss": 9,
+    "noData": 0,
+    "note": "计数描述本地 lab 结果分布，不是生产达标计数。"
+  }
+}

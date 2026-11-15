@@ -1,0 +1,55 @@
+{
+  "casePrefix": "C6",
+  "label": "get-mission-detail-xss",
+  "at": "2026-11-15T07:45:00.986Z",
+  "method": "GET",
+  "url": "/api/v1/missions/cmwhj4odv0037xlk8i110dv57",
+  "reqHeaders": {
+    "Cookie": "<redacted: session cookie present>"
+  },
+  "reqBody": null,
+  "status": 200,
+  "respHeaders": {
+    "x-frame-options": "DENY",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(self), microphone=(self), geolocation=(self)",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "x-xss-protection": "1; mode=block",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com; connect-src 'self' https://cloudflareinsights.com https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com; frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com; base-uri 'self'; form-action 'self' https://accounts.google.com https://twitter.com; object-src 'none'",
+    "cache-control": "no-store, max-age=0",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "content-type": "application/json",
+    "date": "Sun, 15 Nov 2026 07:45:00 GMT",
+    "connection": "keep-alive",
+    "keep-alive": "timeout=5",
+    "transfer-encoding": "chunked"
+  },
+  "rawBody": "{\"success\":true,\"data\":{\"id\":\"cmwhj4odv0037xlk8i110dv57\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_authed\",\"title\":\"<script>alert(1)</script> 红队-XSS\",\"goal\":\"<script>alert(1)</script> 用于验证原文落库与 API 层非 HTML 执行态\",\"offer\":\"红队验收探针\",\"constraints\":[],\"successCriteria\":\"API 响应为 JSON 且保留原文\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/dWCqKyTZhQiSKe6HIQ4GomjyAYykNVwV\",\"shareToken\":\"dWCqKyTZhQiSKe6HIQ4GomjyAYykNVwV\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:45:00.787Z\",\"updatedAt\":\"2026-11-15T07:45:00.787Z\",\"participantCount\":0,\"sourceRunId\":null}}",
+  "json": {
+    "success": true,
+    "data": {
+      "id": "cmwhj4odv0037xlk8i110dv57",
+      "organizationId": "e2e_org_authed",
+      "ownerId": "e2e_user_authed",
+      "title": "<script>alert(1)</script> 红队-XSS",
+      "goal": "<script>alert(1)</script> 用于验证原文落库与 API 层非 HTML 执行态",
+      "offer": "红队验收探针",
+      "constraints": [],
+      "successCriteria": "API 响应为 JSON 且保留原文",
+      "status": "DRAFT",
+      "publicPreview": true,
+      "maxParticipants": null,
+      "sharePath": "/m/dWCqKyTZhQiSKe6HIQ4GomjyAYykNVwV",
+      "shareToken": "dWCqKyTZhQiSKe6HIQ4GomjyAYykNVwV",
+      "expiresAt": null,
+      "publishedAt": null,
+      "closedAt": null,
+      "createdAt": "2026-11-15T07:45:00.787Z",
+      "updatedAt": "2026-11-15T07:45:00.787Z",
+      "participantCount": 0,
+      "sourceRunId": null
+    }
+  },
+  "setCookiePresent": false
+}

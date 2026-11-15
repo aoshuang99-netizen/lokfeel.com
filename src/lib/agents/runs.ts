@@ -69,6 +69,8 @@ import {
   type AgentRunViewer,
 } from './dto'
 import { providerHonesty, resolveRuntimeProvider, type ProviderHonesty } from './provider-runtime'
+// V21/C03：编排阶段事件（**不是**模型 token 流）。只在这里接线，不改 runSkill 签名、不改 provider。
+import { buildOrchestrationStages, emitStageEvents } from './stage-events'
 
 /** 幂等作用域（与 `IdempotencyRecord.scope` 对齐）。 */
 export const AGENT_RUN_SCOPE = 'agent.run'
@@ -471,6 +473,8 @@ export async function createAgentRun(
 
   const outcome = await withIdempotency<AgentRunDto>({
     organizationId: ctx.organizationId,
+    // V21/R3：发起人身份取自服务端会话，键空间按用户分区。
+    actorId: ctx.userId,
     scope: AGENT_RUN_SCOPE,
     key,
     requestHash,
@@ -501,6 +505,8 @@ export async function createAgentRun(
       //    顺序是刻意的：额度必须在"决定要不要花钱"之前就知道（AC-20）。
       const ledger = await loadLedger(ctx.organizationId, now)
       const quota = input.quota ?? (await resolveOrganizationAgentQuota(ctx)).quota
+      // V21/C03 · 编排关键点 ①：额度已在**调用之前**读完（AC-20 的顺序保证）。
+      const quotaChecked = true
       const result = await runSkill({
         skill,
         input: effectiveInput,
@@ -571,6 +577,27 @@ export async function createAgentRun(
           deliveryTarget: { select: DELIVERY_TARGET_SELECT },
         },
       }) as AgentRunRow
+
+      // V21/C03 · 编排关键点 ②③④ 已在上面发生（MODEL_CALL / SCHEMA_VALIDATE / PERSISTED），
+      // 事实在各自关键点采集，**落库放在 PERSISTED 之后**（runId 要到 create 成功才存在）。
+      // ⚠️ 这些是**编排阶段事件，不是模型 token 流**：只记录编排走到哪一步、当时的事实，
+      //    不伪造逐 token 输出，也不宣称模型生成过程被实时转发。
+      // 审计式旁路：阶段事件写失败不改变运行本身的业务结果。
+      await emitStageEvents(
+        ctx.organizationId,
+        created.id,
+        buildOrchestrationStages({
+          quotaChecked,
+          quotaBlocked: result.status === 'BLOCKED_QUOTA',
+          providerKind: result.providerKind,
+          callCount: newCalls.length,
+          schemaValid: result.payload !== null && result.payload !== undefined,
+          status: result.status,
+          degradeCode: result.degradeCode,
+          persistedRunId: created.id,
+        }),
+        now
+      ).catch(() => {})
 
       // 审计是**旁路**：失败不改变业务结果（与 `writeTenantAudit` 的约定一致）。
       // safeMetadata 只放枚举与数字 —— `goal` 是用户文本，不进审计。

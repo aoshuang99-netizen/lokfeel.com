@@ -1,0 +1,90 @@
+{
+  "casePrefix": "C4",
+  "label": "approve",
+  "at": "2026-11-15T07:44:51.360Z",
+  "method": "POST",
+  "url": "/api/v1/agents/runs/cmwhj4gss001vxlk80c4rws4z/approve",
+  "reqHeaders": {
+    "Cookie": "<redacted: session cookie present>"
+  },
+  "reqBody": {
+    "note": "redteam independent review"
+  },
+  "status": 200,
+  "respHeaders": {
+    "x-frame-options": "DENY",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(self), microphone=(self), geolocation=(self)",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "x-xss-protection": "1; mode=block",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' fonts.googleapis.com https://accounts.google.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com fonts.gstatic.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https://api.dicebear.com https://images.unsplash.com https://randomuser.me https://picsum.photos https://lh3.googleusercontent.com https://pbs.twimg.com; connect-src 'self' https://cloudflareinsights.com https://*.stripe.com https://api.twitter.com https://twitter.com https://hooks.stripe.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcm.googleapis.com https://api.creem.io https://www.creem.io https://*.pusher.com wss://*.pusher.com; frame-src 'self' https://js.stripe.com https://accounts.google.com https://content.googleapis.com; base-uri 'self'; form-action 'self' https://accounts.google.com https://twitter.com; object-src 'none'",
+    "cache-control": "no-store, max-age=0",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "content-type": "application/json",
+    "date": "Sun, 15 Nov 2026 07:44:51 GMT",
+    "connection": "keep-alive",
+    "keep-alive": "timeout=5",
+    "transfer-encoding": "chunked"
+  },
+  "rawBody": "{\"success\":true,\"data\":{\"id\":\"cmwhj4gss001vxlk80c4rws4z\",\"skill\":\"INTRO_DRAFT\",\"status\":\"APPROVED\",\"risk\":\"HIGH\",\"requiresApproval\":true,\"requestedBy\":\"e2e_user_authed\",\"subjectLabel\":null,\"goal\":\"为红队验收起草一段介绍开场白\",\"proposal\":{\"counterpartLabel\":\"红队B\",\"draftMessage\":\"红队B，你好。我是红队A，目前正在准备红队验收相关的工作，接下来会与你一同推进这项任务。为了便于后续沟通，我想先简要确认一下当前的工作安排和彼此的分工边界。如果你方便的话，希望我们能就验收涉及的流程、时间节点和需要注意的事项做一次简短沟通。我会根据你的反馈再确认接下来的具体安排。\",\"usedFieldKeys\":[]},\"reason\":null,\"degradeCode\":null,\"providerKind\":\"workbuddy\",\"injectionSignals\":[],\"injectionFlagged\":false,\"costMicroCents\":11295,\"calls\":[{\"seq\":1,\"skill\":\"INTRO_DRAFT\",\"providerKind\":\"workbuddy\",\"risk\":\"HIGH\",\"highCost\":true,\"ok\":true,\"inputTokens\":361,\"outputTokens\":98,\"microCents\":11295,\"at\":\"2026-11-15T07:44:48.692Z\"}],\"approval\":{\"decision\":\"APPROVED\",\"actorId\":\"e2e_user_authed\",\"deciderRole\":\"OWNER\",\"note\":\"redteam independent review\",\"decidedAt\":\"2026-11-15T07:44:51.326Z\"},\"execution\":{\"available\":false,\"reason\":\"这条运行计划送给对手方，但没有目标身份 —— 收件人必须在创建时由服务端固定（执行时不补，否则批准覆盖的就不是真正收到东西的那个人）。\",\"code\":\"NO_TARGET\",\"kind\":null,\"channel\":null},\"executionRecord\":null,\"deliveryTarget\":null,\"canApprove\":false,\"canReject\":false,\"createdAt\":\"2026-11-15T07:44:50.956Z\",\"updatedAt\":\"2026-11-15T07:44:51.341Z\"}}",
+  "json": {
+    "success": true,
+    "data": {
+      "id": "cmwhj4gss001vxlk80c4rws4z",
+      "skill": "INTRO_DRAFT",
+      "status": "APPROVED",
+      "risk": "HIGH",
+      "requiresApproval": true,
+      "requestedBy": "e2e_user_authed",
+      "subjectLabel": null,
+      "goal": "为红队验收起草一段介绍开场白",
+      "proposal": {
+        "counterpartLabel": "红队B",
+        "draftMessage": "红队B，你好。我是红队A，目前正在准备红队验收相关的工作，接下来会与你一同推进这项任务。为了便于后续沟通，我想先简要确认一下当前的工作安排和彼此的分工边界。如果你方便的话，希望我们能就验收涉及的流程、时间节点和需要注意的事项做一次简短沟通。我会根据你的反馈再确认接下来的具体安排。",
+        "usedFieldKeys": []
+      },
+      "reason": null,
+      "degradeCode": null,
+      "providerKind": "workbuddy",
+      "injectionSignals": [],
+      "injectionFlagged": false,
+      "costMicroCents": 11295,
+      "calls": [
+        {
+          "seq": 1,
+          "skill": "INTRO_DRAFT",
+          "providerKind": "workbuddy",
+          "risk": "HIGH",
+          "highCost": true,
+          "ok": true,
+          "inputTokens": 361,
+          "outputTokens": 98,
+          "microCents": 11295,
+          "at": "2026-11-15T07:44:48.692Z"
+        }
+      ],
+      "approval": {
+        "decision": "APPROVED",
+        "actorId": "e2e_user_authed",
+        "deciderRole": "OWNER",
+        "note": "redteam independent review",
+        "decidedAt": "2026-11-15T07:44:51.326Z"
+      },
+      "execution": {
+        "available": false,
+        "reason": "这条运行计划送给对手方，但没有目标身份 —— 收件人必须在创建时由服务端固定（执行时不补，否则批准覆盖的就不是真正收到东西的那个人）。",
+        "code": "NO_TARGET",
+        "kind": null,
+        "channel": null
+      },
+      "executionRecord": null,
+      "deliveryTarget": null,
+      "canApprove": false,
+      "canReject": false,
+      "createdAt": "2026-11-15T07:44:50.956Z",
+      "updatedAt": "2026-11-15T07:44:51.341Z"
+    }
+  },
+  "setCookiePresent": false
+}

@@ -15,10 +15,11 @@
  *   3. **三态齐全**：loading / error / empty 都是真实反馈；读不到不显示 0。
  */
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AlertCircle, CheckCircle2, Loader2, Users } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useApiGet } from '@/hooks/use-api'
-import { missionsFromListPayload } from '@/lib/living/missions/list'
+import { parseListEnvelope, type ListEnvelopeResult } from '@/lib/living/api/envelope'
 import {
   isPublicMissionStatus,
   missionStatusLabel,
@@ -26,19 +27,13 @@ import {
   type MissionAction,
   type PublicMissionStatus,
 } from '@/lib/living/missions/labels'
+import ExecutionPanel from './execution-panel'
+import MissionSpecSection from './mission-spec-section'
 
 /**
- * `GET /api/v1/missions` 的信封：**`data` 是数组**，分页元数据在 `meta`
- * （`paginated()`，src/lib/api-response.ts:95）。
- * 早期按 `{items}` 读会得到一个恒空的列表 —— 而那长得和"真的没有任务"一模一样，
- * 正是 V21 明令禁止的"假空态"。
+ * 单对象详情（`GET /api/v1/missions/{id}`）的信封。列表读取**不用**这个形状，
+ * 一律走 `parseListEnvelope`（见下方 useMissionList），避免权限错误被读成「没有任务」。
  */
-interface MissionListEnvelope {
-  success: boolean
-  data: MissionDto[]
-  meta?: { page: number; pageSize: number; total: number; totalPages: number }
-  error?: { code: string; message: string }
-}
 type ApiEnvelope<T> = {
   success: boolean
   data: T
@@ -54,6 +49,8 @@ export interface MissionDto {
   constraints: string[] | null
   successCriteria: string
   status: string
+  /** Mission ↔ AgentRun 真实关联锚点（V21 第二批服务端 DTO 新增）。 */
+  sourceRunId: string | null
   sharePath?: string
   maxParticipants: number | null
   expiresAt: string | null
@@ -81,12 +78,16 @@ function StatusBadge({ status }: { status: PublicMissionStatus }) {
 function Loadable({
   isLoading,
   error,
+  errorSuffix,
+  abnormal,
   empty,
   emptyText,
   children,
 }: {
   isLoading: boolean
   error: string | null
+  errorSuffix?: string
+  abnormal?: string | null
   empty: boolean
   emptyText: string
   children: React.ReactNode
@@ -103,7 +104,16 @@ function Loadable({
     return (
       <div className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger" role="alert">
         <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        <span>读取失败：{error}</span>
+        <span>读取失败：{error}{errorSuffix}</span>
+      </div>
+    )
+  }
+  // 形状不认识 / 前置非空断言失败：不是合法空态，更不是「没有任务」，单独报错。
+  if (abnormal) {
+    return (
+      <div className="flex items-start gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-danger" role="alert">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <span>数据异常：{abnormal}</span>
       </div>
     )
   }
@@ -111,6 +121,49 @@ function Loadable({
     return <div className="rounded-lf border border-dashed border-lf-line p-4 text-sm text-lf-text-muted">{emptyText}</div>
   }
   return <>{children}</>
+}
+
+/**
+ * 列表读取：一律走 `parseListEnvelope`（含 HTTP status），绝不把权限错误 / 畸形载荷
+ * 静默当成空列表。refetch 供状态迁移成功后重读。
+ */
+function useMissionList(url: string): {
+  result: ListEnvelopeResult<MissionDto>
+  isLoading: boolean
+  refetch: () => void
+} {
+  const { status: authStatus } = useSession()
+  const [result, setResult] = useState<ListEnvelopeResult<MissionDto>>({
+    kind: 'unexpected',
+    items: [],
+    count: 0,
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [nonce, setNonce] = useState(0)
+  const refetch = useCallback(() => setNonce((n) => n + 1), [])
+
+  useEffect(() => {
+    if (authStatus === 'loading') return
+    let active = true
+    setIsLoading(true)
+    fetch(url)
+      .then(async (res) => {
+        const payload = await res.json().catch(() => null)
+        if (!active) return
+        setResult(parseListEnvelope<MissionDto>(payload, { status: res.status }))
+      })
+      .catch(() => {
+        if (active) setResult({ kind: 'unexpected', items: [], count: 0 })
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [url, authStatus, nonce])
+
+  return { result, isLoading, refetch }
 }
 
 export default function MissionBoard({
@@ -125,14 +178,25 @@ export default function MissionBoard({
   const [transitionError, setTransitionError] = useState<string | null>(null)
   const [transitioning, setTransitioning] = useState<MissionAction | null>(null)
 
-  const list = useApiGet<MissionListEnvelope>('/api/v1/missions?page=1&pageSize=10')
+  const list = useMissionList('/api/v1/missions?page=1&pageSize=10')
   const detail = useApiGet<ApiEnvelope<MissionDto>>(
     selectedMissionId ? `/api/v1/missions/${selectedMissionId}` : null,
   )
 
-  const items = missionsFromListPayload<MissionDto>(list.data)
+  const items = list.result.items
   const canUpdate = capabilities.has('mission.update')
   const selected = detail.data?.data ?? null
+
+  // 列表前置非空断言：kind='ok' 却 count===0 视为异常（不假绿）；
+  // kind='error' 显示权限错误原文，绝不当作「没有任务」。
+  const listError =
+    list.result.kind === 'error' ? (list.result.message ?? '列表读取失败') : null
+  const listAbnormal =
+    list.result.kind === 'unexpected'
+      ? '任务列表响应形状异常，无法确认是否有数据（不显示为空列表）。'
+      : list.result.kind === 'ok' && list.result.count === 0
+        ? '列表前置非空断言失败：服务端返回成功但集合为空。'
+        : null
 
   /** 迁移：成功只认服务端返回；无论成败都重读列表与详情。 */
   const runTransition = async (missionId: string, action: MissionAction) => {
@@ -169,8 +233,10 @@ export default function MissionBoard({
 
       <Loadable
         isLoading={list.isLoading}
-        error={list.error}
-        empty={items.length === 0}
+        error={listError}
+        errorSuffix={list.result.permissionDenied ? '（这是权限错误，不是「没有任务」）' : undefined}
+        abnormal={listAbnormal}
+        empty={list.result.kind === 'empty'}
         emptyText="还没有任务。写下一个目标，创建后会在这里跟进。"
       >
         <ul className="space-y-2" data-testid="mission-list">
@@ -288,6 +354,16 @@ export default function MissionBoard({
                 </div>
               )
             })()}
+
+          {/* V21 第二批 · C04：字段级编辑 + 版本历史（刷新不丢、409 冲突可见） */}
+          <MissionSpecSection
+            missionId={selected.id}
+            sourceRunId={selected.sourceRunId ?? null}
+            locked={selected.status === 'CLOSED'}
+          />
+
+          {/* V21 第二批：服务端真实闭环（运行 / 审批 / 执行 / 回执 / 独立核验） */}
+          <ExecutionPanel mission={selected} capabilities={capabilities} />
         </section>
       )}
     </div>

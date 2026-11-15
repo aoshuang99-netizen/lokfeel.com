@@ -1,0 +1,1685 @@
+{
+  "meta": {
+    "title": "V21 第二批 · 真实业务闭环取证",
+    "base": "http://127.0.0.1:3214",
+    "startedAt": "2026-11-15T07:44:36.754Z",
+    "honestBoundary": "execute 的真实效果是 IN_APP 站内回执（RECEIPT），不是外部动作；核验由第二人基于回执做出。",
+    "providerKind": "workbuddy",
+    "runStatus": "PROPOSED",
+    "provenance": "ai（服务端模型）",
+    "stageEvents": [
+      {
+        "seq": 1,
+        "stage": "QUOTA_CHECK"
+      },
+      {
+        "seq": 2,
+        "stage": "MODEL_CALL"
+      },
+      {
+        "seq": 3,
+        "stage": "SCHEMA_VALIDATE"
+      },
+      {
+        "seq": 4,
+        "stage": "PERSISTED"
+      }
+    ],
+    "receipt": {
+      "kind": "RECEIPT",
+      "channel": "IN_APP",
+      "deliveryId": "cmwhj4a30001exlk8w69r3iut",
+      "deliveryStatus": "SENT"
+    },
+    "finishedAt": "2026-11-15T07:44:44.466Z"
+  },
+  "steps": [
+    {
+      "label": "health",
+      "request": {
+        "method": "GET",
+        "path": "/api/health",
+        "headers": [],
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "status": "healthy",
+          "dbLatency": 5,
+          "timestamp": "2026-11-15T07:44:36.812Z",
+          "cache": {
+            "hits": 601,
+            "misses": 65,
+            "hitRate": 0.9
+          },
+          "redis": {
+            "backend": "upstash",
+            "configured": true,
+            "degraded": false,
+            "degradedForMs": 0,
+            "degradedReason": "",
+            "degradeCount": 0
+          },
+          "botModule": {
+            "enabled": false,
+            "enabledSource": "default",
+            "tickIntervalMs": 60000,
+            "maxActionsPerTick": 50,
+            "minActionIntervalMs": 30000,
+            "speedMultiplier": 1,
+            "warnings": [
+              "未设置 BOT_ENGINE_ENABLED：按代码默认**关闭** Bot 模块（2026-09-28 翻转）。需要 Bot 的既有部署必须显式设置 BOT_ENGINE_ENABLED=true。",
+              "Bot 模块已关闭：所有 /api/cron/bot-*、/api/bots/status 与 /api/bot-automation 均返回 503（含 body.disabledReason）。这是预期行为。"
+            ]
+          },
+          "firebaseAdmin": {
+            "sdkLoaded": true,
+            "configured": false,
+            "initialized": false,
+            "appCount": 0
+          },
+          "payments": {
+            "configured": false,
+            "charging": false,
+            "channels": {
+              "dodo.checkout": false,
+              "dodo.webhook": false,
+              "creem.checkout": false,
+              "creem.webhook": false,
+              "stripe.card": false,
+              "stripe.refund": false,
+              "stripe.webhook": false
+            },
+            "missing": [
+              "CREEM_API_KEY",
+              "CREEM_WEBHOOK_SECRET",
+              "DODO_PAYMENTS_API_KEY",
+              "DODO_PAYMENTS_ENVIRONMENT",
+              "DODO_PAYMENTS_WEBHOOK_KEY",
+              "STRIPE_SECRET_KEY",
+              "STRIPE_WEBHOOK_SECRET"
+            ],
+            "malformed": []
+          },
+          "version": "0.1.0",
+          "commit": "f666564",
+          "builtAt": "2026-11-15T07:22:33.256Z",
+          "commitSource": "git"
+        }
+      }
+    },
+    {
+      "label": "login-owner",
+      "request": {
+        "method": "POST",
+        "path": "/api/auth/login",
+        "headers": [
+          "Origin",
+          "Referer",
+          "Accept"
+        ],
+        "body": {
+          "email": "e2e.authed@example.invalid",
+          "password": "<redacted: from .qa-authed-e2e.local.json>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "redirectUrl": "/dashboard",
+          "role": "USER",
+          "user": {
+            "id": "e2e_user_authed",
+            "email": "e2e.authed@example.invalid",
+            "name": "E2E Authed User",
+            "role": "USER"
+          }
+        }
+      }
+    },
+    {
+      "label": "login-second-admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/auth/login",
+        "headers": [
+          "Origin",
+          "Referer",
+          "Accept"
+        ],
+        "body": {
+          "email": "e2e.redteam.admin@example.invalid",
+          "password": "<redacted: from .qa-authed-e2e.local.json>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "redirectUrl": "/dashboard",
+          "role": "USER",
+          "user": {
+            "id": "e2e_user_redteam_admin",
+            "email": "e2e.redteam.admin@example.invalid",
+            "name": "RedTeam ADMIN",
+            "role": "USER"
+          }
+        }
+      }
+    },
+    {
+      "label": "create-intent-run",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/agents/runs",
+        "headers": [
+          "Idempotency-Key"
+        ],
+        "body": {
+          "skill": "INTENT_EXTRACTION",
+          "input": {
+            "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "run": {
+              "id": "cmwhj48up0010xlk8dasg53bn",
+              "skill": "INTENT_EXTRACTION",
+              "status": "PROPOSED",
+              "risk": "LOW",
+              "requiresApproval": false,
+              "requestedBy": "e2e_user_authed",
+              "subjectLabel": null,
+              "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+              "proposal": {
+                "version": "1.2",
+                "title": "三个月内签约两家东南亚分销伙伴",
+                "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+                "nodes": [
+                  {
+                    "id": "intent-1",
+                    "title": "目标与成功判据",
+                    "type": "intent",
+                    "data": {
+                      "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                      "constraints": [
+                        "时间限制：三个月内完成"
+                      ],
+                      "successCriteria": [
+                        "找到两家东南亚分销伙伴",
+                        "与两家伙伴签署试销协议"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "candidate-1",
+                    "title": "候选池",
+                    "type": "candidate",
+                    "data": {
+                      "candidates": []
+                    }
+                  },
+                  {
+                    "id": "consent-1",
+                    "title": "披露与同意",
+                    "type": "consent",
+                    "data": {
+                      "fields": [],
+                      "status": "CONSENT_PENDING"
+                    }
+                  }
+                ],
+                "availableActions": [],
+                "notes": []
+              },
+              "reason": null,
+              "degradeCode": null,
+              "providerKind": "workbuddy",
+              "injectionSignals": [],
+              "injectionFlagged": false,
+              "costMicroCents": 17520,
+              "calls": [
+                {
+                  "seq": 1,
+                  "skill": "INTENT_EXTRACTION",
+                  "providerKind": "workbuddy",
+                  "risk": "LOW",
+                  "highCost": false,
+                  "ok": true,
+                  "inputTokens": 468,
+                  "outputTokens": 175,
+                  "microCents": 17520,
+                  "at": "2026-11-15T07:44:38.545Z"
+                }
+              ],
+              "approval": null,
+              "execution": {
+                "available": true,
+                "reason": "把已确定的结构化产出（WorkspaceSpec）以站内信回执给发起人；不落任何业务数据（落成 Mission 属业务写入，不在本切片）。",
+                "code": null,
+                "kind": "RECEIPT",
+                "channel": "IN_APP"
+              },
+              "executionRecord": null,
+              "deliveryTarget": null,
+              "canApprove": false,
+              "canReject": false,
+              "createdAt": "2026-11-15T07:44:40.657Z",
+              "updatedAt": "2026-11-15T07:44:40.657Z"
+            },
+            "replayed": false
+          }
+        }
+      }
+    },
+    {
+      "label": "replay-intent-run",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/agents/runs",
+        "headers": [
+          "Idempotency-Key"
+        ],
+        "body": {
+          "skill": "INTENT_EXTRACTION",
+          "input": {
+            "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "run": {
+              "id": "cmwhj48up0010xlk8dasg53bn",
+              "skill": "INTENT_EXTRACTION",
+              "status": "PROPOSED",
+              "risk": "LOW",
+              "requiresApproval": false,
+              "requestedBy": "e2e_user_authed",
+              "subjectLabel": null,
+              "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+              "proposal": {
+                "version": "1.2",
+                "title": "三个月内签约两家东南亚分销伙伴",
+                "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+                "nodes": [
+                  {
+                    "id": "intent-1",
+                    "title": "目标与成功判据",
+                    "type": "intent",
+                    "data": {
+                      "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                      "constraints": [
+                        "时间限制：三个月内完成"
+                      ],
+                      "successCriteria": [
+                        "找到两家东南亚分销伙伴",
+                        "与两家伙伴签署试销协议"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "candidate-1",
+                    "title": "候选池",
+                    "type": "candidate",
+                    "data": {
+                      "candidates": []
+                    }
+                  },
+                  {
+                    "id": "consent-1",
+                    "title": "披露与同意",
+                    "type": "consent",
+                    "data": {
+                      "fields": [],
+                      "status": "CONSENT_PENDING"
+                    }
+                  }
+                ],
+                "availableActions": [],
+                "notes": []
+              },
+              "reason": null,
+              "degradeCode": null,
+              "providerKind": "workbuddy",
+              "injectionSignals": [],
+              "injectionFlagged": false,
+              "costMicroCents": 17520,
+              "calls": [
+                {
+                  "seq": 1,
+                  "skill": "INTENT_EXTRACTION",
+                  "providerKind": "workbuddy",
+                  "risk": "LOW",
+                  "highCost": false,
+                  "ok": true,
+                  "inputTokens": 468,
+                  "outputTokens": 175,
+                  "microCents": 17520,
+                  "at": "2026-11-15T07:44:38.545Z"
+                }
+              ],
+              "approval": null,
+              "execution": {
+                "available": true,
+                "reason": "把已确定的结构化产出（WorkspaceSpec）以站内信回执给发起人；不落任何业务数据（落成 Mission 属业务写入，不在本切片）。",
+                "code": null,
+                "kind": "RECEIPT",
+                "channel": "IN_APP"
+              },
+              "executionRecord": null,
+              "deliveryTarget": null,
+              "canApprove": false,
+              "canReject": false,
+              "createdAt": "2026-11-15T07:44:40.657Z",
+              "updatedAt": "2026-11-15T07:44:40.657Z"
+            },
+            "replayed": true
+          }
+        }
+      }
+    },
+    {
+      "label": "create-mission-with-run",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions",
+        "headers": [
+          "Idempotency-Key"
+        ],
+        "body": {
+          "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+          "offer": "提供产品样品与渠道培训",
+          "successCriteria": "签署试销协议并完成首批出货",
+          "constraints": [
+            "期限：三个月内"
+          ],
+          "sourceRunId": "cmwhj48up0010xlk8dasg53bn"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "id": "cmwhj494x0018xlk898lxkkp5",
+            "organizationId": "e2e_org_authed",
+            "ownerId": "e2e_user_authed",
+            "title": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+            "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+            "offer": "提供产品样品与渠道培训",
+            "constraints": [
+              "期限：三个月内"
+            ],
+            "successCriteria": "签署试销协议并完成首批出货",
+            "status": "DRAFT",
+            "publicPreview": true,
+            "maxParticipants": null,
+            "sharePath": "/m/0kTMxcd1JhiWsDBWWY91-d8Z2dwuOVll",
+            "shareToken": "0kTMxcd1JhiWsDBWWY91-d8Z2dwuOVll",
+            "expiresAt": null,
+            "publishedAt": null,
+            "closedAt": null,
+            "createdAt": "2026-11-15T07:44:41.026Z",
+            "updatedAt": "2026-11-15T07:44:41.026Z",
+            "participantCount": 0,
+            "sourceRunId": "cmwhj48up0010xlk8dasg53bn"
+          }
+        }
+      }
+    },
+    {
+      "label": "伪造 sourceRunId 被拒",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions",
+        "headers": [
+          "Idempotency-Key"
+        ],
+        "body": {
+          "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+          "offer": "提供产品样品与渠道培训",
+          "successCriteria": "签署试销协议并完成首批出货",
+          "constraints": [
+            "期限：三个月内"
+          ],
+          "sourceRunId": "run_does_not_exist"
+        }
+      },
+      "response": {
+        "status": 400,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "VALIDATION_ERROR",
+            "message": "sourceRunId must reference a real INTENT_EXTRACTION run in this organization",
+            "details": {
+              "field": "sourceRunId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "spec-v0",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/spec",
+        "headers": [],
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "missionId": "cmwhj494x0018xlk898lxkkp5",
+            "currentVersion": 0,
+            "current": null,
+            "history": []
+          }
+        }
+      }
+    },
+    {
+      "label": "spec-save-v1",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/spec",
+        "headers": [],
+        "body": {
+          "spec": {
+            "version": "1.2",
+            "title": "三个月内签约两家东南亚分销伙伴",
+            "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+            "nodes": [
+              {
+                "id": "intent-1",
+                "title": "目标与成功判据",
+                "type": "intent",
+                "data": {
+                  "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                  "constraints": [
+                    "时间限制：三个月内完成"
+                  ],
+                  "successCriteria": [
+                    "找到两家东南亚分销伙伴",
+                    "与两家伙伴签署试销协议"
+                  ]
+                }
+              },
+              {
+                "id": "candidate-1",
+                "title": "候选池",
+                "type": "candidate",
+                "data": {
+                  "candidates": []
+                }
+              },
+              {
+                "id": "consent-1",
+                "title": "披露与同意",
+                "type": "consent",
+                "data": {
+                  "fields": [],
+                  "status": "CONSENT_PENDING"
+                }
+              }
+            ],
+            "availableActions": [],
+            "notes": []
+          },
+          "expectedVersion": 0,
+          "changeNote": "首批方案：确认期限与判据"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "missionId": "cmwhj494x0018xlk898lxkkp5",
+            "currentVersion": 1,
+            "current": {
+              "id": "cmwhj49ju001bxlk8mgy4ugcp",
+              "missionId": "cmwhj494x0018xlk898lxkkp5",
+              "version": 1,
+              "spec": {
+                "version": "1.2",
+                "title": "三个月内签约两家东南亚分销伙伴",
+                "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+                "nodes": [
+                  {
+                    "id": "intent-1",
+                    "title": "目标与成功判据",
+                    "type": "intent",
+                    "data": {
+                      "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                      "constraints": [
+                        "时间限制：三个月内完成"
+                      ],
+                      "successCriteria": [
+                        "找到两家东南亚分销伙伴",
+                        "与两家伙伴签署试销协议"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "candidate-1",
+                    "title": "候选池",
+                    "type": "candidate",
+                    "data": {
+                      "candidates": []
+                    }
+                  },
+                  {
+                    "id": "consent-1",
+                    "title": "披露与同意",
+                    "type": "consent",
+                    "data": {
+                      "fields": [],
+                      "status": "CONSENT_PENDING"
+                    }
+                  }
+                ],
+                "availableActions": [],
+                "notes": []
+              },
+              "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+              "offer": null,
+              "successCriteria": "[\"找到两家东南亚分销伙伴\",\"与两家伙伴签署试销协议\"]",
+              "expiresAt": null,
+              "actorId": "e2e_user_authed",
+              "createdAt": "2026-11-15T07:44:41.562Z",
+              "changeNote": "首批方案：确认期限与判据"
+            },
+            "history": [
+              {
+                "id": "cmwhj49ju001bxlk8mgy4ugcp",
+                "version": 1,
+                "actorId": "e2e_user_authed",
+                "createdAt": "2026-11-15T07:44:41.562Z",
+                "changeNote": "首批方案：确认期限与判据"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "label": "并发版本冲突 409",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/spec",
+        "headers": [],
+        "body": {
+          "spec": {
+            "version": "1.2",
+            "title": "三个月内签约两家东南亚分销伙伴",
+            "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+            "nodes": [
+              {
+                "id": "intent-1",
+                "title": "目标与成功判据",
+                "type": "intent",
+                "data": {
+                  "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                  "constraints": [
+                    "时间限制：三个月内完成"
+                  ],
+                  "successCriteria": [
+                    "找到两家东南亚分销伙伴",
+                    "与两家伙伴签署试销协议"
+                  ]
+                }
+              },
+              {
+                "id": "candidate-1",
+                "title": "候选池",
+                "type": "candidate",
+                "data": {
+                  "candidates": []
+                }
+              },
+              {
+                "id": "consent-1",
+                "title": "披露与同意",
+                "type": "consent",
+                "data": {
+                  "fields": [],
+                  "status": "CONSENT_PENDING"
+                }
+              }
+            ],
+            "availableActions": [],
+            "notes": []
+          },
+          "expectedVersion": 0
+        }
+      },
+      "response": {
+        "status": 409,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Spec version conflict",
+            "details": {
+              "code": "SPEC_VERSION_CONFLICT",
+              "expectedVersion": 0,
+              "currentVersion": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "stage-events",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/agents/runs/cmwhj48up0010xlk8dasg53bn/events",
+        "headers": [],
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "text/event-stream; charset=utf-8",
+          "idempotent-replayed": null
+        },
+        "body": ": V21 C03 编排阶段事件（编排阶段事件，不是模型 token 流）；Last-Event-ID=0\n\nid: 1\nevent: stage\ndata: {\"id\":\"cmwhj48vb0012xlk8oxnela1k\",\"seq\":1,\"stage\":\"QUOTA_CHECK\",\"at\":\"2026-11-15T07:44:38.545Z\",\"detail\":{\"checked\":true,\"blocked\":false},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 2\nevent: stage\ndata: {\"id\":\"cmwhj48vb0013xlk8089f7m14\",\"seq\":2,\"stage\":\"MODEL_CALL\",\"at\":\"2026-11-15T07:44:38.545Z\",\"detail\":{\"providerKind\":\"workbuddy\",\"callCount\":1},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 3\nevent: stage\ndata: {\"id\":\"cmwhj48vb0014xlk8vklvwfe7\",\"seq\":3,\"stage\":\"SCHEMA_VALIDATE\",\"at\":\"2026-11-15T07:44:38.545Z\",\"detail\":{\"schemaValid\":true},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 4\nevent: stage\ndata: {\"id\":\"cmwhj48vb0015xlk82y1bwtxq\",\"seq\":4,\"stage\":\"PERSISTED\",\"at\":\"2026-11-15T07:44:38.545Z\",\"detail\":{\"runId\":\"cmwhj48up0010xlk8dasg53bn\",\"status\":\"PROPOSED\"},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nevent: done\ndata: {\"note\":\"编排阶段事件，不是模型 token 流\",\"lastEventId\":4}\n\n"
+      }
+    },
+    {
+      "label": "stage-events-resume",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/agents/runs/cmwhj48up0010xlk8dasg53bn/events",
+        "headers": [
+          "Last-Event-ID"
+        ],
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "text/event-stream; charset=utf-8",
+          "idempotent-replayed": null
+        },
+        "body": ": V21 C03 编排阶段事件（编排阶段事件，不是模型 token 流）；Last-Event-ID=1\n\nid: 2\nevent: stage\ndata: {\"id\":\"cmwhj48vb0013xlk8089f7m14\",\"seq\":2,\"stage\":\"MODEL_CALL\",\"at\":\"2026-11-15T07:44:38.545Z\",\"detail\":{\"providerKind\":\"workbuddy\",\"callCount\":1},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 3\nevent: stage\ndata: {\"id\":\"cmwhj48vb0014xlk8vklvwfe7\",\"seq\":3,\"stage\":\"SCHEMA_VALIDATE\",\"at\":\"2026-11-15T07:44:38.545Z\",\"detail\":{\"schemaValid\":true},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nid: 4\nevent: stage\ndata: {\"id\":\"cmwhj48vb0015xlk82y1bwtxq\",\"seq\":4,\"stage\":\"PERSISTED\",\"at\":\"2026-11-15T07:44:38.545Z\",\"detail\":{\"runId\":\"cmwhj48up0010xlk8dasg53bn\",\"status\":\"PROPOSED\"},\"note\":\"编排阶段事件，不是模型 token 流\"}\n\nevent: done\ndata: {\"note\":\"编排阶段事件，不是模型 token 流\",\"lastEventId\":4}\n\n"
+      }
+    },
+    {
+      "label": "execute-run",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/agents/runs/cmwhj48up0010xlk8dasg53bn/execute",
+        "headers": [],
+        "body": null
+      },
+      "response": {
+        "status": 201,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "run": {
+              "id": "cmwhj48up0010xlk8dasg53bn",
+              "skill": "INTENT_EXTRACTION",
+              "status": "EXECUTED",
+              "risk": "LOW",
+              "requiresApproval": false,
+              "requestedBy": "e2e_user_authed",
+              "subjectLabel": null,
+              "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+              "proposal": {
+                "version": "1.2",
+                "title": "三个月内签约两家东南亚分销伙伴",
+                "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+                "nodes": [
+                  {
+                    "id": "intent-1",
+                    "title": "目标与成功判据",
+                    "type": "intent",
+                    "data": {
+                      "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                      "constraints": [
+                        "时间限制：三个月内完成"
+                      ],
+                      "successCriteria": [
+                        "找到两家东南亚分销伙伴",
+                        "与两家伙伴签署试销协议"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "candidate-1",
+                    "title": "候选池",
+                    "type": "candidate",
+                    "data": {
+                      "candidates": []
+                    }
+                  },
+                  {
+                    "id": "consent-1",
+                    "title": "披露与同意",
+                    "type": "consent",
+                    "data": {
+                      "fields": [],
+                      "status": "CONSENT_PENDING"
+                    }
+                  }
+                ],
+                "availableActions": [],
+                "notes": []
+              },
+              "reason": null,
+              "degradeCode": null,
+              "providerKind": "workbuddy",
+              "injectionSignals": [],
+              "injectionFlagged": false,
+              "costMicroCents": 17520,
+              "calls": [
+                {
+                  "seq": 1,
+                  "skill": "INTENT_EXTRACTION",
+                  "providerKind": "workbuddy",
+                  "risk": "LOW",
+                  "highCost": false,
+                  "ok": true,
+                  "inputTokens": 468,
+                  "outputTokens": 175,
+                  "microCents": 17520,
+                  "at": "2026-11-15T07:44:38.545Z"
+                }
+              ],
+              "approval": null,
+              "execution": {
+                "available": false,
+                "reason": "该运行已执行过（执行是终态，不会重复交付）",
+                "code": "STATUS_NOT_EXECUTABLE",
+                "kind": null,
+                "channel": null
+              },
+              "executionRecord": {
+                "id": "cmwhj4a37001fxlk85apqctqe",
+                "kind": "RECEIPT",
+                "channel": "IN_APP",
+                "recipientId": "e2e_user_authed",
+                "deliveryId": "cmwhj4a30001exlk8w69r3iut",
+                "deliveryStatus": "SENT",
+                "actorId": "e2e_user_authed",
+                "executedAt": "2026-11-15T07:44:42.236Z"
+              },
+              "deliveryTarget": null,
+              "canApprove": false,
+              "canReject": false,
+              "createdAt": "2026-11-15T07:44:40.657Z",
+              "updatedAt": "2026-11-15T07:44:42.261Z"
+            },
+            "execution": {
+              "id": "cmwhj4a37001fxlk85apqctqe",
+              "kind": "RECEIPT",
+              "channel": "IN_APP",
+              "recipientId": "e2e_user_authed",
+              "deliveryId": "cmwhj4a30001exlk8w69r3iut",
+              "deliveryStatus": "SENT",
+              "actorId": "e2e_user_authed",
+              "executedAt": "2026-11-15T07:44:42.236Z"
+            },
+            "replayed": false,
+            "delivery": {
+              "id": "cmwhj4a30001exlk8w69r3iut",
+              "status": "SENT",
+              "provider": "in-app"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "run-after-execute",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/agents/runs/cmwhj48up0010xlk8dasg53bn",
+        "headers": [],
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "id": "cmwhj48up0010xlk8dasg53bn",
+            "skill": "INTENT_EXTRACTION",
+            "status": "EXECUTED",
+            "risk": "LOW",
+            "requiresApproval": false,
+            "requestedBy": "e2e_user_authed",
+            "subjectLabel": null,
+            "goal": "帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg",
+            "proposal": {
+              "version": "1.2",
+              "title": "三个月内签约两家东南亚分销伙伴",
+              "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+              "nodes": [
+                {
+                  "id": "intent-1",
+                  "title": "目标与成功判据",
+                  "type": "intent",
+                  "data": {
+                    "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                    "constraints": [
+                      "时间限制：三个月内完成"
+                    ],
+                    "successCriteria": [
+                      "找到两家东南亚分销伙伴",
+                      "与两家伙伴签署试销协议"
+                    ]
+                  }
+                },
+                {
+                  "id": "candidate-1",
+                  "title": "候选池",
+                  "type": "candidate",
+                  "data": {
+                    "candidates": []
+                  }
+                },
+                {
+                  "id": "consent-1",
+                  "title": "披露与同意",
+                  "type": "consent",
+                  "data": {
+                    "fields": [],
+                    "status": "CONSENT_PENDING"
+                  }
+                }
+              ],
+              "availableActions": [],
+              "notes": []
+            },
+            "reason": null,
+            "degradeCode": null,
+            "providerKind": "workbuddy",
+            "injectionSignals": [],
+            "injectionFlagged": false,
+            "costMicroCents": 17520,
+            "calls": [
+              {
+                "seq": 1,
+                "skill": "INTENT_EXTRACTION",
+                "providerKind": "workbuddy",
+                "risk": "LOW",
+                "highCost": false,
+                "ok": true,
+                "inputTokens": 468,
+                "outputTokens": 175,
+                "microCents": 17520,
+                "at": "2026-11-15T07:44:38.545Z"
+              }
+            ],
+            "approval": null,
+            "execution": {
+              "available": false,
+              "reason": "该运行已执行过（执行是终态，不会重复交付）",
+              "code": "STATUS_NOT_EXECUTABLE",
+              "kind": null,
+              "channel": null
+            },
+            "executionRecord": {
+              "id": "cmwhj4a37001fxlk85apqctqe",
+              "kind": "RECEIPT",
+              "channel": "IN_APP",
+              "recipientId": "e2e_user_authed",
+              "deliveryId": "cmwhj4a30001exlk8w69r3iut",
+              "deliveryStatus": "SENT",
+              "actorId": "e2e_user_authed",
+              "executedAt": "2026-11-15T07:44:42.236Z"
+            },
+            "deliveryTarget": null,
+            "canApprove": false,
+            "canReject": false,
+            "createdAt": "2026-11-15T07:44:40.657Z",
+            "updatedAt": "2026-11-15T07:44:42.261Z"
+          }
+        }
+      }
+    },
+    {
+      "label": "EXECUTED 后方案锁定 409",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/spec",
+        "headers": [],
+        "body": {
+          "spec": {
+            "version": "1.2",
+            "title": "三个月内签约两家东南亚分销伙伴",
+            "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+            "nodes": [
+              {
+                "id": "intent-1",
+                "title": "目标与成功判据",
+                "type": "intent",
+                "data": {
+                  "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                  "constraints": [
+                    "时间限制：三个月内完成"
+                  ],
+                  "successCriteria": [
+                    "找到两家东南亚分销伙伴",
+                    "与两家伙伴签署试销协议"
+                  ]
+                }
+              },
+              {
+                "id": "candidate-1",
+                "title": "候选池",
+                "type": "candidate",
+                "data": {
+                  "candidates": []
+                }
+              },
+              {
+                "id": "consent-1",
+                "title": "披露与同意",
+                "type": "consent",
+                "data": {
+                  "fields": [],
+                  "status": "CONSENT_PENDING"
+                }
+              }
+            ],
+            "availableActions": [],
+            "notes": []
+          },
+          "expectedVersion": 1
+        }
+      },
+      "response": {
+        "status": 409,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Mission is locked: linked run already executed",
+            "details": {
+              "code": "MISSION_LOCKED"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "verification-before",
+      "request": {
+        "method": "GET",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/verification",
+        "headers": [],
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": null
+        }
+      }
+    },
+    {
+      "label": "发起人自己核验被拒",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/verification",
+        "headers": [],
+        "body": {
+          "criteria": [
+            {
+              "label": "签署试销协议",
+              "confirmed": true
+            },
+            {
+              "label": "完成首批出货",
+              "confirmed": true
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Verifier must differ from the run requester",
+            "details": {
+              "code": "SELF_VERIFICATION_FORBIDDEN"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "模型输出当证据被拒",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/verification",
+        "headers": [],
+        "body": {
+          "criteria": [
+            {
+              "label": "签署试销协议",
+              "confirmed": true
+            },
+            {
+              "label": "完成首批出货",
+              "confirmed": true
+            }
+          ],
+          "proposal": {
+            "version": "1.2",
+            "title": "三个月内签约两家东南亚分销伙伴",
+            "summary": "在三个月内找到两家东南亚分销伙伴并签署试销协议。",
+            "nodes": [
+              {
+                "id": "intent-1",
+                "title": "目标与成功判据",
+                "type": "intent",
+                "data": {
+                  "goal": "在三个月内找到两家东南亚分销伙伴并签署试销协议",
+                  "constraints": [
+                    "时间限制：三个月内完成"
+                  ],
+                  "successCriteria": [
+                    "找到两家东南亚分销伙伴",
+                    "与两家伙伴签署试销协议"
+                  ]
+                }
+              },
+              {
+                "id": "candidate-1",
+                "title": "候选池",
+                "type": "candidate",
+                "data": {
+                  "candidates": []
+                }
+              },
+              {
+                "id": "consent-1",
+                "title": "披露与同意",
+                "type": "consent",
+                "data": {
+                  "fields": [],
+                  "status": "CONSENT_PENDING"
+                }
+              }
+            ],
+            "availableActions": [],
+            "notes": []
+          }
+        }
+      },
+      "response": {
+        "status": 400,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "VALIDATION_ERROR",
+            "message": "proposal is model output and is not admissible evidence",
+            "details": {
+              "code": "MODEL_OUTPUT_NOT_EVIDENCE",
+              "field": "proposal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "未确认的判据被拒",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/verification",
+        "headers": [],
+        "body": {
+          "criteria": [
+            {
+              "label": "签署试销协议",
+              "confirmed": false
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Every acceptance criterion must be confirmed:true",
+            "details": {
+              "code": "CRITERIA_NOT_CONFIRMED"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "create-mission-without-run",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions",
+        "headers": [
+          "Idempotency-Key"
+        ],
+        "body": {
+          "goal": "独立核验负例用的无关联任务 mwhj46pg",
+          "offer": "样品",
+          "successCriteria": "签署试销协议"
+        }
+      },
+      "response": {
+        "status": 201,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "id": "cmwhj4bdo001hxlk86dh6i1hy",
+            "organizationId": "e2e_org_authed",
+            "ownerId": "e2e_user_authed",
+            "title": "独立核验负例用的无关联任务 mwhj46pg",
+            "goal": "独立核验负例用的无关联任务 mwhj46pg",
+            "offer": "样品",
+            "constraints": [],
+            "successCriteria": "签署试销协议",
+            "status": "DRAFT",
+            "publicPreview": true,
+            "maxParticipants": null,
+            "sharePath": "/m/TLi9h8x5r__dMroCwV427hC43vR4vppg",
+            "shareToken": "TLi9h8x5r__dMroCwV427hC43vR4vppg",
+            "expiresAt": null,
+            "publishedAt": null,
+            "closedAt": null,
+            "createdAt": "2026-11-15T07:44:43.932Z",
+            "updatedAt": "2026-11-15T07:44:43.932Z",
+            "participantCount": 0,
+            "sourceRunId": null
+          }
+        }
+      }
+    },
+    {
+      "label": "无关联运行/无回执不可核验",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj4bdo001hxlk86dh6i1hy/verification",
+        "headers": [],
+        "body": {
+          "criteria": [
+            {
+              "label": "签署试销协议",
+              "confirmed": true
+            },
+            {
+              "label": "完成首批出货",
+              "confirmed": true
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "CONFLICT",
+            "message": "Mission has no linked AgentRun",
+            "details": {
+              "code": "MISSION_NOT_LINKED"
+            }
+          }
+        }
+      }
+    },
+    {
+      "label": "verification-by-second-actor",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/verification",
+        "headers": [],
+        "body": {
+          "criteria": [
+            {
+              "label": "签署试销协议",
+              "confirmed": true
+            },
+            {
+              "label": "完成首批出货",
+              "confirmed": true
+            }
+          ],
+          "evidenceNote": "对照回执逐条核对，第二人确认"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": true,
+          "data": {
+            "id": "cmwhj4bmw001kxlk8kj2vxyu1",
+            "organizationId": "e2e_org_authed",
+            "missionId": "cmwhj494x0018xlk898lxkkp5",
+            "runId": "cmwhj48up0010xlk8dasg53bn",
+            "receiptRef": "cmwhj4a30001exlk8w69r3iut",
+            "verdict": "CONFIRMED",
+            "criteria": [
+              {
+                "label": "签署试销协议",
+                "confirmed": true
+              },
+              {
+                "label": "完成首批出货",
+                "confirmed": true
+              }
+            ],
+            "evidenceNote": "对照回执逐条核对，第二人确认",
+            "verifierId": "e2e_user_redteam_admin",
+            "createdAt": "2026-11-15T07:44:44.264Z",
+            "verificationLevel": "COUNTERPARTY_CONFIRMED",
+            "evidence": {
+              "http": {
+                "method": "POST",
+                "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/verification",
+                "organizationId": "e2e_org_authed"
+              },
+              "dbRows": {
+                "verificationId": "cmwhj4bmw001kxlk8kj2vxyu1",
+                "missionId": "cmwhj494x0018xlk898lxkkp5",
+                "runId": "cmwhj48up0010xlk8dasg53bn",
+                "executionId": "cmwhj4a37001fxlk85apqctqe"
+              },
+              "auditEventType": "mission.verification_recorded",
+              "receipt": {
+                "deliveryId": "cmwhj4a30001exlk8w69r3iut",
+                "deliveryStatus": "SENT",
+                "channel": "IN_APP",
+                "kind": "RECEIPT"
+              }
+            },
+            "statement": "本记录仅陈述已核验的事实（HTTP 请求摘要 / DB 行 id / 审计事件类型 / 回执引用），不宣布目标达成，也不把模型输出当作证据。"
+          }
+        }
+      }
+    },
+    {
+      "label": "重复核验被拒",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/missions/cmwhj494x0018xlk898lxkkp5/verification",
+        "headers": [],
+        "body": {
+          "criteria": [
+            {
+              "label": "签署试销协议",
+              "confirmed": true
+            },
+            {
+              "label": "完成首批出货",
+              "confirmed": true
+            }
+          ]
+        }
+      },
+      "response": {
+        "status": 409,
+        "headersSubset": {
+          "content-type": "application/json",
+          "idempotent-replayed": null
+        },
+        "body": {
+          "success": false,
+          "data": null,
+          "error": {
+            "code": "CONFLICT",
+            "message": "这条任务已经有核验记录，不能重复核验。",
+            "details": {
+              "code": "VERIFICATION_ALREADY_RECORDED",
+              "missionId": "cmwhj494x0018xlk898lxkkp5",
+              "runId": "cmwhj48up0010xlk8dasg53bn"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "negativeCases": [
+    {
+      "label": "伪造 sourceRunId 被拒",
+      "expectStatus": 400,
+      "actualStatus": 400,
+      "actualCode": "VALIDATION_ERROR",
+      "pass": true
+    },
+    {
+      "label": "并发版本冲突 409",
+      "expectStatus": 409,
+      "expectCode": "SPEC_VERSION_CONFLICT",
+      "actualStatus": 409,
+      "actualCode": "SPEC_VERSION_CONFLICT",
+      "pass": true
+    },
+    {
+      "label": "EXECUTED 后方案锁定 409",
+      "expectStatus": 409,
+      "expectCode": "MISSION_LOCKED",
+      "actualStatus": 409,
+      "actualCode": "MISSION_LOCKED",
+      "pass": true
+    },
+    {
+      "label": "发起人自己核验被拒",
+      "expectStatus": 409,
+      "expectCode": "SELF_VERIFICATION_FORBIDDEN",
+      "actualStatus": 409,
+      "actualCode": "SELF_VERIFICATION_FORBIDDEN",
+      "pass": true
+    },
+    {
+      "label": "模型输出当证据被拒",
+      "expectStatus": 400,
+      "expectCode": "MODEL_OUTPUT_NOT_EVIDENCE",
+      "actualStatus": 400,
+      "actualCode": "MODEL_OUTPUT_NOT_EVIDENCE",
+      "pass": true
+    },
+    {
+      "label": "未确认的判据被拒",
+      "expectStatus": 409,
+      "actualStatus": 409,
+      "actualCode": "CRITERIA_NOT_CONFIRMED",
+      "pass": true
+    },
+    {
+      "label": "无关联运行/无回执不可核验",
+      "expectStatus": 409,
+      "actualStatus": 409,
+      "actualCode": "MISSION_NOT_LINKED",
+      "pass": true
+    },
+    {
+      "label": "重复核验被拒",
+      "expectStatus": 409,
+      "actualStatus": 409,
+      "actualCode": "VERIFICATION_ALREADY_RECORDED",
+      "pass": true
+    }
+  ],
+  "dbEvidence": {
+    "agentRun": [
+      {
+        "id": "cmwhj48up0010xlk8dasg53bn",
+        "status": "EXECUTED",
+        "requestedBy": "e2e_user_authed"
+      }
+    ],
+    "agentExecution": [
+      {
+        "id": "cmwhj4a37001fxlk85apqctqe",
+        "runId": "cmwhj48up0010xlk8dasg53bn",
+        "kind": "RECEIPT",
+        "channel": "IN_APP",
+        "deliveryId": "cmwhj4a30001exlk8w69r3iut",
+        "deliveryStatus": "SENT"
+      }
+    ],
+    "executionVerification": [
+      {
+        "id": "cmwhj4bmw001kxlk8kj2vxyu1",
+        "missionId": "cmwhj494x0018xlk898lxkkp5",
+        "runId": "cmwhj48up0010xlk8dasg53bn",
+        "verdict": "CONFIRMED",
+        "verifierId": "e2e_user_redteam_admin",
+        "receiptRef": "cmwhj4a30001exlk8w69r3iut"
+      }
+    ],
+    "missionSpecRevision": [
+      {
+        "id": "cmwhj49ju001bxlk8mgy4ugcp",
+        "missionId": "cmwhj494x0018xlk898lxkkp5",
+        "version": 1
+      }
+    ],
+    "agentRunStageEvent": [
+      {
+        "id": "cmwhj48vb0012xlk8oxnela1k",
+        "runId": "cmwhj48up0010xlk8dasg53bn",
+        "seq": 1,
+        "stage": "QUOTA_CHECK"
+      },
+      {
+        "id": "cmwhj48vb0013xlk8089f7m14",
+        "runId": "cmwhj48up0010xlk8dasg53bn",
+        "seq": 2,
+        "stage": "MODEL_CALL"
+      },
+      {
+        "id": "cmwhj48vb0014xlk8vklvwfe7",
+        "runId": "cmwhj48up0010xlk8dasg53bn",
+        "seq": 3,
+        "stage": "SCHEMA_VALIDATE"
+      },
+      {
+        "id": "cmwhj48vb0015xlk82y1bwtxq",
+        "runId": "cmwhj48up0010xlk8dasg53bn",
+        "seq": 4,
+        "stage": "PERSISTED"
+      }
+    ],
+    "tenantAuditEvent": [
+      {
+        "id": "cmwhj4a3f001gxlk8h5u0m4tw",
+        "eventType": "agent.run.executed",
+        "resourceType": "agent_run",
+        "resourceId": "cmwhj48up0010xlk8dasg53bn"
+      },
+      {
+        "id": "cmwhj49k4001cxlk8ic2dp2ro",
+        "eventType": "mission.spec_revision_created",
+        "resourceType": "mission_spec",
+        "resourceId": "cmwhj494x0018xlk898lxkkp5"
+      },
+      {
+        "id": "cmwhj49510019xlk89p4ax2yi",
+        "eventType": "mission.created",
+        "resourceType": "mission",
+        "resourceId": "cmwhj494x0018xlk898lxkkp5"
+      },
+      {
+        "id": "cmwhj48vl0016xlk8l174wjjl",
+        "eventType": "agent.run.created",
+        "resourceType": "agent_run",
+        "resourceId": "cmwhj48up0010xlk8dasg53bn"
+      }
+    ],
+    "mission": [
+      {
+        "id": "cmwhj494x0018xlk898lxkkp5",
+        "sourceRunId": "cmwhj48up0010xlk8dasg53bn",
+        "status": "DRAFT"
+      }
+    ]
+  },
+  "failures": [],
+  "conclusion": {
+    "verdict": "PASS_LOCAL",
+    "note": "PASS_LOCAL 仅表示本地隔离库的真实 HTTP+DB+Audit+阶段事件链路闭合；不等于生产发布，也不等于外部执行动作完成。",
+    "chain": [
+      "意图运行",
+      "幂等重放",
+      "带 sourceRunId 创建任务",
+      "方案版本化+冲突",
+      "阶段事件SSE+续传",
+      "批准/执行",
+      "真实回执",
+      "第二人独立核验",
+      "DB 四重证据"
+    ],
+    "negatives": [
+      {
+        "label": "伪造 sourceRunId 被拒",
+        "expectStatus": 400,
+        "actualStatus": 400,
+        "actualCode": "VALIDATION_ERROR",
+        "pass": true
+      },
+      {
+        "label": "并发版本冲突 409",
+        "expectStatus": 409,
+        "expectCode": "SPEC_VERSION_CONFLICT",
+        "actualStatus": 409,
+        "actualCode": "SPEC_VERSION_CONFLICT",
+        "pass": true
+      },
+      {
+        "label": "EXECUTED 后方案锁定 409",
+        "expectStatus": 409,
+        "expectCode": "MISSION_LOCKED",
+        "actualStatus": 409,
+        "actualCode": "MISSION_LOCKED",
+        "pass": true
+      },
+      {
+        "label": "发起人自己核验被拒",
+        "expectStatus": 409,
+        "expectCode": "SELF_VERIFICATION_FORBIDDEN",
+        "actualStatus": 409,
+        "actualCode": "SELF_VERIFICATION_FORBIDDEN",
+        "pass": true
+      },
+      {
+        "label": "模型输出当证据被拒",
+        "expectStatus": 400,
+        "expectCode": "MODEL_OUTPUT_NOT_EVIDENCE",
+        "actualStatus": 400,
+        "actualCode": "MODEL_OUTPUT_NOT_EVIDENCE",
+        "pass": true
+      },
+      {
+        "label": "未确认的判据被拒",
+        "expectStatus": 409,
+        "actualStatus": 409,
+        "actualCode": "CRITERIA_NOT_CONFIRMED",
+        "pass": true
+      },
+      {
+        "label": "无关联运行/无回执不可核验",
+        "expectStatus": 409,
+        "actualStatus": 409,
+        "actualCode": "MISSION_NOT_LINKED",
+        "pass": true
+      },
+      {
+        "label": "重复核验被拒",
+        "expectStatus": 409,
+        "actualStatus": 409,
+        "actualCode": "VERIFICATION_ALREADY_RECORDED",
+        "pass": true
+      }
+    ]
+  }
+}
