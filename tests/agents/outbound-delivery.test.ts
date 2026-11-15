@@ -58,6 +58,12 @@ import { createFakeAgentDb, installFakeAgentDb, type FakeAgentDb } from './_fake
 
 const ORG = 'org_1'
 const REQUESTER = 'u_1'
+/**
+ * 审批人 ≠ 发起人（V21 第三批 C02 职责分离）。
+ * 本文件的运行一律由 `REQUESTER` 发起 —— 收件人语义（送给谁）依赖这个事实；
+ * 所以"谁来批"必须换成另一个持有 `agent.approve` 的 ADMIN。
+ */
+const APPROVER = 'u_approver'
 const TARGET_USER = 'u_target'
 const TARGET_USER_2 = 'u_target_2'
 const INTENT_ID = 'intent_1'
@@ -145,7 +151,8 @@ async function createIntro(key = 'd-intro', allowedFieldKeys: string[] = ['goal'
 /** 走完"创建 → 批准"两步（介绍草稿是高风险技能，必须有人工裁决才能执行）。 */
 async function createApprovedIntro(key = 'd-approved') {
   const { run } = await createIntro(key)
-  const approved = await decideAgentRun(ctx(), run.id, 'APPROVED')
+  // 批准动作由 `APPROVER` 完成（`REQUESTER` 不能批自己发起的运行）。
+  const approved = await decideAgentRun(ctx('ADMIN', APPROVER), run.id, 'APPROVED')
   return { run, approved }
 }
 
@@ -365,7 +372,7 @@ describe('执行：第二道门（披露授权「撤销即刻生效」在投递�
     seedDisclosure({ bio: 'COUNTERPARTY', city: 'COUNTERPARTY' })
     const { run } = await createIntro('d-narrow')
     expect(JSON.parse(String(fake.deliveryTargets[0].authorizedFieldKeys))).toEqual(['bio', 'city'])
-    await decideAgentRun(ctx(), run.id, 'APPROVED')
+    await decideAgentRun(ctx('ADMIN', APPROVER), run.id, 'APPROVED')
 
     fake.socialIntents[0].disclosure = JSON.stringify({ bio: 'COUNTERPARTY' })
 

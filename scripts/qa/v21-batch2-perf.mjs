@@ -68,7 +68,13 @@ const NET = {
 };
 const CPU_RATE = 4;
 const LONG_TASK_US = 50_000;
-const TRACE_CATEGORIES = 'toplevel,devtools.timeline,v8.execute,blink.user_timing';
+// V21 第三批 · C01：加 CPU profile 采样，才能把长任务归因到**函数/脚本**，
+// 而不是只报「某毫秒有个 984ms 的 RunTask」。`disabled-by-default-` 前缀是
+// Chromium 对高开销类别的显式开关，缺少它时 Profile/ProfileChunk 不会落盘。
+const TRACE_CATEGORIES =
+  'toplevel,devtools.timeline,v8.execute,blink.user_timing,disabled-by-default-v8.cpu_profiler';
+/** 只跑指定页（逗号分隔 id），用于整改期的单页快速归因；不传 = 全量 9 页。 */
+const ONLY = (argOf('only', '') || '').split(',').map((s) => s.trim()).filter(Boolean);
 
 const GOAL = '两周内约到 10 位目标用户做深度访谈，我们提供产品内测名额作为对价，每人聊 30 分钟。';
 
@@ -127,23 +133,54 @@ const PAGES = [
   { id: 'outcomes', label: 'Outcomes（成果）· 附加', url: `${BASE}/workspace?view=outcomes`, navLabel: NAV_LABEL.outcomes, ready: 'main' },
 ];
 
+/** 诊断期只跑指定页；`--only` 为空时就是全量 9 页（正式取证必须全量）。 */
+const ACTIVE_PAGES = ONLY.length > 0 ? PAGES.filter((p) => ONLY.includes(p.id)) : PAGES;
+if (ONLY.length > 0 && ACTIVE_PAGES.length === 0) {
+  console.error(`--only 未匹配任何页：${ONLY.join(',')}；可选：${PAGES.map((p) => p.id).join(',')}`);
+  process.exit(1);
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 
 // ── 页面内采集器（addInitScript，须早于任何脚本；只读 Performance API）────
 function collector() {
   const v = {
-    lcp: null, lcpEl: null, cls: 0, clsShifts: 0, fcp: null,
+    lcp: null, lcpEl: null, lcpClass: null, cls: 0, clsShifts: 0, fcp: null,
     tbt: 0, longTasks: 0, inpMax: null, inpCount: 0,
+    // C01：CLS 归因 —— 记录位移来源元素（节点名 + class + 前后矩形），
+    // 否则只能报「CLS 0.685」，无法指出是哪个组件在动。
+    clsSources: [],
   };
   window.__lfVitals = v;
   const safe = (type, cb, opts) => {
     try { new PerformanceObserver(cb).observe({ type, buffered: true, ...opts }); } catch { /* 不支持则该项留空，不补 0 */ }
   };
   safe('largest-contentful-paint', (list) => {
-    for (const e of list.getEntries()) { v.lcp = e.startTime; v.lcpEl = e.element ? e.element.tagName : null; }
+    for (const e of list.getEntries()) {
+      v.lcp = e.startTime;
+      v.lcpEl = e.element ? e.element.tagName : null;
+      const cn = e.element && e.element.className;
+      v.lcpClass = typeof cn === 'string' ? cn.slice(0, 120) : null;
+    }
   });
   safe('layout-shift', (list) => {
-    for (const e of list.getEntries()) if (!e.hadRecentInput) { v.cls += e.value; v.clsShifts += 1; }
+    for (const e of list.getEntries()) {
+      if (e.hadRecentInput) continue;
+      v.cls += e.value;
+      v.clsShifts += 1;
+      if (v.clsSources.length >= 8) continue;
+      const sources = (e.sources || []).slice(0, 3).map((s) => {
+        const cn = s.node && s.node.className;
+        const rect = (r) => (r ? { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) } : null);
+        return {
+          tag: s.node ? s.node.nodeName : null,
+          class: typeof cn === 'string' ? cn.slice(0, 100) : null,
+          prev: rect(s.previousRect),
+          cur: rect(s.currentRect),
+        };
+      });
+      v.clsSources.push({ value: Math.round(e.value * 1000) / 1000, atMs: Math.round(e.startTime), sources });
+    }
   });
   safe('paint', (list) => {
     for (const e of list.getEntries()) if (e.name === 'first-contentful-paint') v.fcp = e.startTime;
@@ -283,10 +320,71 @@ function pickMainThread(events) {
   const main = meta.find((e) => e.args.name === 'CrRendererMain');
   return main ? { pid: main.pid, tid: main.tid } : null;
 }
+/**
+ * CPU profile 归因：把 Profile / ProfileChunk 里的 samples + timeDeltas
+ * 按 nodeId 聚合为「函数自耗时」，再映射回 callFrame（函数名 + 脚本 URL）。
+ *
+ * 口径说明：这是**采样自耗时**（self time），不含子调用；总和不等于 TBT。
+ * 它的用途是回答「主线程时间花在哪些函数上」，与 TBT 的门槛判定互不替代。
+ */
+function summarizeCpuProfile(chunks) {
+  const empty = { status: 'NO_PROFILE', sampleCount: 0, totalMs: null, topFunctions: [] };
+  const prof = chunks.filter((e) => e.name === 'Profile' || e.name === 'ProfileChunk');
+  if (prof.length === 0) return empty;
+
+  const nodes = new Map();
+  const selfUs = new Map();
+  let sampleCount = 0;
+  let totalUs = 0;
+
+  for (const e of prof) {
+    const data = (e.args && e.args.data) || {};
+    const cp = data.cpuProfile || {};
+    // nodes 可能只出现在 Profile 帧；ProfileChunk 只带增量节点。
+    if (Array.isArray(cp.nodes)) for (const n of cp.nodes) if (n && n.id != null) nodes.set(n.id, n);
+    // 🔴 Chrome 的 ProfileChunk 把 timeDeltas 放在 `args.data` 层，
+    //    而 samples 在 `args.data.cpuProfile` 里 —— 两处都要取，否则永远是 NO_SAMPLES。
+    const deltas = Array.isArray(cp.timeDeltas)
+      ? cp.timeDeltas
+      : Array.isArray(data.timeDeltas)
+        ? data.timeDeltas
+        : null;
+    if (Array.isArray(cp.samples) && deltas) {
+      const len = Math.min(cp.samples.length, deltas.length);
+      for (let i = 0; i < len; i += 1) {
+        const id = cp.samples[i];
+        const dt = Number(deltas[i]) || 0;
+        if (dt <= 0) continue;
+        selfUs.set(id, (selfUs.get(id) || 0) + dt);
+        totalUs += dt;
+        sampleCount += 1;
+      }
+    }
+  }
+
+  if (sampleCount === 0) return { ...empty, status: 'NO_SAMPLES' };
+
+  const rows = [...selfUs.entries()]
+    .map(([id, us]) => {
+      const cf = (nodes.get(id) || {}).callFrame || {};
+      return {
+        name: cf.functionName || '(anonymous)',
+        url: cf.url ? String(cf.url).replace(/^https?:\/\/[^/]+/, '') : null,
+        selfMs: Math.round(us / 1000),
+        sharePct: Math.round((us / totalUs) * 1000) / 10,
+      };
+    })
+    .sort((a, b) => b.selfMs - a.selfMs)
+    .slice(0, 15);
+
+  return { status: 'OK', sampleCount, totalMs: Math.round(totalUs / 1000), topFunctions: rows };
+}
+
 function summarizeTrace(chunks, status, error) {
   const out = {
     status, eventCount: chunks.length, error: error || null,
     mainThread: null, taskEventName: null, longTaskCount: 0, traceTbtMs: null, longTasksTop: [],
+    cpuProfile: { status: 'NO_PROFILE', sampleCount: 0, totalMs: null, topFunctions: [] },
   };
   if (status !== 'OK' || chunks.length === 0) return out;
   const mt = pickMainThread(chunks);
@@ -307,6 +405,8 @@ function summarizeTrace(chunks, status, error) {
     durMs: Math.round(t.dur / 1000),
     blockingMs: Math.round((t.dur - LONG_TASK_US) / 1000),
   }));
+  // C01：函数级归因（与 TBT 并列输出，不参与门槛判定）。
+  out.cpuProfile = summarizeCpuProfile(chunks);
   return out;
 }
 
@@ -347,7 +447,26 @@ async function measureOne(browser, def, cookies, runIndex) {
 
   // 交互前定稿值：LCP/CLS/TBT/FCP 在此冻结，后续交互不污染它们。
   let before = {};
-  try { before = await page.evaluate(() => ({ ...(window.__lfVitals || {}) })); } catch { /* 页面已崩 */ }
+  try {
+    before = await page.evaluate(() => {
+      const v = { ...(window.__lfVitals || {}) };
+      // C01：首屏实际传输字节（gzip 后）。`(program)` 占比高通常就是脚本体积/解析成本，
+      // 没有这个数字就无法判断"该减 bundle 还是该拆长任务"。
+      try {
+        let jsKB = 0, totalKB = 0, count = 0;
+        for (const r of performance.getEntriesByType('resource')) {
+          const bytes = r.transferSize || r.encodedBodySize || 0;
+          totalKB += bytes / 1024;
+          count += 1;
+          if (r.initiatorType === 'script') jsKB += bytes / 1024;
+        }
+        v.jsKB = Math.round(jsKB);
+        v.transferKB = Math.round(totalKB);
+        v.resourceCount = count;
+      } catch { /* 不支持则留空，不补 0 */ }
+      return v;
+    });
+  } catch { /* 页面已崩 */ }
 
   let endOk = startOk;
   let endError = null;
@@ -392,8 +511,15 @@ async function measureOne(browser, def, cookies, runIndex) {
     metrics: {
       lcpMs: num(before.lcp),
       lcpEl: before.lcpEl ?? null,
+      lcpClass: before.lcpClass ?? null,
       cls: num(before.cls),
       clsShifts: num(before.clsShifts),
+      clsSources: Array.isArray(before.clsSources) ? before.clsSources.slice(0, 5) : [],
+      // C01：首屏传输字节（gzip 后，来自 PerformanceResourceTiming）——
+      // 用于判断 `(program)` 高占比是否来自脚本体积，而不是靠猜。
+      jsKB: num(before.jsKB),
+      transferKB: num(before.transferKB),
+      resourceCount: num(before.resourceCount),
       fcpMs: num(before.fcp),
       tbtMs: num(before.tbt),              // PerformanceObserver longtask 口径
       longTasks: num(before.longTasks),
@@ -480,7 +606,7 @@ const report = {
     'Trace 采集失败的页标 BLOCKED 并保留失败证据，不以 0 或估算值顶替。',
   ],
   verdict: null,
-  pageCount: PAGES.length,
+  pageCount: ACTIVE_PAGES.length,
   pages: [],
 };
 
@@ -506,7 +632,7 @@ const browser = await chromium.launch({
 });
 
 try {
-  for (const def of PAGES) {
+  for (const def of ACTIVE_PAGES) {
     process.stdout.write(`… ${def.label} (${RUNS} 轮)`);
     const samples = [];
     for (let i = 0; i < RUNS; i += 1) {

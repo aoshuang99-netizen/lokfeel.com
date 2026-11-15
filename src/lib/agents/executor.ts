@@ -56,6 +56,13 @@ import {
 } from './dto'
 import { DELIVERY_PROFILE_AUDIENCE, loadOutboundGate, type OutboundGate } from './delivery-target'
 import { findRunRow } from './runs'
+// V21 第三批 · C02：执行前复检"批准是否合规且仍有效"（与审批写入同一套策略常量）。
+import {
+  AGENT_APPROVAL_POLICY_VERSION,
+  AGENT_APPROVAL_TTL_MS,
+  APPROVAL_EXPIRED,
+  SELF_APPROVAL_FORBIDDEN,
+} from './policy'
 
 /** 投递出口的形状（可注入 —— 单测用它把"投递失败"变成可控输入，而不是靠网络）。 */
 export type DeliverFn = typeof deliverNotification
@@ -171,6 +178,35 @@ export async function executeAgentRun(
   }
 
   const plan = decision.plan
+
+  // 🔴 V21 第三批 · C02：执行前**重新**校验批准本身是否合规、是否仍有效。
+  //
+  //  为什么执行侧还要查一遍（审批侧已经拦了自批）：
+  //    ① 库里可能存在**旧策略下**已经写进去的自批记录（历史数据不会自动消失）；
+  //    ② 批准可能已经过期（覆盖的是当时那份产出与披露授权）；
+  //    ③ 执行入口可被脚本/cron 直接调用，不能只信"状态列写着 APPROVED"。
+  //  两者都是 403/409 而不是静默放行 —— 静态状态列不能替代事件表的合规性。
+  if (row.requiresApproval && row.approval?.decision === 'APPROVED') {
+    if (row.approval.actorId === row.requestedBy) {
+      throw new ForbiddenError(
+        '该运行的批准由发起人自己完成（旧策略下的自批），执行被拒绝 —— 需由另一个主体重新发起并批准',
+        {
+          code: SELF_APPROVAL_FORBIDDEN,
+          policyVersion: AGENT_APPROVAL_POLICY_VERSION,
+          runId: row.id,
+        },
+      )
+    }
+    const decidedAt = new Date(row.approval.decidedAt).getTime()
+    if (Number.isFinite(decidedAt) && now.getTime() - decidedAt > AGENT_APPROVAL_TTL_MS) {
+      throw new ConflictError('批准已过期（超过 24h），需要重新批准后才能执行', {
+        code: APPROVAL_EXPIRED,
+        policyVersion: AGENT_APPROVAL_POLICY_VERSION,
+        decidedAt: new Date(decidedAt).toISOString(),
+        ttlMs: AGENT_APPROVAL_TTL_MS,
+      })
+    }
+  }
 
   // 🔴 收件人分两路，而"哪一路"由**执行计划**决定（闭集），不由调用方：
   //    REQUESTER → 发起人（内部回执）；TARGET → 创建时固定的对手方。

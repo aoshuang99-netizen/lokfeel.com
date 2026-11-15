@@ -51,9 +51,15 @@ import type { TenantContext } from '@/lib/tenancy/resolve'
 import { createFakeAgentDb, installFakeAgentDb, type FakeAgentDb } from './_fake-db'
 
 // ── 上下文 ──
-const ctx = (organizationId: string, role: TenantContext['role'] = 'ADMIN'): TenantContext => ({
+// `userId` 可覆盖：V21 第三批 C02 要求「发起人 ≠ 审批人」，
+// 审批用例用 `u_approver` 裁决 `u_1` 发起的运行（四眼原则）。
+const ctx = (
+  organizationId: string,
+  role: TenantContext['role'] = 'ADMIN',
+  userId = 'u_1',
+): TenantContext => ({
   organizationId,
-  userId: 'u_1',
+  userId,
   role,
   membershipId: 'ms_1',
 })
@@ -377,6 +383,10 @@ describe('DTO 投影边界', () => {
 
 // ═══════════════════════════════════════════════════════════
 describe('审批状态机', () => {
+  // 🔴 职责分离（C02）：运行由 `u_1` 发起，裁决必须由**另一个**主体完成。
+  //    本组的意图是状态机与裁决落库，不是自批，所以把审批者换成 `u_approver`。
+  const approver = () => ctx(ORG, 'ADMIN', 'u_approver')
+
   async function awaitingRun(key = 'ap') {
     const { run } = await createAgentRun(ctx(ORG), {
       skill: 'INTRO_DRAFT',
@@ -401,7 +411,7 @@ describe('审批状态机', () => {
 
   it('AWAITING_APPROVAL → APPROVED：写入一条裁决 + 状态迁移', async () => {
     const run = await awaitingRun()
-    const decided = await decideAgentRun(ctx(ORG, 'ADMIN'), run.id, 'APPROVED', '看起来没问题')
+    const decided = await decideAgentRun(approver(), run.id, 'APPROVED', '看起来没问题')
 
     expect(decided.status).toBe('APPROVED')
     expect(decided.approval).toMatchObject({ decision: 'APPROVED', deciderRole: 'ADMIN', note: '看起来没问题' })
@@ -410,8 +420,8 @@ describe('审批状态机', () => {
 
   it('🔴 不可改判：再次裁决 → 409', async () => {
     const run = await awaitingRun()
-    await decideAgentRun(ctx(ORG), run.id, 'APPROVED')
-    await expect(decideAgentRun(ctx(ORG), run.id, 'REJECTED')).rejects.toBeInstanceOf(ConflictError)
+    await decideAgentRun(approver(), run.id, 'APPROVED')
+    await expect(decideAgentRun(approver(), run.id, 'REJECTED')).rejects.toBeInstanceOf(ConflictError)
     expect(fake.approvals).toHaveLength(1)
   })
 
@@ -423,16 +433,16 @@ describe('审批状态机', () => {
       provider: { kind: 'ready', provider: adviceProvider(validAdvice) },
     })
     expect(run.status).toBe('PROPOSED')
-    await expect(decideAgentRun(ctx(ORG), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
+    await expect(decideAgentRun(approver(), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
     expect(fake.approvals).toHaveLength(0)
   })
 
   it('驳回也是终局：REJECTED 后不能再裁决', async () => {
     const run = await awaitingRun()
-    const rejected = await decideAgentRun(ctx(ORG), run.id, 'REJECTED', '不合适')
+    const rejected = await decideAgentRun(approver(), run.id, 'REJECTED', '不合适')
     expect(rejected.status).toBe('REJECTED')
     expect(rejected.approval?.decision).toBe('REJECTED')
-    await expect(decideAgentRun(ctx(ORG), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
+    await expect(decideAgentRun(approver(), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
   })
 
   it('跨租户裁决 → 404（不能批别人的运行）', async () => {
@@ -445,7 +455,7 @@ describe('审批状态机', () => {
 
   it('🔴 裁决本身**不写 EXECUTED** —— 批准与执行是两步（执行须显式触发）', async () => {
     const run = await awaitingRun()
-    const approved = await decideAgentRun(ctx(ORG), run.id, 'APPROVED')
+    const approved = await decideAgentRun(approver(), run.id, 'APPROVED')
     // 批准只把状态推到 APPROVED；副作用**没有**发生（库里没有 AgentExecution 行）。
     expect(approved.status).toBe('APPROVED')
     expect(fake.runs.every((r) => r.status !== 'EXECUTED')).toBe(true)

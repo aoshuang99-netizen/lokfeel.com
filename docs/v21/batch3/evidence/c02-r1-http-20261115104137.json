@@ -1,0 +1,376 @@
+{
+  "taskId": "C02",
+  "title": "R1 审批权隔离（职责分离）真实 HTTP 复验",
+  "startedAt": "2026-11-15T10:41:37.055Z",
+  "base": "http://127.0.0.1:3214",
+  "source": {
+    "head": "1b73a2cadf1bb6b0d0cf908d90d38e9c66db04ca",
+    "branch": "v21/batch2",
+    "dirty": true
+  },
+  "honesty": [
+    "run 行由本地隔离库 ci-e2e.db 预置（创建 run 需真实模型调用，本地无 WORKBUDDY_LLM_* 凭据）。",
+    "被测对象是 /approve 与 /execute 的授权判定，不是 run 创建路径。",
+    "结论只代表本地隔离环境（BASE=http://127.0.0.1:3214），不代表生产。",
+    "执行副作用仅为站内回执（IN_APP / RECEIPT），不代表任何外部服务收到或完成动作。"
+  ],
+  "preflight": {
+    "requests": [
+      {
+        "label": "login-owner",
+        "method": "POST",
+        "path": "/api/auth/login",
+        "at": "2026-11-15T10:41:37.901Z",
+        "status": 200,
+        "rawBody": "{\"success\":true,\"redirectUrl\":\"/dashboard\",\"role\":\"USER\",\"user\":{\"id\":\"e2e_user_authed\",\"email\":\"e2e.authed@example.invalid\",\"name\":\"E2E Authed User\",\"role\":\"USER\"}}"
+      },
+      {
+        "label": "baseline-get-missions",
+        "method": "GET",
+        "path": "/api/v1/missions",
+        "at": "2026-11-15T10:41:38.767Z",
+        "status": 200,
+        "rawBody": "{\"success\":true,\"data\":[{\"id\":\"cmwhj4pn0003dxlk8vinjfcfk\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_redteam_admin\",\"title\":\"红队-R3-共享幂等键\",\"goal\":\"验证同一把幂等键在两个同租户账号之间是否串台\",\"offer\":\"红队验收探针\",\"constraints\":[],\"successCriteria\":\"第二个账号不应读到第一个账号的资源\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/LfPhEmT6zGVGPrmD-oTaC_vFHy3FVWnO\",\"shareToken\":\"LfPhEmT6zGVGPrmD-oTaC_vFHy3FVWnO\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:45:02.412Z\",\"updatedAt\":\"2026-11-15T07:45:02.412Z\",\"participantCount\":0,\"sourceRunId\":null},{\"id\":\"cmwhj4pi8003axlk8ry9pb31z\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_authed\",\"title\":\"红队-R3-共享幂等键\",\"goal\":\"验证同一把幂等键在两个同租户账号之间是否串台\",\"offer\":\"红队验收探针\",\"constraints\":[],\"successCriteria\":\"第二个账号不应读到第一个账号的资源\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/AmoiaR-PHpQIt2o1xCfC0TmOz1v9z0r3\",\"shareToken\":\"AmoiaR-PHpQIt2o1xCfC0TmOz1v9z0r3\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:45:02.240Z\",\"updatedAt\":\"2026-11-15T07:45:02.240Z\",\"participantCount\":0,\"sourceRunId\":null},{\"id\":\"cmwhj4odv0037xlk8i110dv57\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_authed\",\"title\":\"<script>alert(1)</script> 红队-XSS\",\"goal\":\"<script>alert(1)</script> 用于验证原文落库与 API 层非 HTML 执行态\",\"offer\":\"红队验收探针\",\"constraints\":[],\"successCriteria\":\"API 响应为 JSON 且保留原文\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/dWCqKyTZhQiSKe6HIQ4GomjyAYykNVwV\",\"shareToken\":\"dWCqKyTZhQiSKe6HIQ4GomjyAYykNVwV\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:45:00.787Z\",\"updatedAt\":\"2026-11-15T07:45:00.787Z\",\"participantCount\":0,\"sourceRunId\":null},{\"id\":\"cmwhj4e5g001qxlk8d2oomptn\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_authed\",\"title\":\"红队-C2-身份注入\",\"goal\":\"验证 organizationId/ownerId/userId 是否被丢弃\",\"offer\":\"红队验收探针\",\"constraints\":[],\"successCriteria\":\"资源归属仍是当前会话租户与用户\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/gNbDGLSPo9_NtHo_4KXDX-KwpVbZc1VN\",\"shareToken\":\"gNbDGLSPo9_NtHo_4KXDX-KwpVbZc1VN\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:44:47.524Z\",\"updatedAt\":\"2026-11-15T07:44:47.524Z\",\"participantCount\":0,\"sourceRunId\":null},{\"id\":\"cmwhj4bdo001hxlk86dh6i1hy\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_authed\",\"title\":\"独立核验负例用的无关联任务 mwhj46pg\",\"goal\":\"独立核验负例用的无关联任务 mwhj46pg\",\"offer\":\"样品\",\"constraints\":[],\"successCriteria\":\"签署试销协议\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/TLi9h8x5r__dMroCwV427hC43vR4vppg\",\"shareToken\":\"TLi9h8x5r__dMroCwV427hC43vR4vppg\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:44:43.932Z\",\"updatedAt\":\"2026-11-15T07:44:43.932Z\",\"participantCount\":0,\"sourceRunId\":null},{\"id\":\"cmwhj494x0018xlk898lxkkp5\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_authed\",\"title\":\"帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg\",\"goal\":\"帮我在三个月内找到两家东南亚分销伙伴并签署试销协议 mwhj46pg\",\"offer\":\"提供产品样品与渠道培训\",\"constraints\":[\"期限：三个月内\"],\"successCriteria\":\"签署试销协议并完成首批出货\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/0kTMxcd1JhiWsDBWWY91-d8Z2dwuOVll\",\"shareToken\":\"0kTMxcd1JhiWsDBWWY91-d8Z2dwuOVll\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:44:41.026Z\",\"updatedAt\":\"2026-11-15T07:44:41.026Z\",\"participantCount\":0,\"sourceRunId\":\"cmwhj48up0010xlk8dasg53bn\"},{\"id\":\"cmwhihfab000jxlk86wgn4iex\",\"organizationId\":\"e2e_org_authed\",\"ownerId\":\"e2e_user_authed\",\"title\":\"独立核验负例用的无关联任务 mwhih9sp\",\"goal\":\"独立核验负例用的无关联任务 mwhih9sp\",\"offer\":\"样品\",\"constraints\":[],\"successCriteria\":\"签署试销协议\",\"status\":\"DRAFT\",\"publicPreview\":true,\"maxParticipants\":null,\"sharePath\":\"/m/Oekm-w2hErnX7_AWGuswJnhQBvfcRcqk\",\"shareToken\":\"Oekm-w2hErnX7_AWGuswJnhQBvfcRcqk\",\"expiresAt\":null,\"publishedAt\":null,\"closedAt\":null,\"createdAt\":\"2026-11-15T07:26:55.907Z\",\"updatedAt\":\"2026-11-15T07:26:55.907Z\",\"participantCount\":0,\"…<truncated>"
+      },
+      {
+        "label": "login-admin2",
+        "method": "POST",
+        "path": "/api/auth/login",
+        "at": "2026-11-15T10:41:40.335Z",
+        "status": 200,
+        "rawBody": "{\"success\":true,\"redirectUrl\":\"/dashboard\",\"role\":\"USER\",\"user\":{\"id\":\"e2e_user_redteam_admin\",\"email\":\"e2e.redteam.admin@example.invalid\",\"name\":\"RedTeam ADMIN\",\"role\":\"USER\"}}"
+      },
+      {
+        "label": "login-member",
+        "method": "POST",
+        "path": "/api/auth/login",
+        "at": "2026-11-15T10:41:40.915Z",
+        "status": 200,
+        "rawBody": "{\"success\":true,\"redirectUrl\":\"/dashboard\",\"role\":\"USER\",\"user\":{\"id\":\"e2e_user_redteam_member\",\"email\":\"e2e.redteam.member@example.invalid\",\"name\":\"RedTeam MEMBER\",\"role\":\"USER\"}}"
+      }
+    ],
+    "seed": {
+      "ok": true,
+      "organizationId": "e2e_org_authed",
+      "users": [
+        {
+          "id": "e2e_user_redteam_member",
+          "email": "e2e.redteam.member@example.invalid",
+          "name": "R1 MEMBER",
+          "role": "MEMBER"
+        },
+        {
+          "id": "e2e_user_redteam_admin",
+          "email": "e2e.redteam.admin@example.invalid",
+          "name": "R1 ADMIN",
+          "role": "ADMIN"
+        }
+      ],
+      "password": "<redacted>"
+    },
+    "owner": {
+      "ok": true,
+      "status": 200,
+      "userId": "e2e_user_authed",
+      "role": "USER"
+    },
+    "admin2": {
+      "ok": true,
+      "status": 200,
+      "userId": "e2e_user_redteam_admin",
+      "role": "USER"
+    },
+    "member": {
+      "ok": true,
+      "status": 200,
+      "userId": "e2e_user_redteam_member",
+      "role": "USER"
+    },
+    "baseline": {
+      "status": 200,
+      "count": null,
+      "organizationId": null
+    },
+    "credentialsLoaded": {
+      "email": "e2e.authed@example.invalid",
+      "password": "<redacted>"
+    },
+    "ctx": {
+      "organizationId": "e2e_org_authed",
+      "ownerId": "e2e_user_authed",
+      "admin2Id": "e2e_user_redteam_admin"
+    }
+  },
+  "cases": [
+    {
+      "id": "R1-1",
+      "title": "发起人自批被拒",
+      "expectation": "OWNER 发起 → OWNER 批准 → 期望 403 SELF_APPROVAL_FORBIDDEN，且零副作用",
+      "verdict": "PASS",
+      "reason": "HTTP 403=403；错误码 SELF_APPROVAL_FORBIDDEN=SELF_APPROVAL_FORBIDDEN；状态未变 AWAITING_APPROVAL=AWAITING_APPROVAL；未写入裁决行=0；未写批准审计=0",
+      "checks": [
+        {
+          "name": "HTTP 403",
+          "expected": 403,
+          "actual": 403,
+          "ok": true
+        },
+        {
+          "name": "错误码 SELF_APPROVAL_FORBIDDEN",
+          "expected": "SELF_APPROVAL_FORBIDDEN",
+          "actual": "SELF_APPROVAL_FORBIDDEN",
+          "ok": true
+        },
+        {
+          "name": "状态未变 AWAITING_APPROVAL",
+          "expected": "AWAITING_APPROVAL",
+          "actual": "AWAITING_APPROVAL",
+          "ok": true
+        },
+        {
+          "name": "未写入裁决行",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "未写批准审计",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        }
+      ],
+      "requests": [
+        {
+          "label": "owner-approve-own-run",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_self_20261115104137/approve",
+          "at": "2026-11-15T10:41:41.462Z",
+          "status": 403,
+          "rawBody": "{\"success\":false,\"data\":null,\"error\":{\"code\":\"PERMISSION_DENIED\",\"message\":\"不能批准自己发起的运行：审批必须由另一个主体完成（职责分离）\",\"details\":{\"code\":\"SELF_APPROVAL_FORBIDDEN\",\"policyVersion\":\"v21.3-separation-of-duties\",\"runId\":\"r1_self_20261115104137\"}}}"
+        }
+      ]
+    },
+    {
+      "id": "R1-2",
+      "title": "另一主体批准后可执行",
+      "expectation": "ADMIN2 批准 → ADMIN2 执行 → 期望 201；二次执行 200 replayed 且只有 1 条执行记录",
+      "verdict": "PASS",
+      "reason": "批准 200=200；状态 APPROVED=APPROVED；首次执行 201=201；二次执行 200=200；二次执行 replayed=true；执行记录只有 1 条=1",
+      "checks": [
+        {
+          "name": "批准 200",
+          "expected": 200,
+          "actual": 200,
+          "ok": true
+        },
+        {
+          "name": "状态 APPROVED",
+          "expected": "APPROVED",
+          "actual": "APPROVED",
+          "ok": true
+        },
+        {
+          "name": "首次执行 201",
+          "expected": 201,
+          "actual": 201,
+          "ok": true
+        },
+        {
+          "name": "二次执行 200",
+          "expected": 200,
+          "actual": 200,
+          "ok": true
+        },
+        {
+          "name": "二次执行 replayed",
+          "expected": true,
+          "actual": true,
+          "ok": true
+        },
+        {
+          "name": "执行记录只有 1 条",
+          "expected": 1,
+          "actual": 1,
+          "ok": true
+        }
+      ],
+      "requests": [
+        {
+          "label": "admin2-approve",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_letter_20261115104137/approve",
+          "at": "2026-11-15T10:41:41.652Z",
+          "status": 200,
+          "rawBody": "{\"success\":true,\"data\":{\"id\":\"r1_letter_20261115104137\",\"skill\":\"COORDINATION_ADVICE\",\"status\":\"APPROVED\",\"risk\":\"LOW\",\"requiresApproval\":true,\"requestedBy\":\"e2e_user_authed\",\"subjectLabel\":\"R1 职责分离复验\",\"goal\":\"验证发起人不得批准自己发起的运行\",\"proposal\":{\"note\":\"r1-fixture\"},\"reason\":null,\"degradeCode\":null,\"providerKind\":\"rules\",\"injectionSignals\":[],\"injectionFlagged\":false,\"costMicroCents\":0,\"calls\":[],\"approval\":{\"decision\":\"APPROVED\",\"actorId\":\"e2e_user_redteam_admin\",\"deciderRole\":\"ADMIN\",\"note\":\"由另一主体批准\",\"decidedAt\":\"2026-11-15T10:41:41.964Z\"},\"execution\":{\"available\":true,\"reason\":\"把建议以站内信回执给发起人。\",\"code\":null,\"kind\":\"RECEIPT\",\"channel\":\"IN_APP\"},\"executionRecord\":null,\"deliveryTarget\":null,\"canApprove\":false,\"canReject\":false,\"createdAt\":\"2026-11-15T10:41:41.000Z\",\"updatedAt\":\"2026-11-15T10:41:41.978Z\"}}"
+        },
+        {
+          "label": "admin2-execute",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_letter_20261115104137/execute",
+          "at": "2026-11-15T10:41:42.001Z",
+          "status": 201,
+          "rawBody": "{\"success\":true,\"data\":{\"run\":{\"id\":\"r1_letter_20261115104137\",\"skill\":\"COORDINATION_ADVICE\",\"status\":\"EXECUTED\",\"risk\":\"LOW\",\"requiresApproval\":true,\"requestedBy\":\"e2e_user_authed\",\"subjectLabel\":\"R1 职责分离复验\",\"goal\":\"验证发起人不得批准自己发起的运行\",\"proposal\":{\"note\":\"r1-fixture\"},\"reason\":null,\"degradeCode\":null,\"providerKind\":\"rules\",\"injectionSignals\":[],\"injectionFlagged\":false,\"costMicroCents\":0,\"calls\":[],\"approval\":{\"decision\":\"APPROVED\",\"actorId\":\"e2e_user_redteam_admin\",\"deciderRole\":\"ADMIN\",\"note\":\"由另一主体批准\",\"decidedAt\":\"2026-11-15T10:41:41.964Z\"},\"execution\":{\"available\":false,\"reason\":\"该运行已执行过（执行是终态，不会重复交付）\",\"code\":\"STATUS_NOT_EXECUTABLE\",\"kind\":null,\"channel\":null},\"executionRecord\":{\"id\":\"cmwhpfwl5000scnk8ff3az5vv\",\"kind\":\"RECEIPT\",\"channel\":\"IN_APP\",\"recipientId\":\"e2e_user_authed\",\"deliveryId\":\"cmwhpfwks000rcnk8gwe65ia4\",\"deliveryStatus\":\"SENT\",\"actorId\":\"e2e_user_redteam_admin\",\"executedAt\":\"2026-11-15T10:41:42.163Z\"},\"deliveryTarget\":null,\"canApprove\":false,\"canReject\":false,\"createdAt\":\"2026-11-15T10:41:41.000Z\",\"updatedAt\":\"2026-11-15T10:41:42.333Z\"},\"execution\":{\"id\":\"cmwhpfwl5000scnk8ff3az5vv\",\"kind\":\"RECEIPT\",\"channel\":\"IN_APP\",\"recipientId\":\"e2e_user_authed\",\"deliveryId\":\"cmwhpfwks000rcnk8gwe65ia4\",\"deliveryStatus\":\"SENT\",\"actorId\":\"e2e_user_redteam_admin\",\"executedAt\":\"2026-11-15T10:41:42.163Z\"},\"replayed\":false,\"delivery\":{\"id\":\"cmwhpfwks000rcnk8gwe65ia4\",\"status\":\"SENT\",\"provider\":\"in-app\"}}}"
+        },
+        {
+          "label": "admin2-execute-again",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_letter_20261115104137/execute",
+          "at": "2026-11-15T10:41:42.364Z",
+          "status": 200,
+          "rawBody": "{\"success\":true,\"data\":{\"run\":{\"id\":\"r1_letter_20261115104137\",\"skill\":\"COORDINATION_ADVICE\",\"status\":\"EXECUTED\",\"risk\":\"LOW\",\"requiresApproval\":true,\"requestedBy\":\"e2e_user_authed\",\"subjectLabel\":\"R1 职责分离复验\",\"goal\":\"验证发起人不得批准自己发起的运行\",\"proposal\":{\"note\":\"r1-fixture\"},\"reason\":null,\"degradeCode\":null,\"providerKind\":\"rules\",\"injectionSignals\":[],\"injectionFlagged\":false,\"costMicroCents\":0,\"calls\":[],\"approval\":{\"decision\":\"APPROVED\",\"actorId\":\"e2e_user_redteam_admin\",\"deciderRole\":\"ADMIN\",\"note\":\"由另一主体批准\",\"decidedAt\":\"2026-11-15T10:41:41.964Z\"},\"execution\":{\"available\":false,\"reason\":\"该运行已执行过（执行是终态，不会重复交付）\",\"code\":\"STATUS_NOT_EXECUTABLE\",\"kind\":null,\"channel\":null},\"executionRecord\":{\"id\":\"cmwhpfwl5000scnk8ff3az5vv\",\"kind\":\"RECEIPT\",\"channel\":\"IN_APP\",\"recipientId\":\"e2e_user_authed\",\"deliveryId\":\"cmwhpfwks000rcnk8gwe65ia4\",\"deliveryStatus\":\"SENT\",\"actorId\":\"e2e_user_redteam_admin\",\"executedAt\":\"2026-11-15T10:41:42.163Z\"},\"deliveryTarget\":null,\"canApprove\":false,\"canReject\":false,\"createdAt\":\"2026-11-15T10:41:41.000Z\",\"updatedAt\":\"2026-11-15T10:41:42.333Z\"},\"execution\":{\"id\":\"cmwhpfwl5000scnk8ff3az5vv\",\"kind\":\"RECEIPT\",\"channel\":\"IN_APP\",\"recipientId\":\"e2e_user_authed\",\"deliveryId\":\"cmwhpfwks000rcnk8gwe65ia4\",\"deliveryStatus\":\"SENT\",\"actorId\":\"e2e_user_redteam_admin\",\"executedAt\":\"2026-11-15T10:41:42.163Z\"},\"replayed\":true,\"delivery\":null}}"
+        }
+      ]
+    },
+    {
+      "id": "R1-3",
+      "title": "旧自批记录执行被拒",
+      "expectation": "库里已有 actorId=发起人 的 APPROVED 裁决 → 执行 → 期望 403 且零投递",
+      "verdict": "PASS",
+      "reason": "HTTP 403=403；错误码 SELF_APPROVAL_FORBIDDEN=SELF_APPROVAL_FORBIDDEN；零投递（无执行记录）=0；状态未变 APPROVED=APPROVED",
+      "checks": [
+        {
+          "name": "HTTP 403",
+          "expected": 403,
+          "actual": 403,
+          "ok": true
+        },
+        {
+          "name": "错误码 SELF_APPROVAL_FORBIDDEN",
+          "expected": "SELF_APPROVAL_FORBIDDEN",
+          "actual": "SELF_APPROVAL_FORBIDDEN",
+          "ok": true
+        },
+        {
+          "name": "零投递（无执行记录）",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        },
+        {
+          "name": "状态未变 APPROVED",
+          "expected": "APPROVED",
+          "actual": "APPROVED",
+          "ok": true
+        }
+      ],
+      "requests": [
+        {
+          "label": "admin2-execute-legacy-self-approval",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_legacy_20261115104137/execute",
+          "at": "2026-11-15T10:41:42.585Z",
+          "status": 403,
+          "rawBody": "{\"success\":false,\"data\":null,\"error\":{\"code\":\"PERMISSION_DENIED\",\"message\":\"该运行的批准由发起人自己完成（旧策略下的自批），执行被拒绝 —— 需由另一个主体重新发起并批准\",\"details\":{\"code\":\"SELF_APPROVAL_FORBIDDEN\",\"policyVersion\":\"v21.3-separation-of-duties\",\"runId\":\"r1_legacy_20261115104137\"}}}"
+        }
+      ]
+    },
+    {
+      "id": "R1-4",
+      "title": "批准超过 24h 执行被拒",
+      "expectation": "APPROVED 由另一主体做出但 decidedAt=25h 前 → 执行 → 期望 409 APPROVAL_EXPIRED 且零投递",
+      "verdict": "PASS",
+      "reason": "HTTP 409=409；错误码 APPROVAL_EXPIRED=APPROVAL_EXPIRED；零投递（无执行记录）=0",
+      "checks": [
+        {
+          "name": "HTTP 409",
+          "expected": 409,
+          "actual": 409,
+          "ok": true
+        },
+        {
+          "name": "错误码 APPROVAL_EXPIRED",
+          "expected": "APPROVAL_EXPIRED",
+          "actual": "APPROVAL_EXPIRED",
+          "ok": true
+        },
+        {
+          "name": "零投递（无执行记录）",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        }
+      ],
+      "requests": [
+        {
+          "label": "admin2-execute-expired",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_expired_20261115104137/execute",
+          "at": "2026-11-15T10:41:42.753Z",
+          "status": 409,
+          "rawBody": "{\"success\":false,\"data\":null,\"error\":{\"code\":\"CONFLICT\",\"message\":\"批准已过期（超过 24h），需要重新批准后才能执行\",\"details\":{\"code\":\"APPROVAL_EXPIRED\",\"policyVersion\":\"v21.3-separation-of-duties\",\"decidedAt\":\"2026-11-14T09:41:42.000Z\",\"ttlMs\":86400000}}}"
+        }
+      ]
+    },
+    {
+      "id": "R1-5",
+      "title": "跨租户批准被拒",
+      "expectation": "另一组织的运行 → 本租户 ADMIN 批准 → 期望 404，且该运行不产生裁决",
+      "verdict": "PASS",
+      "reason": "HTTP 404=404；外部租户未产生裁决=0",
+      "checks": [
+        {
+          "name": "HTTP 404",
+          "expected": 404,
+          "actual": 404,
+          "ok": true
+        },
+        {
+          "name": "外部租户未产生裁决",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        }
+      ],
+      "requests": [
+        {
+          "label": "admin2-approve-foreign-run",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_foreign_20261115104137/approve",
+          "at": "2026-11-15T10:41:42.949Z",
+          "status": 404,
+          "rawBody": "{\"success\":false,\"data\":null,\"error\":{\"code\":\"NOT_FOUND\",\"message\":\"Agent run not found\"}}"
+        }
+      ]
+    },
+    {
+      "id": "R1-6",
+      "title": "MEMBER 无 agent.approve",
+      "expectation": "MEMBER 会话批准他人发起的运行 → 期望 403（能力不足），且零裁决写入",
+      "verdict": "PASS",
+      "reason": "HTTP 403=403；未写入裁决行=0",
+      "checks": [
+        {
+          "name": "HTTP 403",
+          "expected": 403,
+          "actual": 403,
+          "ok": true
+        },
+        {
+          "name": "未写入裁决行",
+          "expected": 0,
+          "actual": 0,
+          "ok": true
+        }
+      ],
+      "requests": [
+        {
+          "label": "member-approve",
+          "method": "POST",
+          "path": "/api/v1/agents/runs/r1_member_20261115104137/approve",
+          "at": "2026-11-15T10:41:43.151Z",
+          "status": 403,
+          "rawBody": "{\"success\":false,\"data\":null,\"error\":{\"code\":\"PERMISSION_DENIED\",\"message\":\"Forbidden: missing capability agent.approve\"}}"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "blocked": 0,
+    "exitCode": 0
+  },
+  "finishedAt": "2026-11-15T10:41:43.445Z"
+}

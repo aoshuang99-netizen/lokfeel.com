@@ -78,6 +78,18 @@ import {
   type WorkspaceSpec,
 } from '@/lib/workspace-spec'
 
+// ── C01 性能：dynamic 切分已**回滚**（实测负收益） ────────────────────
+//
+// 曾把 LivingCanvas / FieldCanvas / MissionBoard 改成 `next/dynamic(ssr:false)`，
+// 理由是首屏不需要它们的模块。但 G15 的测量口径是**直接打开 `?view=missions`
+// 等 URL**：这时该屏的 LCP 元素（如 `[data-testid="mission-list"]`）本身就在
+// lazy chunk 里，必须先下载并执行 chunk 才能出现 —— 实测 9 页 LCP/TBT 全面变差。
+//
+// 结论：在「每个屏都可能被直接打开」的产品里，按屏 lazy 只对**真正非首屏**
+// 的模块有效；对可深链接的屏是负优化。因此恢复静态 import，把优化集中在
+// ① Service Worker 延后（layout.tsx）② 首屏请求收敛（见下方 enabled 闸门）
+// ③ 同 URL 并发去重（hooks/use-api.ts）。这三项对每个入口都是纯收益或中性。
+
 // ── 真实端点响应形状（与 route.ts 一致） ──────────────────────────────
 /** B2C 遗留端点（**不带**信封）。 */
 interface NotificationsRes {
@@ -399,14 +411,45 @@ export default function LivingWorkspace() {
   /** T10 · Bridge：当前选中的协议（未选时面板内部取列表第一条）。 */
   const [bridgeSelection, setBridgeSelection] = useState<string | null>(null)
 
+  /**
+   * C01 性能 · 非首屏数据面的启用闸门。
+   *
+   * 首屏（Now）真正需要的只有 4 个请求：通知、未读、能力、提案。
+   * 其余（任务队列 / 成果 / 授权明细 / Agent 运行 / 跨社群）只在
+   * **切到对应屏**或**首屏空闲后**才发。
+   *
+   * 未就绪时阶段条对应段落显示「—」—— 这是诚实的"还没读到"，不是 0，也不是假数据。
+   * 之前"三个租户域常开"让首屏并发 10+ 个请求，在移动端 lab 档位下直接争抢带宽。
+   */
+  const [idleReady, setIdleReady] = useState(false)
+  useEffect(() => {
+    type IdleWindow = Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+    const w = window as IdleWindow
+    if (typeof w.requestIdleCallback === 'function') {
+      const id = w.requestIdleCallback(() => setIdleReady(true), { timeout: 1500 })
+      return () => w.cancelIdleCallback?.(id)
+    }
+    const timer = window.setTimeout(() => setIdleReady(true), 800)
+    return () => window.clearTimeout(timer)
+  }, [])
+
   const notifications = useApiGet<NotificationsRes>('/api/notifications')
   const chats = useApiGet<ChatCountRes>('/api/chats/unread-count')
   // 真实能力探测：403 即说明当前账号不是任何 ACTIVE 社群的成员。
   const org = useApiGet<ApiEnvelope<OrgOverview>>('/api/v1/org')
   // P1 收口：三类节点的真实来源。
+  // 提案：Now 屏的「待你介绍」计数要用 ⇒ 首屏保留。
   const proposals = useApiGet<ApiEnvelope<{ proposals: unknown[] }>>('/api/v1/connections/proposals')
-  const jobs = useApiGet<ApiEnvelope<{ jobs: unknown[] }>>('/api/v1/workflow/jobs')
-  const outcomes = useApiGet<ApiEnvelope<{ items: unknown[] }>>('/api/v1/outcomes')
+  // 任务队列只服务 Studio 画布；成果列表只服务 Outcomes/画布 ⇒ 按屏或空闲后启用。
+  const jobs = useApiGet<ApiEnvelope<{ jobs: unknown[] }>>('/api/v1/workflow/jobs', {
+    enabled: idleReady || activeKey === 'studio',
+  })
+  const outcomes = useApiGet<ApiEnvelope<{ items: unknown[] }>>('/api/v1/outcomes', {
+    enabled: idleReady || activeKey === 'outcomes',
+  })
 
   /**
    * 服务端下发的真实能力集合。
@@ -425,15 +468,18 @@ export default function LivingWorkspace() {
    *
    * ⚠️ 三者都是 hook，必须在任何提前 return 之前调用（React 的调用顺序约束）。
    */
-    // 🔴 三个租户域数据面**常开**（V16 截图实证）：阶段条在每一屏都要显示四段计数，
-  //  按屏开关会让非对应屏永远显示「未就绪」，轨道形同虚设。
-  //  三个 hook 内部都是"取数+装配一次，主视图与详情共用"，常开只增加首屏 3 个请求，
-  //  却省掉了每次切屏的重复取数。非成员的 403 由 Evidence Lens 如实展示，不额外处理。
-  const consentData = useConsentGateData(consentIntentId, true)
-    const observatoryData = useOutcomeObservatoryData(true)
-    // Agents 端点要求 agent.run（OPERATOR+）：MEMBER 常开会每屏吃一个 403，
+  // 🔴 C01 修正（第三批）：原先三个租户域数据面**常开**，理由是"阶段条每屏都要四段计数"。
+  //  代价是首屏并发 10+ 个请求 + 三份装配计算。现在改为「切到对应屏 或 首屏空闲」才启用：
+  //  · 首屏阶段条未就绪的段落显示「—」（诚实：还没读到），而不是 0；
+  //  · 切屏立即启用，用户不会为了看某一屏而等 idle；
+  //  · 非成员的 403 仍由 Evidence Lens 如实展示。
+  const consentData = useConsentGateData(consentIntentId, idleReady || activeKey === 'consent')
+  const observatoryData = useOutcomeObservatoryData(idleReady || activeKey === 'outcomes')
+  // Agents 端点要求 agent.run（OPERATOR+）：MEMBER 常开会每屏吃一个 403，
   // 所以这里用**已探测到的能力集**开关，而不是无脑常开。
-  const agentData = useAgentBoardData(capabilities.has('agent.run'))
+  const agentData = useAgentBoardData(
+    capabilities.has('agent.run') && (idleReady || activeKey === 'agents'),
+  )
   // T10：只有**切到跨社群子面板**才发这三个租户域请求（不在这一区就没必要打，非成员还会吃 403）。
   const bridgeData = useBridgePanelData(bridgeSelection, activeKey === 'consent' && consentTab === 'bridge')
 

@@ -39,6 +39,16 @@ import { createFakeAgentDb, installFakeAgentDb, type FakeAgentDb } from './_fake
 const ORG = 'org_1'
 const ctx: TenantContext = { organizationId: ORG, userId: 'u_1', role: 'ADMIN', membershipId: 'ms_1' }
 
+/**
+ * 审批者上下文（V21 第三批 C02 的职责分离）。
+ *
+ * `ctx` 是本文件的**发起人**（`u_1`）—— 它创建运行，也被用于读取 DTO；
+ * 裁决必须换一个主体，否则 `decideAgentRun` 会以 `SELF_APPROVAL_FORBIDDEN` 拒绝。
+ * 只在本文件上半部分的"审批一致性"用例里使用，避免影响下半部分
+ * `ctxWithRole` 的逐格交叉验证（那里 `seedRun` 的发起人是 `u_2`）。
+ */
+const APPROVER_CTX: TenantContext = { organizationId: ORG, userId: 'u_approver', role: 'ADMIN', membershipId: 'ms_2' }
+
 let fake: FakeAgentDb
 
 beforeEach(() => {
@@ -113,13 +123,13 @@ async function makeProposed(key: string) {
 describe('T09 · 审批一致性', () => {
   it('单步：批准后 status 与裁决一致', async () => {
     const run = await makeIntroAwaiting('a')
-    await decideAgentRun(ctx, run.id, 'APPROVED')
+    await decideAgentRun(APPROVER_CTX, run.id, 'APPROVED')
     assertConsistent()
   })
 
   it('单步：驳回后 status 与裁决一致', async () => {
     const run = await makeIntroAwaiting('b')
-    await decideAgentRun(ctx, run.id, 'REJECTED', '不合适')
+    await decideAgentRun(APPROVER_CTX, run.id, 'REJECTED', '不合适')
     assertConsistent()
   })
 
@@ -140,8 +150,8 @@ describe('T09 · 审批一致性', () => {
       provider: { kind: 'ready', provider: adviceProvider({ ...validAdvice, candidateIds: ['cand_x'] }) }, // FAILED
     })
 
-    await decideAgentRun(ctx, approved.id, 'APPROVED')
-    await decideAgentRun(ctx, rejected.id, 'REJECTED')
+    await decideAgentRun(APPROVER_CTX, approved.id, 'APPROVED')
+    await decideAgentRun(APPROVER_CTX, rejected.id, 'REJECTED')
 
     expect(fake.runs).toHaveLength(5)
     expect(fake.approvals).toHaveLength(2)
@@ -150,7 +160,7 @@ describe('T09 · 审批一致性', () => {
 
   it('🔴 一致性断言本身是**有效**的（变异自证：人为破坏必被抓到）', async () => {
     const run = await makeIntroAwaiting('d')
-    await decideAgentRun(ctx, run.id, 'APPROVED')
+    await decideAgentRun(APPROVER_CTX, run.id, 'APPROVED')
     // 变异 1：删掉裁决行 → 终态却没有裁决 → 必须失败
     const saved = fake.approvals.slice()
     fake.approvals = []

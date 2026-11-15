@@ -130,9 +130,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             __html: `
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').catch(function(err) {
-      console.warn('SW registration failed:', err);
-    });
+    var register = function() {
+      navigator.serviceWorker.register('/sw.js').catch(function(err) {
+        console.warn('SW registration failed:', err);
+      });
+    };
+    // V21 第三批 · C01：SW 注册从「load 立即」改为「空闲后」。
+    // 实测（Chrome Trace, 4x CPU 节流）：/sw.js 脚本自耗时可达 1002ms，
+    // 外加 skipWaiting 272ms —— 全部落在首屏 TBT 窗口内。
+    // PWA 离线缓存不是首屏必需能力，先让输入框与结果可交互，再装缓存。
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(register, { timeout: 5000 });
+    } else {
+      setTimeout(register, 3000);
+    }
   });
 }
             `.trim(),

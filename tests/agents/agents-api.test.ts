@@ -56,8 +56,14 @@ let fake: FakeAgentDb
 
 type Role = 'OWNER' | 'ADMIN' | 'OPERATOR' | 'MEMBER'
 
-function asRole(role: Role) {
-  requireAuthMock.mockResolvedValue({ user: { id: 'u_1' } })
+/**
+ * 装一次会话 + 成员关系。
+ *
+ * `userId` 默认是发起人 `u_1`；审批用例要按 V21 第三批 C02 的职责分离规则
+ * 换成**另一个**主体（`u_approver`），否则会被 `SELF_APPROVAL_FORBIDDEN` 拦下。
+ */
+function asRole(role: Role, userId = 'u_1') {
+  requireAuthMock.mockResolvedValue({ user: { id: userId } })
   ;(db.membership as unknown as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
     id: 'ms_1',
     organizationId: ORG,
@@ -246,7 +252,13 @@ describe('GET /api/v1/agents/runs/{id} —— 详情', () => {
 
 // ═══════════════════════════════════════════════════════════
 describe('审批 HTTP 面', () => {
+  // 🔴 职责分离（V21 第三批 C02）：发起人 `u_1` 不能批准自己发起的运行。
+  //    本组用例验证的是 HTTP 面的状态机与权限口径，因此**审批动作**由另一个 ADMIN
+  //    （`u_approver`）发起 —— 发起人仍是 `seedRun()` 默认的 `u_1`。
+  const asApprover = () => asRole('ADMIN', 'u_approver')
+
   it('AWAITING_APPROVAL → approve：200 且状态 APPROVED', async () => {
+    asApprover()
     const seeded = seedRun()
     const res = await approveRoute.POST(
       postReq(`/api/v1/agents/runs/${seeded.id}/approve`, { note: 'ok' }),
@@ -259,6 +271,7 @@ describe('审批 HTTP 面', () => {
   })
 
   it('已裁决 → 再次 approve/reject 均 409', async () => {
+    asApprover()
     const seeded = seedRun()
     await approveRoute.POST(postReq(`/api/v1/agents/runs/${seeded.id}/approve`, {}), paramsOf(seeded.id))
     const again = await rejectRoute.POST(
@@ -269,6 +282,7 @@ describe('审批 HTTP 面', () => {
   })
 
   it('🔴 状态真相表：PROPOSED 直接 approve → 409', async () => {
+    asApprover()
     const seeded = seedRun({ status: 'PROPOSED', requiresApproval: false, risk: 'LOW' })
     const res = await approveRoute.POST(
       postReq(`/api/v1/agents/runs/${seeded.id}/approve`, {}),

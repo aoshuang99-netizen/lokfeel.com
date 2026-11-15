@@ -54,6 +54,52 @@ export function invalidateCache(urlPattern?: string): void {
   }
 }
 
+/**
+ * 同 URL 并发去重（V21 第三批 C01）。
+ *
+ * 🔴 真实缺陷（不是理论优化）：`living-workspace` 与 `ConsentGate`/`OutcomeObservatory`
+ *    会各自 `useApiGet('/api/v1/connections/proposals' | '/api/v1/outcomes')`。
+ *    两个实例在同一 tick 挂载时，模块级 cache 还没写入 —— 于是**同一条 URL 发两次请求**。
+ *    在移动端 lab 档位下这会直接争抢首屏带宽。
+ *
+ * 语义：只合并**同时进行中**的请求；响应落地后立刻出队，后续 refetch 仍是新请求。
+ * 每个 hook 实例各自 setData，数据归属不变。
+ */
+type SharedResult =
+  | { ok: true; json: unknown }
+  | { ok: false; status: number; message: string; unauthorized: boolean };
+
+const inflight = new Map<string, Promise<SharedResult>>();
+
+function fetchShared(url: string): Promise<SharedResult> {
+  const existing = inflight.get(url);
+  if (existing) return existing;
+  const promise = (async (): Promise<SharedResult> => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        if (res.status === 401) {
+          return { ok: false, status: 401, message: "Please sign in to continue", unauthorized: true };
+        }
+        const err = await res.json().catch(() => ({ message: "Request failed" }));
+        return { ok: false, status: res.status, message: err.message || `Error ${res.status}`, unauthorized: false };
+      }
+      return { ok: true, json: await res.json() };
+    } catch {
+      return {
+        ok: false,
+        status: 0,
+        message: "Service unavailable — API not connected yet",
+        unauthorized: false,
+      };
+    } finally {
+      inflight.delete(url);
+    }
+  })();
+  inflight.set(url, promise);
+  return promise;
+}
+
 // ─── Types ───
 
 interface FetchState<T> {
@@ -110,26 +156,21 @@ export function useApiGet<T>(url: string | null, options?: { enabled?: boolean }
       setError(null);
 
       try {
-        const res = await fetch(url);
+        // 同 URL 并发合并：后到的实例复用同一份响应，不再发第二次网络请求。
+        const result = await fetchShared(url);
 
-        if (!res.ok) {
-          if (res.status === 401) {
-            setError("Please sign in to continue");
-            return;
+        if (!result.ok) {
+          if (!result.unauthorized && result.status === 0) {
+            console.warn(`API fetch failed for ${url}: network error`);
           }
-          const err = await res.json().catch(() => ({ message: "Request failed" }));
-          setError(err.message || `Error ${res.status}`);
+          setError(result.message);
           return;
         }
 
-        const json = await res.json();
         if (mountedRef.current) {
-          setData(json);
-          setCache(url, json);
+          setData(result.json as T);
+          setCache(url, result.json as T);
         }
-      } catch (err) {
-        console.warn(`API fetch failed for ${url}:`, err);
-        setError("Service unavailable — API not connected yet");
       } finally {
         if (mountedRef.current) {
           setIsLoading(false);

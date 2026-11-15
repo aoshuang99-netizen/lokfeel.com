@@ -71,6 +71,8 @@ import {
 import { providerHonesty, resolveRuntimeProvider, type ProviderHonesty } from './provider-runtime'
 // V21/C03：编排阶段事件（**不是**模型 token 流）。只在这里接线，不改 runSkill 签名、不改 provider。
 import { buildOrchestrationStages, emitStageEvents } from './stage-events'
+// V21 第三批 · C02：审批职责分离策略（版本化，写入审计）。
+import { AGENT_APPROVAL_POLICY_VERSION, SELF_APPROVAL_FORBIDDEN } from './policy'
 
 /** 幂等作用域（与 `IdempotencyRecord.scope` 对齐）。 */
 export const AGENT_RUN_SCOPE = 'agent.run'
@@ -731,6 +733,23 @@ export async function decideAgentRun(
     )
   }
 
+  // 🔴 V21 第三批 · C02：**发起人不得批准自己发起的运行**。
+  //
+  //  为什么必须在这里（而不是只在路由里）：`decideAgentRun` 可被脚本 / cron /
+  //  内部任务直接调用，路由层的 `withTenant('agent.approve')` 只能挡住 HTTP 入口。
+  //  之前 OWNER/ADMIN 同时持有 run + approve + execute，单账号就能完成
+  //  「发起 → 批准 → 执行」的自我闭环 —— 红队已真实复现（R1）。
+  //
+  //  语义：发起与批准必须是**两个主体**。要自己推进，就换一个有 agent.approve 的同事；
+  //  这与「四眼原则」一致，而不是把审批降级成一次点击。
+  if (row.requestedBy === ctx.userId) {
+    throw new ForbiddenError('不能批准自己发起的运行：审批必须由另一个主体完成（职责分离）', {
+      code: SELF_APPROVAL_FORBIDDEN,
+      policyVersion: AGENT_APPROVAL_POLICY_VERSION,
+      runId: row.id,
+    })
+  }
+
   const from = row.status as AgentRunStatus
   try {
     assertTransition(from, decision)
@@ -774,7 +793,15 @@ export async function decideAgentRun(
     resourceType: 'agent_run',
     resourceId: row.id,
     // ⚠️ **不记 note**：它是人写的自由文本，可能含档案信息（与「拒绝理由不回流」同一取向）。
-    safeMetadata: { skill: row.skill, risk: row.risk, deciderRole: ctx.role, hasNote: note !== null },
+    safeMetadata: {
+      skill: row.skill,
+      risk: row.risk,
+      deciderRole: ctx.role,
+      hasNote: note !== null,
+      // C02：记录"按哪版审批策略批的"以及发起人/批准人是否为不同主体。
+      policyVersion: AGENT_APPROVAL_POLICY_VERSION,
+      separationOfDuties: row.requestedBy !== ctx.userId,
+    },
   }).catch(() => {})
 
   const updated = await findRunRow(ctx.organizationId, row.id)

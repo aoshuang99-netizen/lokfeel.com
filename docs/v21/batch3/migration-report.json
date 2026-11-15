@@ -1,0 +1,941 @@
+{
+  "task": "V21 第三批 · C05（Prisma 迁移与数据完整性）",
+  "generatedAt": "2026-11-15T10:45:08.565Z",
+  "status": "PASS",
+  "migration": {
+    "version": "20261115120000_v21_batch2_execution_loop",
+    "dir": "prisma/migrations/20261115120000_v21_batch2_execution_loop",
+    "files": {
+      "migrationSql": {
+        "path": "prisma/migrations/20261115120000_v21_batch2_execution_loop/migration.sql",
+        "sha256": "bc14f420be35bdc9bf64c49bc40d1d91863c1b45050bf7c883364420500a8570",
+        "bytes": 3500
+      },
+      "downSql": {
+        "path": "prisma/migrations/20261115120000_v21_batch2_execution_loop/down.sql",
+        "sha256": "c84d7f0c80d3c372057bcc1bb89b878f1b3920266ead8b446e08fc867a23506a",
+        "bytes": 2441
+      }
+    },
+    "additions": {
+      "tables": [
+        "MissionSpecRevision",
+        "ExecutionVerification",
+        "AgentRunStageEvent"
+      ],
+      "columns": [
+        {
+          "table": "Mission",
+          "column": "sourceRunId",
+          "type": "TEXT"
+        },
+        {
+          "table": "IdempotencyRecord",
+          "column": "actorId",
+          "type": "TEXT"
+        }
+      ],
+      "indexes": [
+        {
+          "table": "MissionSpecRevision",
+          "name": "MissionSpecRevision_missionId_version_key",
+          "unique": true,
+          "columns": [
+            "missionId",
+            "version"
+          ]
+        },
+        {
+          "table": "MissionSpecRevision",
+          "name": "MissionSpecRevision_organizationId_missionId_version_idx",
+          "unique": false,
+          "columns": [
+            "organizationId",
+            "missionId",
+            "version"
+          ]
+        },
+        {
+          "table": "ExecutionVerification",
+          "name": "ExecutionVerification_missionId_runId_key",
+          "unique": true,
+          "columns": [
+            "missionId",
+            "runId"
+          ]
+        },
+        {
+          "table": "ExecutionVerification",
+          "name": "ExecutionVerification_organizationId_missionId_idx",
+          "unique": false,
+          "columns": [
+            "organizationId",
+            "missionId"
+          ]
+        },
+        {
+          "table": "AgentRunStageEvent",
+          "name": "AgentRunStageEvent_runId_seq_key",
+          "unique": true,
+          "columns": [
+            "runId",
+            "seq"
+          ]
+        },
+        {
+          "table": "AgentRunStageEvent",
+          "name": "AgentRunStageEvent_organizationId_runId_seq_idx",
+          "unique": false,
+          "columns": [
+            "organizationId",
+            "runId",
+            "seq"
+          ]
+        }
+      ]
+    }
+  },
+  "environment": {
+    "node": "v22.22.2",
+    "platform": "darwin/x64",
+    "prismaCli": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/node_modules/.bin/prisma",
+    "datasourceProvider": "sqlite",
+    "isolationDir": "/tmp/v21-batch3-compat",
+    "databases": {
+      "clean": "/tmp/v21-batch3-compat/v21-mig-clean.db",
+      "legacy": "/tmp/v21-batch3-compat/v21-mig-legacy.db",
+      "deployProbe": "/tmp/v21-batch3-compat/v21-mig-deploy-probe.db"
+    },
+    "note": "全部使用 /tmp 下的独立库；未读写 ci-e2e.db 或任何生产库。"
+  },
+  "checks": [
+    {
+      "id": "M01",
+      "title": "migration.sql 为纯新增（静态检查）",
+      "status": "PASS",
+      "detail": "forbidden=0, ALTER=2, 非 ADD COLUMN=0",
+      "evidence": {
+        "forbiddenStatements": [],
+        "alterStatements": [
+          "ALTER TABLE \"Mission\" ADD COLUMN \"sourceRunId\" TEXT;",
+          "ALTER TABLE \"IdempotencyRecord\" ADD COLUMN \"actorId\" TEXT;"
+        ]
+      }
+    },
+    {
+      "id": "M02",
+      "title": "构建迁移前 schema 快照（当前 schema 去掉 v21 增量）",
+      "status": "PASS",
+      "detail": "/tmp/v21-batch3-compat/schema-before（8 个 .prisma，去掉 v21.prisma，裁剪 2 行）",
+      "evidence": {
+        "snapshotDir": "/tmp/v21-batch3-compat/schema-before",
+        "removedColumns": [
+          "Mission.sourceRunId",
+          "IdempotencyRecord.actorId"
+        ]
+      }
+    },
+    {
+      "id": "M03",
+      "title": "migration.sql 与 prisma migrate diff 生成结果逐句一致",
+      "status": "PASS",
+      "detail": "与生成结果完全一致（含顺序）",
+      "evidence": {
+        "expectedSqlPath": "/tmp/v21-batch3-compat/expected-v21-diff.sql",
+        "expectedSha256": "b70b37dade13a846e6c253003f60bf58413d9774746fe9a014f9852d3e2fa868",
+        "actualSha256": "b70b37dade13a846e6c253003f60bf58413d9774746fe9a014f9852d3e2fa868",
+        "firstDiff": null
+      }
+    },
+    {
+      "id": "M04",
+      "title": "干净库应用「迁移前基线」",
+      "status": "PASS",
+      "detail": "表=63, 新表=0, Mission 列=17（无 sourceRunId）",
+      "evidence": {
+        "baselineSql": "/tmp/v21-batch3-compat/baseline-before-v21.sql",
+        "baselineSha256": "6474672622a4e5b56b3394581d3341b406d605aa4e57abeff133ba664550eab5",
+        "execute": {
+          "exitCode": 0,
+          "stdout": "Script executed successfully."
+        },
+        "tableCount": 63,
+        "missionColumns": [
+          "id",
+          "organizationId",
+          "ownerId",
+          "title",
+          "goal",
+          "offer",
+          "constraints",
+          "successCriteria",
+          "status",
+          "shareToken",
+          "publicPreview",
+          "maxParticipants",
+          "expiresAt",
+          "publishedAt",
+          "closedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      }
+    },
+    {
+      "id": "M05",
+      "title": "干净库应用新迁移 migration.sql",
+      "status": "PASS",
+      "detail": "prisma db execute 退出码 0",
+      "evidence": {
+        "execute": {
+          "exitCode": 0,
+          "stdout": "Script executed successfully."
+        }
+      }
+    },
+    {
+      "id": "M06",
+      "title": "三张新表存在且列定义正确",
+      "status": "PASS",
+      "detail": "缺失表=无, 语义不符=无",
+      "evidence": {
+        "tables": [
+          "MissionSpecRevision",
+          "ExecutionVerification",
+          "AgentRunStageEvent"
+        ],
+        "columns": {
+          "MissionSpecRevision": [
+            {
+              "cid": 0,
+              "name": "id",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 1
+            },
+            {
+              "cid": 1,
+              "name": "organizationId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 2,
+              "name": "missionId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 3,
+              "name": "version",
+              "type": "INTEGER",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 4,
+              "name": "specJson",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 5,
+              "name": "goal",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 6,
+              "name": "offer",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 7,
+              "name": "successCriteria",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 8,
+              "name": "expiresAt",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 9,
+              "name": "changeNote",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 10,
+              "name": "actorId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 11,
+              "name": "createdAt",
+              "type": "DATETIME",
+              "notnull": 1,
+              "dflt_value": "CURRENT_TIMESTAMP",
+              "pk": 0
+            }
+          ],
+          "ExecutionVerification": [
+            {
+              "cid": 0,
+              "name": "id",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 1
+            },
+            {
+              "cid": 1,
+              "name": "organizationId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 2,
+              "name": "missionId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 3,
+              "name": "runId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 4,
+              "name": "receiptRef",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 5,
+              "name": "verdict",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 6,
+              "name": "criteriaJson",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 7,
+              "name": "evidenceNote",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 8,
+              "name": "verifierId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 9,
+              "name": "createdAt",
+              "type": "DATETIME",
+              "notnull": 1,
+              "dflt_value": "CURRENT_TIMESTAMP",
+              "pk": 0
+            }
+          ],
+          "AgentRunStageEvent": [
+            {
+              "cid": 0,
+              "name": "id",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 1
+            },
+            {
+              "cid": 1,
+              "name": "organizationId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 2,
+              "name": "runId",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 3,
+              "name": "seq",
+              "type": "INTEGER",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 4,
+              "name": "stage",
+              "type": "TEXT",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 5,
+              "name": "at",
+              "type": "DATETIME",
+              "notnull": 1,
+              "dflt_value": null,
+              "pk": 0
+            },
+            {
+              "cid": 6,
+              "name": "detail",
+              "type": "TEXT",
+              "notnull": 0,
+              "dflt_value": null,
+              "pk": 0
+            }
+          ]
+        },
+        "semantics": {
+          "MissionSpecRevision.version NOT NULL": true,
+          "MissionSpecRevision.specJson NOT NULL": true,
+          "MissionSpecRevision.actorId NOT NULL": true,
+          "MissionSpecRevision.changeNote NULL": true,
+          "ExecutionVerification.verdict NOT NULL": true,
+          "ExecutionVerification.receiptRef NULL": true,
+          "AgentRunStageEvent.seq NOT NULL": true,
+          "AgentRunStageEvent.detail NULL": true
+        }
+      }
+    },
+    {
+      "id": "M07",
+      "title": "两个可选列存在且 NOT NULL=0（旧行默认 NULL）",
+      "status": "PASS",
+      "detail": "Mission.sourceRunId=存在, IdempotencyRecord.actorId=存在",
+      "evidence": [
+        {
+          "table": "Mission",
+          "column": "sourceRunId",
+          "found": true,
+          "definition": {
+            "cid": 17,
+            "name": "sourceRunId",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        },
+        {
+          "table": "IdempotencyRecord",
+          "column": "actorId",
+          "found": true,
+          "definition": {
+            "cid": 8,
+            "name": "actorId",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "M08",
+      "title": "六条索引存在（唯一/非唯一与列序正确）",
+      "status": "PASS",
+      "detail": "6/6 通过",
+      "evidence": [
+        {
+          "table": "MissionSpecRevision",
+          "index": "MissionSpecRevision_missionId_version_key",
+          "expected": {
+            "unique": true,
+            "columns": [
+              "missionId",
+              "version"
+            ]
+          },
+          "actual": {
+            "unique": true,
+            "columns": [
+              "missionId",
+              "version"
+            ]
+          },
+          "pass": true
+        },
+        {
+          "table": "MissionSpecRevision",
+          "index": "MissionSpecRevision_organizationId_missionId_version_idx",
+          "expected": {
+            "unique": false,
+            "columns": [
+              "organizationId",
+              "missionId",
+              "version"
+            ]
+          },
+          "actual": {
+            "unique": false,
+            "columns": [
+              "organizationId",
+              "missionId",
+              "version"
+            ]
+          },
+          "pass": true
+        },
+        {
+          "table": "ExecutionVerification",
+          "index": "ExecutionVerification_missionId_runId_key",
+          "expected": {
+            "unique": true,
+            "columns": [
+              "missionId",
+              "runId"
+            ]
+          },
+          "actual": {
+            "unique": true,
+            "columns": [
+              "missionId",
+              "runId"
+            ]
+          },
+          "pass": true
+        },
+        {
+          "table": "ExecutionVerification",
+          "index": "ExecutionVerification_organizationId_missionId_idx",
+          "expected": {
+            "unique": false,
+            "columns": [
+              "organizationId",
+              "missionId"
+            ]
+          },
+          "actual": {
+            "unique": false,
+            "columns": [
+              "organizationId",
+              "missionId"
+            ]
+          },
+          "pass": true
+        },
+        {
+          "table": "AgentRunStageEvent",
+          "index": "AgentRunStageEvent_runId_seq_key",
+          "expected": {
+            "unique": true,
+            "columns": [
+              "runId",
+              "seq"
+            ]
+          },
+          "actual": {
+            "unique": true,
+            "columns": [
+              "runId",
+              "seq"
+            ]
+          },
+          "pass": true
+        },
+        {
+          "table": "AgentRunStageEvent",
+          "index": "AgentRunStageEvent_organizationId_runId_seq_idx",
+          "expected": {
+            "unique": false,
+            "columns": [
+              "organizationId",
+              "runId",
+              "seq"
+            ]
+          },
+          "actual": {
+            "unique": false,
+            "columns": [
+              "organizationId",
+              "runId",
+              "seq"
+            ]
+          },
+          "pass": true
+        }
+      ]
+    },
+    {
+      "id": "M09",
+      "title": "唯一约束真实生效（重复插入被拒）",
+      "status": "PASS",
+      "detail": "3/3 唯一键拒绝了重复行",
+      "evidence": [
+        {
+          "table": "MissionSpecRevision",
+          "duplicateRejected": true,
+          "error": "UNIQUE constraint failed: MissionSpecRevision.missionId, MissionSpecRevision.version"
+        },
+        {
+          "table": "ExecutionVerification",
+          "duplicateRejected": true,
+          "error": "UNIQUE constraint failed: ExecutionVerification.missionId, ExecutionVerification.runId"
+        },
+        {
+          "table": "AgentRunStageEvent",
+          "duplicateRejected": true,
+          "error": "UNIQUE constraint failed: AgentRunStageEvent.runId, AgentRunStageEvent.seq"
+        }
+      ]
+    },
+    {
+      "id": "M10",
+      "title": "相对基线为纯新增（无表/列丢失）",
+      "status": "PASS",
+      "detail": "+表 3, +列 2, 丢失表 0, 丢失列 0",
+      "evidence": {
+        "addedTables": [
+          "AgentRunStageEvent",
+          "ExecutionVerification",
+          "MissionSpecRevision"
+        ],
+        "addedColumns": [
+          "IdempotencyRecord.actorId",
+          "Mission.sourceRunId"
+        ],
+        "lostTables": [],
+        "lostColumns": [],
+        "beforeTableCount": 63,
+        "afterTableCount": 66
+      }
+    },
+    {
+      "id": "M11",
+      "title": "旧版本库：应用基线并写入旧版数据",
+      "status": "PASS",
+      "detail": "Mission=true, IdempotencyRecord=true, 旧表无新列=true",
+      "evidence": {
+        "missionColumns": [
+          "id",
+          "organizationId",
+          "ownerId",
+          "title",
+          "goal",
+          "offer",
+          "constraints",
+          "successCriteria",
+          "status",
+          "shareToken",
+          "publicPreview",
+          "maxParticipants",
+          "expiresAt",
+          "publishedAt",
+          "closedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "idempotencyColumns": [
+          "id",
+          "organizationId",
+          "scope",
+          "key",
+          "requestHash",
+          "resourceType",
+          "resourceId",
+          "createdAt"
+        ],
+        "inserted": {
+          "mission": {
+            "id": "legacy_mission_1",
+            "organizationId": "legacy_org_1",
+            "ownerId": "legacy_user_1",
+            "title": "旧版 Mission（迁移前写入）",
+            "goal": "验证旧行在迁移后可读",
+            "offer": "旧报价",
+            "constraints": null,
+            "successCriteria": "旧判据",
+            "status": "ACTIVE",
+            "shareToken": "legacy_share_token_1",
+            "publicPreview": 1,
+            "maxParticipants": null,
+            "expiresAt": null,
+            "publishedAt": null,
+            "closedAt": null,
+            "createdAt": "2026-11-15T10:44:38.693Z",
+            "updatedAt": "2026-11-15T10:44:38.693Z"
+          },
+          "idempotencyRecord": {
+            "id": "legacy_idem_1",
+            "organizationId": "legacy_org_1",
+            "scope": "mission.create",
+            "key": "legacy-key-1",
+            "requestHash": "sha256:legacy-hash",
+            "resourceType": "Mission",
+            "resourceId": "legacy_res_1",
+            "createdAt": "2026-11-15T10:44:38.693Z"
+          }
+        }
+      }
+    },
+    {
+      "id": "M12",
+      "title": "旧数据在应用新迁移后仍可读且值不变",
+      "status": "PASS",
+      "detail": "Mission=字段全一致, IdempotencyRecord=字段全一致",
+      "evidence": {
+        "mission": {
+          "id": "legacy_mission_1",
+          "organizationId": "legacy_org_1",
+          "ownerId": "legacy_user_1",
+          "title": "旧版 Mission（迁移前写入）",
+          "goal": "验证旧行在迁移后可读",
+          "offer": "旧报价",
+          "constraints": null,
+          "successCriteria": "旧判据",
+          "status": "ACTIVE",
+          "shareToken": "legacy_share_token_1",
+          "publicPreview": 1,
+          "maxParticipants": null,
+          "expiresAt": null,
+          "publishedAt": null,
+          "closedAt": null,
+          "createdAt": "2026-11-15T10:44:38.693Z",
+          "updatedAt": "2026-11-15T10:44:38.693Z",
+          "sourceRunId": null
+        },
+        "idempotencyRecord": {
+          "id": "legacy_idem_1",
+          "organizationId": "legacy_org_1",
+          "scope": "mission.create",
+          "key": "legacy-key-1",
+          "requestHash": "sha256:legacy-hash",
+          "resourceType": "Mission",
+          "resourceId": "legacy_res_1",
+          "createdAt": "2026-11-15T10:44:38.693Z",
+          "actorId": null
+        }
+      }
+    },
+    {
+      "id": "M13",
+      "title": "旧行新列默认 NULL（无回填、无默认值）",
+      "status": "PASS",
+      "detail": "Mission.sourceRunId=null, IdempotencyRecord.actorId=null",
+      "evidence": {
+        "missionSourceRunId": null,
+        "idempotencyActorId": null
+      }
+    },
+    {
+      "id": "M14",
+      "title": "旧库新列可写入（新代码按需赋值），旧行仍不受影响",
+      "status": "PASS",
+      "detail": "sourceRunId=legacy_run_1, actorId=legacy_user_1, Mission 行数=1",
+      "evidence": {
+        "mission": {
+          "sourceRunId": "legacy_run_1"
+        },
+        "idempotencyRecord": {
+          "actorId": "legacy_user_1"
+        },
+        "missionCount": 1
+      }
+    },
+    {
+      "id": "M15",
+      "title": "旧库三张新表可用（新表在旧数据上增量建立）",
+      "status": "PASS",
+      "detail": "MissionSpecRevision=1, AgentRunStageEvent=1",
+      "evidence": {
+        "missionSpecRevisionCount": 1,
+        "agentRunStageEventCount": 1
+      }
+    },
+    {
+      "id": "M16",
+      "title": "prisma validate 通过",
+      "status": "PASS",
+      "detail": "The schemas at prisma/schema are valid 🚀",
+      "evidence": {
+        "exitCode": 0,
+        "stdout": "The schemas at prisma/schema are valid 🚀",
+        "stderr": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma/schema."
+      }
+    },
+    {
+      "id": "M17",
+      "title": "src/generated 已包含三张新表（Prisma Client 与 schema 一致）",
+      "status": "PASS",
+      "detail": "缺失=无, 新字段=存在",
+      "evidence": {
+        "generatedDir": "src/generated",
+        "hits": {
+          "MissionSpecRevision": [
+            "src/generated/edge.js",
+            "src/generated/index-browser.js",
+            "src/generated/index.d.ts",
+            "src/generated/index.js",
+            "src/generated/schema.prisma"
+          ],
+          "ExecutionVerification": [
+            "src/generated/edge.js",
+            "src/generated/index-browser.js",
+            "src/generated/index.d.ts",
+            "src/generated/index.js",
+            "src/generated/schema.prisma"
+          ],
+          "AgentRunStageEvent": [
+            "src/generated/edge.js",
+            "src/generated/index-browser.js",
+            "src/generated/index.d.ts",
+            "src/generated/index.js",
+            "src/generated/schema.prisma"
+          ]
+        },
+        "schemaCopyHasNewFields": true
+      }
+    },
+    {
+      "id": "M18",
+      "title": "down.sql 不含假回滚（无 DROP COLUMN / 无 DROP 既有表）",
+      "status": "PASS",
+      "detail": "DROP TABLE=3（目标=AgentRunStageEvent,ExecutionVerification,MissionSpecRevision）, DROP COLUMN=0",
+      "evidence": {
+        "activeStatements": [
+          "DROP TABLE IF EXISTS \"AgentRunStageEvent\";",
+          "DROP TABLE IF EXISTS \"ExecutionVerification\";",
+          "DROP TABLE IF EXISTS \"MissionSpecRevision\";"
+        ],
+        "dropTargets": [
+          "AgentRunStageEvent",
+          "ExecutionVerification",
+          "MissionSpecRevision"
+        ],
+        "dropColumn": []
+      }
+    }
+  ],
+  "knownLimitations": [
+    {
+      "id": "L01",
+      "title": "prisma/migrations 历史无法在 SQLite 上重放（migrate deploy 失败）",
+      "status": "CONFIRMED",
+      "classification": "PRE_EXISTING_ENVIRONMENT_CONSTRAINT",
+      "introducedByThisChange": false,
+      "command": "DATABASE_URL=file:/tmp/v21-batch3-compat/v21-mig-deploy-probe.db npx prisma migrate deploy",
+      "exitCode": 1,
+      "rawOutput": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma/schema.\nError: P3018\n\nA migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20250413130000_add_product_optimization_features\n\nDatabase error code: 1\n\nDatabase error:\nnear \"DO\": syntax error in -- Migration: Add Product Optimization Features\n-- Created: 2026-04-13\n-- Description: Add Sincerity System, Vault Features, and Profile Extensions\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 1: Create New Enums\n-- ═══════════════════════════════════════════════════════════════\n\n-- Vault Status Enum\nDO $$\nBEGIN\n    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'VaultStatus') THEN\n        CREATE TYPE \"VaultStatus\" AS ENUM ('ACTIVE', 'EXTENDED', 'REVOKED', 'EXPIRED');\n    END IF;\nEND$$;\n\n-- Sincerity Transaction Type Enum\nDO $$\nBEGIN\n    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'SincerityTransactionType') THEN\n        CREATE TYPE \"SincerityTransactionType\" AS ENUM ('EARN', 'SPEND', 'RECEIVE_GIFT', 'SEND_GIFT', 'REFUND');\n    END IF;\nEND$$;\n\n-- Sincerity Tier Enum\nDO $$\nBEGIN\n    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'SincerityTier') THEN\n        CREATE TYPE \"SincerityTier\" AS ENUM ('BRONZE', 'SILVER', 'GOLD', 'PLATINUM');\n    END IF;\nEND$$;\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 2: Create SincerityWallet Table\n-- ═══════════════════════════════════════════════════════════════\n\nCREATE TABLE IF NOT EXISTS \"SincerityWallet\" (\n    \"id\" TEXT NOT NULL,\n    \"userId\" TEXT NOT NULL,\n    \"balance\" INTEGER NOT NULL DEFAULT 0,\n    \"totalEarned\" INTEGER NOT NULL DEFAULT 0,\n    \"totalSpent\" INTEGER NOT NULL DEFAULT 0,\n    \"totalGifted\" INTEGER NOT NULL DEFAULT 0,\n    \"totalReceived\" INTEGER NOT NULL DEFAULT 0,\n    \"tier\" \"SincerityTier\" NOT NULL DEFAULT 'BRONZE',\n    \"tierProgress\" DOUBLE PRECISION DEFAULT 0,\n    \"lastEarnedAt\" TIMESTAMP(3),\n    \"lastSpentAt\" TIMESTAMP(3),\n    \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    \"updatedAt\" TIMESTAMP(3) NOT NULL,\n\n    CONSTRAINT \"SincerityWallet_pkey\" PRIMARY KEY (\"id\")\n);\n\n-- Create unique index on userId\nCREATE UNIQUE INDEX IF NOT EXISTS \"SincerityWallet_userId_key\" ON \"SincerityWallet\"(\"userId\");\n\n-- Create indexes\nCREATE INDEX IF NOT EXISTS \"SincerityWallet_tier_idx\" ON \"SincerityWallet\"(\"tier\");\nCREATE INDEX IF NOT EXISTS \"SincerityWallet_balance_idx\" ON \"SincerityWallet\"(\"balance\");\n\n-- Add foreign key constraint\nDO $$\nBEGIN\n    IF NOT EXISTS (\n        SELECT 1 FROM information_schema.table_constraints \n        WHERE constraint_name = 'SincerityWallet_userId_fkey' \n        AND table_name = 'SincerityWallet'\n    ) THEN\n        ALTER TABLE \"SincerityWallet\" \n        ADD CONSTRAINT \"SincerityWallet_userId_fkey\" \n        FOREIGN KEY (\"userId\") REFERENCES \"Profile\"(\"id\") \n        ON DELETE CASCADE ON UPDATE CASCADE;\n    END IF;\nEND$$;\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 3: Create SincerityTransaction Table\n-- ═══════════════════════════════════════════════════════════════\n\nCREATE TABLE IF NOT EXISTS \"SincerityTransaction\" (\n    \"id\" TEXT NOT NULL,\n    \"walletId\" TEXT NOT NULL,\n    \"type\" \"SincerityTransactionType\" NOT NULL,\n    \"amount\" INTEGER NOT NULL,\n    \"source\" TEXT NOT NULL,\n    \"description\" TEXT,\n    \"matchId\" TEXT,\n    \"fromUserId\" TEXT,\n    \"toUserId\" TEXT,\n    \"message\" TEXT,\n    \"metadata\" TEXT,\n    \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\n    CONSTRAINT \"SincerityTransaction_pkey\" PRIMARY KEY (\"id\")\n);\n\n-- Create indexes\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_walletId_idx\" ON \"SincerityTransaction\"(\"walletId\");\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_type_idx\" ON \"SincerityTransaction\"(\"type\");\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_createdAt_idx\" ON \"SincerityTransaction\"(\"createdAt\");\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_source_idx\" ON \"SincerityTransaction\"(\"source\");\n\n-- Add foreign key constraint\nDO $$\nBEGIN\n    IF NOT EXISTS (\n        SELECT 1 FROM information_schema.table_constraints \n        WHERE constraint_name = 'SincerityTransaction_walletId_fkey' \n        AND table_name = 'SincerityTransaction'\n    ) THEN\n        ALTER TABLE \"SincerityTransaction\" \n        ADD CONSTRAINT \"SincerityTransaction_walletId_fkey\" \n        FOREIGN KEY (\"walletId\") REFERENCES \"SincerityWallet\"(\"id\") \n        ON DELETE CASCADE ON UPDATE CASCADE;\n    END IF;\nEND$$;\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 4: Extend Profile Table\n-- ═══════════════════════════════════════════════════════════════\n\n-- Add professional info columns\nALTER TABLE \"Profile\" \n    ADD COLUMN IF NOT EXISTS \"occupation\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"company\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"industry\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"linkedInVerified\" BOOLEAN DEFAULT false,\n    ADD COLUMN IF NOT EXISTS \"verificationBadge\" TEXT;\n\n-- Create index on linkedInVerified\nCREATE INDEX IF NOT EXISTS \"Profile_linkedInVerified_idx\" ON \"Profile\"(\"linkedInVerified\");\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 5: Extend Match Table\n-- ═══════════════════════════════════════════════════════════════\n\n-- Add pitch message and gift columns\nALTER TABLE \"Match\" \n    ADD COLUMN IF NOT EXISTS \"pitchMessage\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"pitchTone\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"aiAssisted\" BOOLEAN DEFAULT false,\n    ADD COLUMN IF NOT EXISTS \"giftAmount\" INTEGER DEFAULT 0,\n    ADD COLUMN IF NOT EXISTS \"isUnread\" BOOLEAN DEFAULT true,\n    ADD COLUMN IF NOT EXISTS \"inboxPriority\" DOUBLE PRECISION;\n\n-- Create indexes\nCREATE INDEX IF NOT EXISTS \"Match_isUnread_idx\" ON \"Match\"(\"isUnread\");\nCREATE INDEX IF NOT EXISTS \"Match_inboxPriority_idx\" ON \"Match\"(\"inboxPriority\");\n\n-- ═",
+      "impact": "干净库不能用 `prisma migrate deploy` 从零构建；生产也不能靠它推进。历史文件 20250413/20250425/20260428 为 PostgreSQL 方言，且 20261010150000_t01_tenancy 明示历史文件是「变更记录，不是可重复执行的迁移脚本」。",
+      "mitigation": "本脚本用「迁移前 schema 快照 → 基线 SQL」在 /tmp 干净库上重建等价起点，再应用本次 migration.sql；生产执行走 scripts/connection/migrate.mjs 的幂等 DDL 通路并单独登记 _prisma_migrations 记录（见 C05_MIGRATION.md §5/§6）。"
+    }
+  ],
+  "commands": [
+    {
+      "command": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/node_modules/.bin/prisma migrate diff --from-schema /tmp/v21-batch3-compat/schema-before --to-schema /Users/frankzhao/WorkBuddy/20260402202519/nexus-app/prisma/schema --script --output /tmp/v21-batch3-compat/expected-v21-diff.sql",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "Loaded Prisma config from prisma.config.ts."
+    },
+    {
+      "command": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/node_modules/.bin/prisma migrate diff --from-empty --to-schema /tmp/v21-batch3-compat/schema-before --script --output /tmp/v21-batch3-compat/baseline-before-v21.sql",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "Loaded Prisma config from prisma.config.ts."
+    },
+    {
+      "command": "DATABASE_URL=file:/tmp/v21-batch3-compat/v21-mig-clean.db npx prisma db execute --file /tmp/v21-batch3-compat/baseline-before-v21.sql",
+      "exitCode": 0,
+      "stdout": "Script executed successfully.",
+      "stderr": "Loaded Prisma config from prisma.config.ts."
+    },
+    {
+      "command": "DATABASE_URL=file:/tmp/v21-batch3-compat/v21-mig-clean.db npx prisma db execute --file /Users/frankzhao/WorkBuddy/20260402202519/nexus-app/prisma/migrations/20261115120000_v21_batch2_execution_loop/migration.sql",
+      "exitCode": 0,
+      "stdout": "Script executed successfully.",
+      "stderr": "Loaded Prisma config from prisma.config.ts."
+    },
+    {
+      "command": "DATABASE_URL=file:/tmp/v21-batch3-compat/v21-mig-legacy.db npx prisma db execute --file /tmp/v21-batch3-compat/baseline-before-v21.sql",
+      "exitCode": 0,
+      "stdout": "Script executed successfully.",
+      "stderr": "Loaded Prisma config from prisma.config.ts."
+    },
+    {
+      "command": "DATABASE_URL=file:/tmp/v21-batch3-compat/v21-mig-legacy.db npx prisma db execute --file /Users/frankzhao/WorkBuddy/20260402202519/nexus-app/prisma/migrations/20261115120000_v21_batch2_execution_loop/migration.sql",
+      "exitCode": 0,
+      "stdout": "Script executed successfully.",
+      "stderr": "Loaded Prisma config from prisma.config.ts."
+    },
+    {
+      "command": "/Users/frankzhao/WorkBuddy/20260402202519/nexus-app/node_modules/.bin/prisma validate",
+      "exitCode": 0,
+      "stdout": "The schemas at prisma/schema are valid 🚀",
+      "stderr": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma/schema."
+    },
+    {
+      "command": "DATABASE_URL=file:/tmp/v21-batch3-compat/v21-mig-deploy-probe.db npx prisma migrate deploy",
+      "exitCode": 1,
+      "stdout": "Datasource \"db\": SQLite database \"v21-mig-deploy-probe.db\" at \"file:/tmp/v21-batch3-compat/v21-mig-deploy-probe.db\"\n\nSQLite database v21-mig-deploy-probe.db created at file:/tmp/v21-batch3-compat/v21-mig-deploy-probe.db\n\n9 migrations found in prisma/migrations\n\nApplying migration `20250413130000_add_product_optimization_features`",
+      "stderr": "Loaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma/schema.\nError: P3018\n\nA migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20250413130000_add_product_optimization_features\n\nDatabase error code: 1\n\nDatabase error:\nnear \"DO\": syntax error in -- Migration: Add Product Optimization Features\n-- Created: 2026-04-13\n-- Description: Add Sincerity System, Vault Features, and Profile Extensions\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 1: Create New Enums\n-- ═══════════════════════════════════════════════════════════════\n\n-- Vault Status Enum\nDO $$\nBEGIN\n    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'VaultStatus') THEN\n        CREATE TYPE \"VaultStatus\" AS ENUM ('ACTIVE', 'EXTENDED', 'REVOKED', 'EXPIRED');\n    END IF;\nEND$$;\n\n-- Sincerity Transaction Type Enum\nDO $$\nBEGIN\n    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'SincerityTransactionType') THEN\n        CREATE TYPE \"SincerityTransactionType\" AS ENUM ('EARN', 'SPEND', 'RECEIVE_GIFT', 'SEND_GIFT', 'REFUND');\n    END IF;\nEND$$;\n\n-- Sincerity Tier Enum\nDO $$\nBEGIN\n    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'SincerityTier') THEN\n        CREATE TYPE \"SincerityTier\" AS ENUM ('BRONZE', 'SILVER', 'GOLD', 'PLATINUM');\n    END IF;\nEND$$;\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 2: Create SincerityWallet Table\n-- ═══════════════════════════════════════════════════════════════\n\nCREATE TABLE IF NOT EXISTS \"SincerityWallet\" (\n    \"id\" TEXT NOT NULL,\n    \"userId\" TEXT NOT NULL,\n    \"balance\" INTEGER NOT NULL DEFAULT 0,\n    \"totalEarned\" INTEGER NOT NULL DEFAULT 0,\n    \"totalSpent\" INTEGER NOT NULL DEFAULT 0,\n    \"totalGifted\" INTEGER NOT NULL DEFAULT 0,\n    \"totalReceived\" INTEGER NOT NULL DEFAULT 0,\n    \"tier\" \"SincerityTier\" NOT NULL DEFAULT 'BRONZE',\n    \"tierProgress\" DOUBLE PRECISION DEFAULT 0,\n    \"lastEarnedAt\" TIMESTAMP(3),\n    \"lastSpentAt\" TIMESTAMP(3),\n    \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    \"updatedAt\" TIMESTAMP(3) NOT NULL,\n\n    CONSTRAINT \"SincerityWallet_pkey\" PRIMARY KEY (\"id\")\n);\n\n-- Create unique index on userId\nCREATE UNIQUE INDEX IF NOT EXISTS \"SincerityWallet_userId_key\" ON \"SincerityWallet\"(\"userId\");\n\n-- Create indexes\nCREATE INDEX IF NOT EXISTS \"SincerityWallet_tier_idx\" ON \"SincerityWallet\"(\"tier\");\nCREATE INDEX IF NOT EXISTS \"SincerityWallet_balance_idx\" ON \"SincerityWallet\"(\"balance\");\n\n-- Add foreign key constraint\nDO $$\nBEGIN\n    IF NOT EXISTS (\n        SELECT 1 FROM information_schema.table_constraints \n        WHERE constraint_name = 'SincerityWallet_userId_fkey' \n        AND table_name = 'SincerityWallet'\n    ) THEN\n        ALTER TABLE \"SincerityWallet\" \n        ADD CONSTRAINT \"SincerityWallet_userId_fkey\" \n        FOREIGN KEY (\"userId\") REFERENCES \"Profile\"(\"id\") \n        ON DELETE CASCADE ON UPDATE CASCADE;\n    END IF;\nEND$$;\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 3: Create SincerityTransaction Table\n-- ═══════════════════════════════════════════════════════════════\n\nCREATE TABLE IF NOT EXISTS \"SincerityTransaction\" (\n    \"id\" TEXT NOT NULL,\n    \"walletId\" TEXT NOT NULL,\n    \"type\" \"SincerityTransactionType\" NOT NULL,\n    \"amount\" INTEGER NOT NULL,\n    \"source\" TEXT NOT NULL,\n    \"description\" TEXT,\n    \"matchId\" TEXT,\n    \"fromUserId\" TEXT,\n    \"toUserId\" TEXT,\n    \"message\" TEXT,\n    \"metadata\" TEXT,\n    \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\n    CONSTRAINT \"SincerityTransaction_pkey\" PRIMARY KEY (\"id\")\n);\n\n-- Create indexes\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_walletId_idx\" ON \"SincerityTransaction\"(\"walletId\");\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_type_idx\" ON \"SincerityTransaction\"(\"type\");\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_createdAt_idx\" ON \"SincerityTransaction\"(\"createdAt\");\nCREATE INDEX IF NOT EXISTS \"SincerityTransaction_source_idx\" ON \"SincerityTransaction\"(\"source\");\n\n-- Add foreign key constraint\nDO $$\nBEGIN\n    IF NOT EXISTS (\n        SELECT 1 FROM information_schema.table_constraints \n        WHERE constraint_name = 'SincerityTransaction_walletId_fkey' \n        AND table_name = 'SincerityTransaction'\n    ) THEN\n        ALTER TABLE \"SincerityTransaction\" \n        ADD CONSTRAINT \"SincerityTransaction_walletId_fkey\" \n        FOREIGN KEY (\"walletId\") REFERENCES \"SincerityWallet\"(\"id\") \n        ON DELETE CASCADE ON UPDATE CASCADE;\n    END IF;\nEND$$;\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 4: Extend Profile Table\n-- ═══════════════════════════════════════════════════════════════\n\n-- Add professional info columns\nALTER TABLE \"Profile\" \n    ADD COLUMN IF NOT EXISTS \"occupation\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"company\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"industry\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"linkedInVerified\" BOOLEAN DEFAULT false,\n    ADD COLUMN IF NOT EXISTS \"verificationBadge\" TEXT;\n\n-- Create index on linkedInVerified\nCREATE INDEX IF NOT EXISTS \"Profile_linkedInVerified_idx\" ON \"Profile\"(\"linkedInVerified\");\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 5: Extend Match Table\n-- ═══════════════════════════════════════════════════════════════\n\n-- Add pitch message and gift columns\nALTER TABLE \"Match\" \n    ADD COLUMN IF NOT EXISTS \"pitchMessage\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"pitchTone\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"aiAssisted\" BOOLEAN DEFAULT false,\n    ADD COLUMN IF NOT EXISTS \"giftAmount\" INTEGER DEFAULT 0,\n    ADD COLUMN IF NOT EXISTS \"isUnread\" BOOLEAN DEFAULT true,\n    ADD COLUMN IF NOT EXISTS \"inboxPriority\" DOUBLE PRECISION;\n\n-- Create indexes\nCREATE INDEX IF NOT EXISTS \"Match_isUnread_idx\" ON \"Match\"(\"isUnread\");\nCREATE INDEX IF NOT EXISTS \"Match_inboxPriority_idx\" ON \"Match\"(\"inboxPriority\");\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 6: Extend ChatRoom Table (The Vault)\n-- ═══════════════════════════════════════════════════════════════\n\n-- Add vault status column\nALTER TABLE \"ChatRoom\" \n    ADD COLUMN IF NOT EXISTS \"vaultStatus\" TEXT DEFAULT 'ACTIVE',\n    ADD COLUMN IF NOT EXISTS \"vaultExpiry\" TIMESTAMP(3),\n    ADD COLUMN IF NOT EXISTS \"extendedAt\" TIMESTAMP(3),\n    ADD COLUMN IF NOT EXISTS \"extendedBy\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"extensionCount\" INTEGER DEFAULT 0,\n    ADD COLUMN IF NOT EXISTS \"revokedAt\" TIMESTAMP(3),\n    ADD COLUMN IF NOT EXISTS \"revokedBy\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"revokeReason\" TEXT,\n    ADD COLUMN IF NOT EXISTS \"screenshotCount\" INTEGER DEFAULT 0,\n    ADD COLUMN IF NOT EXISTS \"lastScreenshotAt\" TIMESTAMP(3);\n\n-- Create indexes\nCREATE INDEX IF NOT EXISTS \"ChatRoom_vaultStatus_idx\" ON \"ChatRoom\"(\"vaultStatus\");\nCREATE INDEX IF NOT EXISTS \"ChatRoom_vaultExpiry_idx\" ON \"ChatRoom\"(\"vaultExpiry\");\n\n-- ═══════════════════════════════════════════════════════════════\n-- STEP 7: Migration Complete\n-- ═══════════════════════════════════════════════════════════════\n\n-- Verify migration\nSELECT \n    'SincerityWallet' as table_name, \n    COUNT(*) as row_count \nFROM \"SincerityWallet\"\nUNION ALL\nSELECT \n    'SincerityTransaction' as table_name, \n    COUNT(*) as row_count \nFROM \"SincerityTransaction\";\n at offset 585"
+    }
+  ],
+  "summary": {
+    "status": "PASS",
+    "total": 18,
+    "passed": 18,
+    "failed": 0,
+    "knownLimitations": 1,
+    "failedIds": []
+  }
+}

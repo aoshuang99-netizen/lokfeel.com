@@ -76,6 +76,13 @@ const ctx = (role: Role = 'ADMIN', userId = 'u_1'): TenantContext => ({
   membershipId: 'ms_1',
 })
 
+/**
+ * 审批者（V21 第三批 C02 职责分离）：发起人是 `ctx()`（`u_1`），
+ * 批准必须由**另一个**主体完成，否则会被 `SELF_APPROVAL_FORBIDDEN` 拦下。
+ * 执行仍可由 `u_1` 触发 —— 执行器只复检"批准人 ≠ 发起人"，不要求执行人不同。
+ */
+const approverCtx = (): TenantContext => ctx('ADMIN', 'u_approver')
+
 /* ── Slice 6 对外送达夹具（介绍草稿的收件人是**创建时固定**的对手方）────── */
 
 const TARGET_USER = 'u_target'
@@ -281,7 +288,7 @@ describe('T09 · 执行器（服务层）', () => {
     expect(fake.executions).toHaveLength(0)
     expect(fake.notifications).toHaveLength(0)
 
-    const approved = await decideAgentRun(ctx(), run.id, 'APPROVED')
+    const approved = await decideAgentRun(approverCtx(), run.id, 'APPROVED')
     expect(approved.status).toBe('APPROVED')
     expect(approved.execution.available).toBe(true)
 
@@ -292,7 +299,7 @@ describe('T09 · 执行器（服务层）', () => {
 
   it('🔴 纵深防御：状态被改坏（APPROVED 但没有裁决行）→ 拒绝执行', async () => {
     const run = await createIntro()
-    await decideAgentRun(ctx(), run.id, 'APPROVED')
+    await decideAgentRun(approverCtx(), run.id, 'APPROVED')
 
     // 模拟"状态列被人工改坏 / 迁移脚本写错"：删掉裁决行，状态留着。
     mockVariant(() => {
@@ -387,7 +394,7 @@ describe('T09 · 执行副作用的形状与披露边界', () => {
 
   it('🔴 通知体**不含**运行目标与草稿正文；收件人是**对手方**（Slice 6）', async () => {
     const run = await createIntro('e-leak')
-    await decideAgentRun(ctx(), run.id, 'APPROVED')
+    await decideAgentRun(approverCtx(), run.id, 'APPROVED')
     await executeAgentRun(ctx(), run.id)
 
     const note = fake.notifications[0]
@@ -426,12 +433,12 @@ describe('T09 · 执行副作用的形状与披露边界', () => {
 describe('T09 · 反向对照', () => {
   it('把状态改回待批 → 执行必须失败（否则上面"待批不给执行"就是假绿）', async () => {
     const intro = await createIntro('e-variant')
-    await decideAgentRun(ctx(), intro.id, 'APPROVED')
+    await decideAgentRun(approverCtx(), intro.id, 'APPROVED')
     await executeAgentRun(ctx(), intro.id) // 第一次成功
 
     // 变异：造一条**新的**已批准运行，然后把状态改回 AWAITING_APPROVAL。
     const second = await createIntro('e-variant-2')
-    await decideAgentRun(ctx(), second.id, 'APPROVED')
+    await decideAgentRun(approverCtx(), second.id, 'APPROVED')
     mockVariant(() => {
       const row = fake.runs.find((r) => r.id === second.id)!
       row.status = 'AWAITING_APPROVAL'

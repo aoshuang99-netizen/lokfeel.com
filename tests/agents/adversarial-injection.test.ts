@@ -69,9 +69,15 @@ import { createAgentRun, decideAgentRun, getAgentRun } from '@/lib/agents'
 import type { TenantContext } from '@/lib/tenancy/resolve'
 import { createFakeAgentDb, installFakeAgentDb, type FakeAgentDb } from './_fake-db'
 
-const ctx = (organizationId: string, role: TenantContext['role'] = 'ADMIN'): TenantContext => ({
+// `userId` 可覆盖：V21 第三批 C02 要求审批人 ≠ 发起人。
+// 默认 `u_1` 既是发起人也是其余用例的操作者；审批用例显式传 `u_approver`。
+const ctx = (
+  organizationId: string,
+  role: TenantContext['role'] = 'ADMIN',
+  userId = 'u_1',
+): TenantContext => ({
   organizationId,
-  userId: 'u_1',
+  userId,
   role,
   membershipId: 'ms_1',
 })
@@ -447,7 +453,7 @@ describe('④ 审批状态不变：绕不过人工那一环', () => {
     expect(run.status).toBe('AWAITING_APPROVAL')
     expect(fake.approvals).toHaveLength(0)
 
-    const approved = await decideAgentRun(ctx(ORG), run.id, 'APPROVED', '人工复核后批准')
+    const approved = await decideAgentRun(ctx(ORG, 'ADMIN', 'u_approver'), run.id, 'APPROVED', '人工复核后批准')
     expect(approved.status).toBe('APPROVED')
     expect(fake.approvals).toHaveLength(1)
     expect(fake.runs.some((r) => r.status === 'EXECUTED')).toBe(false)
@@ -461,7 +467,7 @@ describe('④ 审批状态不变：绕不过人工那一环', () => {
       provider: ready(createStubProvider(() => JSON.stringify(validAdvice))),
     })
     expect(run.status).toBe('PROPOSED')
-    await expect(decideAgentRun(ctx(ORG), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
+    await expect(decideAgentRun(ctx(ORG, 'ADMIN', 'u_approver'), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
     expect(fake.approvals).toHaveLength(0)
   })
 
@@ -472,8 +478,8 @@ describe('④ 审批状态不变：绕不过人工那一环', () => {
       idempotencyKey: 'adv-4',
       provider: ready(createStubProvider(() => JSON.stringify(validIntro))),
     })
-    await decideAgentRun(ctx(ORG), run.id, 'REJECTED', '不合适')
-    await expect(decideAgentRun(ctx(ORG), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
+    await decideAgentRun(ctx(ORG, 'ADMIN', 'u_approver'), run.id, 'REJECTED', '不合适')
+    await expect(decideAgentRun(ctx(ORG, 'ADMIN', 'u_approver'), run.id, 'APPROVED')).rejects.toBeInstanceOf(ConflictError)
     const after = await getAgentRun(ctx(ORG), run.id)
     expect(after.status).toBe('REJECTED')
   })
@@ -485,7 +491,7 @@ describe('④ 审批状态不变：绕不过人工那一环', () => {
       idempotencyKey: 'adv-5',
       provider: ready(createStubProvider(() => JSON.stringify(validIntro))),
     })
-    await decideAgentRun(ctx(ORG), run.id, 'APPROVED', '对方邮箱是 someone@example.test')
+    await decideAgentRun(ctx(ORG, 'ADMIN', 'u_approver'), run.id, 'APPROVED', '对方邮箱是 someone@example.test')
     const auditMock = (db as unknown as { tenantAuditEvent: { create: jest.Mock } }).tenantAuditEvent.create
     const payloads = JSON.stringify(auditMock.mock.calls)
     expect(payloads).not.toContain('someone@example.test')
