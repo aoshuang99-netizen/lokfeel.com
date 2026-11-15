@@ -297,8 +297,9 @@ test.describe('认证弹窗 · ReportModal（真实键盘）', () => {
     expect(
       priorReports.length,
       '24h 内该用户对已有举报（去重是 per 用户对）—— 前置不干净。' +
-        'beforeAll 应已自动重置；若仍红，检查 DATABASE_URL 是否与本轮服务指向同一个 file: 库，' +
-        '或手工执行 `node scripts/qa/seed-chat-fixture.mjs --cleanup` 后重跑',
+        '本用例没有 afterAll 清理，同一个持久库上二次跑必然红：' +
+        '删掉隔离库里的陈旧行 `DELETE FROM "UserReport" WHERE reporterId=\'e2e_user_chat_a\'` 后重跑即可' +
+        '（`/api/reports` 没有 DELETE 端点，所以没有 API 级清理）。',
     ).toBe(0);
 
     const reason = 'HARASSMENT';

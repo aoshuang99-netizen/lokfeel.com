@@ -6,6 +6,7 @@
 |---|---|
 | 基线候选（第二批代码树） | `dbb95a7182256ed693e12066f630885f3082fa1d` |
 | 基线审批包 HEAD | `1b73a2c` |
+| 第三批本地提交 | `b467802`（`v21/batch2`，**未推送**） |
 | 第三批工作分支 | `v21/batch2`（本地，未推送） |
 | 生产 | `b50e53e` / healthy / `commitSource=env` |
 | 远端 main | `cad717e92542395e4346e49d388f09be78ec1557` |
@@ -21,7 +22,7 @@
 | C04 Outcome 五证据 | — | **PARTIAL** | — | 0 | 复用 `closure.json` | — | 模型输出被 `400 MODEL_OUTPUT_NOT_EVIDENCE` 拒 | `docs/v21/batch2/closure.json` | 缺 `OutcomeEvidence`（业务结果）持久化；现有只到「回执 + 第二人确认」 | 新增 OutcomeEvidence 表与其迁移 |
 | C05 迁移完整性 | 子代理 | **PASS** | 见提交 | `prisma/migrations/20261115120000_…/{migration.sql,down.sql}`、`migration_lock.toml`、`scripts/qa/v21-batch3-migration-compat.mjs`、`docs/v21/batch3/C05_MIGRATION.md` | `node scripts/qa/v21-batch3-migration-compat.mjs` | 0（18/18 PASS） | 干净库 + 旧库副本双跑；唯一键重复插入被拒；旧行新列为 NULL | `docs/v21/batch3/migration-report.json`（45KB，含真实 PRAGMA） | SQLite 无法安全 DROP COLUMN（回滚走备份） | 生产迁移需 Owner 单独授权 |
 | C06 独立审查 | 同会话子代理 | **PARTIAL** | — | 0（只改测试） | `npx jest tests/agents` | 0 | 子代理独立复跑并逐文件报告夹具改法 | 见子代理回报 | **不是外部审查主体**；未做完整安全红队复跑 | 外部 Codex / 第三方 Reviewer |
-| C07 发布治理 | — | **BLOCKED** | — | 0 | `gh api …/branches/main/protection` | 127（`gh: command not found`） | — | 本文件 §C07 | 无 `gh` CLI / 无 admin PAT；未推送故无法配 required checks | Owner 提供 PAT 或安装 gh；批准推送后建 PR |
+| C07 发布治理 | — | **BLOCKED** | — | 0（只加 `C07_GOVERNANCE.md`） | `gh api …/branches/main/protection` | 127（`gh: command not found`） | — | `docs/v21/batch3/C07_GOVERNANCE.md`（含可直接应用的 ruleset 载荷） | 无 `gh` CLI / 无 admin PAT；未推送故无法配 required checks 与 Preview | Owner 提供 admin 权限（或装 gh）；另需新增 `perf-g15` 门禁后才能把性能设为 required |
 | C08 Figma / 真人 | — | **BLOCKED / UNTESTED** | — | 0 | — | — | — | `docs/v21/batch2/{FIGMA_MAPPING,G04_USABILITY_PROTOCOL}.md` | 无 Figma 凭据；无真人样本 | Owner 授权 + 组织 10 人 |
 | C09 RC 冻结 | — | **NO_GO** | — | — | — | — | — | `docs/v21/batch2/RC_APPROVAL_PACKAGE.md` | G15 FAIL、G09 PARTIAL、G02/G04/G20 未闭环 | 待上述门禁 |
 
@@ -38,14 +39,40 @@
 | 命令 | 结果 |
 |---|---|
 | `npx tsc --noEmit` | **0** |
-| `npm run build` | **0**（3m36s，dynamic 回滚后重建） |
+| `npm run build` | **0**（3m36s，dynamic 回滚后重建；`.next/BUILD_ID` 18:11 晚于全部源码改动） |
+| `npx jest --runInBand`（全量） | **0** · **160 suites / 2915 tests**（第二批为 159/2906） |
 | `npx jest tests/agents --runInBand` | **0** · 14 suites / **254** tests |
 | `npx jest tests/living --runInBand` | **0** · 20 suites / **389** tests |
 | `node scripts/qa/v21-batch3-migration-compat.mjs` | **0** · 18/18 PASS |
 | `node scripts/qa/v21-batch2-perf.mjs --runs=3` | **0**（采集完成）· **9/9 MISS** |
 | `node scripts/qa/v21-batch3-r1-http.mjs` | **0** · 6 PASS / 0 FAIL |
+| `npx eslint <本批改动文件>` | **0**（0 error / 0 warning）；`use-api.ts` 计数与 `docs/implementation/lint-baseline.json` **完全持平**（any 3 / set-state 1 / unused 1 / deps 1） |
 
-**未跑**（不得当作通过）：全量 `npx jest --runInBand`（其余 100+ suites）、`e2e-ci` 全量、视觉脚本、闭环脚本、`v21-batch2-redteam.mjs`（其审批链用例仍是单账号夹具，已被 `v21-batch3-r1-http.mjs` 取代）。
+**未跑成功**：
+- `node scripts/ci/lint-ratchet.mjs`（全仓棘轮）在本机 **10 分钟未跑完**，已终止。原因与 2026-11-15 日检同一条：`.next-fix-1114/`、`.next-fix2-1114/` 等构建产物未被 `eslint.config.mjs` 的 `BUILD_ARTIFACTS` 覆盖，棘轮误计上千处（日检日志记 3865 处 / +61081 problems）。**属环境债，不是本批引入**，但也不记 PASS。
+- `npx jest --runInBand` 之外的视觉脚本、闭环脚本、`v21-batch2-redteam.mjs`（其审批链用例仍是单账号夹具，已被 `v21-batch3-r1-http.mjs` 取代）未跑。
+
+### e2e-ci（全量）实测：122 passed / **1 failed** / 2 did not run
+
+失败用例：`tests/e2e-ci/auth-dialogs.spec.ts:283` ⑦「举报真实落库」。
+失败点**不是**业务行为，而是它自己的前置断言：
+
+```text
+24h 内该用户对已有举报（去重是 per 用户对）—— 前置不干净
+Expected: 0   Received: 1
+```
+
+**定性（有原始数据）**：库里那条 `UserReport`（`reporterId=e2e_user_chat_a` → `e2e_user_chat_b`，`HARASSMENT`）
+`createdAt = 2026-11-15T07:35:11Z`（= 15:35 CST），**早于本批任何代码改动（17:23 起）**，
+是**今天早些时候那轮 e2e** 留下的。`/api/reports` 的 24h 去重是 per 用户对，
+所以同一个 `ci-e2e.db` 上**第二次跑全量必然红**，与 RED 代码无关。
+
+**复核**：清掉该陈旧夹具后单跑该 spec → **11 passed / exit 0**（`/tmp/lf-e2e-one.log`）。
+⇒ 判为**环境残留 / 测试设计缺陷**，不计作本批回归，但也**不记 e2e 通过**。
+
+**遗留缺陷（下一批修）**：该用例没有 `afterAll` 清理，且失败文案里给的
+`node scripts/qa/seed-chat-fixture.mjs --cleanup` **在本仓不存在**（误导性指引）；
+`/api/reports` 也没有 DELETE 端点。要么加清理钩子，要么让文案指向真实可执行的动作。
 
 ## §C03 为什么是 BLOCKED（不是「已有接口」）
 
