@@ -1,0 +1,139 @@
+================================================================================
+LOKFEEL 轻量门禁日检 · 2026-11-14 (CST)
+文件名口径：gates-daily-2026-11-14.log（YYYY-MM-DD，与同目录 evidence 日志命名一致）
+================================================================================
+仓库        : /Users/frankzhao/WorkBuddy/20260402202519/nexus-app
+分支 / HEAD : main @ abe1623（昨日为 0e16959，期间有 test(e2e)/docs 等提交）
+执行窗口    : 2026-11-14 09:38:16 ~ 09:40:38 CST（2m22s）
+命令前缀    : env -u NODE_OPTIONS（逐条生效，10/10 项均带该前缀）
+原始 NODE_OPTIONS : --require=".../cli/vendor/shim/node-language-shim.cjs"（已由 env -u 移除）
+Node / npm  : v22.22.2 / 10.9.7
+范围声明    : 仅下列 10 项轻量日检；**未运行全量 116 格 G4 矩阵**
+正式发布结论: NO_GO（沿用，未推进状态词 / 未发布 / 未切流 / 未改生产配置 / 未发生真实扣款）
+本次性质    : 只读检测；未自动修代码、未更新 lint 基线、未放宽阈值、未把失败写成 PASS
+
+--------------------------------------------------------------------------------
+一、逐项结果（退出码 + 结论）
+--------------------------------------------------------------------------------
+[01] PASS  exit=0   30s  env -u NODE_OPTIONS npx tsc --noEmit
+[02] PASS  exit=0   71s  env -u NODE_OPTIONS npm run lint:gate
+[03] PASS  exit=0   34s  env -u NODE_OPTIONS npm test -- --silent
+[04] PASS  exit=0    1s  env -u NODE_OPTIONS npm run verify:brand-scan
+[05] PASS  exit=0    3s  env -u NODE_OPTIONS npm run check:products
+[06] PASS  exit=0    2s  env -u NODE_OPTIONS npm run check:secrets
+[07] PASS  exit=0    0s  env -u NODE_OPTIONS node --test scripts/qa/b4-g4-verdict.test.mjs
+[08] PASS  exit=0    0s  env -u NODE_OPTIONS node --test scripts/qa/checkout-sentinel-verdict.test.mjs
+[09] PASS  exit=0    1s  env -u NODE_OPTIONS node --test scripts/qa/verify-figma-import-kit.test.mjs
+[10] PASS  exit=0    0s  env -u NODE_OPTIONS node scripts/qa/verify-figma-import-kit.mjs
+
+汇总 : total=10  PASS=10  FAIL=0
+本次日检整体结论 : **PASS**（10/10 项真实 exit=0；判定规则「任一失败即记 FAIL」
+                    已应用，本次无失败项，故无新增债需定位）
+口径限定 : 此处 PASS 仅表示这 10 项轻量门禁在本次执行中全绿，**不等于发布放行**，
+           不推进 NO_GO 状态词、不触发任何发布动作。
+
+关键输出摘录（每项末段；完整输出见文末留存说明）
+  [01] 0 条 TS 诊断（grep -c "error TS" = 0）；输出仅含 npm 版本升级 notice，非诊断
+  [02] ✅ lint 棘轮通过：零新增（债务下降 5 处、清零 18 处）；
+       基线生成于 2026-10-16T04:29:22.985Z，当前全仓 1462 problems / 617 命中 / 1276 文件
+  [03] Test Suites: 146 passed, 146 total · Tests: 2741 passed, 2741 total · Time: 24.068 s
+  [04] 公开路由扫描 27 个 page/layout · 禁词 12 条 → 27 干净 / 0 命中 / 共 0 处
+  [05] ✅ 商业契约通过：R1–R5 全过（销售入口未指向 /pay.html、R2 白名单 5 文件、
+       R3 无外部结账、R4 不引用 plans.ts、R5 /pricing 为真实页面）
+  [06] 扫描 2543 个跟踪文件（G1 已知泄漏 + G2 env 回退字面量）→ ✅ PASS 无命中
+  [07] node:test  # tests 8 · # pass 8 · # fail 0   （G4 判定层单测，非矩阵）
+  [08] node:test  # tests 6 · # pass 6 · # fail 0   （收银台判定层）
+  [09] node:test  # tests 4 · # pass 4 · # fail 0   （Figma 资产校验，含负控）
+  [10] {"ok":true,"errors":[],"stats":{"frames":20,"colorTokens":33,"components":9,
+        "systems":["landing-light","public-dark","living-connection-os"]}}
+
+隐性失败核查：逐项扫描 10 份 stdout/stderr，未发现 FAILED / ❌ / ✗ / not ok /
+EXIT=[1-9] / errors:[...] 等与 exit=0 相矛盾的输出标记；结论以退出码为准，无有利推定。
+
+--------------------------------------------------------------------------------
+二、昨日 FAIL 项 [01] 的今日状态（只读核查，未作任何修改）
+--------------------------------------------------------------------------------
+事实对照：
+  · 2026-11-13 日检（gates-daily-2026-11-13.log）：exit=2，2 条诊断，均落在
+    .next/types/validator.ts(1010/1018)，指向已迁移的 src/app/(public)/page.js。
+  · 2026-11-14 本次独立复跑：exit=0，0 条诊断 → 昨日红灯**本次未复现**。
+
+只读证据（全部为查询，未重建、未清理、未改配置）：
+  1) .next/types/validator.ts mtime = 2026-11-13 19:55，晚于昨日日检窗口
+     （09:24–09:27），亦晚于昨日定位链记录的旧生成物时间 11-12 20:00:46。
+     同目录 cache-life.d.ts / root-params.d.ts / routes.d.ts mtime 同为 11-13 19:55，
+     即整组 .next/types 生成物在昨日日检之后被重新生成过。
+  2) 新生成物中 "(public)/page.js" 残留计数 = 0；typeof import() 总数 = 313
+     （昨日旧生成物为 306，其中 1 处失效）→ 失效的旧路由组校验块已不在生成物内。
+  3) tsconfig.json 的 include 仍含 ".next/types/**/*.ts"，exclude 仍为
+     ["node_modules","prisma/seed.ts","scripts/**/*.ts","deploy-tasks",
+      "tests/**/*.ts","tests/**/*.tsx","backups"] → 诊断消失**不是**靠排除生成
+     类型目录、加 @ts-ignore 或放宽任何阈值实现，门禁口径未变动。
+  4) 首页仍在 src/app/(landing)/page.tsx（mtime 11-13 18:53）；
+     src/app/(public)/ 目录内无根 page.tsx / page.js，与昨日定位链一致。
+
+判定与边界：
+  · 今日 exit=0 是本次命令的**真实结果**，据实记 PASS；**不是**把昨日的 FAIL 改写为
+    PASS。gates-daily-2026-11-13.log 仍为 FAIL 历史证据，不回填、不覆盖、不改写。
+  · 本次自动化**未执行任何重建/修复**，未追查该生成物重建的触发方与提交归属
+    （.next 为构建产物，通常不入版本控制）。不排除后续再次出现同类 stale 生成物
+    红灯；本次仅记录现象与时序，不作「已彻底修复」的有利推定。
+  · 本次无失败项 → **新增债：无**（0 项 FAIL，无需新增债定位）。
+
+建议动作（仅建议；本任务及本次自动化均不执行任何一项）：
+  A. 由发布负责人在独立受控变更中确认 .next/types 重生成的具体触发方与时间线，
+     并把「生成物与源码树同步」纳入 tsc 门禁的前置检查，避免红灯随本地构建状态漂移。
+  B. 若后续 tsc 红灯复现，沿用 gates-daily-2026-11-13.log 第二节的 A–E 处理：
+     复核路由归属 → 重新生成 .next/types → 另立证据复跑，要求 0 诊断。
+  C. 严禁以「改 tsconfig include 排除 .next/types」、加 @ts-ignore、改 lint 基线
+     或放宽任何阈值的方式消除红灯 —— 属放宽门禁 / 改动生产配置，禁止。
+  D. 本次日检 PASS 不构成发布放行；正式结论仍为 NO_GO，不推进任何状态词。
+
+--------------------------------------------------------------------------------
+三、观察项（非 FAIL，不改变上述退出码结论）
+--------------------------------------------------------------------------------
+· 指标较昨日的变化，均源于仓库自然演进（HEAD 0e16959 → abe1623，期间有
+  test(e2e): 定价页金额断言… 等提交），非本任务修改：
+    jest      145 套 / 2730 例 → 146 套 / 2741 例
+    lint      清零 17 处 → 18 处（零新增口径不变；基线仍为 2026-10-16，未更新）
+    secrets   2481 个跟踪文件 → 2543 个（0 命中不变）
+    validator typeof import() 306 → 313（失效残留 1 → 0）
+· 昨日观察项「A worker process has failed to exit gracefully…」今日输出中未复现；
+  仅记录现象，不据此推断 open handle 已修复，建议后续单独用 --detectOpenHandles 定位。
+· [02] lint 输出中仍列 src/app/(public)/page.tsx 的规则条目，来自 lint 棘轮的
+  **基线历史快照**，不构成该源码文件当前存在的证明（与文件缺失不矛盾）。
+  本任务未更新、未重写 lint 基线（未调用 lint:baseline / --update 类命令）。
+· [07] b4-g4-verdict.test.mjs 是 G4 判定层单测（8 个子测），不是 116 格矩阵；
+  本次明确未运行全量 G4 矩阵（历史全量结果见 gates-b4-2026-11-11.log，不在本日检范围）。
+· [01] 输出中的 npm 10.9.7 → 12.2.2 升级提示为 notice，非 TS 诊断，不影响 exit=0。
+
+--------------------------------------------------------------------------------
+四、工作树未提交改动（只报告，不清理）
+--------------------------------------------------------------------------------
+执行前（09:38:16）与执行后（09:40:38，写本日志之前）两次
+git status --porcelain=v1 逐行 diff 一致（WT_UNCHANGED_BY_GATES），均为 3 项：
+  M  docs/release/lokfeel-final-20261110/evidence/checkout-sentinel-2026-11-13.log
+  ?? .workbuddy/memory/
+  ?? docs/release/lokfeel-final-20261110/evidence/checkout-sentinel-2026-11-14.log
+结论：10 项门禁命令执行**未产生新的工作树改动**，即未自动修代码、未更新 lint 基线、
+      未放宽阈值、未改动生产配置。上述 3 项为任务开始前既有改动，本任务只报告、不清理。
+本任务自身仅新增本证据日志 gates-daily-2026-11-14.log（昨日同名日志已被纳入版本
+控制；本日志写入后为新的未跟踪文件，是本次唯一新增项），未执行清理、暂存、提交、
+回滚、状态词推进或任何生产配置变更。
+
+--------------------------------------------------------------------------------
+五、边界与口径声明
+--------------------------------------------------------------------------------
+· 正式发布结论仍为 NO_GO（锚点：09_GO_NO_GO.md、12_RC_FINAL_GO_NO_GO.md、
+  RELEASE_STATUS.md 为唯一状态页）。本次仅做检测。
+· 未发布、未切流、未改生产配置、未发生真实扣款、未推进状态词。
+· 未自动修代码、未更新 lint 基线、未放宽阈值、未把任何失败写成 PASS。
+· 未运行全量 116 格 G4 矩阵；仅跑清单内 10 项（含 3 个 node:test 判定层单测）。
+· 逐项完整 stdout/stderr 留存于临时目录 /tmp/gates-daily-20261114/{01..10}.out，
+  退出码台账 /tmp/gates-daily-20261114/results.tsv
+  （idx | exit | elapsed_s | cmd）；均为仓库外临时文件，未纳入版本控制。
+
+================================================================================
+本次日检结论：PASS —— 10/10 项 exit=0（昨日 [01] tsc 红灯本次未复现）
+正式发布结论：仍为 NO_GO，本次不推进、不发布
+================================================================================
