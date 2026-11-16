@@ -42,6 +42,12 @@ interface GoogleSignInButtonProps {
   disabled?: boolean;
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  /**
+   * 视觉变体。`dark` = 旧深色玻璃（默认，保持既有调用点不变）；
+   * `paper` = 登录页 v4 的纸面设计语言（白底、墨色字、细边框）。
+   * 只影响配色，不改任何行为。
+   */
+  variant?: "dark" | "paper";
 }
 
 function GoogleIcon({ size = 18 }: { size?: number }) {
@@ -61,10 +67,23 @@ export default function GoogleSignInButton({
   disabled = false,
   onSuccess,
   onError,
+  variant = "dark",
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
+
+  const paper = variant === "paper";
+  const palette = paper
+    ? {
+        bg: "#ffffff",
+        bgHover: "#faf9f6",
+        border: "rgba(11,14,17,0.16)",
+        borderHover: "rgba(11,14,17,0.34)",
+        text: "#0b0e11",
+        textLoading: "rgba(11,14,17,0.55)",
+      }
+    : colors;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -81,8 +100,11 @@ export default function GoogleSignInButton({
       // Using /api/auth/oauth/google/signin to avoid [...nextauth] catch-all 404
       // This generates our own PKCE with plain-text code_verifier cookie
       window.location.href = `/api/auth/oauth/google/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-    } catch (err: any) {
-      const msg = err?.message || "Network error. Please check your connection and try again.";
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : "Network error. Please check your connection and try again.";
       setError(msg);
       onError?.(msg);
       console.error("[GoogleSignIn] Error:", err);
@@ -102,10 +124,10 @@ export default function GoogleSignInButton({
         style={{
           width: "100%",
           padding: "13px 16px",
-          background: isLoading || disabled ? "rgba(26, 26, 26, 0.5)" : colors.bg,
-          border: `1px solid ${isLoading || disabled ? "rgba(85,85,85,0.15)" : colors.border}`,
+          background: isLoading || disabled ? (paper ? "#f1efea" : "rgba(26, 26, 26, 0.5)") : palette.bg,
+          border: `1px solid ${isLoading || disabled ? palette.border : palette.border}`,
           borderRadius: "12px",
-          color: isLoading ? colors.textLoading : colors.text,
+          color: isLoading ? palette.textLoading : palette.text,
           fontSize: "14px",
           fontWeight: "500",
           cursor: isLoading || disabled ? "not-allowed" : "pointer",
@@ -120,14 +142,14 @@ export default function GoogleSignInButton({
         }}
         onMouseEnter={(e) => {
           if (!isLoading && !disabled) {
-            e.currentTarget.style.borderColor = colors.borderHover;
-            e.currentTarget.style.background = colors.bgHover;
+            e.currentTarget.style.borderColor = palette.borderHover;
+            e.currentTarget.style.background = palette.bgHover;
           }
         }}
         onMouseLeave={(e) => {
           if (!isLoading && !disabled) {
-            e.currentTarget.style.borderColor = colors.border;
-            e.currentTarget.style.background = colors.bg;
+            e.currentTarget.style.borderColor = palette.border;
+            e.currentTarget.style.background = palette.bg;
           }
         }}
       >
@@ -140,9 +162,9 @@ export default function GoogleSignInButton({
             marginTop: "8px",
             padding: "10px 14px",
             borderRadius: "10px",
-            background: colors.errorBg,
-            border: `1px solid rgba(248, 113, 113, 0.2)`,
-            color: colors.error,
+            background: paper ? "#fdf2f0" : colors.errorBg,
+            border: `1px solid ${paper ? "rgba(140,59,49,0.24)" : "rgba(248, 113, 113, 0.2)"}`,
+            color: paper ? "#8c3b31" : colors.error,
             fontSize: "13px",
             lineHeight: "1.4",
           }}

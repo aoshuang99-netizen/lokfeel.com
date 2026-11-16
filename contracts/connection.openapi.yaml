@@ -655,6 +655,25 @@ paths:
         '403': {$ref: '#/components/responses/Forbidden'}
         '404': {$ref: '#/components/responses/NotFound'}
 
+  # ────────────────────────────────────────────────────────────────
+  # 公开面 · 首页活数据（匿名可达，只读聚合）
+  # ────────────────────────────────────────────────────────────────
+  /public/pulse:
+    get:
+      tags: [public]
+      operationId: getPublicPulse
+      summary: 跨租户 30 天聚合计数（供首页展示；不含任何租户/用户/任务内容）
+      description: |
+        匿名可达。`activity` 为 null 表示聚合不可用（不是 0）；单项为 null 表示
+        该表缺失或查询失败。`stages` 为空且 `note=stage_events_unavailable`
+        表示阶段事件表尚未迁移 —— 展示层必须显示「—」而不是 0。
+      security: []
+      responses:
+        '200': {$ref: '#/components/responses/Ok'}
+        '429':
+          description: 限流（每 IP 60 次/分钟）
+          content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
+
 components:
   securitySchemes:
     bearerAuth: {type: http, scheme: bearer}

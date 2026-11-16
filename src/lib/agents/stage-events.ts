@@ -14,6 +14,21 @@ import type { TenantContext } from '@/lib/tenancy'
 
 export const STAGE_NOTE = '编排阶段事件，不是模型 token 流'
 
+/**
+ * 阶段名的**唯一清单**（`buildOrchestrationStages` 产出的就这五个）。
+ *
+ * 用途：公开面（首页 `/api/v1/public/pulse`）只把这五个名字投出去，
+ * 防止未来写入脏值把任意字符串带到匿名响应里。**新增阶段必须同步这里**，
+ * 否则新阶段会被公开端点静默过滤掉（表现为首页少一条，而不是报错）。
+ */
+export const ORCHESTRATION_STAGE_NAMES = [
+  'QUOTA_CHECK',
+  'MODEL_CALL',
+  'SCHEMA_VALIDATE',
+  'PERSISTED',
+  'DEGRADED',
+] as const
+
 export interface OrchestrationFacts {
   /** 额度是否已查（读账本 + 方案派生完成）。 */
   quotaChecked: boolean

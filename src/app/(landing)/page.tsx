@@ -1,279 +1,207 @@
 "use client";
 
 /**
- * LANDING PAGE — Connection OS（SaaS AI 生成式平台）· v3
+ * LANDING PAGE — Connection OS · v4（极简 + 活数据）
  *
- * v3 改版原则（用户反馈：文案太多 / 缺核心功能 / 缺成功案例 / 缺 3D 可视化 / AI 能力不突出）：
- *   · 全页正文砍到「一句标题 + 一行说明」级别，细节交给产品页；
- *   · Hero 直接上 3D 透视场景：真实 Mission Studio 截图 + 悬浮 AI 芯片（纯 CSS 3D + rAF，零依赖）；
- *   · AI 专区：真实技能名（INTENT_EXTRACTION / INTRO_DRAFT / COORDINATION_ADVICE）+
- *     可交互编译 trace（模型 → 守卫 → 契约 → 画布）；
- *   · 3D 关系图（OrbitGraph）：Mission 为核，Agent / 人 / 门禁 / 成果绕核运行；
- *   · Playbooks（成功案例位）：按产品真实计量单价构造的示例跑通记录，明确标注非客户背书。
+ * v4 改版依据（用户反馈）：
+ *   1. 「文案太 AI、没有突出重点」⇒ 全页正文压到一句标题 + 一行说明；
+ *      删掉 v3 的七段式叙事（AI 专区 / Interop / 治理条 / Playbooks 全部并入三行）。
+ *   2. 「模型图都是静态没有数据」⇒ 删掉纯装饰的 3D 截图与轨道球；
+ *      改为两块**取自真实端点**的数据面：
+ *        · 编译面板用的是服务端真实编排阶段名（QUOTA_CHECK / MODEL_CALL /
+ *          SCHEMA_VALIDATE / PERSISTED），不是"模型 → 守卫 → 契约"这种编造流程；
+ *        · Live ledger 的每个数字来自 `/api/v1/public/pulse`（跨租户 30 天聚合）。
+ *   3. 「简约」⇒ 配色只有 ink / paper / 一个信号色；无渐变霓虹、无毛玻璃堆叠。
  *
- * 诚实约束：不放虚构客户 logo/证言；演示标注"runs in your browser"；
- *   数字（5 MCP 工具 / 50 REST 端点 / 3 技能 / 计量单价）取自仓库真实实现。
+ * 🔴 诚实约束（沿用 v3，不放宽）：
+ *   · 端点不可用时显示「—」，**不显示 0、也不填示例数字**；
+ *   · 演示面板标注 "rules in your browser"，不冒充真实模型调用；
+ *   · 不放虚构客户 logo / 证言。
  */
 
-import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import QuickSignupModal from "@/components/auth/quick-signup-modal";
+import type { PublicPulse } from "@/lib/public/pulse-shape";
 
-/* ─────────────────────────── 1. 品牌常量 ─────────────────────────── */
+/* ─────────────────────────── 1. 设计令牌 ─────────────────────────── */
 
 const INK = "#0b0e11";
 const PAPER = "#f7f5f0";
+/** 信号色：只用于**大字号**与线条；小字一律用 SIGNAL_DEEP（对比度达标）。 */
 const SIGNAL = "#b8863f";
-/** 大字强调色的对比达标版（SIGNAL 在 PAPER 上 2.96:1，差大字 3:1 一线之隔） */
 const SIGNAL_DEEP = "#8a5a1e";
 const MUTED = "#5a636b";
-/** 对比达标版浅色次级文字（G4：#8a9298 在 PAPER 上 2.9:1 不达 4.5） */
 const FAINT = "#626a70";
 
-/* ─────────────────────────── 2. Hero 3D 场景（零依赖 CSS 3D + rAF） ─────────────────────────── */
+const CONTRACT_VERSION = "1.2";
 
-/** 芯片在场景内的锚点：x/y 用百分比，z 是场景坐标系的悬浮高度。 */
-const FLOATERS: Array<{ z: number; left: string; top: string; kind: "ai" | "gate" | "outcome"; text: string }> = [
-  { z: 170, left: "56%", top: "-16%", kind: "ai", text: "INTENT_EXTRACTION ✓ 412 tok" },
-  { z: 210, left: "2%", top: "-28%", kind: "outcome", text: "Outcome · verified" },
-  { z: 120, left: "-8%", top: "66%", kind: "gate", text: "Consent · per-field" },
-];
+/* ─────────────────────────── 2. 活数据 ─────────────────────────── */
 
-function HeroScene() {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const sceneRef = useRef<HTMLDivElement | null>(null);
-  const floatersRef = useRef<Array<HTMLDivElement | null>>([]);
-  const pointer = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
+type PulseStatus = "idle" | "loading" | "ready" | "unavailable";
+
+/**
+ * 首屏之后才取数：这段请求不参与 LCP/TBT（G15 实测口径下，首屏任何 fetch
+ * 都会挤进同一个长任务窗口）。idle 回调 + 2s 兜底，与 SW 注册同一策略。
+ */
+function usePulse(): { status: PulseStatus; data: PublicPulse | null } {
+  const [state, setState] = useState<{ status: PulseStatus; data: PublicPulse | null }>({
+    status: "idle",
+    data: null,
+  });
 
   useEffect(() => {
-    const wrap = wrapRef.current;
-    const scene = sceneRef.current;
-    if (!wrap || !scene) return;
+    let cancelled = false;
 
-    const billboard = "rotateZ(30deg) rotateX(-58deg)"; // 近似抵消场景旋转，让芯片面向镜头
-    const place = (el: HTMLElement, z: number, bob: number) => {
-      el.style.transform = `translateZ(${(z + bob).toFixed(1)}px) ${billboard}`;
+    const load = async () => {
+      if (cancelled) return;
+      setState((s) => (s.status === "idle" ? { status: "loading", data: null } : s));
+      try {
+        const res = await fetch("/api/v1/public/pulse", { headers: { accept: "application/json" } });
+        const json = (await res.json()) as { success?: boolean; data?: PublicPulse };
+        if (cancelled) return;
+        if (json?.success && json.data) setState({ status: "ready", data: json.data });
+        else setState({ status: "unavailable", data: null });
+      } catch {
+        if (!cancelled) setState({ status: "unavailable", data: null });
+      }
     };
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      scene.style.transform = "rotateX(58deg) rotateZ(-30deg)";
-      floatersRef.current.forEach((el, i) => el && place(el, FLOATERS[i]?.z ?? 0, 0));
-      return;
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+
+    if (typeof w.requestIdleCallback === "function") {
+      const id = w.requestIdleCallback(load, { timeout: 2000 });
+      return () => {
+        cancelled = true;
+        w.cancelIdleCallback?.(id);
+      };
     }
-
-    const onMove = (e: PointerEvent) => {
-      const r = wrap.getBoundingClientRect();
-      pointer.current.tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
-      pointer.current.ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
-    };
-    const onLeave = () => {
-      pointer.current.tx = 0;
-      pointer.current.ty = 0;
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    wrap.addEventListener("pointerleave", onLeave);
-
-    let raf = 0;
-    let started = 0;
-    const frame = (now: number) => {
-      if (document.visibilityState === "hidden") {
-        raf = requestAnimationFrame(frame);
-        return;
-      }
-      const t = (now - started) / 1000;
-      const p = pointer.current;
-      p.x += (p.tx - p.x) * 0.05;
-      p.y += (p.ty - p.y) * 0.05;
-      scene.style.transform = `rotateX(${58 - p.y * 5}deg) rotateZ(${-30 + p.x * 6}deg)`;
-      floatersRef.current.forEach((el, i) => {
-        if (!el) return;
-        place(el, FLOATERS[i]?.z ?? 0, Math.sin(t * 0.85 + i * 1.9) * (4 + i * 2.5));
-      });
-      raf = requestAnimationFrame(frame);
-    };
-
-    /**
-     * 🔴 先让首屏画完，再启动装饰性漂浮（V16 · T10 实测数据驱动）。
-     *
-     * 这段 rAF 每帧都在改写 preserve-3d 子树里芯片的 transform，而 LCP 元素
-     * （主平面截图）就在同一个 3D 子树内 —— 每帧重绘都会把 LCP 的最终绘制时间往后推。
-     * 实测（1440×900，冷上下文）：开 rAF → LCP 7008ms；reduced-motion 关掉 rAF → 4476ms。
-     * 所以延迟到 idle 再起动画：少 1.2s 的漂浮，用户感知不到，LCP 却能早 2.5s。
-     */
-    const start = () => {
-      if (raf) return;
-      started = performance.now();
-      raf = requestAnimationFrame(frame);
-    };
-    const ric = (
-      window as unknown as {
-        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
-      }
-    ).requestIdleCallback;
-    const kickTimer = ric ? 0 : window.setTimeout(start, 1200);
-    if (ric) ric(start, { timeout: 1500 });
-
+    const timer = window.setTimeout(load, 1200);
     return () => {
-      cancelAnimationFrame(raf);
-      if (kickTimer) window.clearTimeout(kickTimer);
-      window.removeEventListener("pointermove", onMove);
-      wrap.removeEventListener("pointerleave", onLeave);
+      cancelled = true;
+      window.clearTimeout(timer);
     };
   }, []);
 
+  return state;
+}
+
+/** 数字递增一次（数据到达时）。reduced-motion 直接给终值。 */
+function useCountUp(value: number | null, durationMs = 700): number | null {
+  const [shown, setShown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (value === null) return;
+
+    // 先落到「一帧之后」再 setState：effect 内同步 setState 会触发
+    // React Compiler 的 cascading-render 规则；rAF 回调里赋值不受此限，
+    // 且顺带保证首帧仍渲染「—」，不会出现 0 → 目标值 的闪跳。
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduce || value === 0) {
+      const id = requestAnimationFrame(() => setShown(value));
+      return () => cancelAnimationFrame(id);
+    }
+
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / durationMs);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setShown(Math.round(value * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, durationMs]);
+
+  return shown;
+}
+
+/** 数字 → 「—」安全格式化（`null` 表示该项不可得，不是 0）。 */
+function fmt(n: number | null | undefined): string {
+  return typeof n === "number" ? n.toLocaleString("en-US") : "—";
+}
+
+function Stat({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: number | null;
+  hint?: string;
+}) {
+  const shown = useCountUp(value);
   return (
-    <div ref={wrapRef} data-gate="scene3d" className="relative select-none" style={{ perspective: "1500px" }}>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(520px 380px at 55% 40%, rgba(184,134,63,0.16), transparent 70%)" }}
-      />
-      <div className="relative mx-auto aspect-[1/0.94] w-full max-w-[580px]" style={{ transformStyle: "preserve-3d" }}>
-        <div
-          ref={sceneRef}
-          className="absolute inset-0"
-          style={{ transformStyle: "preserve-3d", transform: "rotateX(58deg) rotateZ(-30deg)" }}
-        >
-          {/* 地面网格：3D 纵深的第一线索 */}
-          <div
-            aria-hidden
-            className="absolute"
-            style={{
-              left: "-32%",
-              top: "-32%",
-              width: "164%",
-              height: "164%",
-              transform: "translateZ(-118px)",
-              borderRadius: 28,
-              backgroundImage:
-                "linear-gradient(rgba(11,14,17,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(11,14,17,0.10) 1px, transparent 1px)",
-              backgroundSize: "46px 46px",
-              maskImage: "radial-gradient(closest-side, black 38%, transparent)",
-              WebkitMaskImage: "radial-gradient(closest-side, black 38%, transparent)",
-              opacity: 0.55,
-            }}
-          />
-          {/* 主平面投影 */}
-          <div
-            aria-hidden
-            className="absolute"
-            style={{
-              left: "7%",
-              top: "10%",
-              width: "86%",
-              height: "80%",
-              transform: "translateZ(-104px)",
-              borderRadius: 36,
-              background: "rgba(11,14,17,0.22)",
-              filter: "blur(48px)",
-            }}
-          />
-          {/* 主平面：真实 Mission Studio 截图（生产站实截） */}
-          <div
-            className="absolute overflow-hidden rounded-xl border"
-            style={{
-              left: 0,
-              top: 0,
-              width: "100%",
-              height: "84%",
-              transform: "translateZ(24px)",
-              borderColor: "rgba(11,14,17,0.18)",
-              boxShadow: "0 48px 90px -46px rgba(11,14,17,0.55)",
-              background: "#fff",
-            }}
-          >
-            <Image
-              src="/showcase/studio.webp"
-              alt="LokFeel Mission Studio — a goal compiled into a workspace canvas"
-              width={1440}
-              height={919}
-              priority
-              // 🔴 WebP（65KB，原 PNG 228KB）+ 不走 Next 图片优化器：
-              // /_next/image 动态转码，冷启动实测反而把 LCP 拖到 7s。静态文件由
-              // Netlify 边缘直出 + 长缓存，是这里最快的路径（`unoptimized` 只是跳过优化器，
-              // 仍然受 `priority` 的 preload 待遇）。
-              unoptimized
-              className="h-full w-full object-cover object-top"
-            />
-          </div>
-          {/* 悬浮芯片：AI / 同意门禁 / 成果 */}
-          {FLOATERS.map((f, i) => (
-            <div
-              key={f.text}
-              ref={(el) => {
-                floatersRef.current[i] = el;
-              }}
-              data-z={f.z}
-              className="absolute flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1.5"
-              style={{
-                left: f.left,
-                top: f.top,
-                borderColor: "rgba(11,14,17,0.14)",
-                background: "rgba(255,255,255,0.94)",
-                boxShadow: "0 18px 40px -20px rgba(11,14,17,0.4)",
-                backdropFilter: "blur(4px)",
-              }}
-            >
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{
-                  background:
-                    f.kind === "ai" ? SIGNAL : f.kind === "outcome" ? "#3f8c74" : "transparent",
-                  border: f.kind === "gate" ? `1.5px solid ${SIGNAL}` : "none",
-                }}
-                aria-hidden
-              />
-              <span className="font-mono text-[9.5px] tracking-wide" style={{ color: INK }}>
-                {f.text}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="min-w-0">
+      <p className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: FAINT }}>
+        {label}
+      </p>
+      <p
+        className="mt-1 font-display text-[1.75rem] font-bold leading-none tabular-nums"
+        style={{ color: INK }}
+      >
+        {shown === null ? "—" : shown.toLocaleString("en-US")}
+      </p>
+      {hint && (
+        <p className="mt-1.5 text-[11.5px] leading-snug" style={{ color: MUTED }}>
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
 
-/* ─────────────────────────── 3. 编译演示（AI 专区 · 浏览器内规则） ─────────────────────────── */
+/* ─────────────────────────── 3. 编译面板（交互） ─────────────────────────── */
 
 type Extracted = { horizon: string | null; target: string | null };
 
-/** 从目标描述里抽取「期限」与「数量」——只做演示用的启发式，不做业务判断。 */
+/** 演示用启发式：只认「期限」与「数量」，不做业务判断。 */
 function extractGoal(goal: string): Extracted {
   const horizonMatch = goal.match(/(\d+)\s*(天|日|周|个月|days?|weeks?|months?)/i);
   const targetMatch = goal.match(
-    /(\d+)\s*(次|个|位|人|partners?|introductions?|deals?|calls?|co-investors?|design partners?)/i
+    /(\d+)\s*(次|个|位|人|partners?|introductions?|deals?|calls?|co-investors?|design partners?)/i,
   );
-
   const horizon = horizonMatch
     ? `${horizonMatch[1]} ${
-        /天|日|days?/i.test(horizonMatch[2]) ? "days" : /周|weeks?/i.test(horizonMatch[2]) ? "weeks" : "months"
+        /天|日|days?/i.test(horizonMatch[2])
+          ? "days"
+          : /周|weeks?/i.test(horizonMatch[2])
+            ? "weeks"
+            : "months"
       }`
     : null;
-
   return { horizon, target: targetMatch ? targetMatch[1] : null };
 }
 
-const COMPILE_STEPS = [
-  "parse · goal & constraints extracted",
-  "model · INTENT_EXTRACTION → WorkspaceSpec",
-  "guard · output ⊆ server projection ✓",
-  "assemble · nodes rendered from allow-list",
+/**
+ * 这四步是**服务端真实编排阶段**（`src/lib/agents/stage-events.ts`），
+ * 不是为了好看编的流程。演示在前端按同样的顺序与名字重放。
+ */
+const PIPE_STEPS: Array<{ stage: string; line: string }> = [
+  { stage: "QUOTA_CHECK", line: "budget & quota" },
+  { stage: "MODEL_CALL", line: "INTENT_EXTRACTION" },
+  { stage: "SCHEMA_VALIDATE", line: `WorkspaceSpec v${CONTRACT_VERSION}` },
+  { stage: "PERSISTED", line: "run recorded" },
 ];
 
-const SAMPLE_GOALS = [
-  "Connect our climate-tech founders with 20 qualified manufacturing partners in 30 days",
-  "Introduce 12 vetted design partners to our AI infrastructure team this quarter",
-  "Find 8 co-investors for our Series A within 45 days",
+const SAMPLES = [
+  "20 qualified manufacturing partners in 30 days",
+  "12 design partners this quarter",
+  "8 co-investors within 45 days",
 ];
 
-function CompileDemo() {
-  const [goal, setGoal] = useState(SAMPLE_GOALS[0]);
+function CompilePanel() {
+  const [goal, setGoal] = useState(SAMPLES[0]);
   const [phase, setPhase] = useState<"idle" | "compiling" | "done">("idle");
-  const [visibleSteps, setVisibleSteps] = useState(0);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [step, setStep] = useState(0);
+  const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
   useEffect(() => {
     const t = timers.current;
@@ -281,49 +209,45 @@ function CompileDemo() {
   }, []);
 
   const parsed = useMemo(() => extractGoal(goal), [goal]);
-
-  const compile = () => {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-    setPhase("compiling");
-    setVisibleSteps(0);
-    COMPILE_STEPS.forEach((_, i) => {
-      timers.current.push(setTimeout(() => setVisibleSteps(i + 1), 240 * (i + 1)));
-    });
-    timers.current.push(setTimeout(() => setPhase("done"), 240 * COMPILE_STEPS.length + 300));
-  };
-
-  const reset = () => {
+  const reset = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
     setPhase("idle");
-    setVisibleSteps(0);
-  };
+    setStep(0);
+  }, []);
+
+  const compile = useCallback(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setPhase("compiling");
+    setStep(0);
+    PIPE_STEPS.forEach((_, i) => {
+      timers.current.push(setTimeout(() => setStep(i + 1), 220 * (i + 1)));
+    });
+    timers.current.push(setTimeout(() => setPhase("done"), 220 * PIPE_STEPS.length + 260));
+  }, []);
 
   return (
     <div
-      className="rounded-2xl border bg-white shadow-[0_1px_0_rgba(11,14,17,0.04),0_24px_60px_-32px_rgba(11,14,17,0.25)]"
-      style={{ borderColor: "rgba(11,14,17,0.12)" }}
+      className="rounded-2xl border bg-white"
+      style={{ borderColor: "rgba(11,14,17,0.12)", boxShadow: "0 24px 60px -40px rgba(11,14,17,0.42)" }}
     >
       <div
-        className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-5"
+        className="flex items-center justify-between gap-3 border-b px-4 py-2.5"
         style={{ borderColor: "rgba(11,14,17,0.08)" }}
       >
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full" style={{ background: SIGNAL }} aria-hidden />
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: MUTED }}>
-            Mission studio
-          </span>
-        </div>
-        <span className="font-mono text-[10px] tracking-wide" style={{ color: FAINT }}>
-          demo · runs in your browser
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: MUTED }}>
+          Mission studio
+        </span>
+        <span className="font-mono text-[10px]" style={{ color: FAINT }}>
+          rules in your browser
         </span>
       </div>
 
       <div className="p-4 sm:p-5">
         <label
           htmlFor="goal-input"
-          className="font-mono text-[10px] uppercase tracking-[0.18em]"
+          className="font-mono text-[10px] uppercase tracking-[0.16em]"
           style={{ color: FAINT }}
         >
           Describe the outcome
@@ -337,611 +261,205 @@ function CompileDemo() {
           }}
           rows={2}
           maxLength={180}
-          className="mt-2 w-full resize-none rounded-xl border px-3.5 py-3 text-[15px] leading-relaxed outline-none transition-colors focus-visible:ring-2"
-          style={{ borderColor: "rgba(11,14,17,0.14)", background: PAPER, color: INK }}
-          placeholder="e.g. Connect our founders with 20 manufacturing partners in 30 days"
+          className="mt-2 w-full resize-none rounded-xl border px-3.5 py-2.5 text-[15px] leading-relaxed outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#8a5a1e]"
+          style={{ borderColor: "rgba(11,14,17,0.16)", background: PAPER, color: INK }}
+          placeholder="e.g. 20 manufacturing partners in 30 days"
         />
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             onClick={compile}
             disabled={phase === "compiling" || goal.trim().length < 8}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-white transition-transform duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             style={{ background: INK }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-              <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" />
-              <circle cx="12" cy="12" r="3.2" />
-            </svg>
-            {phase === "compiling" ? "Compiling…" : phase === "done" ? "Recompile" : "Compile workspace"}
+            {phase === "compiling" ? "Compiling…" : phase === "done" ? "Compile again" : "Compile"}
           </button>
-
-          {SAMPLE_GOALS.slice(1).map((g, i) => (
+          {SAMPLES.slice(1).map((s, i) => (
             <button
-              key={i}
+              key={s}
               onClick={() => {
-                setGoal(g);
+                setGoal(s);
                 reset();
               }}
-              className="cursor-pointer rounded-full border px-3 py-1.5 text-[12px] transition-colors hover:bg-black/[0.03]"
+              className="cursor-pointer rounded-full border px-2.5 py-1.5 font-mono text-[10.5px] transition-colors hover:bg-black/[0.03]"
               style={{ borderColor: "rgba(11,14,17,0.14)", color: MUTED }}
             >
-              Example {i + 2}
+              sample {i + 2}
             </button>
           ))}
         </div>
 
-        {/* Agent 运行 trace */}
-        <div className="mt-4 space-y-1.5" aria-live="polite">
-          {COMPILE_STEPS.map((step, i) => (
-            <div
-              key={step}
-              className="flex items-center gap-2 font-mono text-[11px] transition-opacity duration-300"
-              style={{ opacity: visibleSteps > i ? 1 : 0, color: MUTED }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={SIGNAL} strokeWidth="2.4" aria-hidden>
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-              {step}
-            </div>
-          ))}
-        </div>
+        {/* 真实阶段名重放 */}
+        <ol className="mt-4 space-y-1.5" aria-live="polite">
+          {PIPE_STEPS.map((s, i) => {
+            const on = step > i;
+            return (
+              <li
+                key={s.stage}
+                className="flex items-baseline gap-2 font-mono text-[10.5px] transition-opacity duration-200"
+                style={{ opacity: on ? 1 : 0.28, color: MUTED }}
+              >
+                <span style={{ color: on ? "#2f6e59" : FAINT }} aria-hidden>
+                  {on ? "✓" : "·"}
+                </span>
+                <span style={{ color: on ? INK : FAINT }}>{s.stage}</span>
+                <span className="truncate">{s.line}</span>
+              </li>
+            );
+          })}
+        </ol>
 
-        {/* 编译结果：三节点画布 */}
+        {/* 编译结果：三列事实，不是营销文案 */}
         {phase === "done" && (
-          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
-            <NodeCard
-              label="Goal & criteria"
-              tone="goal"
-              lines={[
-                goal.length > 58 ? `${goal.slice(0, 58)}…` : goal,
-                parsed.horizon ? `Horizon · ${parsed.horizon}` : "Horizon · not stated",
-                parsed.target ? `Success · ${parsed.target} connected` : "Success · needs a number",
-              ]}
-            />
-            <NodeCard
-              label="Candidate pool"
-              tone="candidate"
-              lines={[
-                "Resolved server-side after consent",
-                "Disclosed per field, not per profile",
-                "No silent widening of the pool",
-              ]}
-            />
-            <NodeCard
-              label="Execution"
-              tone="execution"
-              lines={[
-                "Queue · pending approval",
-                "Agents draft, humans approve",
-                "Outcome verified before it counts",
-              ]}
-            />
-          </div>
+          <dl className="mt-4 grid gap-px overflow-hidden rounded-xl border sm:grid-cols-3" style={{ borderColor: "rgba(11,14,17,0.1)", background: "rgba(11,14,17,0.1)" }}>
+            {[
+              ["goal", parsed.target ? `${parsed.target} connected` : "needs a number"],
+              ["horizon", parsed.horizon ?? "not stated"],
+              ["gates", "consent · budget"],
+              ["agents", "3 skills"],
+              ["approval", "second person"],
+              ["proof", "counterparty confirms"],
+            ].map(([k, v]) => (
+              <div key={k} className="bg-white px-2.5 py-2">
+                <dt className="font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: FAINT }}>
+                  {k}
+                </dt>
+                <dd className="mt-0.5 text-[11.5px] leading-tight" style={{ color: INK }}>
+                  {v}
+                </dd>
+              </div>
+            ))}
+          </dl>
         )}
 
-        <p className="mt-4 text-[11px] leading-relaxed" style={{ color: FAINT }}>
-          Demo rules only. In the product, compilation produces a{" "}
-          <span className="font-mono">WorkspaceSpec</span> validated on the server — the canvas never
-          renders model-authored HTML. Live runs call a real model through WorkBuddy cloud compute
-          (keyless, metered per call).
+        <p className="mt-3.5 text-[11px] leading-relaxed" style={{ color: FAINT }}>
+          Same stage names as the server pipeline. A live run calls the model server-side and
+          stores the result — nothing is rendered from model-authored HTML.
         </p>
       </div>
     </div>
   );
 }
 
-function NodeCard({
-  label,
-  lines,
-  tone,
-}: {
-  label: string;
-  lines: string[];
-  tone: "goal" | "candidate" | "execution";
-}) {
-  const accent = tone === "goal" ? SIGNAL_DEEP : tone === "candidate" ? "#2f6e59" : "rgba(11,14,17,0.8)";
-  return (
-    <div className="rounded-xl border bg-white p-3" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
-      <div className="mb-2 flex items-center gap-1.5">
-        <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} aria-hidden />
-        <span className="font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: accent }}>
-          {label}
-        </span>
-      </div>
-      <ul className="space-y-1.5">
-        {lines.map((l, i) => (
-          <li key={i} className="text-[11.5px] leading-snug" style={{ color: i === 0 ? INK : MUTED }}>
-            {l}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+/* ─────────────────────────── 4. Live ledger（真数据） ─────────────────────────── */
 
-/* ─────────────────────────── 4. 3D 关系图（Mission 核 + 轨道节点） ─────────────────────────── */
+function Ledger({ pulse }: { pulse: ReturnType<typeof usePulse> }) {
+  const { status, data } = pulse;
+  const activity = data?.activity ?? null;
+  const stages = data?.stages ?? [];
+  const max = stages.reduce((m, s) => Math.max(m, s.count), 0);
+  const quiet =
+    activity !== null &&
+    activity.missions === 0 &&
+    activity.runs === 0 &&
+    activity.decisions === 0 &&
+    activity.verifiedOutcomes === 0;
 
-type OrbitKind = "agent" | "human" | "gate" | "outcome";
-
-const ORBIT_NODES: Array<{ label: string; kind: OrbitKind }> = [
-  { label: "Agent · draft", kind: "agent" },
-  { label: "Organiser", kind: "human" },
-  { label: "Consent gate", kind: "gate" },
-  { label: "Agent · rank", kind: "agent" },
-  { label: "Member", kind: "human" },
-  { label: "Proposal", kind: "outcome" },
-  { label: "Agent · verify", kind: "agent" },
-  { label: "Counterparty", kind: "human" },
-  { label: "Budget gate", kind: "gate" },
-  { label: "Outcome · metered", kind: "outcome" },
-];
-
-const ORBIT_COLOR: Record<OrbitKind, string> = {
-  agent: "#d29a4d",
-  human: "#f2f1ec",
-  gate: "transparent",
-  outcome: "#5aa88c",
-};
-
-function OrbitGraph() {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const nodeRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const labelRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const coreRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    /** 透视投影到 2D（与 wrap 的 perspective:1100px 一致），驱动平铺标签层的 left/top。
-     *  定义在 effect 内：只闭包稳定的 ref，无外部依赖 ⇒ exhaustive-deps 干净，
-     *  且不会因组件重渲染而重启 requestAnimationFrame 循环。 */
-    const project = (x: number, y: number, z: number) => {
-      const P = 1100;
-      const s = P / (P - z);
-      return { px: x * s, py: y * s };
-    };
-
-    /** 平铺标签跟随节点（不走 transform —— axe 无法解析 3D 变换层的背景堆叠，G4）。 */
-    const placeLabel = (i: number, x: number, y: number, z: number, depth: number) => {
-      const lab = labelRefs.current[i];
-      if (!lab) return;
-      const { px, py } = project(x, y, z);
-      lab.style.left = `calc(50% + ${(px + 6).toFixed(1)}px)`;
-      lab.style.top = `calc(50% + ${(py + 18).toFixed(1)}px)`;
-      // R6-T2：下限从 0.35 提到 0.7。
-      // 原因（axe 实测，3 个节点）：深度淡出到 0.35 时，8.5px 的白字与深底混合后
-      // 计算色变成 #5f6060/#636565，对比度 3.0–4.06，低于 AA 的 4.5。
-      // 深度感仍保留（0.7→1.0 的差），但文字不再进入"可读性不合格"的区间。
-      lab.style.opacity = (0.7 + depth * 0.3).toFixed(2);
-    };
-
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-    const N = ORBIT_NODES.length;
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      nodeRefs.current.forEach((el, i) => {
-        if (!el) return;
-        const a = (i / N) * Math.PI * 2;
-        const x = Math.sin(a) * 180;
-        const z = Math.cos(a) * 180;
-        const y = ((i % 3) - 1) * 44;
-        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px)`;
-        el.style.opacity = "0.8";
-        placeLabel(i, x, y, z, 0.5);
-      });
-      return;
-    }
-
-    let raf = 0;
-    let t0 = 0;
-    let lastFrame = 0;
-    const FRAME_MS = 32; // ≈30fps：装饰性轨道无需 60fps，省掉一半主线程长任务
-    const frame = (now: number) => {
-      raf = requestAnimationFrame(frame);
-      if (document.visibilityState === "hidden") return;
-      if (now - lastFrame < FRAME_MS) return;
-      lastFrame = now;
-      const theta = ((now - t0) / 1000) * 0.22;
-      nodeRefs.current.forEach((el, i) => {
-        if (!el) return;
-        const a = (i / N) * Math.PI * 2 + theta;
-        const x = Math.sin(a) * 185;
-        const z = Math.cos(a) * 185;
-        const y = ((i % 3) - 1) * 46;
-        const depth = (z + 185) / 370; // 0 远 → 1 近
-        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px)`;
-        el.style.opacity = (0.35 + depth * 0.65).toFixed(2);
-        placeLabel(i, x, y, z, depth);
-      });
-      if (coreRef.current) {
-        const s = 1 + Math.sin(((now - t0) / 1000) * 1.6) * 0.06;
-        coreRef.current.style.transform = `translate(-50%, -50%) scale(${s.toFixed(3)})`;
-      }
-    };
-
-    /**
-     * P0-06 / G10：装饰动画不得占用首屏主线程预算。
-     * HeroScene（本文件上方）已用同一模式把 LCP 从 7008ms 压到 4476ms；
-     * OrbitGraph 此前是挂载即起 rAF、每帧改写 12 组 3D transform + 标签，
-     * 在 4×CPU 节流下持续产生 longtask（首页 TBT 1972ms vs 其他页 478–1063ms）。
-     * 现改为：首屏空闲后再启动 + 30fps 限流 + 页面隐藏时跳过计算。
-     * 这是真实的首屏可交互性优化，不是为测量器调整阈值；reduced-motion
-     * 分支仍完全静态（G4 的 reducedMotion 口径不受影响）。
-     */
-    const start = () => {
-      if (raf) return;
-      t0 = performance.now();
-      lastFrame = 0;
-      raf = requestAnimationFrame(frame);
-    };
-    const ric = (
-      window as unknown as {
-        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
-        cancelIdleCallback?: (id: number) => void
-      }
+  // 直接派生（不用 useMemo）：依赖是字符串字段，react-compiler 无法保留
+  // 手动 memo 的依赖集（它推断的是整个 `data`），会报 preserve-manual-memoization。
+  const asOf = (() => {
+    if (!data?.asOf) return null;
+    const d = new Date(data.asOf);
+    if (Number.isNaN(d.getTime())) return null;
+    return (
+      d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC"
     );
-    const idleId = ric.requestIdleCallback?.(start, { timeout: 1500 });
-    const kickTimer = idleId === undefined ? window.setTimeout(start, 1200) : 0;
-
-    return () => {
-      cancelAnimationFrame(raf);
-      if (kickTimer) window.clearTimeout(kickTimer);
-      if (idleId !== undefined) ric.cancelIdleCallback?.(idleId);
-    };
-  }, []);
+  })();
 
   return (
-    <div
-      ref={wrapRef}
-      data-gate="orbit"
-      className="relative mx-auto h-[420px] w-full max-w-[560px] sm:h-[460px]"
-      style={{ perspective: "1100px" }}
-    >
-      <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
-        {/* 轨道环 */}
-        {[0, 1].map((r) => (
-          <div
-            key={r}
-            aria-hidden
-            className="absolute left-1/2 top-1/2 rounded-full border border-dashed"
-            style={{
-              width: 370,
-              height: 370,
-              marginLeft: -185,
-              marginTop: -185,
-              transform: `rotateX(76deg) translateZ(${r === 0 ? 0 : -70}px)`,
-              borderColor: "rgba(242,241,236,0.16)",
-            }}
-          />
-        ))}
-
-        {/* Mission 核 */}
-        <div className="absolute left-1/2 top-1/2" style={{ transformStyle: "preserve-3d" }}>
-          <div
-            ref={coreRef}
-            className="grid h-24 w-24 place-items-center rounded-full"
-            style={{
-              background: "radial-gradient(circle at 34% 30%, rgba(210,154,77,0.95), rgba(184,134,63,0.55) 58%, rgba(184,134,63,0.12))",
-              boxShadow: "0 0 70px rgba(184,134,63,0.45)",
-            }}
-          >
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#0b0e11]">mission</span>
-          </div>
-        </div>
-
-        {/* 轨道节点（仅圆点；文字标签在下方平铺层） */}
-        {ORBIT_NODES.map((n, i) => (
-          <div
-            key={n.label}
-            ref={(el) => {
-              nodeRefs.current[i] = el;
-            }}
-            className="absolute left-1/2 top-1/2"
-          >
-            <span
-              className="block h-3 w-3 rounded-full"
-              style={{
-                background: n.kind === "gate" ? "transparent" : ORBIT_COLOR[n.kind],
-                border: n.kind === "gate" ? `1.5px dashed ${SIGNAL}` : "none",
-                boxShadow: n.kind === "agent" ? "0 0 14px rgba(210,154,77,0.8)" : "none",
-              }}
-              aria-hidden
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* 轨道标签平铺层：不参与 3D 变换（每帧由 placeLabel 以 left/top 同步投影坐标）。
-          原因：axe 的背景解析无法跟随 3D 变换层，标签在任何底色上的实际对比 ≈13:1
-          （实色深底芯片），但 axe 误取金色核心为背景 —— 拆平后几何可解析（G4）。 */}
-      {ORBIT_NODES.map((n, i) => (
-        <span
-          key={n.label}
-          ref={(el) => {
-            labelRefs.current[i] = el;
-          }}
-          className="absolute -translate-x-1/2 whitespace-nowrap rounded-md px-1.5 py-0.5 font-mono text-[8.5px] uppercase tracking-[0.14em]"
-          style={{
-            left: "50%",
-            top: "50%",
-            opacity: 0,
-            color: "#f2f1ec",
-            background: "#14171a",
-            border: "1px solid rgba(242,241,236,0.18)",
-          }}
-        >
-          {n.label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-/* ─────────────────────────── 5. 通用小件 ─────────────────────────── */
-
-function Eyebrow({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
-  return (
-    <p
-      className="font-mono text-[10px] uppercase tracking-[0.22em]"
-      style={{ color: dark ? "rgba(242,241,236,0.7)" : FAINT }}
-    >
-      {children}
-    </p>
-  );
-}
-
-/** 核心功能卡：图 + 标题 + 一行说明（不写段落）。 */
-function FeatureCard({
-  title,
-  line,
-  diagram,
-  dark = false,
-}: {
-  title: string;
-  line: string;
-  diagram: ReactNode;
-  dark?: boolean;
-}) {
-  return (
-    <div
-      className="flex flex-col rounded-2xl border p-6"
-      style={{
-        borderColor: dark ? "rgba(242,241,236,0.14)" : "rgba(11,14,17,0.12)",
-        background: dark ? "#171c21" : "#ffffff",
-      }}
-    >
-      <div className="h-12">{diagram}</div>
-      <h3
-        className="mt-5 font-display text-[17px] font-bold"
-        style={{ color: dark ? "#f2f1ec" : INK }}
+    <div className="rounded-2xl border bg-white" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
+      <div
+        className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-3"
+        style={{ borderColor: "rgba(11,14,17,0.08)" }}
       >
-        {title}
-      </h3>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: dark ? "rgba(242,241,236,0.78)" : MUTED }}>
-        {line}
-      </p>
-    </div>
-  );
-}
-
-/* ── 三个功能小图（SVG，均用主题色） ── */
-
-function DiagramCompile() {
-  return (
-    <svg width="120" height="44" viewBox="0 0 120 44" fill="none" aria-hidden>
-      <rect x="1" y="12" width="30" height="20" rx="5" stroke={INK} strokeOpacity="0.5" />
-      <path d="M37 22h14m0 0-4-4m4 4-4 4" stroke={SIGNAL} strokeWidth="1.6" />
-      <rect x="57" y="4" width="24" height="14" rx="4" fill={SIGNAL} fillOpacity="0.16" stroke={SIGNAL} />
-      <rect x="57" y="24" width="24" height="14" rx="4" fill="#3f8c74" fillOpacity="0.14" stroke="#3f8c74" strokeOpacity="0.7" />
-      <rect x="88" y="14" width="24" height="14" rx="4" stroke={INK} strokeOpacity="0.4" />
-      <path d="M85 31h-1" stroke={INK} strokeOpacity="0.4" />
-    </svg>
-  );
-}
-
-function DiagramAgents() {
-  return (
-    <svg width="120" height="44" viewBox="0 0 120 44" fill="none" aria-hidden>
-      <circle cx="16" cy="22" r="7" fill={SIGNAL} fillOpacity="0.9" />
-      <circle cx="48" cy="10" r="5" stroke={INK} strokeOpacity="0.45" />
-      <circle cx="48" cy="34" r="5" stroke={INK} strokeOpacity="0.45" />
-      <path d="M24 19l19-7M24 25l19 7" stroke={SIGNAL} strokeWidth="1.2" strokeDasharray="3 3" />
-      <path d="M78 22h14m0 0-4-4m4 4-4 4" stroke="#3f8c74" strokeWidth="1.5" />
-      <rect x="98" y="14" width="18" height="16" rx="4" stroke="#3f8c74" strokeOpacity="0.8" />
-      <path d="M103 22l3 3 5-6" stroke="#3f8c74" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
-function DiagramConsent() {
-  return (
-    <svg width="120" height="44" viewBox="0 0 120 44" fill="none" aria-hidden>
-      {[0, 1, 2].map((r) => (
-        <g key={r}>
-          <rect x="2" y={4 + r * 13} width="34" height="9" rx="3" stroke={INK} strokeOpacity="0.35" />
-          {[0, 1, 2].map((c) => (
-            <circle
-              key={c}
-              cx={58 + c * 20}
-              cy={8.5 + r * 13}
-              r="3"
-              fill={(r + c) % 3 === 0 ? SIGNAL : "transparent"}
-              stroke={(r + c) % 3 === 0 ? "none" : INK}
-              strokeOpacity="0.3"
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-1.5 w-1.5" aria-hidden>
+            <span
+              className="absolute inline-flex h-full w-full rounded-full opacity-70 motion-safe:animate-ping"
+              style={{ background: "#2f6e59" }}
             />
-          ))}
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-/* ─────────────────────────── 6. Playbooks（示例跑通记录） ─────────────────────────── */
-
-/**
- * 计量单价取自产品真实实现（Outcome Observatory 口径）：
- * introduction USD 5.00 · outcome USD 3.00 · proposal USD 0.20 · verification USD 1.00。
- * 三条 playbook 的成本按这些单价手工核算，保持自洽；明确标注为示例，非客户背书。
- */
-const PLAYBOOKS: Array<{
-  name: string;
-  goal: string;
-  compiled: string;
-  verified: string;
-  cost: string;
-}> = [
-  {
-    name: "Manufacturing partnerships",
-    goal: "20 qualified manufacturing partners in 30 days",
-    compiled: "3 channels · 46 proposals · 2 gates",
-    verified: "27 verified intros",
-    cost: "USD 171.20 metered",
-  },
-  {
-    name: "Design-partner program",
-    goal: "12 vetted design partners this quarter",
-    compiled: "2 channels · 38 proposals · 1 gate",
-    verified: "14 verified intros",
-    cost: "USD 91.60 metered",
-  },
-  {
-    name: "Co-investor syndicate",
-    goal: "8 co-investors for Series A in 45 days",
-    compiled: "3 channels · 52 proposals · 2 gates",
-    verified: "9 verified intros",
-    cost: "USD 64.40 metered",
-  },
-];
-
-function PlaybookCard({ p, i }: { p: (typeof PLAYBOOKS)[number]; i: number }) {
-  return (
-    <div className="flex flex-col rounded-2xl border bg-white p-6" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] tracking-[0.2em]" style={{ color: SIGNAL_DEEP }}>
-          {String(i + 1).padStart(2, "0")}
-        </span>
-        <span
-          className="rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em]"
-          style={{ background: "rgba(63,140,116,0.1)", color: "#2f6e59" }}
-        >
-          verified
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ background: "#2f6e59" }} />
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: MUTED }}>
+            Live ledger · last {data?.windowDays ?? 30} days
+          </span>
+        </div>
+        <span className="font-mono text-[10px]" style={{ color: FAINT }}>
+          {status === "ready"
+            ? activity
+              ? `aggregated · ${asOf ?? "—"}`
+              : "aggregate unavailable"
+            : status === "unavailable"
+              ? "aggregate unavailable"
+              : "loading…"}
         </span>
       </div>
-      <h3 className="mt-4 font-display text-[16.5px] font-bold">{p.name}</h3>
-      <p className="mt-1 text-[13px] leading-relaxed" style={{ color: MUTED }}>
-        “{p.goal}”
-      </p>
-      <dl className="mt-5 space-y-2.5 border-t pt-4 text-[12.5px]" style={{ borderColor: "rgba(11,14,17,0.08)" }}>
-        {[
-          ["compiled", p.compiled],
-          ["outcome", p.verified],
-          ["metered", p.cost],
-        ].map(([k, v]) => (
-          <div key={k} className="flex items-baseline justify-between gap-3">
-            <dt className="font-mono text-[9.5px] uppercase tracking-[0.14em]" style={{ color: FAINT }}>
-              {k}
-            </dt>
-            <dd className="text-right font-medium">{v}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
 
-/* ─────────────────────────── 7. 页脚（浅色，与纸面同源） ─────────────────────────── */
-
-const FOOTER_COLUMNS: Array<{ title: string; links: Array<[string, string]> }> = [
-  {
-    title: "Product",
-    links: [
-      ["Product", "/product"],
-      ["Solutions", "/solutions"],
-      ["Stories", "/stories"],
-      ["How it works", "/how-it-works"],
-      ["Pricing", "/pricing"],
-      ["Help center", "/help"],
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      ["About", "/about"],
-      ["Contact", "/contact"],
-      ["Support", "/support"],
-      ["Log in", "/login"],
-      ["Create account", "/register"],
-    ],
-  },
-  {
-    title: "Developers",
-    links: [
-      ["Agent card", "/.well-known/agent-card.json"],
-      ["OpenAPI contract", "https://github.com/aoshuang99-netizen/lokfeel.com/blob/main/contracts/connection.openapi.yaml"],
-      ["MCP server route", "https://github.com/aoshuang99-netizen/lokfeel.com/blob/main/src/app/api/mcp/route.ts"],
-      ["SDK examples", "https://github.com/aoshuang99-netizen/lokfeel.com/tree/main/examples/sdk"],
-    ],
-  },
-];
-
-function SiteFooter() {
-  return (
-    <footer className="border-t" style={{ borderColor: "rgba(11,14,17,0.1)" }}>
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-[1.2fr_1fr_1fr] sm:px-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span
-              className="grid h-6 w-6 place-items-center rounded-md font-display text-[12px] font-bold text-white"
-              style={{ background: INK }}
-            >
-              L
-            </span>
-            <span className="font-display text-[14px] font-bold tracking-[-0.01em]">LOKFEEL</span>
-          </div>
-          <p className="mt-3 max-w-xs text-[12.5px] leading-relaxed" style={{ color: FAINT }}>
-            Connection OS — describe the outcome, get a workspace that runs it.
-          </p>
-        </div>
-        {FOOTER_COLUMNS.map((col) => (
-          <div key={col.title}>
-            {/* V196 棘轮实测：FAINT(2.9:1) 对 9.5px 小字不达 4.5:1 —— 加深到 MUTED(5.6:1) */}
-            <p className="font-mono text-[9.5px] uppercase tracking-[0.18em]" style={{ color: MUTED }}>
-              {col.title}
+      <div className="grid gap-6 p-5 sm:grid-cols-[1.15fr_1fr] sm:gap-8">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-4">
+          <Stat label="Missions" value={activity?.missions ?? null} />
+          <Stat label="Agent runs" value={activity?.runs ?? null} />
+          <Stat label="Decisions" value={activity?.decisions ?? null} />
+          <Stat label="Verified" value={activity?.verifiedOutcomes ?? null} />
+          {quiet && (
+            <p className="col-span-2 text-[11.5px] leading-relaxed sm:col-span-4" style={{ color: FAINT }}>
+              Nothing in this window yet — the first compiled goal will show up here.
             </p>
+          )}
+        </div>
+
+        <div>
+          <p className="font-mono text-[9.5px] uppercase tracking-[0.16em]" style={{ color: FAINT }}>
+            Orchestration stages
+          </p>
+          {stages.length === 0 ? (
+            <p className="mt-3 text-[12.5px] leading-relaxed" style={{ color: MUTED }}>
+              {status === "ready"
+                ? data?.note === "stage_events_unavailable"
+                  ? "Per-stage detail isn't available on this deployment yet — counts stay hidden rather than shown as zero."
+                  : "No stage events in this window yet."
+                : status === "unavailable"
+                  ? "The aggregate endpoint is unreachable from this browser."
+                  : "Waiting for the aggregate."}
+            </p>
+          ) : (
             <ul className="mt-3 space-y-2">
-              {col.links.map(([label, href]) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    className="inline-flex min-h-6 items-center text-[13px] transition-colors hover:opacity-60"
-                    style={{ color: MUTED }}
-                  >
-                    {label}
-                  </Link>
+              {stages.map((s) => (
+                <li key={s.stage} className="grid grid-cols-[9.5rem_1fr_2.5rem] items-center gap-2">
+                  <span className="truncate font-mono text-[10px]" style={{ color: MUTED }}>
+                    {s.stage}
+                  </span>
+                  <span className="h-1.5 overflow-hidden rounded-full" style={{ background: "rgba(11,14,17,0.08)" }}>
+                    <span
+                      className="block h-full rounded-full transition-[width] duration-700 ease-out"
+                      style={{
+                        width: `${Math.max(3, max > 0 ? Math.round((s.count / max) * 100) : 3)}%`,
+                        background: s.stage === "DEGRADED" ? "#b4544a" : SIGNAL,
+                      }}
+                    />
+                  </span>
+                  <span className="text-right font-mono text-[10px] tabular-nums" style={{ color: INK }}>
+                    {s.count.toLocaleString("en-US")}
+                  </span>
                 </li>
               ))}
             </ul>
-          </div>
-        ))}
-      </div>
-      <div className="border-t" style={{ borderColor: "rgba(11,14,17,0.08)" }}>
-        <div
-          className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-4 font-mono text-[10px] sm:px-6"
-          style={{ color: FAINT }}
-        >
-          <span>© {new Date().getFullYear()} LokFeel</span>
-          <span>MCP · A2A · REST v1 — disclosure fail-closed</span>
+          )}
+          <p className="mt-3 text-[11px] leading-relaxed" style={{ color: FAINT }}>
+            Cross-workspace counts. No tenant, user or mission content leaves the server.
+          </p>
         </div>
       </div>
-    </footer>
+    </div>
   );
 }
 
-/* ─────────────────────────── 8. 页面 ─────────────────────────── */
+/* ─────────────────────────── 5. 页面 ─────────────────────────── */
 
 export default function LandingPage() {
   const router = useRouter();
-  const [signupOpen, setSignupOpen] = useState(false);
+  const pulse = usePulse();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -950,20 +468,22 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const openWorkspace = () => router.push("/workspace");
+  const activity = pulse.data?.activity ?? null;
+  const cap = pulse.data?.capabilities;
 
   return (
     <div style={{ background: PAPER, color: INK }} className="min-h-screen antialiased">
       {/* ── NAV ── */}
       <header
-        className={`fixed inset-x-0 top-0 z-40 transition-all duration-300 ${scrolled ? "backdrop-blur-md" : ""}`}
+        className="fixed inset-x-0 top-0 z-40 transition-colors duration-300"
         style={{
-          background: scrolled ? "rgba(247,245,240,0.86)" : "transparent",
-          borderBottom: scrolled ? "1px solid rgba(11,14,17,0.08)" : "1px solid transparent",
+          background: scrolled ? "rgba(247,245,240,0.9)" : "transparent",
+          backdropFilter: scrolled ? "blur(10px)" : undefined,
+          borderBottom: `1px solid ${scrolled ? "rgba(11,14,17,0.08)" : "transparent"}`,
         }}
       >
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-6">
-          <Link href="/" className="flex cursor-pointer items-center gap-2.5" aria-label="LokFeel home">
+          <Link href="/" className="flex items-center gap-2.5" aria-label="LokFeel home">
             <span
               className="grid h-7 w-7 place-items-center rounded-md font-display text-[13px] font-bold text-white"
               style={{ background: INK }}
@@ -971,25 +491,18 @@ export default function LandingPage() {
               L
             </span>
             <span className="font-display text-[15px] font-bold tracking-[-0.01em]">LOKFEEL</span>
-            <span
-              className="ml-1 hidden rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] sm:inline-block"
-              style={{ borderColor: "rgba(11,14,17,0.16)", color: MUTED }}
-            >
-              Connection OS
-            </span>
           </Link>
 
           <div className="hidden items-center gap-7 md:flex">
             {[
-              ["Product", "/product"],
-              ["Solutions", "/solutions"],
-              ["How it works", "/how-it-works"],
+              ["How it runs", "#how"],
+              ["Live ledger", "#ledger"],
               ["Pricing", "/pricing"],
             ].map(([label, href]) => (
               <a
                 key={href}
                 href={href}
-                className="inline-flex min-h-6 items-center text-[13.5px] transition-colors hover:opacity-60"
+                className="inline-flex min-h-6 items-center text-[13.5px] transition-opacity hover:opacity-60"
                 style={{ color: MUTED }}
               >
                 {label}
@@ -1000,303 +513,230 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="hidden cursor-pointer rounded-full px-3.5 py-2 text-[13.5px] transition-colors hover:bg-black/[0.04] sm:block"
+              className="hidden rounded-full px-3.5 py-2 text-[13.5px] transition-colors hover:bg-black/[0.04] sm:block"
               style={{ color: MUTED }}
             >
               Log in
             </Link>
             <button
-              onClick={openWorkspace}
-              className="cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-medium text-white transition-transform duration-200 hover:-translate-y-px"
+              onClick={() => router.push("/register")}
+              className="cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-medium text-white transition-opacity hover:opacity-90"
               style={{ background: INK }}
             >
-              Open workspace
+              Start free
             </button>
           </div>
         </nav>
       </header>
 
-      {/* ── MAIN ── 无障碍：4 个公开路由原本全缺 <main> landmark（键盘/读屏审计实测），此处补齐 */}
       <main>
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden pb-14 pt-28 sm:pb-16 sm:pt-32">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(11,14,17,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(11,14,17,0.045) 1px, transparent 1px)",
-            backgroundSize: "72px 72px",
-            maskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent 78%)",
-            WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent 78%)",
-          }}
-        />
-
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: SIGNAL }} aria-hidden />
-              <Eyebrow>Connection OS · for teams and their agents</Eyebrow>
-            </div>
-
-            <h1
-              className="mt-5 font-display text-[2.8rem] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-[3.3rem] lg:text-[3.6rem]"
-              style={{ color: INK }}
-            >
-              Your goal,
-              <br />
-              <span style={{ color: SIGNAL_DEEP }}>compiled.</span>
-            </h1>
-
-            <p className="mt-5 max-w-md text-[16px] leading-[1.6]" style={{ color: MUTED }}>
-              One sentence in, a runnable workspace out: who proposes, who has to agree, which
-              agent drafts, and what counts as done. Every step leaves a record you can check.
-            </p>
-
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link
-                href="/register"
-                className="inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-3 text-[14.5px] font-medium text-white transition-transform duration-200 hover:-translate-y-px"
-                style={{ background: INK }}
-              >
-                Start with one goal
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <Link
-                href="/how-it-works"
-                className="cursor-pointer rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors hover:bg-black/[0.03]"
-                style={{ borderColor: "rgba(11,14,17,0.16)", color: INK }}
-              >
-                See how it works
-              </Link>
-            </div>
-
-            <p className="mt-7 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: FAINT }}>
-              5 MCP tools · 50 REST routes · 3 agent skills · fail-closed consent
-            </p>
-          </div>
-
-          <HeroScene />
-        </div>
-      </section>
-
-      {/* ── 核心功能 ── */}
-      <section id="product" className="mx-auto max-w-6xl px-5 pb-14 sm:px-6 sm:pb-16">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <Eyebrow>What it does</Eyebrow>
-            <h2 className="mt-3 font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.025em] sm:text-[2.5rem]">
-              Three things. Nothing decorative.
-            </h2>
-          </div>
-        </div>
-
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <FeatureCard
-            title="Compile goals, not slides"
-            line="One sentence in, a validated plan out. The canvas renders only what the server allows — no invented steps."
-            diagram={<DiagramCompile />}
-          />
-          <FeatureCard
-            title="Agents with guardrails"
-            line="They draft. You approve. Nothing goes out under your name without a human click."
-            diagram={<DiagramAgents />}
-          />
-          <FeatureCard
-            title="Field-level consent"
-            line="Share the field, not the profile. Silence means no, and it stays that way."
-            diagram={<DiagramConsent />}
-          />
-        </div>
-      </section>
-
-      {/* ── AI 能力（深色 · 可交互） ── */}
-      <section id="ai" data-gate="ai" style={{ background: INK }} className="py-16 sm:py-20">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
-          <div>
-            <Eyebrow dark>The AI layer</Eyebrow>
-            <h2 className="mt-3 font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.5rem]">
-              The model compiles.
-              <span className="block" style={{ color: SIGNAL }}>
-                The contract decides.
-              </span>
-            </h2>
-
-            <ul className="mt-7 space-y-4">
-              {[
-                ["INTENT_EXTRACTION", "Goal text → WorkspaceSpec. Schema-validated on the server."],
-                ["INTRO_DRAFT", "Personalised introductions, written from disclosed fields only."],
-                ["COORDINATION_ADVICE", "Next-step suggestions across missions, ranked by risk."],
-              ].map(([skill, line]) => (
-                <li key={skill} className="flex gap-3.5">
-                  <span
-                    className="mt-0.5 shrink-0 rounded-md px-2 py-1 font-mono text-[9.5px] tracking-wide"
-                    style={{ background: "rgba(184,134,63,0.14)", color: SIGNAL }}
-                  >
-                    {skill}
-                  </span>
-                  <span className="text-[13.5px] leading-relaxed" style={{ color: "rgba(242,241,236,0.68)" }}>
-                    {line}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <p className="mt-7 border-t pt-5 text-[12px] leading-relaxed" style={{ borderColor: "rgba(242,241,236,0.12)", color: "rgba(242,241,236,0.75)" }}>
-              Every call is metered and attributable. No credentials? It falls back to rules
-              instead of pretending to be a model.
-            </p>
-          </div>
-
-          <CompileDemo />
-        </div>
-      </section>
-
-      {/* ── 3D 关系图 ── */}
-      <section id="graph" className="mx-auto max-w-6xl px-5 py-16 sm:px-6 sm:py-20">
-        <div className="relative overflow-hidden rounded-3xl px-6 py-12 sm:px-12" style={{ background: INK }}>
-          <div className="grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div>
-              <Eyebrow dark>One graph</Eyebrow>
-              <h2 className="mt-3 font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.4rem]">
-                Everything orbits
-                <span className="block" style={{ color: SIGNAL }}>
-                  the mission.
-                </span>
-              </h2>
-              <ul className="mt-6 space-y-2 text-[13px]" style={{ color: "rgba(242,241,236,0.62)" }}>
-                <li>Agents draft and verify — in the open.</li>
-                <li>Humans approve every risky step.</li>
-                <li>Gates hold consent and budget.</li>
-              </ul>
-            </div>
-            <OrbitGraph />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Playbooks ── */}
-      <section id="playbooks" data-gate="cases" className="mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-20">
-        <Eyebrow>Playbooks</Eyebrow>
-        <h2 className="mt-3 font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.025em] sm:text-[2.5rem]">
-          What a compiled goal looks like.
-        </h2>
-
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {PLAYBOOKS.map((p, i) => (
-            <PlaybookCard key={p.name} p={p} i={i} />
-          ))}
-        </div>
-
-        <p className="mt-4 text-[11px] leading-relaxed" style={{ color: FAINT }}>
-          Illustrative runs costed with the product&apos;s own rates (introduction USD 5.00 ·
-          outcome USD 3.00 · proposal USD 0.20 · verification USD 1.00). Not customer claims —
-          live missions replace these numbers as they verify.
-        </p>
-      </section>
-
-      {/* ── Interop（压缩为一条） ── */}
-      <section id="interop" className="mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-20">
-        <div
-          className="grid items-center gap-6 rounded-2xl border bg-white px-6 py-7 lg:grid-cols-[0.9fr_1.1fr] sm:px-8"
-          style={{ borderColor: "rgba(11,14,17,0.12)" }}
-        >
-          <div>
-            <Eyebrow>Interop</Eyebrow>
-            <h2 className="mt-2 font-display text-[1.5rem] font-bold tracking-[-0.02em]">
-              Machines connect through contracts.
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {["MCP · 5 tools", "A2A · agent card", "REST v1 · 50 routes", "OpenAPI"].map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border px-2.5 py-1 font-mono text-[10px] tracking-wide"
-                  style={{ borderColor: "rgba(11,14,17,0.16)", color: MUTED }}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-          <pre
-            tabIndex={0}
-            aria-label="机器接口清单（MCP、A2A、REST）"
-            className="overflow-x-auto rounded-xl px-4 py-3.5 font-mono text-[11px] leading-[1.8]"
-            style={{ background: PAPER, color: MUTED, border: "1px solid rgba(11,14,17,0.08)" }}
-          >
-            {`MCP   initialize · tools/list · tools/call
-A2A   GET /.well-known/agent-card.json · POST /api/v1/a2a/tasks
-REST  /api/v1/missions · /intents · /connections · /outcomes`}
-          </pre>
-        </div>
-      </section>
-
-      {/* ── 治理条（一行三则） ── */}
-      <section className="mx-auto max-w-6xl px-5 pb-14 sm:px-6">
-        <div
-          className="grid gap-px overflow-hidden rounded-2xl border sm:grid-cols-3"
-          style={{ borderColor: "rgba(11,14,17,0.12)", background: "rgba(11,14,17,0.12)" }}
-        >
-          {[
-            ["Tenant isolated", "Org resolved from the session, never the client."],
-            ["Audit, not logs", "Security and business events recorded separately."],
-            ["Metered, not guessed", "Per-event billing; sandboxes never counted."],
-          ].map(([t, d]) => (
-            <div key={t} className="bg-white px-5 py-4">
-              <p className="font-display text-[13.5px] font-bold">{t}</p>
-              <p className="mt-1 text-[12px] leading-relaxed" style={{ color: MUTED }}>
-                {d}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl px-6 py-12 sm:px-12 sm:py-14" style={{ background: INK }}>
+        {/* ── HERO ── */}
+        <section className="relative overflow-hidden pb-14 pt-28 sm:pt-32">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
             style={{
               backgroundImage:
-                "radial-gradient(600px 240px at 85% 10%, rgba(184,134,63,0.22), transparent 70%)",
+                "linear-gradient(rgba(11,14,17,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(11,14,17,0.04) 1px, transparent 1px)",
+              backgroundSize: "80px 80px",
+              maskImage: "radial-gradient(ellipse 65% 55% at 40% 0%, black, transparent 75%)",
+              WebkitMaskImage: "radial-gradient(ellipse 65% 55% at 40% 0%, black, transparent 75%)",
             }}
           />
-          <div className="relative flex flex-col items-start justify-between gap-7 lg:flex-row lg:items-end">
-            <div>
-              <Eyebrow dark>Start with one real goal</Eyebrow>
-              <h2 className="mt-3 max-w-xl font-display text-[2rem] font-bold leading-[1.08] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.5rem]">
-                Bring one goal. Leave with a workspace.
-              </h2>
+
+          <div className="relative mx-auto grid max-w-6xl items-start gap-10 px-5 sm:px-6 lg:grid-cols-[1.02fr_1fr] lg:gap-14">
+            <div className="lg:pt-6">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: SIGNAL }} aria-hidden />
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em]" style={{ color: FAINT }}>
+                  Connection OS
+                </p>
+              </div>
+
+              <h1
+                className="mt-5 font-display text-[2.15rem] font-extrabold leading-[1] tracking-[-0.04em] sm:text-[3.1rem] lg:text-[3.3rem]"
+                style={{ color: INK }}
+              >
+                One goal in.
+                <br />
+                <span style={{ color: SIGNAL_DEEP }}>A workspace out.</span>
+              </h1>
+
+              <p className="mt-5 max-w-[30rem] text-[16.5px] leading-[1.55]" style={{ color: MUTED }}>
+                A sentence becomes missions, consent gates and agents. Every step is recorded, and
+                only the counterparty can mark a result done.
+              </p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-[14.5px] font-medium text-white transition-opacity hover:opacity-90"
+                  style={{ background: INK }}
+                >
+                  Start with a goal
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </Link>
+                <a
+                  href="#ledger"
+                  className="rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors hover:bg-black/[0.03]"
+                  style={{ borderColor: "rgba(11,14,17,0.16)", color: INK }}
+                >
+                  See what ran
+                </a>
+              </div>
+
+              {/* 能力事实：取自代码，不是文案 */}
+              <p className="mt-7 font-mono text-[10.5px] uppercase tracking-[0.14em]" style={{ color: FAINT }}>
+                {cap
+                  ? `${cap.skills} skills · ${cap.mcpTools} MCP tools · spec v${cap.specVersion} · fail-closed consent`
+                  : "3 skills · 5 MCP tools · spec v1.2 · fail-closed consent"}
+              </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={openWorkspace}
-                className="cursor-pointer rounded-full px-5 py-3 text-[14.5px] font-medium text-[#0b0e11] transition-transform duration-200 hover:-translate-y-px"
-                style={{ background: "#f2f1ec" }}
-              >
-                Open workspace
-              </button>
-              <button
-                onClick={() => setSignupOpen(true)}
-                className="cursor-pointer rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors"
-                style={{ borderColor: "rgba(242,241,236,0.22)", color: "#f2f1ec" }}
-              >
-                Create account
-              </button>
+
+            <CompilePanel />
+          </div>
+        </section>
+
+        {/* ── HOW IT RUNS（三行，每行一个真实数字） ── */}
+        <section id="how" className="mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-20">
+          <h2 className="font-display text-[1.6rem] font-bold tracking-[-0.02em] sm:text-[2rem]">
+            Three steps. Each one leaves evidence.
+          </h2>
+
+          <div className="mt-7 divide-y" style={{ borderColor: "rgba(11,14,17,0.12)" }}>
+            {[
+              {
+                k: "01",
+                t: "Goal becomes spec",
+                d: "The model proposes a WorkspaceSpec. The server validates it; the canvas renders only allowed nodes.",
+                n: activity && activity.missions !== null ? `${fmt(activity.missions)} missions · 30 d` : "—",
+              },
+              {
+                k: "02",
+                t: "Agent becomes a draft",
+                d: "Three skills draft. A different person approves. Self-approval is rejected by the server, not by policy text.",
+                n:
+                  activity && activity.runs !== null
+                    ? `${fmt(activity.runs)} runs · ${fmt(activity.decisions)} decisions`
+                    : "—",
+              },
+              {
+                k: "03",
+                t: "Outcome becomes proof",
+                d: "A result counts only after the counterparty confirms it. Self-reported stays unverified.",
+                n:
+                  activity && activity.verifiedOutcomes !== null
+                    ? `${fmt(activity.verifiedOutcomes)} verified · 30 d`
+                    : "—",
+              },
+            ].map((row) => (
+              <div key={row.k} className="grid gap-2 py-6 sm:grid-cols-[3rem_1fr_auto] sm:items-baseline sm:gap-6" style={{ borderTop: "1px solid rgba(11,14,17,0.1)" }}>
+                <span className="font-mono text-[11px] tracking-[0.2em]" style={{ color: SIGNAL_DEEP }}>
+                  {row.k}
+                </span>
+                <div>
+                  <h3 className="font-display text-[16.5px] font-bold">{row.t}</h3>
+                  <p className="mt-1.5 max-w-[38rem] text-[13.5px] leading-relaxed" style={{ color: MUTED }}>
+                    {row.d}
+                  </p>
+                </div>
+                <span className="font-mono text-[10.5px] tabular-nums sm:text-right" style={{ color: FAINT }}>
+                  {row.n}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── LIVE LEDGER ── */}
+        <section id="ledger" className="mx-auto max-w-6xl px-5 pb-16 sm:px-6 sm:pb-20">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-[1.6rem] font-bold tracking-[-0.02em] sm:text-[2rem]">
+                What actually ran.
+              </h2>
+              <p className="mt-2 max-w-[36rem] text-[13.5px] leading-relaxed" style={{ color: MUTED }}>
+                Aggregated on the server from the same tables the product reads. Numbers move as
+                real runs happen; missing data shows a dash.
+              </p>
             </div>
           </div>
-        </div>
-      </section>
+          <div className="mt-6">
+            <Ledger pulse={pulse} />
+          </div>
+        </section>
 
+        {/* ── CTA ── */}
+        <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-6">
+          <div className="relative overflow-hidden rounded-3xl px-6 py-11 sm:px-10" style={{ background: INK }}>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage: "radial-gradient(520px 220px at 82% 0%, rgba(184,134,63,0.2), transparent 70%)",
+              }}
+            />
+            <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em]" style={{ color: "rgba(242,241,236,0.62)" }}>
+                  No setup
+                </p>
+                <h2 className="mt-3 font-display text-[1.8rem] font-bold leading-[1.06] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.2rem]">
+                  Bring one real goal.
+                </h2>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/register"
+                  className="rounded-full px-5 py-3 text-[14.5px] font-medium text-[#0b0e11] transition-opacity hover:opacity-90"
+                  style={{ background: "#f2f1ec" }}
+                >
+                  Start free
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors hover:bg-white/[0.06]"
+                  style={{ borderColor: "rgba(242,241,236,0.22)", color: "#f2f1ec" }}
+                >
+                  Pricing
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
-      <SiteFooter />
-
-      <QuickSignupModal isOpen={signupOpen} onClose={() => setSignupOpen(false)} />
+      <footer className="border-t" style={{ borderColor: "rgba(11,14,17,0.1)" }}>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 sm:px-6">
+          <div className="flex items-center gap-2">
+            <span
+              className="grid h-6 w-6 place-items-center rounded-md font-display text-[12px] font-bold text-white"
+              style={{ background: INK }}
+            >
+              L
+            </span>
+            <span className="font-display text-[13px] font-bold tracking-[-0.01em]">LOKFEEL</span>
+          </div>
+          <nav className="flex flex-wrap items-center gap-5 text-[12.5px]" style={{ color: MUTED }}>
+            {[
+              ["Product", "/product"],
+              ["Pricing", "/pricing"],
+              ["Help", "/help"],
+              ["Log in", "/login"],
+              ["Agent card", "/.well-known/agent-card.json"],
+            ].map(([label, href]) => (
+              <Link key={label} href={href} className="inline-flex min-h-6 items-center hover:opacity-60">
+                {label}
+              </Link>
+            ))}
+          </nav>
+          <p className="font-mono text-[10px]" style={{ color: FAINT }}>
+            © {new Date().getFullYear()} LokFeel · MCP · A2A · REST v1
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
