@@ -1,0 +1,10 @@
+﻿github_repo,stars_2026_11_16,license,use_in_v22,url,install_status
+obra/superpowers,318110,MIT,"TDD, systematic debugging, verification-before-completion, code review",https://github.com/obra/superpowers,NOT_INSTALLED
+anthropics/skills,195432,per-skill license,frontend-design,https://github.com/anthropics/skills,NOT_INSTALLED
+nextlevelbuilder/ui-ux-pro-max-skill,149995,MIT,"design intelligence, tokens, layout alternatives",https://github.com/nextlevelbuilder/ui-ux-pro-max-skill,NOT_INSTALLED
+pbakaus/impeccable,110816,Apache-2.0,"critique, audit, clarify, harden",https://github.com/pbakaus/impeccable,NOT_INSTALLED
+Nutlope/hallmark,55558,MIT,anti-template independent design critique,https://github.com/Nutlope/hallmark,NOT_INSTALLED
+vercel-labs/agent-skills,34134,check individual skill,"web-design-guidelines, react-best-practices",https://github.com/vercel-labs/agent-skills,NOT_INSTALLED
+microsoft/playwright-cli,15224,Apache-2.0,"browser screenshots, interaction, trace, skills installer",https://github.com/microsoft/playwright-cli,NOT_INSTALLED
+dequelabs/axe-core,7827,MPL-2.0,accessibility checks; tool not a skill,https://github.com/dequelabs/axe-core,NOT_INSTALLED
+GoogleChrome/lighthouse-ci,7149,Apache-2.0,performance CI; tool not a skill,https://github.com/GoogleChrome/lighthouse-ci,NOT_INSTALLED

@@ -1,0 +1,61 @@
+{
+  "checked_at": "2026-11-16",
+  "source": "GitHub repository API via connected GitHub tool",
+  "warning": "stars indicate popularity not daily official Trending rank; skill scripts unreviewed; no install performed",
+  "repos": [
+    {
+      "repo": "obra/superpowers",
+      "stars": 318110,
+      "license": "MIT",
+      "use": "TDD, systematic debugging, verification-before-completion, code review"
+    },
+    {
+      "repo": "anthropics/skills",
+      "stars": 195432,
+      "license": "per-skill license",
+      "use": "frontend-design"
+    },
+    {
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "stars": 149995,
+      "license": "MIT",
+      "use": "design intelligence, tokens, layout alternatives"
+    },
+    {
+      "repo": "pbakaus/impeccable",
+      "stars": 110816,
+      "license": "Apache-2.0",
+      "use": "critique, audit, clarify, harden"
+    },
+    {
+      "repo": "Nutlope/hallmark",
+      "stars": 55558,
+      "license": "MIT",
+      "use": "anti-template independent design critique"
+    },
+    {
+      "repo": "vercel-labs/agent-skills",
+      "stars": 34134,
+      "license": "check individual skill",
+      "use": "web-design-guidelines, react-best-practices"
+    },
+    {
+      "repo": "microsoft/playwright-cli",
+      "stars": 15224,
+      "license": "Apache-2.0",
+      "use": "browser screenshots, interaction, trace, skills installer"
+    },
+    {
+      "repo": "dequelabs/axe-core",
+      "stars": 7827,
+      "license": "MPL-2.0",
+      "use": "accessibility checks; tool not a skill"
+    },
+    {
+      "repo": "GoogleChrome/lighthouse-ci",
+      "stars": 7149,
+      "license": "Apache-2.0",
+      "use": "performance CI; tool not a skill"
+    }
+  ]
+}

@@ -58,7 +58,7 @@ export default function CareersPage() {
             Join the <span className="text-gradient">{BRAND.name}</span> Team
           </h1>
           <p className="text-xl text-foreground-muted max-w-2xl mx-auto">
-            We are building the compiler between what people mean and what systems actually do.
+            We are building the bridge between what people mean and what systems actually do.
             Come build it with us.
           </p>
         </div>

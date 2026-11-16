@@ -64,7 +64,13 @@ const footerSections = {
   },
 };
 
-export default function Footer() {
+/**
+ * V22: `frozen` is optional because the auth layout also renders this footer.
+ * The public layout passes the server-computed value so Navbar (client) and
+ * Footer (server) never disagree about which links exist — that disagreement
+ * was the source of React #418 on /pricing.
+ */
+export default function Footer({ frozen }: { frozen?: boolean }) {
   return (
     <footer className="relative z-10 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-16">
@@ -80,7 +86,7 @@ export default function Footer() {
               <ul className="space-y-2 list-none p-0 m-0">
                 {/* GA T2：审核中的公开页从页脚摘除（与中间件/sitemap 同一份名单），
                     避免"入口还在、点进去却是审核中"的孤儿导航。 */}
-                {visiblePublicLinks(section.links).map((link) => (
+                {visiblePublicLinks(section.links, frozen).map((link) => (
                   <li key={link.href}>
                     {link.external ? (
                       <a

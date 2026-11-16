@@ -1,229 +1,296 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import {
-  PenLine,
-  FileText,
+  HelpCircle,
   ShieldCheck,
-  Bot,
-  BadgeCheck,
-  Server,
+  TriangleAlert,
   Lock,
-  Eye,
-  Users,
+  Server,
 } from "lucide-react";
 import { BRAND } from "@/config/brand";
-import { PublicHold } from "@/components/marketing/public-hold";
-import { isPublicSurfaceFrozen } from "@/config/public-surface";
 
 export const metadata: Metadata = {
-  // GA T2：审核期间不索引（正文已由 PublicHold 占位，这里只是配套）
-  robots: { index: false, follow: false },
-  title: "Product",
+  title: `Product — ${BRAND.name}`,
   description:
-    "One workspace from intent to proof: intent, proposals, consent, approved agent action and three-level outcome verification — plus a machine surface of MCP tools and A2A tasks.",
+    "What you can do with LokFeel today, what needs your approval, and what is not live yet. Every item carries a status from the public capability register.",
   openGraph: {
     title: `Product — ${BRAND.name}`,
     description:
-      "The full chain from collaboration intent to verified outcome, with permissions, quotas and audit at every step.",
+      "State a goal, approve what matters, and keep an in-app record of what happened, with a clear boundary on what is not live yet.",
   },
 };
 
-const fiveSteps = [
+const boundaryText =
+  "LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in-app record of what happened. Not live yet: actions carried out inside external apps, automatic execution across other tools, and independent confirmation that a result was achieved outside LokFeel. We do not present any of those as available.";
+
+type Capability = {
+  title: string;
+  body: string;
+  status: "Available" | "Gated" | "Planned";
+  href?: string;
+  linkLabel?: string;
+};
+
+const whatYouCanDo: Capability[] = [
   {
-    icon: PenLine,
-    step: "01 · Intent",
-    title: "State what you want to achieve",
-    input: "A goal in your own words",
-    output: "An intent record tied to a mission",
-    permission: "Self-service (intent.manage)",
-    limit: "You must belong to a mission first — otherwise the API returns 409",
+    title: "State a goal and get an editable step list",
+    body: "Describe what you want to get done in your own words and get a list of steps you can change.",
+    status: "Gated",
+    href: "/workspace?view=now",
+    linkLabel: "Open the goal input",
   },
   {
-    icon: FileText,
-    step: "02 · Proposal",
-    title: "Turn it into a proposal between two parties",
-    input: "An intent and a counterparty",
-    output: "A proposal with explicit expiry",
-    permission: "Operators and above create; everyone can read their own",
-    limit: "A proposal is not consent — one side drafting it proves nothing",
+    title: "Edit each step and keep a version history",
+    body: "Change the steps one by one; each change is recorded so you can see what was decided earlier.",
+    status: "Gated",
+    href: "/workspace?view=missions",
+    linkLabel: "Open my tasks",
   },
   {
-    icon: ShieldCheck,
-    step: "03 · Consent",
-    title: "Both sides approve, with field-level disclosure",
-    input: "A pending proposal",
-    output: "A consent record per party",
-    permission: "Self-service (proposal.decide)",
-    limit: "Decline reasons are never leaked back to the other side",
+    title: "Decide exactly which fields to share",
+    body: "Choose field by field what to disclose. Silence is treated as no, never as consent.",
+    status: "Available",
+    href: "/workspace?view=consent",
+    linkLabel: "Review what needs approval",
   },
   {
-    icon: Bot,
-    step: "04 · Action",
-    title: "Agents act — only after approval",
-    input: "An approved action request",
-    output: "An executed run with provider, progress and failures",
-    permission: "Approval (agent.approve, admin) and execution (agent.execute, operator) are separate powers",
-    limit: "No approval record → 409. Prompt injection cannot bypass the gate",
+    title: "See everything you have asked for in one list",
+    body: "Your goals and their current state live together in a single list you can return to.",
+    status: "Gated",
+    href: "/workspace?view=missions",
+    linkLabel: "Open my tasks",
   },
   {
-    icon: BadgeCheck,
-    step: "05 · Outcome",
-    title: "Prove what happened",
-    input: "A reported result on a connection",
-    output: "A verification level: self-reported, counterparty-confirmed or externally-verified",
-    permission: "Everyone reports; counterparty confirms; admin verifies",
-    limit: "Self-reporting never counts as verified — the level is derived from the record set",
+    title: "See who did each step and where it stopped",
+    body: "Each step records what happened and whether it is still in progress or came to a halt.",
+    status: "Gated",
+    href: "/workspace?view=agents",
+    linkLabel: "Open the activity log",
+  },
+  {
+    title: "Keep an in-app receipt after an action",
+    body: "After an action you get a record inside LokFeel. It is an in-app receipt only, not proof of a result in another service.",
+    status: "Available",
+    href: "/workspace?view=outcomes",
+    linkLabel: "Open results",
   },
 ];
 
-const surfaces = [
+const needsApproval: Capability[] = [
   {
-    icon: Eye,
-    title: "Workspace — six screens",
-    body: "Now, Studio, Field, Consent, Outcomes and Agents. Every state you see comes from a real server endpoint — no fabricated progress, no timer-based success.",
+    title: "A key action needs another person to approve it",
+    body: "The person who requested an action cannot approve it themselves; a second approval is required.",
+    status: "Gated",
+    href: "/workspace?view=consent",
+    linkLabel: "Open approvals",
   },
   {
-    icon: Users,
-    title: "Console — seven screens",
-    body: "Overview, missions, members, connections, agents, outcomes and organization settings. Role-based: owners see and control what members cannot.",
-  },
-  {
-    icon: Server,
-    title: "Machine surface",
-    body: "MCP with five per-tool authenticated capabilities (list missions, list bridges, bridge discovery, list outcomes, report outcome) and an A2A task endpoint rate-limited to 120 requests per minute. Discovery is public; calling a tool always requires authorization.",
+    title: "Field-level sharing is set by you, not inferred",
+    body: "Sensitive fields move only after you explicitly allow them. With no valid approval the request is refused.",
+    status: "Available",
+    href: "/workspace?view=consent",
+    linkLabel: "Open approvals",
   },
 ];
 
-const honestBoundaries = [
-  "Notifications are in-app and email — there is no Slack, WhatsApp or CRM integration today.",
-  "Agents run against real AI providers under per-plan quotas and micro-cent budgets. Every plan has finite limits; we do not sell \"unlimited\".",
-  "Nothing on this page promises closed deals, revenue growth or automatic success — only a process with approvals and proofs.",
+const notLiveYet: Capability[] = [
+  {
+    title: "Real actions inside external apps",
+    body: "Sending a real calendar invite or a real email to an outside service is not supported today.",
+    status: "Planned",
+  },
+  {
+    title: "Automatic execution across other tools",
+    body: "Chaining actions across several applications without your approval is not supported today.",
+    status: "Planned",
+  },
+  {
+    title: "Independent confirmation of a result outside LokFeel",
+    body: "Confirming that an outside result was actually achieved, independently of an in-app record, is not supported today.",
+    status: "Planned",
+  },
 ];
+
+const statusStyles: Record<Capability["status"], string> = {
+  Available: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+  Gated: "bg-amber-500/10 text-amber-300 border-amber-500/30",
+  Planned: "bg-slate-500/10 text-slate-300 border-slate-500/30",
+};
+
+function CapabilityCard({ item }: { item: Capability }) {
+  return (
+    <div className="glass-card p-6">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+        <span
+          className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${statusStyles[item.status]}`}
+        >
+          {item.status}
+        </span>
+      </div>
+      <p className="text-sm text-foreground-muted leading-relaxed">{item.body}</p>
+      {item.href && item.linkLabel ? (
+        <Link
+          href={item.href}
+          className="mt-4 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-primary hover:underline"
+        >
+          {item.linkLabel} <span aria-hidden>→</span>
+        </Link>
+      ) : null}
+    </div>
+  );
+}
 
 export default function ProductPage() {
-  // GA T2：内容安全的保证在**渲染层** —— 审核未完成时这个组件不渲染任何商业声明。
-  if (isPublicSurfaceFrozen()) return <PublicHold />;
   return (
-    <div className="pt-24">
+    <div className="pt-24 pb-20">
       {/* Hero */}
-      <section className="relative py-16 lg:py-24 overflow-hidden">
+      <section className="relative py-16 lg:py-20 overflow-hidden">
         <div className="glow-orb glow-orb-primary w-[600px] h-[600px] -top-20 -left-20 opacity-30" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <p className="text-primary text-sm font-medium tracking-wide uppercase mb-4">
-            {BRAND.category}
-          </p>
+          <p className="text-primary text-sm font-medium tracking-wide uppercase mb-4">Product</p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-            One workspace, <span className="text-gradient">from intent to proof</span>
+            Know what you can do, <span className="text-gradient">and what needs your OK</span>
           </h1>
           <p className="text-xl text-foreground-muted max-w-2xl mx-auto">
-            Five steps, each with explicit inputs, outputs, permissions and limits. If a step
-            cannot be verified, the chain does not advance.
+            Three plain questions, one honest answer each. Every capability is labelled Available,
+            Gated, or Planned, straight from the capability register.
+          </p>
+
+          <div
+            role="note"
+            aria-label="Current capability boundary"
+            className="glass-card mt-8 p-6 text-left max-w-2xl mx-auto"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Lock className="w-5 h-5 text-primary shrink-0" aria-hidden />
+              <h2 className="text-base font-semibold text-foreground">Where things stand today</h2>
+            </div>
+            <p className="text-sm text-foreground-muted leading-relaxed">{boundaryText}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Status legend */}
+      <section className="py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm text-foreground-subtle leading-relaxed">
+            <span className="font-semibold text-foreground-muted">Reading the labels: </span>
+            available means wired up with an in-app record; gated means the capability exists but
+            needs authorization or a second person and is not confirmed in production yet; planned
+            means not built or not accepted, so please do not expect it today. These are the three
+            statuses in the public capability register.
           </p>
         </div>
       </section>
 
-      {/* Five steps */}
-      <section className="py-16 lg:py-20 bg-background-secondary/30">
+      {/* Q1 */}
+      <section className="py-12 lg:py-16 bg-background-secondary/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-2">
-            {fiveSteps.map((item) => (
-              <div key={item.step} className="glass-card p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                    <item.icon className="w-6 h-6 text-primary" aria-hidden />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-mono text-xs text-primary mb-1">{item.step}</p>
-                    <h2 className="text-lg font-semibold text-foreground mb-3">{item.title}</h2>
-                    <dl className="space-y-1.5 text-sm">
-                      <div className="flex gap-2">
-                        <dt className="text-foreground-subtle shrink-0">Input →</dt>
-                        <dd className="text-foreground-muted">{item.input}</dd>
-                      </div>
-                      <div className="flex gap-2">
-                        <dt className="text-foreground-subtle shrink-0">Output →</dt>
-                        <dd className="text-foreground-muted">{item.output}</dd>
-                      </div>
-                      <div className="flex gap-2">
-                        <dt className="text-foreground-subtle shrink-0">Who can →</dt>
-                        <dd className="text-foreground-muted">{item.permission}</dd>
-                      </div>
-                    </dl>
-                    <p className="mt-3 text-xs leading-relaxed text-foreground-subtle border-t border-white/10 pt-3">
-                      {item.limit}
-                    </p>
-                  </div>
-                </div>
-              </div>
+          <div className="flex items-center gap-3 mb-8">
+            <HelpCircle className="w-7 h-7 text-primary" aria-hidden />
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What can I do?</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {whatYouCanDo.map((item) => (
+              <CapabilityCard key={item.title} item={item} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Surfaces */}
-      <section className="py-16 lg:py-24">
+      {/* Q2 */}
+      <section className="py-12 lg:py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-              Three surfaces, one permission model
-            </h2>
-            <p className="text-foreground-muted max-w-xl mx-auto">
-              People use the workspace and console; other agents use the machine surface. All
-              three check the same role and capability gates.
-            </p>
+          <div className="flex items-center gap-3 mb-8">
+            <ShieldCheck className="w-7 h-7 text-primary" aria-hidden />
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What needs my approval?</h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {surfaces.map((surface) => (
-              <div key={surface.title} className="glass-card p-6">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
-                  <surface.icon className="w-6 h-6 text-primary" aria-hidden />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{surface.title}</h3>
-                <p className="text-foreground-muted text-sm leading-relaxed">{surface.body}</p>
-              </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {needsApproval.map((item) => (
+              <CapabilityCard key={item.title} item={item} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Honest boundaries */}
-      <section className="py-16 lg:py-20 bg-background-secondary/30">
+      {/* Q3 */}
+      <section className="py-12 lg:py-16 bg-background-secondary/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3 mb-8">
+            <TriangleAlert className="w-7 h-7 text-primary" aria-hidden />
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What is not live yet?</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {notLiveYet.map((item) => (
+              <CapabilityCard key={item.title} item={item} />
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-foreground-subtle">
+            These are planned, not supported. If one of them matters to your work, tell us what
+            you need it for.
+          </p>
+          <Link
+            href="/contact"
+            className="mt-3 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-primary hover:underline"
+          >
+            Contact us <span aria-hidden>→</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* For developers — implementation details only */}
+      <section className="py-12 lg:py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="glass-card p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Lock className="w-5 h-5 text-primary" aria-hidden />
-              <h2 className="text-xl font-semibold text-foreground">
-                What we will not claim
-              </h2>
-            </div>
-            <ul className="space-y-3">
-              {honestBoundaries.map((item) => (
-                <li key={item} className="flex gap-3 text-foreground-muted text-sm leading-relaxed">
-                  <span className="text-primary shrink-0" aria-hidden>—</span>
-                  {item}
+          <details className="glass-card">
+            <summary className="flex min-h-[44px] cursor-pointer items-center gap-3 px-6 py-4 text-base font-semibold text-foreground">
+              <Server className="w-5 h-5 text-primary shrink-0" aria-hidden />
+              For developers — implementation details (not user-facing features)
+            </summary>
+            <div className="border-t border-white/10 px-6 pb-6 pt-4">
+              <p className="text-sm text-foreground-muted leading-relaxed mb-4">
+                Implementation detail only. The names below are internal terms used in developer
+                documentation. They are not product features, not user-facing capabilities, and
+                not promises about what you can do today.
+              </p>
+              <ul className="space-y-2 text-sm text-foreground-muted leading-relaxed list-disc pl-5">
+                <li>
+                  A machine interface: MCP tools, an A2A task endpoint, and REST routes under
+                  /api/v1. These exist for integrations, not for the first screen.
                 </li>
-              ))}
-            </ul>
-          </div>
+                <li>
+                  An internal plan object (WorkspaceSpec) checked against a Schema on the server,
+                  with internal stage names such as INTENT_EXTRACTION and internal module names
+                  such as Studio, Proposals, a Compiler, and Token accounting.
+                </li>
+                <li>
+                  Internal positioning labels you may see in older code: Connection OS, Agent OS,
+                  and Mission pipeline. They describe the implementation, not the product you use.
+                </li>
+              </ul>
+              <p className="mt-4 text-sm text-foreground-subtle">
+                None of the above describes something you can do in the product today. See the
+                capability statuses above for what is actually available.
+              </p>
+            </div>
+          </details>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16 lg:py-24">
+      <section className="py-16 lg:py-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Start with one real goal
-          </h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">Start with one goal</h2>
           <p className="text-foreground-muted mb-8">
-            Register, create an organization, and take a goal through the full chain — approval
-            and verification included.
+            State something you want done. See the steps, decide what to approve, and keep the
+            record inside LokFeel.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/register" className="btn-primary text-lg px-8 py-4">
-              Start free
+            <Link href="/register" className="btn-primary text-lg px-8 py-4 min-h-[44px]">
+              Try with a goal
             </Link>
-            <Link href="/how-it-works" className="btn-secondary text-lg px-8 py-4">
-              See the walkthrough
+            <Link href="/how-it-works" className="btn-secondary text-lg px-8 py-4 min-h-[44px]">
+              See how it works
             </Link>
           </div>
         </div>

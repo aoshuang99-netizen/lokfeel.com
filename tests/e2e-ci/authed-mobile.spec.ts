@@ -102,7 +102,9 @@ test.describe('默认落点 · 主线守卫', () => {
     ).toBe('/workspace');
 
     const text = await page.locator('body').innerText();
-    expect(text, '这一屏必须是 Living Workspace').toContain('My Workspace');
+    // V22：工作区标题已改为中文「我的工作区」，旧英文标题 My Workspace 不应再出现。
+    expect(text, '这一屏必须是主线工作区（V22 中文标题）').toContain('我的工作区');
+    expect(text, '不得再出现旧英文标题 My Workspace').not.toContain('My Workspace');
     expect(text, '不得再出现旧约会线发现页的文案').not.toContain('No more profiles');
   });
 });

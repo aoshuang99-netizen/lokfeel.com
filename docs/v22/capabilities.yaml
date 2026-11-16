@@ -1,0 +1,120 @@
+# V22 能力事实源 —— 供 /product 页面、claim gate 与发布验收共用
+# 规则（总令 §C.3）：缺真实 Provider 结果的功能不得在可售页面标 live。
+# status 取值：available（已接通且有真实回执）| gated（技术上存在，但需授权/第二主体/商业批准）
+#              | planned（未实现或未验收，禁止宣传为可用）| deprecated（旧业务线，隔离保留）
+
+schemaVersion: 1
+asOf: 2026-11-16
+sourceSha: de6b3b9
+productionSha: b50e53e
+policy: "status != available 时，公开文案不得出现 已支持/自动完成/跨应用执行/Verified Outcome 等无条件语义"
+reviewOwner: PENDING_BUSINESS_OWNER
+
+capabilities:
+  - id: CAP-GOAL-INPUT
+    name: "说出目标并生成可编辑方案"
+    status: gated
+    sourceApi: "POST /api/v1/missions · src/lib/workspace-spec/compile.ts"
+    evidence: "本地 V21 首批 f666564；production b50e53e 未部署该链路"
+    uiClaim: "输入一句话，得到可修改的步骤清单"
+    owner: Frontend + Backend
+    notes: "线上未验证；服务端生成需 WORKBUDDY_LLM_* 凭据，CI 未注入"
+
+  - id: CAP-SPEC-VERSIONING
+    name: "方案字段级编辑与版本化"
+    status: gated
+    sourceApi: "V21 第二批 dbb95a7 · Revision / Conflict 409"
+    evidence: "本地 closure.json PASS_LOCAL 23 步"
+    uiClaim: "每一步都能改，改动留版本记录"
+    owner: Backend
+    notes: "未推送、未在生产验证"
+
+  - id: CAP-CONSENT
+    name: "字段级授权与失败即拒绝"
+    status: available
+    sourceApi: "prisma/schema/connection.prisma · t05_connection_consent 迁移"
+    evidence: "生产 cad717e 已含该迁移"
+    uiClaim: "共享哪些字段由你逐项决定，沉默视为不同意"
+    owner: Backend
+    notes: "可用，但具体 UI 状态需逐页复核"
+
+  - id: CAP-SECOND-PERSON-APPROVAL
+    name: "职责分离：自批与旧自批执行被服务端拒绝"
+    status: gated
+    sourceApi: "src/lib/agents/{policy,runs,executor}.ts"
+    evidence: "b467802 · tests/agents 254 tests · scripts/qa/v21-batch3-r1-http.mjs 6/6 HTTP"
+    uiClaim: "关键动作由另一个人批准，发起人不能自己批准"
+    owner: Security
+    notes: "仅本地；生产 b50e53e 无此逻辑，禁止在线上文案宣称"
+
+  - id: CAP-MISSION-LIST
+    name: "任务列表 / 详情 / 关闭"
+    status: gated
+    sourceApi: "src/app/api/v1/missions/* · 7 个内部 key 中 missions 已 ready:true"
+    evidence: "本地 NAV 全 ready；生产 LIVE 仍显示 Missions 暂未提供"
+    uiClaim: "我交代过的事都在这里"
+    owner: Frontend + Backend
+    notes: "典型发布断层，未部署前不得对外宣称可用"
+
+  - id: CAP-AGENT-RUNS
+    name: "Agent 运行编排与阶段事件"
+    status: gated
+    sourceApi: "src/lib/agents/stage-events.ts · AgentRunStageEvent"
+    evidence: "3 个 SKILL_KEYS；编排阶段事件不是模型 token 流"
+    uiClaim: "能看到每一步是谁做的、卡在哪"
+    owner: Backend
+    notes: "SSE 是编排阶段事件，不是流式模型输出"
+
+  - id: CAP-IN-APP-RECEIPT
+    name: "站内回执"
+    status: available
+    sourceApi: "V21 execute → IN_APP RECEIPT"
+    evidence: "本地 closure.json；EXECUTION_KINDS 仍仅 RECEIPT"
+    uiClaim: "执行后留一条站内回执"
+    owner: Backend
+    notes: "🔴 只能称「站内回执」，不得称「外部动作已执行」"
+
+  - id: CAP-EXTERNAL-ACTION
+    name: "真实外部执行器 / Provider 回执"
+    status: planned
+    sourceApi: "无"
+    evidence: "V21 第三批 C03 BLOCKED：无经授权 Provider 与沙箱凭据"
+    uiClaim: "禁止出现在任何可售页面"
+    owner: Owner（需指定 Provider 并授权沙箱）
+    notes: "总令 §S-12 / §D Truth Gate；这是 V22 最大能力缺口"
+
+  - id: CAP-OUTCOME-VERIFICATION
+    name: "独立成果核验"
+    status: planned
+    sourceApi: "Outcome.verificationLevel = COUNTERPARTY_CONFIRMED | EXTERNALLY_VERIFIED"
+    evidence: "第二人确认只证明站内动作被确认；缺 OutcomeEvidence 持久化表"
+    uiClaim: "禁止使用 verified / 已验证 作为营销标签"
+    owner: Backend + QA
+    notes: "EXECUTED ≠ VERIFIED；创建任务 ≠ 结果完成"
+
+  - id: CAP-PUBLIC-PULSE
+    name: "匿名跨租户 30 天聚合（内部证据）"
+    status: available
+    sourceApi: "GET /api/v1/public/pulse"
+    evidence: "tests/api/public-pulse.test.ts · OpenAPI contracts/connection.openapi.yaml"
+    uiClaim: "只用于 /product 的证据区，不进首屏"
+    owner: Backend
+    notes: "DB 不可用时返回 null + note，展示层显示「—」，不填 0、不填示例数字"
+
+  - id: CAP-INTEROP
+    name: "MCP / A2A / REST 机器接口"
+    status: available
+    sourceApi: "src/lib/interop/tools.ts（5 个工具）· 60 个 /api/v1 路由"
+    evidence: "源码实测计数"
+    uiClaim: "仅开发者文档；禁止进入首页首屏"
+    owner: Backend
+    notes: "S-02：生产首屏把 5 MCP tools / 50 REST routes 当卖点，V22 下沉"
+
+  - id: CAP-B2C-LEGACY
+    name: "旧 B2C 会员 / Hlua 订阅"
+    status: deprecated
+    sourceApi: "/dashboard/* legacy"
+    evidence: "总令 S-07 / F 表"
+    uiClaim: "与 ONE 产品线隔离，不串 SKU、套餐与品牌话术"
+    owner: Billing + Legal
+    notes: "D1 未批前 /pricing 不显示金额"

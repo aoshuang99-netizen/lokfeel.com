@@ -86,7 +86,7 @@ const topics = [
     title: "Reference",
     items: [
       "The product page maps every claim to its permission and limit.",
-      "The machine surface (MCP tools, A2A tasks) is documented for developers in the repository.",
+      "Developer-facing interfaces are documented in the repository.",
       "Legal texts — terms, privacy, refunds — state the operating entity and your rights directly.",
     ],
     links: [

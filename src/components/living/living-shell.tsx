@@ -12,10 +12,14 @@
  *   2. 主题与动效**只**作用在本节点的 `data-lf-*` 属性上 → 不影响全站既有页面。
  *   3. 响应式：<1024px 时 Dock 退化为横向条、Inspector 收进浮层；显式 `min-w-0` 防溢出。
  *   4. `prefers-reduced-motion` 时强制 L0（由 globals.css 的媒体查询兜底，这里同步 data 属性）。
+ *
+ * V22 · DEV03（信息架构）：一级只露 4 个中文主任务；studio / field / agents 收进二级「更多」。
+ *   🔴 这是**呈现分组**，不是能力开关：7 个内部 key 全部保留 `ready:true`，
+ *      深链白名单仍来自整份 NAV 的 ready key，分组不影响 `?view=` 直达对应屏。
  */
 
-import { useRef, useState, type ReactNode } from 'react'
-import { Contrast, PanelRight, PanelRightClose } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, Contrast, PanelRight, PanelRightClose } from 'lucide-react'
 import { useDialogA11y } from '@/lib/a11y/use-dialog-a11y'
 import { useLivingTheme, type LivingTheme } from '@/components/theme/living-theme'
 import SignOutButton from '@/components/auth/sign-out-button'
@@ -28,6 +32,13 @@ export interface LivingNavItem {
   ready: boolean
   /** 未就绪原因 —— 会原样展示给用户，不能写"敬请期待"这种没信息量的话。 */
   reason?: string
+  /**
+   * 导航层级（V22 · DEV03）：
+   *  - 'primary'（缺省）→ 一级主任务导航，直接可见；
+   *  - 'more' → 收进二级「更多」分组，键盘可达、Esc 关闭、点击仍写 `?view=` 深链。
+   * 🔴 分组只决定"露在哪一层"，**不改变** `ready`、key 或深链白名单。
+   */
+  tier?: 'primary' | 'more'
 }
 
 // 类型真值也来自共享模块：Console 与 Workspace 必须认同同一个主题集合。
@@ -56,6 +67,160 @@ interface LivingShellProps {
   dualWorld?: boolean
   /** 阶段条（Adaptive 的驱动源，渲染在 Canvas 顶部）。 */
   stageRail?: ReactNode
+}
+
+/**
+ * 一级与「更多」共用的导航按钮。
+ * 保留「未就绪不可点 + 把原因写进 title」这条 AC-18 不变量；主要可点目标 ≥44×44。
+ */
+function NavButton({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: LivingNavItem
+  active: boolean
+  onNavigate: (key: string) => void
+}) {
+  if (!item.ready) {
+    // 🔴 未就绪：**不可点**，且把原因写进 accessible name —— 不是空按钮。
+    return (
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        title={item.reason}
+        className="flex min-h-11 shrink-0 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] text-lf-text-faint lg:w-full lg:px-1"
+      >
+        <span className="font-medium">{item.label}</span>
+        {/* 「未就绪」是验收文档的口径（相对 ready 而言）。对用户只说一句：
+            这项现在没有，原因在 title 里。 */}
+        <span className="whitespace-nowrap text-[10px] text-lf-text-faint">暂未提供</span>
+      </button>
+    )
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => onNavigate(item.key)}
+      aria-current={active ? 'page' : undefined}
+      title={item.hint}
+      className={[
+        'lf-focus-ring flex min-h-11 shrink-0 flex-col items-center justify-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] transition-colors lg:w-full lg:px-1',
+        active ? 'bg-lf-signal-soft text-lf-signal' : 'text-lf-text-muted hover:text-lf-text',
+      ].join(' ')}
+      style={{ transitionDuration: 'var(--lf-dur-fast)' }}
+    >
+      <span className="font-medium">{item.label}</span>
+    </button>
+  )
+}
+
+/**
+ * 二级导航「更多」（V22 · DEV03）。
+ *
+ *  - 「更多」是**分组**（inline 展开），不是浮层：不受 Dock 的 `overflow-x-auto` 裁剪，
+ *    也没有 transform / resize 定位的隐患；桌面竖列、移动横向条里都保持在文档流中。
+ *  - 键盘可达：触发按钮与展开项都在同一个 `<nav>` 内，Tab 顺序天然可达；
+ *    Esc 关闭并把焦点还给触发按钮；点击外部关闭；focus-visible 由 `lf-focus-ring` 提供。
+ *  - 点击任一项 = `onNavigate(key)`，与一级一致地写 `?view=` 深链（绝不新增点了没反应的按钮）。
+ *  - 「设置 / 证据」只作文字说明，指向顶栏已有的证据面板，不造不可用按钮。
+ *  - 无展开动画（条件渲染），`ChevronDown` 的过渡时长走 `--lf-dur-fast`，
+ *    reduced-motion 时该令牌被清零 → 瞬间切换，与全站降级一致。
+ */
+function MoreNavGroup({
+  items,
+  activeKey,
+  onNavigate,
+}: {
+  items: LivingNavItem[]
+  activeKey: string
+  onNavigate: (key: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const groupRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  // 当前屏正好落在「更多」里（例如 `?view=studio` 深链直达）时，触发按钮也高亮，
+  // 让用户知道"我在这儿"，不必展开才能确认。
+  const activeInside = items.some((i) => i.key === activeKey)
+
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      if (groupRef.current && !groupRef.current.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown, true)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown, true)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [open])
+
+  if (items.length === 0) return null
+
+  return (
+    <div ref={groupRef} className="flex shrink-0 flex-col gap-1 lg:w-full">
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={open ? 'lf-more-nav' : undefined}
+        aria-label={activeInside ? '更多（当前视图在此分组）' : '更多'}
+        className={[
+          'lf-focus-ring flex min-h-11 shrink-0 flex-col items-center justify-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] transition-colors lg:w-full lg:px-1',
+          activeInside ? 'bg-lf-signal-soft text-lf-signal' : 'text-lf-text-muted hover:text-lf-text',
+        ].join(' ')}
+        style={{ transitionDuration: 'var(--lf-dur-fast)' }}
+      >
+        <span className="inline-flex items-center gap-1 font-medium">
+          更多
+          <ChevronDown
+            className="h-3.5 w-3.5 transition-transform"
+            style={{
+              transform: open ? 'rotate(180deg)' : undefined,
+              transitionDuration: 'var(--lf-dur-fast)',
+            }}
+            aria-hidden="true"
+          />
+        </span>
+      </button>
+
+      {open && (
+        <div
+          id="lf-more-nav"
+          role="group"
+          aria-label="更多视图"
+          className="flex flex-col gap-1 rounded-lf border border-lf-line bg-lf-surface-2/60 p-1 lg:w-full"
+        >
+          {items.map((item) => (
+            <NavButton
+              key={item.key}
+              item={item}
+              active={item.key === activeKey}
+              onNavigate={(key) => {
+                onNavigate(key)
+                setOpen(false)
+                // 菜单收起后该项从 DOM 移除，焦点必须回到仍存在的触发按钮（§H 焦点恢复）。
+                triggerRef.current?.focus()
+              }}
+            />
+          ))}
+          <p className="px-2 py-1.5 text-[11px] leading-relaxed text-lf-text-muted">
+            设置与证据在右上角的「证据」面板查看。
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function LivingShell({
@@ -88,6 +253,11 @@ export default function LivingShell({
   })
 
   const hasInspector = Boolean(inspector)
+
+  // V22 · DEV03：只按 `tier` 分呈现层，不增删任何 key、不改 `ready`。
+  // 缺省（未标 tier）一律归入一级，避免"以后加项忘了标"就悄悄消失。
+  const primaryItems = nav.filter((item) => item.tier !== 'more')
+  const moreItems = nav.filter((item) => item.tier === 'more')
 
   return (
     <div
@@ -164,43 +334,17 @@ export default function LivingShell({
           data-lf-world={dualWorld ? 'canvas' : undefined}
           className="flex shrink-0 gap-1 overflow-x-auto border-b border-lf-line bg-lf-surface px-2 py-2 lg:w-20 lg:flex-col lg:overflow-x-visible lg:border-b-0 lg:border-r lg:py-4"
         >
-          {nav.map((item) => {
-            const active = item.key === activeKey
-            if (!item.ready) {
-              // 🔴 未就绪：**不可点**，且把原因写进 accessible name —— 不是空按钮。
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  disabled
-                  aria-disabled="true"
-                  title={item.reason}
-                  className="flex shrink-0 cursor-not-allowed flex-col items-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] text-lf-text-faint lg:w-full lg:px-1"
-                >
-                  <span className="font-medium">{item.label}</span>
-                  {/* 「未就绪」是验收文档的口径（相对 ready 而言）。对用户只说一句：
-                      这项现在没有，原因在 title 里。 */}
-                  <span className="whitespace-nowrap text-[10px] text-lf-text-faint">暂未提供</span>
-                </button>
-              )
-            }
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => onNavigate(item.key)}
-                aria-current={active ? 'page' : undefined}
-                title={item.hint}
-                className={[
-                  'lf-focus-ring flex min-h-11 shrink-0 flex-col items-center justify-center gap-1 rounded-lf px-3 py-2 text-center text-[11px] transition-colors lg:w-full lg:px-1',
-                  active ? 'bg-lf-signal-soft text-lf-signal' : 'text-lf-text-muted hover:text-lf-text',
-                ].join(' ')}
-                style={{ transitionDuration: 'var(--lf-dur-fast)' }}
-              >
-                <span className="font-medium">{item.label}</span>
-              </button>
-            )
-          })}
+          {primaryItems.map((item) => (
+            <NavButton
+              key={item.key}
+              item={item}
+              active={item.key === activeKey}
+              onNavigate={onNavigate}
+            />
+          ))}
+          {moreItems.length > 0 && (
+            <MoreNavGroup items={moreItems} activeKey={activeKey} onNavigate={onNavigate} />
+          )}
         </nav>
 
         {/* ── 中央 Living Canvas ── */}

@@ -1,0 +1,288 @@
+{
+  "capturedAt": "2026-11-16T05:41:01.412Z",
+  "base": "http://127.0.0.1:3214",
+  "evidenceLevel": "LOCAL_PREVIEW",
+  "summary": {
+    "cases": 12,
+    "pagesWithErrors": 1,
+    "failedChecks": [],
+    "goalRelay": "PASS"
+  },
+  "relay": {
+    "verdict": "PASS",
+    "steps": [
+      {
+        "step": "home -> register",
+        "urlOk": true,
+        "url": "http://127.0.0.1:3214/register?goal=Get%20three%20quotes%20for%20a%20home%20repair%20and%20compare%20them"
+      },
+      {
+        "step": "register shows goal",
+        "ok": true
+      },
+      {
+        "step": "sessionStorage draft",
+        "ok": true
+      },
+      {
+        "step": "draft survives reload",
+        "ok": true
+      },
+      {
+        "step": "untrusted goal not executed",
+        "ok": true
+      }
+    ]
+  },
+  "results": [
+    {
+      "case": "home-desktop",
+      "url": "http://127.0.0.1:3214/",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Say what you want done. Stay in control.See what actually happened.",
+        "bodyHead": "L LOKFEEL How it works What works today Pricing Log in Start Say what you want done. Stay in control. See what actually happened. Turn one goal into clear steps, approve the actions that matter, and track evidence-backed progress. Then get back to your day. WHAT DO YOU WANT TO GET DONE? Try with a goal See a real walkthrough Plan a relocation without losing track of the paperwork Get three quotes for a home repair an",
+        "bodyChars": 2867,
+        "hasGoalInput": true,
+        "minSubmitHeight": 46,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "heroMatchesFrozenCopy": true,
+        "noBannedWords": [],
+        "noVerifiedLabel": true,
+        "goalInputPresent": true,
+        "touchTargetOk": true,
+        "noHoldingCopy": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/home-desktop.png"
+    },
+    {
+      "case": "home-tablet",
+      "url": "http://127.0.0.1:3214/",
+      "viewport": "768x1024",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Say what you want done. Stay in control.See what actually happened.",
+        "bodyHead": "L LOKFEEL How it works What works today Pricing Log in Start Say what you want done. Stay in control. See what actually happened. Turn one goal into clear steps, approve the actions that matter, and track evidence-backed progress. Then get back to your day. WHAT DO YOU WANT TO GET DONE? Try with a goal See a real walkthrough Plan a relocation without losing track of the paperwork Get three quotes for a home repair an",
+        "bodyChars": 2867,
+        "hasGoalInput": true,
+        "minSubmitHeight": 46,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "heroMatchesFrozenCopy": true,
+        "noBannedWords": [],
+        "noVerifiedLabel": true,
+        "goalInputPresent": true,
+        "touchTargetOk": true,
+        "noHoldingCopy": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/home-tablet.png"
+    },
+    {
+      "case": "home-mobile",
+      "url": "http://127.0.0.1:3214/",
+      "viewport": "390x844",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Say what you want done. Stay in control.See what actually happened.",
+        "bodyHead": "L LOKFEEL Log in Start Say what you want done. Stay in control.See what actually happened. Turn one goal into clear steps, approve the actions that matter, and track evidence-backed progress. Then get back to your day. WHAT DO YOU WANT TO GET DONE? Try with a goal See a real walkthrough Plan a relocation without losing track of the paperwork Get three quotes for a home repair and compare them Coordinate a small event",
+        "bodyChars": 2828,
+        "hasGoalInput": true,
+        "minSubmitHeight": 46,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "heroMatchesFrozenCopy": true,
+        "noBannedWords": [],
+        "noVerifiedLabel": true,
+        "goalInputPresent": true,
+        "touchTargetOk": true,
+        "noHoldingCopy": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/home-mobile.png"
+    },
+    {
+      "case": "login-desktop",
+      "url": "http://127.0.0.1:3214/login",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Welcome back.",
+        "bodyHead": "L LOKFEEL CONNECTION OS PREFLIGHT This is what your sign-in will provision. IDENTITY waiting for email WORKSPACE personal SKILLS 3 · INTENT_EXTRACTION INTRO_DRAFT COORDINATION_ADVICE GATES consent · budget · approval SESSION httpOnly · issued server-side TENANT resolved from session, never client SELF-APPROVAL REJECTED · CONSENT FAIL-CLOSED · AUDIT SEPARATE FROM LOGS SIGN IN Welcome back. Pick up where your workspace",
+        "bodyChars": 628,
+        "hasGoalInput": false,
+        "minSubmitHeight": 48,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false
+      },
+      "screenshot": "docs/v22/evidence/preview/login-desktop.png"
+    },
+    {
+      "case": "login-mobile",
+      "url": "http://127.0.0.1:3214/login",
+      "viewport": "390x844",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Welcome back.",
+        "bodyHead": "L LOKFEEL SIGN IN Welcome back. Pick up where your workspace left off. Continue with Google Continue with X OR USE EMAIL EMAIL OR PHONE PASSWORD Remember me Forgot password? Log in Continue as guest Create account By signing in you accept the terms and privacy policy.",
+        "bodyChars": 268,
+        "hasGoalInput": false,
+        "minSubmitHeight": 48,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false
+      },
+      "screenshot": "docs/v22/evidence/preview/login-mobile.png"
+    },
+    {
+      "case": "product-desktop",
+      "url": "http://127.0.0.1:3214/product",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Know what you can do, and what needs your OK",
+        "bodyHead": "LokFee! Pricing About Log in Get Started PRODUCT Know what you can do, and what needs your OK Three plain questions, one honest answer each. Every capability is labelled Available, Gated, or Planned, straight from the capability register. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in-app record of what happene",
+        "bodyChars": 3446,
+        "hasGoalInput": false,
+        "minSubmitHeight": null,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "noHoldingCopy": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/product-desktop.png"
+    },
+    {
+      "case": "pricing-desktop",
+      "url": "http://127.0.0.1:3214/pricing",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [
+        "pageerror: Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      ],
+      "checks": {
+        "h1": "Pricing is not published yet",
+        "bodyHead": "LokFee! Pricing About Log in Get Started Pricing is not published yet LokFeel has not published pricing yet; commercial terms are shared only after they are reviewed and approved. Contact us PRODUCT Product Solutions Stories How it works Help center Pricing COMPANY About Us Careers Press Contact SUPPORT FAQ Safety Tips Community Guidelines Support Refunds Cancellations Policy LEGAL Terms of Service Privacy Policy Coo",
+        "bodyChars": 547,
+        "hasGoalInput": false,
+        "minSubmitHeight": null,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "noUnapprovedAmount": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/pricing-desktop.png"
+    },
+    {
+      "case": "solutions-desktop",
+      "url": "http://127.0.0.1:3214/solutions",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Three situations, one honest boundary",
+        "bodyHead": "LokFee! Pricing About Log in Get Started SOLUTIONS Three situations, one honest boundary An individual, a team, and two parties coordinating an introduction. For each one: what you put in, what needs approval, what you get, and what is not live yet. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in-app record of w",
+        "bodyChars": 2805,
+        "hasGoalInput": false,
+        "minSubmitHeight": null,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "noHoldingCopy": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/solutions-desktop.png"
+    },
+    {
+      "case": "how-it-works-desktop",
+      "url": "http://127.0.0.1:3214/how-it-works",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Three steps, nothing hidden",
+        "bodyHead": "LokFee! Pricing About Log in Get Started HOW IT WORKS Three steps, nothing hidden Say the goal, approve what matters, see what happened. The deeper details are folded away until you want them. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in-app record of what happened. Not live yet: actions carried out inside ex",
+        "bodyChars": 1669,
+        "hasGoalInput": false,
+        "minSubmitHeight": null,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "noHoldingCopy": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/how-it-works-desktop.png"
+    },
+    {
+      "case": "stories-desktop",
+      "url": "http://127.0.0.1:3214/stories",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "No customer results published yet",
+        "bodyHead": "LokFee! Pricing About Log in Get Started No customer results published yet. We have no customer case studies, numbers, or confirmed outcomes to show. Anything below is an illustrative demo, labelled on every card. STORIES No customer results published yet We do not dress up demos as success stories. Here is what the in-app flow looks like, clearly marked as illustrative. Where things stand today LokFeel is in a contr",
+        "bodyChars": 2167,
+        "hasGoalInput": false,
+        "minSubmitHeight": null,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false,
+        "noHoldingCopy": true,
+        "noChinese": true
+      },
+      "screenshot": "docs/v22/evidence/preview/stories-desktop.png"
+    },
+    {
+      "case": "about-desktop",
+      "url": "http://127.0.0.1:3214/about",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "About LokFeel",
+        "bodyHead": "LokFee! Pricing About Log in Get Started ABOUT About LokFeel We build for the person who has something to get done, not for an org chart. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in-app record of what happened. Not live yet: actions carried out inside external apps, automatic execution across other tools, an",
+        "bodyChars": 2756,
+        "hasGoalInput": false,
+        "minSubmitHeight": null,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false
+      },
+      "screenshot": "docs/v22/evidence/preview/about-desktop.png"
+    },
+    {
+      "case": "contact-desktop",
+      "url": "http://127.0.0.1:3214/contact",
+      "viewport": "1440x900",
+      "status": 200,
+      "errors": [],
+      "checks": {
+        "h1": "Contact",
+        "bodyHead": "LokFee! Pricing About Log in Get Started Contact Contact details are under review. Contact details are under review. We are confirming which of the addresses below are actually monitored. Until that is done, we make no promise about response times, and we do not publish a mailing address or company details here. Please treat the addresses below as not yet confirmed and do not rely on a reply. Channels currently liste",
+        "bodyChars": 1655,
+        "hasGoalInput": false,
+        "minSubmitHeight": null,
+        "hasHoldingCopy": false,
+        "hasAmount": false,
+        "hasChinese": false
+      },
+      "screenshot": "docs/v22/evidence/preview/contact-desktop.png"
+    }
+  ]
+}

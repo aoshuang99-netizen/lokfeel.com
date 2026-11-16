@@ -11,7 +11,7 @@ const guidelines = [
   {
     icon: Users,
     title: "Be Real",
-    desc: "Show your真实 self. No catfishing, fake photos, or misrepresentation of who you are.",
+    desc: "Show your real self. No catfishing, fake photos, or misrepresentation of who you are.",
   },
   {
     icon: Shield,

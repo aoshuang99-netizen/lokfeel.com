@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
-import { LokFeeLogo } from "@/components/LokFeeLogo";
 import { visiblePublicLinks } from "@/config/public-surface";
 
-export default function Navbar() {
+/**
+ * V22: `frozen` is computed once by the server layout and passed down.
+ * Reading `isPublicSurfaceFrozen()` inside this client component caused a
+ * hydration mismatch (React #418) because non-NEXT_PUBLIC env vars are not
+ * inlined into the browser bundle.
+ */
+export default function Navbar({ frozen }: { frozen: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -21,13 +26,14 @@ export default function Navbar() {
 
   // GA T2：审核中的公开页不得出现在导航里（同一份名单也驱动中间件与 sitemap）。
   // 这不是安全边界 —— 直接访问由 proxy.ts 冻结；这里只避免"点了却看到审核中"。
-  const navLinks = visiblePublicLinks([
-    { label: "Product", href: "/product" },
-    { label: "Solutions", href: "/solutions" },
-    { label: "How it works", href: "/how-it-works" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "About", href: "/about" },
-  ]);
+  const navLinks = visiblePublicLinks(
+    [
+      { label: "How it works", href: "/how-it-works" },
+      { label: "What works today", href: "/product" },
+      { label: "Pricing", href: "/pricing" },
+    ],
+    frozen,
+  );
 
   return (
     <>
@@ -41,9 +47,16 @@ export default function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="group">
-              <LokFeeLogo size="md" showText={true} animated={true} />
+            {/* V22: one brand, plain wordmark. The old "LokFee!" heart/gradient
+                mark belonged to the legacy B2C line and must not lead the
+                ONE product surface. Matches the landing page wordmark. */}
+            <Link href="/" className="group inline-flex items-center gap-2.5" aria-label="LokFeel home">
+              <span className="grid h-8 w-8 place-items-center rounded-md bg-[#0b0e11] font-display text-[13px] font-bold text-white">
+                L
+              </span>
+              <span className="font-display text-[15px] font-bold tracking-[-0.01em] text-foreground">
+                LOKFEEL
+              </span>
             </Link>
 
             {/* Desktop Navigation */}

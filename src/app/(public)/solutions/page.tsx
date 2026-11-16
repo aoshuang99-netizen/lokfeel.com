@@ -1,171 +1,157 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Users2, Target, Briefcase } from "lucide-react";
+import { Target, Users2, Handshake, Lock } from "lucide-react";
 import { BRAND } from "@/config/brand";
-import { PublicHold } from "@/components/marketing/public-hold";
-import { isPublicSurfaceFrozen } from "@/config/public-surface";
 
 export const metadata: Metadata = {
-  // GA T2：审核期间不索引（正文已由 PublicHold 占位，这里只是配套）
-  robots: { index: false, follow: false },
-  title: "Solutions",
+  title: `Solutions — ${BRAND.name}`,
   description:
-    "LokFeel in practice: professional introductions for communities, goal execution for small teams, and collaboration workflows for hiring and cross-border work.",
+    "Three job stories for an individual, a team, and two parties coordinating an introduction. Each states the input, the approval, the in-app result, and the boundary of what is live today.",
   openGraph: {
     title: `Solutions — ${BRAND.name}`,
     description:
-      "Three verified scenarios built on the same chain: intent, consent, approved action, verified outcome.",
+      "Real situations with honest limits: what you put in, what needs approval, what you get, and what is not live yet.",
   },
 };
 
-const scenarios = [
-  {
-    icon: Users2,
-    id: "Professional communities",
-    intro:
-      "A community operator turns member requests into introductions both sides actually agreed to.",
-    roles: "Community operator (operator/owner), the two members being introduced.",
-    trigger: "A member posts a collaboration intent.",
-    actions: [
-      "The operator drafts a proposal between the two parties, with field-level disclosure.",
-      "Both members consent on their own — no consent, no introduction.",
-      "The operator sends the introduction; both sides follow up inside the product.",
-    ],
-    result:
-      "The introduction is recorded; afterwards either side can report the outcome and the counterparty confirms it.",
-    boundary:
-      "Introductions and follow-ups happen in-product (in-app and email notifications). We do not claim delivery to channels we have not integrated.",
-  },
+const boundaryText =
+  "LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in-app record of what happened. Not live yet: actions carried out inside external apps, automatic execution across other tools, and independent confirmation that a result was achieved outside LokFeel. We do not present any of those as available.";
+
+const stories = [
   {
     icon: Target,
-    id: "Small teams",
-    intro:
-      "A team takes a goal from a chat message to an executed, independently verified outcome.",
-    roles: "A member submits the goal; the owner approves; another member verifies.",
-    trigger: "The team records a goal in the workspace (compiled into a mission).",
-    actions: [
-      "The owner approves the agent action — approval and execution are separate powers.",
-      "The agent executes against a real AI provider; progress and failures are visible.",
-      "A third role verifies the outcome, which is recorded as externally verified.",
-    ],
-    result:
-      "The outcome carries a verification level and audit events; the console keeps the whole trail.",
+    id: "For an individual",
+    goal: "Break one complicated piece of digital work into steps you can actually act on.",
+    input: "A goal in your own words.",
+    approval:
+      "You review the suggested steps and decide which actions may go ahead. A key action needs your approval, or a second person, before anything runs.",
+    result: "An editable list of steps and an in-app record of what you decided and what happened.",
     boundary:
-      "Agent execution runs under per-plan quotas and micro-cent budgets. Every plan has finite limits — no unlimited tiers.",
+      "Turning those steps into automatic actions across other apps, and independently confirming a result outside LokFeel, are planned and not live today.",
   },
   {
-    icon: Briefcase,
-    id: "Hiring & cross-border collaboration",
-    intro:
-      "The same chain supports hiring coordination and cross-border team collaboration.",
-    roles: "Whoever owns the relationship manages the proposals; both sides consent.",
-    trigger: "A concrete collaboration need: an introduction, a referral, a joint task.",
-    actions: [
-      "Record the intent, draft the proposal, get consent — identical to the scenarios above.",
-      "Run approved follow-up actions and track them as outcomes.",
-    ],
-    result: "A recorded, consented and verified collaboration step — not an inbox thread.",
+    icon: Users2,
+    id: "For a team",
+    goal: "Organize a meeting, coordinate roles, and start tasks that people have approved.",
+    input: "A shared goal and the people involved.",
+    approval:
+      "A second person approves key actions. The person who requested an action cannot approve their own request.",
+    result: "A task list with an approval trail inside LokFeel, so you can see who agreed to what.",
     boundary:
-      "LokFeel is a general collaboration platform, not an industry-specific solution. If your scenario needs the intent → consent → action → verification chain, it fits.",
+      "Sending a real calendar invite or a real email to an outside service is planned and not live today. An in-app record is not the same as a delivered message.",
+  },
+  {
+    icon: Handshake,
+    id: "For relationship and community collaboration",
+    goal: "Arrange an introduction between two parties who have both agreed to it.",
+    input: "A request and the fields each party is willing to share.",
+    approval:
+      "Both parties give explicit, field-level consent before any field is shared. Silence counts as no.",
+    result: "A consent record and a read-only view of the agreed fields inside LokFeel.",
+    boundary:
+      "Delivering a real introduction to an outside channel and getting a result receipt are planned and not live today.",
   },
 ];
 
 export default function SolutionsPage() {
-  // GA T2：内容安全的保证在**渲染层** —— 审核未完成时这个组件不渲染任何商业声明。
-  if (isPublicSurfaceFrozen()) return <PublicHold />;
   return (
-    <div className="pt-24">
+    <div className="pt-24 pb-20">
       {/* Hero */}
-      <section className="relative py-16 lg:py-24 overflow-hidden">
+      <section className="relative py-16 lg:py-20 overflow-hidden">
         <div className="glow-orb glow-orb-secondary w-[600px] h-[600px] -top-20 -right-20 opacity-30" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <p className="text-primary text-sm font-medium tracking-wide uppercase mb-4">
-            Scenarios
-          </p>
+          <p className="text-primary text-sm font-medium tracking-wide uppercase mb-4">Solutions</p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-            Same chain, <span className="text-gradient">three workloads</span>
+            Three situations, <span className="text-gradient">one honest boundary</span>
           </h1>
           <p className="text-xl text-foreground-muted max-w-2xl mx-auto">
-            Every scenario runs on the same verified path: intent, consent, approved action,
-            outcome. Pick the one closest to your work.
+            An individual, a team, and two parties coordinating an introduction. For each one: what
+            you put in, what needs approval, what you get, and what is not live yet.
           </p>
+
+          <div
+            role="note"
+            aria-label="Current capability boundary"
+            className="glass-card mt-8 p-6 text-left max-w-2xl mx-auto"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Lock className="w-5 h-5 text-primary shrink-0" aria-hidden />
+              <h2 className="text-base font-semibold text-foreground">Where things stand today</h2>
+            </div>
+            <p className="text-sm text-foreground-muted leading-relaxed">{boundaryText}</p>
+          </div>
         </div>
       </section>
 
-      {/* Scenarios */}
-      <section className="py-16 lg:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          {scenarios.map((scenario) => (
-            <article key={scenario.id} className="glass-card p-8">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                  <scenario.icon className="w-6 h-6 text-primary" aria-hidden />
+      {/* Job stories */}
+      <section className="py-12 lg:py-16 bg-background-secondary/30">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-sm text-foreground-subtle mb-8">
+            These are job stories that describe current capability and its limits. They are not
+            customer case studies and they carry no performance numbers.
+          </p>
+          <div className="space-y-8">
+            {stories.map((story, i) => (
+              <article key={story.id} className="glass-card p-8">
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                    <story.icon className="w-6 h-6 text-primary" aria-hidden />
+                  </div>
+                  <div>
+                    <p className="font-mono text-xs text-primary mb-1">
+                      {String(i + 1).padStart(2, "0")}
+                    </p>
+                    <h2 className="text-2xl font-bold text-foreground">{story.id}</h2>
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold text-foreground">{scenario.id}</h2>
-              </div>
-              <p className="text-foreground mb-6">{scenario.intro}</p>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
+                <p className="text-foreground mb-6">{story.goal}</p>
+                <dl className="grid gap-5 md:grid-cols-2">
                   <div>
-                    <h3 className="text-xs font-bold tracking-widest text-white/60 uppercase mb-1">
-                      Roles
-                    </h3>
-                    <p className="text-sm text-foreground-muted">{scenario.roles}</p>
+                    <dt className="text-xs font-bold tracking-widest text-foreground-subtle uppercase mb-1">
+                      Input
+                    </dt>
+                    <dd className="text-sm text-foreground-muted leading-relaxed">{story.input}</dd>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold tracking-widest text-white/60 uppercase mb-1">
-                      Trigger
-                    </h3>
-                    <p className="text-sm text-foreground-muted">{scenario.trigger}</p>
+                    <dt className="text-xs font-bold tracking-widest text-foreground-subtle uppercase mb-1">
+                      Approval
+                    </dt>
+                    <dd className="text-sm text-foreground-muted leading-relaxed">{story.approval}</dd>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold tracking-widest text-white/60 uppercase mb-1">
+                    <dt className="text-xs font-bold tracking-widest text-foreground-subtle uppercase mb-1">
                       Result
-                    </h3>
-                    <p className="text-sm text-foreground-muted">{scenario.result}</p>
+                    </dt>
+                    <dd className="text-sm text-foreground-muted leading-relaxed">{story.result}</dd>
                   </div>
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold tracking-widest text-white/60 uppercase mb-3">
-                    How it runs
-                  </h3>
-                  <ol className="space-y-2">
-                    {scenario.actions.map((action, i) => (
-                      <li key={action} className="flex gap-3 text-sm text-foreground-muted">
-                        <span className="font-mono text-primary shrink-0" aria-hidden>
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        {action}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </div>
-              <p className="mt-6 text-xs leading-relaxed text-foreground-subtle border-t border-white/10 pt-4">
-                <span className="font-semibold text-foreground-muted">Boundary: </span>
-                {scenario.boundary}
-              </p>
-            </article>
-          ))}
+                  <div>
+                    <dt className="text-xs font-bold tracking-widest text-foreground-subtle uppercase mb-1">
+                      Boundary
+                    </dt>
+                    <dd className="text-sm text-foreground-muted leading-relaxed">{story.boundary}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16 lg:py-20 bg-background-secondary/30">
+      <section className="py-16 lg:py-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Closest scenario not listed?
+            Your situation is the starting point
           </h2>
           <p className="text-foreground-muted mb-8">
-            If your work needs the intent → consent → approved action → verification chain, it
-            runs on LokFeel. Ask us, or try it directly.
+            Start with one goal and see the steps, the approvals, and the record for yourself.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/register" className="btn-primary text-lg px-8 py-4">
-              Start free
+            <Link href="/register" className="btn-primary text-lg px-8 py-4 min-h-[44px]">
+              Try with a goal
             </Link>
-            <Link href="/contact" className="btn-secondary text-lg px-8 py-4">
-              Talk to us
+            <Link href="/product" className="btn-secondary text-lg px-8 py-4 min-h-[44px]">
+              Read the product page
             </Link>
           </div>
         </div>

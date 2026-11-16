@@ -7,7 +7,7 @@ import { getProduct } from '@/config/products';
 export const metadata: Metadata = {
   title: 'Hlua Pass（另一条产品线）· LokFeel',
   description:
-    'Hlua Pass 是 streaming 与 H-Points 会员，与 LokFeel Connection OS 是两条独立的产品线。本页说明两者的边界与各自的退款承诺。',
+    'Hlua Pass 是 streaming 与 H-Points 会员，与 the workspace product 是两条独立的产品线。本页说明两者的边界与各自的退款承诺。',
 };
 
 /**
@@ -50,11 +50,11 @@ export default function HluaPage() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">它不是什么</h2>
             <p className="text-foreground leading-relaxed">
-              它不是 <strong>LokFeel Connection OS</strong>（目标 → WorkspaceSpec → Mission →
+              它不是 <strong>the workspace product</strong>（目标 → a structured plan → Mission →
               Agent → Consent → Outcome 的协作系统），也不包含 Workspace、Mission、Agent 或组织功能。
               如果你要找的是那个产品，
               <Link href="/pricing" className="text-primary hover:underline mx-1">
-                请看 Connection OS 的定价页
+                请看 the workspace product 的定价页
               </Link>
               。
             </p>
@@ -92,7 +92,7 @@ export default function HluaPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-3 font-semibold text-foreground hover:bg-white/5 transition"
               >
                 <ArrowLeft className="w-4 h-4" />
-                回到 Connection OS 定价
+                回到 the workspace product 定价
               </Link>
             </div>
           </section>

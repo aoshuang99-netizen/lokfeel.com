@@ -45,6 +45,7 @@ import {
   workspaceViewUrl,
   WORKSPACE_VIEW_PARAM,
 } from '@/lib/living/workspace-view'
+import { restoreGoalDraft } from '@/lib/goal-draft'
 import LivingCanvas from '@/components/living/living-canvas'
 import FieldCanvas from '@/components/living/field/field-canvas'
 import FieldInspector from '@/components/living/field/field-inspector'
@@ -127,24 +128,29 @@ interface OrgOverview {
  * 侧栏七项。`hint` 是 hover 提示，写给用户看 —— 不写"2.5D""逐字段披露"这类设计术语：
  * 用户点开的理由永远是"这对我要办的事有什么用"。
  *
- * V21：导航按**用户动作**重命名（开始 / 工作区 / 关系网络 / 授权 / 成果 / 执行团队 / 任务）。
+ * V22：一级只露 4 个中文主任务（开始 / 我的任务 / 待我确认 / 成果），其余 3 项收进二级「更多」。
  * `key` 不动 —— URL `?view=` 深链接、历史与外部引用全部不受影响（03_UI_DESIGN_CONTRACT 的
  * 信息架构迁移要求：改名不改 key，就是迁移与兼容方案）。
- * 「任务」`ready:true`：服务端列表/详情/迁移端点早已存在（C00 盘点），死入口是纯前端遗留。
+ * 「我的任务」`ready:true`：服务端列表/详情/迁移端点早已存在（C00 盘点），死入口是纯前端遗留。
  */
+// V22 · DEV03（总令 §E）：7 个内部 key 一个不删、全部 `ready:true`；
+// `tier` 只决定「一级 4 主任务 / 二级『更多』3 项」的呈现层级，不改 key、不改深链。
+// label / hint 全中文，技术专名与英文行动词不进用户可见导航。
 const NAV: LivingNavItem[] = [
-  { key: 'now', label: '开始', hint: '今天要推进什么', ready: true },
-  { key: 'studio', label: '工作区', hint: '把一句话摊成能跑的方案', ready: true },
-  { key: 'field', label: '关系网络', hint: '谁认识谁，谁在等你', ready: true },
-  { key: 'consent', label: '授权', hint: '谁能看到你的哪个字段', ready: true },
-  { key: 'outcomes', label: '成果', hint: '做成了什么，怎么核验', ready: true },
-  { key: 'agents', label: '执行团队', hint: 'Agent 干了什么，哪一步等你批', ready: true },
-  { key: 'missions', label: '任务', hint: '你交代过的事都在这里', ready: true },
+  { key: 'now', label: '开始', hint: '今天要推进什么', ready: true, tier: 'primary' },
+  { key: 'missions', label: '我的任务', hint: '你交代过的事都在这里', ready: true, tier: 'primary' },
+  { key: 'consent', label: '待我确认', hint: '哪些动作等我点头', ready: true, tier: 'primary' },
+  { key: 'outcomes', label: '成果', hint: '做成了什么，怎么核验', ready: true, tier: 'primary' },
+  { key: 'studio', label: '方案编辑', hint: '把目标摊成能改的步骤', ready: true, tier: 'more' },
+  { key: 'field', label: '关系网络', hint: '谁认识谁，谁在等你', ready: true, tier: 'more' },
+  { key: 'agents', label: '执行记录', hint: '每一步是谁做的、卡在哪', ready: true, tier: 'more' },
 ]
 
 /**
  * 深链接白名单：**由 NAV 派生**，不是另抄一份字面量。
- * `ready:false` 的 `missions` 自动被排除 —— 拼 `?view=missions` 不会绕过「未开放功能不伪装可用」。
+ * 7 个 key 全部 `ready:true`（含收进「更多」的 studio/field/agents），故 7 个
+ * `?view=<key>` 全部可解析：刷新、前进/后退、直接粘贴链接都直达对应屏。
+ * 🔴 `tier` 不参与过滤 —— 呈现分组绝不缩窄白名单（workspace-view.ts 语义保持不变）。
  */
 const READY_VIEW_KEYS: readonly string[] = NAV.filter((item) => item.ready).map((item) => item.key)
 
@@ -291,7 +297,7 @@ function ConsentSubTabs({
     { key: 'bridge' as const, label: '跨社群', hint: '跨群：两个群主各自划范围、成员逐个加入' },
   ]
   return (
-    <div role="tablist" aria-label="Consent 区子面板" className="flex flex-wrap gap-2">
+    <div role="tablist" aria-label="待我确认区的子面板" className="flex flex-wrap gap-2">
       {tabs.map((t) => {
         const active = t.key === value
         return (
@@ -362,6 +368,21 @@ export default function LivingWorkspace() {
   }, [])
 
   const [draft, setDraft] = useState('')
+  /**
+   * V22 §F: prefill the real goal composer from the carried draft
+   * (`?goal=` or sessionStorage) after mount. Initial state stays '' so the
+   * SSR output and first hydration match; this only sets the initial value.
+   * Submit / intent / create-mission / race / idempotency logic is untouched.
+   */
+  useEffect(() => {
+    const carried = restoreGoalDraft()
+    if (carried) {
+      // Mount-only prefill from client state (URL/storage): initial state stays ''
+      // on both server and first client render, so hydration matches.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDraft(carried)
+    }
+  }, [])
   /**
    * V21 · C03：理解结果改由 IntentGateway 产出（服务端真实链路 + 来源标注）。
    * `null` = 还没提交过；error 也存进来 —— 用户改一改还能再试，不该把失败态吞掉。
@@ -485,6 +506,18 @@ export default function LivingWorkspace() {
 
   const unreadNotifications = notifications.data?.unreadCount ?? null
   const unreadChats = chats.data?.unreadCount ?? null
+
+  /**
+   * V22 · DEV03（总令 §E）：首屏接口异常收敛成**一条独立提示条**。
+   * 只聚合首屏真正会发的 4 个请求；「重新加载」逐个 refetch（真实重取，不删数据接线）。
+   * `null`（还没读到）不算异常 —— 它仍是诚实的「—」，不该被当成错误惊扰用户。
+   */
+  const recoverableErrors = [
+    notifications.error,
+    chats.error,
+    org.error,
+    proposals.error,
+  ].filter((e): e is string => Boolean(e))
 
   const latestNotifications = useMemo(
     () => (notifications.data?.notifications ?? []).slice(0, 6),
@@ -931,9 +964,9 @@ export default function LivingWorkspace() {
               setSelectedMissionId(createResult.missionId)
               navigateTo('missions')
             }}
-            className="lf-focus-ring mt-2 rounded-lf px-2 py-1 text-xs text-lf-signal transition-colors hover:bg-lf-surface-2"
+            className="lf-focus-ring mt-2 inline-flex min-h-11 items-center rounded-lf px-2 text-xs text-lf-signal transition-colors hover:bg-lf-surface-2"
           >
-            在「任务」里查看 →
+            在「我的任务」里查看 →
           </button>
           <p className="mt-1 text-[11px] text-lf-text-faint">
             幂等键 {attempt?.key ?? '—'}（同一份草稿重试会复用该键，因此不会重复创建）。
@@ -979,9 +1012,15 @@ export default function LivingWorkspace() {
       nav={NAV}
       activeKey={activeKey}
       onNavigate={navigateTo}
-      title="My Workspace"
+      title="我的工作区"
       dualWorld
-      stageRail={<StageRail stages={stages} activeView={activeKey} onFocusView={navigateTo} />}
+      stageRail={
+        /* Now 首屏主操作是「写下目标」；阶段条（四段计数 / 读不到）是系统状态，
+           不压在它之前。其余屏仍保留阶段条；数据 hooks 照常接线、不删。 */
+        activeKey === 'now' ? undefined : (
+          <StageRail stages={stages} activeView={activeKey} onFocusView={navigateTo} />
+        )
+      }
       contextExtra={
         <span className="hidden items-center gap-1 rounded-lf border border-lf-line px-2 py-1 text-xs text-lf-text-muted sm:inline-flex">
           <Bell className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1007,14 +1046,14 @@ export default function LivingWorkspace() {
               style={{ background: 'linear-gradient(90deg, transparent, var(--lf-signal), transparent)' }}
             />
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-lf-text-faint">
-              Now · 你的工作区
+              开始 · 你的工作区
             </p>
             <h1 className="mt-3 text-[1.7rem] font-semibold leading-[1.15] tracking-[-0.02em] text-lf-text lg:text-[2.1rem]">
               今天想推进什么？
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-lf-text-muted">
               一句话说清结果、期限，和你愿意拿出的东西。它会摊成一张能跑的工作区：
-              谁提案、谁点头、Agent 做什么、什么算成交。
+              谁提案、谁点头、由谁执行、什么算成交。
             </p>
 
             <div className="mt-5 rounded-lf border border-lf-line bg-lf-bg/40 px-2 pb-1 pt-2 transition-colors focus-within:border-lf-signal/60">
@@ -1032,7 +1071,7 @@ export default function LivingWorkspace() {
                     setDraft(seed.goal)
                     document.getElementById('lf-composer')?.focus()
                   }}
-                  className="lf-focus-ring min-h-9 rounded-full border border-lf-line px-3 text-[12px] text-lf-text-muted transition-colors hover:border-lf-line-strong hover:text-lf-text"
+                  className="lf-focus-ring min-h-11 rounded-full border border-lf-line px-3 text-[12px] text-lf-text-muted transition-colors hover:border-lf-line-strong hover:text-lf-text"
                   style={{ transitionDuration: 'var(--lf-dur-fast)' }}
                 >
                   {seed.label}
@@ -1040,6 +1079,33 @@ export default function LivingWorkspace() {
               ))}
             </div>
           </section>
+
+          {/*
+            V22 · DEV03（总令 §E）：接口异常收敛成一条独立提示条，放在主操作之后。
+            只给一个可执行的下一步「重新加载」（真实 refetch 首屏 4 个请求）；
+            不把「读不到 / 错误计数」这类系统状态压到用户要办的事之前，也不删真实数据接线。
+          */}
+          {recoverableErrors.length > 0 && (
+            <div
+              role="status"
+              className="flex flex-wrap items-center gap-2 rounded-lf border border-lf-danger/40 bg-lf-surface-2 p-3 text-sm text-lf-text"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 text-lf-danger" aria-hidden="true" />
+              <span className="min-w-0 flex-1">部分信息暂时没读到，不影响你写下目标。</span>
+              <button
+                type="button"
+                onClick={() => {
+                  notifications.refetch()
+                  chats.refetch()
+                  org.refetch()
+                  proposals.refetch()
+                }}
+                className="lf-focus-ring inline-flex min-h-11 shrink-0 items-center justify-center rounded-lf border border-lf-line-strong px-3 text-xs text-lf-text transition-colors hover:bg-lf-surface-2"
+              >
+                重新加载
+              </button>
+            </div>
+          )}
 
           {/*
             V21 · F02：提交后**原位**出现理解摘要与可执行方案 —— 不强行跳到配置页。
@@ -1155,7 +1221,7 @@ export default function LivingWorkspace() {
 
       {activeKey === 'studio' && (
         <div className="space-y-4">
-          <h1 className="text-lg font-semibold">工作区</h1>
+          <h1 className="text-lg font-semibold">方案编辑</h1>
           <p className="text-sm text-lf-text-muted">
             在「开始」写下目标后，方案会摊在这里：要联系谁、要谁同意、做成什么算完成、
             结果怎么核验。每一步都会落到真实记录上，不是画给你看的一张图。

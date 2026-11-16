@@ -1,0 +1,28 @@
+﻿priority,evidence_level,route,job_to_be_done,known_issue_or_risk,acceptance_condition,owner
+P0,LIVE,/,首页定位,战略/文案/布局/案例证据,5秒测试>=8/10且 CTA 到目标输入,Marketing+QA
+P0,LIVE,/workspace?view=studio,计划编辑,中英混用/编译技术语/计数读不到,直接深链显示任务方案，编辑保存后有版本回执,Frontend+QA
+P0,SCREENSHOT,/workspace?view=now,开始界面,使命条+四读不到压住主操作,输入先于审计面，模型/规则来源真实，竞态负控,Frontend+QA
+P0,SOURCE,/product,能力说明,技术术语过密,能力状态/真实动作/限制一一关联,Product+Marketing
+P0,SOURCE,/solutions,场景,团队行业为中心,个人/团队/社群真实任务3类且证据真实,Product+Marketing
+P0,SOURCE,/how-it-works,使用流程,7步骤偏系统,3步主叙事，第一次使用<=2 clicks到输入,Product+Frontend
+P0,SOURCE,/stories,案例,demo与verified容易混淆,演示与真实客户证据显著隔离,Legal+Marketing
+P0,SOURCE,/pricing,订阅,B2C/Hlua/OS混杂,D1未批不显示金额，SSR/JSON/API门禁一致,Billing+Legal
+P1,SOURCE,/help,帮助,以系统分类,按用户问题，5问题可完成恢复,Support
+P1,SOURCE,/about,公司使命,not single-player表述偏离个人优先,新使命与真实主体一致,Strategy+Legal
+P0,SOURCE,/contact,联系方式,注册地址待核实占位,联系方式测试通过，未核实信息不外露,Legal+Support
+P0,SOURCE,/terms,服务协议,主体/产品范围,法务主体真实且权益一致,Legal
+P0,SOURCE,/privacy,隐私政策,旧业务与新授权混用风险,数据类别/授权/撤回真实合规,Legal+Security
+P0,SOURCE,/refunds,退款,历史条款与新产品可能冲突,退款主体、产品和支付渠道一致,Legal+Billing
+P1,SOURCE,/login,登录,首次使用流需要回收,登录后目标草稿保留,Frontend+QA
+P1,SOURCE,/register,注册,转化路径可能断,注册后自动回到目标,Frontend+QA
+P1,SOURCE,/dashboard/onboarding,入门,组织门槛需要核对,无组织用户不假死，有清晰最小路径,Frontend+Backend
+P1,SOURCE,/support,客服,可能与help重复,入口真实可达，反馈可记录,Support
+P1,SOURCE,/faq,常见问题,与help重复,答案一致且canonical正确,Support
+P0,SOURCE,/workspace?view=missions,任务列表,线上Missions未提供,GA具备真实列表、详情、409、无假空态,Frontend+Backend
+P0,SOURCE,/workspace?view=consent,授权,服务端决策/角色隔离,自审批/撤销/跨租户负例拒绝,Security+Backend
+P0,SOURCE,/workspace?view=agents,执行记录,IN_APP回执≠外部动作,真实执行范围准确标记；证据可追,Backend+QA
+P0,SOURCE,/workspace?view=outcomes,成果,verified可能滥用,无Provider证据不得VERIFIED,Backend+QA
+P1,SOURCE,/workspace?view=field,关系网络,个人授权/隐私,取消授权后关系不可读,Security+Frontend
+P0,REPORT,CI/Netlify,部署治理,main无保护,未审批push/失败required checks无法触发生产,Release+Security
+P0,REPORT,G15 9页,性能,9/9未达,9/9 TBT<=200 LCP<=2500 CLS<=0.1 同环境原始trace,Perf+QA
+P0,REPORT,public i18n,混语,英文导航中文正文,语言切换后非品牌混语=0,Frontend+QA

@@ -30,6 +30,8 @@ import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
 
 // X (Twitter) — Native OAuth 2.0 + PKCE redirect
 import { useSearchParams } from "next/navigation";
+// V22 §F: carry the typed goal through signup onto the Now screen.
+import { restoreGoalDraft, withGoal, writeGoalDraft } from "@/lib/goal-draft";
 
 // ─── Registration State Persistence ───
 const REG_STATE_KEY = 'lokfeel_register_state';
@@ -123,6 +125,8 @@ export default function RegisterPage() {
   const [dobYear, setDobYear] = useState("");
   const [dobMonth, setDobMonth] = useState("");
   const [dobDay, setDobDay] = useState("");
+  /** V22 §F: the original goal carried from the landing page (read-only display). */
+  const [goalDraft, setGoalDraft] = useState("");
 
   // ─── Restore state on mount ───
   useEffect(() => {
@@ -139,6 +143,21 @@ export default function RegisterPage() {
       if (saved.sentInfo) setSentInfo(saved.sentInfo);
     } else if (saved && saved.phase === 'form' && saved.formData.email) {
       setFormData(prev => ({ ...prev, ...saved.formData }));
+    }
+  }, []);
+
+  // ─── V22 §F: restore the goal draft carried from the landing page ───
+  // URL `?goal=` wins, then sessionStorage (so a refresh still recovers it).
+  // Persist whatever we restored: a shared /register?goal= link may have had no
+  // prior storage write, and we want the draft to survive a later reload/redirect.
+  useEffect(() => {
+    const restored = restoreGoalDraft();
+    if (restored) {
+      // Mount-only restore from client state (URL/storage): initial state stays ""
+      // on both server and first client render, so hydration matches.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setGoalDraft(restored);
+      writeGoalDraft(restored);
     }
   }, []);
 
@@ -366,7 +385,13 @@ export default function RegisterPage() {
             if (signInResult?.ok || signInResult?.url) {
               clearRegState();
               await new Promise(resolve => setTimeout(resolve, 500));
-              window.location.href = data.redirectTo || "/dashboard/onboarding";
+              // V22 §F: with a goal draft, land on the Now screen with the goal
+              // prefilled so the user can create a plan right away. Without a
+              // draft, keep the existing login/onboarding target untouched.
+              const carriedGoal = restoreGoalDraft();
+              window.location.href = carriedGoal
+                ? withGoal("/workspace?view=now", carriedGoal)
+                : (data.redirectTo || "/dashboard/onboarding");
               return;
             }
           }
@@ -376,13 +401,30 @@ export default function RegisterPage() {
       }
 
       clearRegState();
-      router.push("/login?registered=true");
+      // Keep the original login target, but carry the goal onto it so the relay
+      // is not lost when auto-login is unavailable.
+      router.push(withGoal("/login?registered=true", restoreGoalDraft()));
     } catch (err: any) {
       setError(err.message || "Verification failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  /**
+   * V22 §F: show the original goal above the form so the user knows it is kept.
+   * `goalDraft` comes from an untrusted URL param / storage — it is rendered as a
+   * React TEXT node only (auto-escaped). No dangerouslySetInnerHTML, no innerHTML.
+   */
+  const goalDraftHint = goalDraft ? (
+    <div
+      className="mb-4 rounded-xl border border-primary/25 bg-primary-muted p-3 text-sm"
+      data-testid="goal-draft-hint"
+    >
+      <p className="font-medium text-foreground">Your goal will be waiting after you sign up</p>
+      <p className="mt-1 break-words text-foreground-muted">{goalDraft}</p>
+    </div>
+  ) : null;
 
   // ─── VERIFY PHASE ───
   if (phase === "verify") {
@@ -402,6 +444,8 @@ export default function RegisterPage() {
             <span className="text-foreground font-medium">{sentInfo.maskedIdentifier || formData.email}</span>
           </p>
         </div>
+
+        {goalDraftHint}
 
         {/* Dev mode code display */}
         {sentInfo.devMode && (
@@ -494,7 +538,7 @@ export default function RegisterPage() {
       <div className="flex flex-col gap-2.5 mb-5">
         {/* Google — GIS with FedCM */}
         <GoogleSignInButton
-          callbackUrl="/dashboard/onboarding"
+          callbackUrl={withGoal("/dashboard/onboarding", goalDraft)}
           disabled={isLoading}
           label="Continue with Google"
         />
@@ -502,7 +546,7 @@ export default function RegisterPage() {
         {/* X (Twitter) — Native OAuth 2.0 + PKCE */}
         <button
           type="button"
-          onClick={() => { window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent("/dashboard/onboarding")}`; }}
+          onClick={() => { window.location.href = `/api/auth/twitter/signin?callbackUrl=${encodeURIComponent(withGoal("/dashboard/onboarding", goalDraft))}`; }}
           disabled={isLoading}
           className="auth-social-btn w-full"
         >
@@ -531,6 +575,9 @@ export default function RegisterPage() {
           {error}
         </div>
       )}
+
+      {/* ─── V22 §F: the original goal, shown above the form ─── */}
+      {goalDraftHint}
 
       {/* REGISTRATION FORM */}
       <form

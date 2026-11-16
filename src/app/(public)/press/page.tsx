@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 const factSheet = [
   {
     label: "Category",
-    value: "Agent-Native Connection OS",
+    value: "A workspace for coordinating goals and approvals",
   },
   {
     label: "Core mechanism",
@@ -29,7 +29,7 @@ const factSheet = [
   },
   {
     label: "Machine surface",
-    value: "MCP server (5 tools), A2A task API, published OpenAPI contract",
+    value: "Published machine interfaces and an OpenAPI contract",
   },
   {
     label: "Data isolation",
