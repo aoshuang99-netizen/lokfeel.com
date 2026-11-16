@@ -10,7 +10,7 @@
 | 本分支基线 | `6bab34c`（V22 第一批） | `git log` |
 | 远端 main | `cad717e` | `git ls-remote`（LIVE） |
 | 生产 | `b50e53e` / healthy / `commitSource=env` | `GET /api/health`（LIVE，`BASELINE.json`） |
-| 本批提交 | 见 `git log` HEAD（本文件提交后回填） | — |
+| 本批提交 | `2767ede`（证据）→ `c814cc4`（第一批）→ `487fbe5`（e2e 断言修复） | `git log` |
 
 ## 第一批任务卡（按总令 §09 格式）
 
@@ -35,7 +35,7 @@
 
 ### U01 / 关系优先 IA（第一批部分）— `TESTED_LOCAL`
 - **代码**：`src/app/workspace/living-workspace.tsx` NAV 一级 4 主任务改「发现适合的人 / 我的介绍 / 等待双方确认 / 关系进展」，二级「引荐方案 / 关系网络 / AI 辅助记录」；**7 个 `?view=` key 与深链全部保留**（改名不改 key）。
-- **测试**：`tests/e2e-ci/workspace-tabs.spec.ts` 标签同步更新；**e2e 本轮未在本地跑**（CI 门禁执行），不冒充 PASS。
+- **测试**：`tests/e2e-ci/workspace-tabs.spec.ts` 标签同步更新；本地 e2e **16/16**（390×844 与 360×800 × 7 视图 + 结构断言），7 个 `?view=` key 全实测。
 
 ### U02 / 官网首页（第一批部分）— `TESTED_LOCAL`
 - **代码**：`src/app/(landing)/page.tsx` 重写为 relationship-first（Hero `Meet people worth knowing. Both people choose. Real connections follow.`；唯一主动作 = 关系意图输入；**sessionStorage 草稿、私密偏好不进 URL**（U06 前置）；truth gate 同屏声明「无真实介绍样本、无客户结果」）；`src/app/layout.tsx` 根 metadata + OG/Twitter 卡全部去 `Connection OS` 叙事；`src/config/brand.ts` 冻结 V23 品类/标语，禁词表增 `Agent-Native Connection OS` / `Every outcome verified`。
@@ -49,8 +49,16 @@
 | 类型 | `env -u NODE_OPTIONS npx tsc --noEmit` | exit 0 |
 | 改动面 lint | `env -u NODE_OPTIONS npx eslint <6 个改动文件>` | exit 0 |
 | 单元 | `env -u NODE_OPTIONS npx jest --silent` | **162 suites / 2926 tests** 全过 |
-| 构建 | `env -u NODE_OPTIONS npm run build` | 见提交信息回填 |
-| e2e / axe / 视口 | — | **未跑**（CI / 后续批次） |
+| 构建 | `env -u NODE_OPTIONS npm run build` | exit 0（沙箱外执行，`prisma generate` 需重写 `src/generated`） |
+| 品牌扫描 | `env -u NODE_OPTIONS node scripts/qa/verify-brand-scan.mjs` | 27 页 / 0 命中 |
+| e2e（分批） | `bash /tmp/lf-e2e-run.sh <spec 分组>` | **全部分批通过**：smoke+register-form、workspace-now / -race / -tabs（16/16）、auth-dialogs 11/11、mobile / legacy-mobile / authed-mobile / dialogs / cache-headers |
+| 单次全量 e2e | `bash /tmp/lf-e2e-run.sh` | 未成功一次跑完：先被沙箱 `unlink` 拦截（提权后重试）、再遇进程僵死 `SQLITE_IOERR`（已清理）、最后 exit 137 被系统终止 ⇒ **按套件分批实测**，不把单次全量宣称通过 |
+| 7 视口 / axe / 真人测试 | — | **未跑**（U08 / Q05 后续批次） |
+
+e2e 过程中的三个真实问题及处置（不掩盖）：
+1. `smoke ⑥` 两处断言停留在旧契约（`Connection OS` 文案、`commercialApproval.status`）⇒ 修为 V23 品牌 + `pricingPublished`，见 `487fbe5`。
+2. `auth-dialogs ⑥` 焦点恢复在一次并发批次中失败，单独复跑通过（时序敏感，非本批改动）。
+3. `auth-dialogs ⑦` 二次跑撞 24h 举报去重的陈旧行 ⇒ 清理隔离库 `UserReport`（`reporterId` 为 QA chat A）后 11/11 通过；本批未改举报代码。
 
 ## 已知未闭合（不因本批收窄）
 
