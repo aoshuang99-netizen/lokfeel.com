@@ -1,29 +1,34 @@
 "use client";
 
 /**
- * LANDING PAGE — V22 strategic recovery.
+ * LANDING PAGE — V23 Relationship-first reset.
  *
- * Product lock (docs/v22/STRATEGY_LOCK.md):
- *   "Let AI carry the digital complexity so people can return to real life."
- *   ONE Goal -> controllable action -> checkable result -> leave the screen.
+ * Product lock (docs/v23/STRATEGY_LOCK.md §1):
+ *   "AI-Native Relationship & Generative Social Platform"
+ *   Real Person -> Relationship Intent -> AI Recommendation -> Mutual Consent
+ *   -> Verified Introduction -> Communication -> Follow-up -> Relationship Outcome
  *
- * What changed vs the v4 page this replaces:
- *   - Hero uses the frozen GA candidate copy; no product-architecture words.
- *   - The primary action is a real goal input that carries the typed goal into
- *     signup, not a decorative "compile" demo or a static 3D diagram.
- *   - No live counters, stage names, token chips, MCP/REST stats or "verified"
- *     case numbers on the first screen. Internal evidence lives on /product.
- *   - Capability boundaries are visible in the same screen as the promise,
- *     not hidden in a footer disclaimer.
+ * What changed vs the V22 page this replaces:
+ *   - The first screen is about real people and trusted introductions, not an
+ *     "any goal you want done" personal agent OS.
+ *   - The single primary action asks what kind of relationship the visitor
+ *     wants to build. It is a real draft carried into signup, not a demo.
+ *   - No fake people, no compatibility percentages, no fake counters, no
+ *     published prices, no "verified success" case numbers.
+ *   - Relationship intent is kept in sessionStorage only. V23 U06 forbids
+ *     private preferences in the URL; the legacy `?goal=` reader is retained
+ *     for old links but no new link writes private intent into a URL.
+ *   - Capability boundaries are on the same screen as the promise.
  *
- * Truth gate: external action execution and independent outcome verification
- * are NOT live. This page must never imply they are.
+ * Truth gate: there are NO real two-sided introduction samples yet. Nothing on
+ * this page may imply that introductions have been delivered or that a
+ * relationship outcome has been achieved.
  */
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { withGoal, writeGoalDraft } from "@/lib/goal-draft";
+import { writeGoalDraft } from "@/lib/goal-draft";
 
 /* ─────────────────────────── design tokens ─────────────────────────── */
 
@@ -35,29 +40,31 @@ const FAINT = "#626a70";
 const LINE = "rgba(11,14,17,0.12)";
 const WHITE = "#ffffff";
 
-/* ─────────────────────────── goal entry ─────────────────────────── */
+/* ───────────────────── relationship intent entry ───────────────────── */
 
-const EXAMPLES = [
-  "Plan a relocation without losing track of the paperwork",
-  "Get three quotes for a home repair and compare them",
-  "Coordinate a small event with five people",
+/** Examples describe intent only. No sensitive attributes, no invented people. */
+const INTENT_EXAMPLES = [
+  "I'd like to meet someone who shares my pace of life and wants something long-term",
+  "I want to be introduced to people in my city who care about the same things I do",
+  "Our community would like to introduce two members who could work well together",
 ];
 
 /**
- * GoalForm is the single primary action. The typed goal is persisted in
- * sessionStorage and passed as ?goal= so /register and /workspace can restore
- * it after auth. No goal is fabricated and nothing is sent to a model here.
+ * IntentForm is the single primary action. The draft lives in sessionStorage
+ * and is restored by /register and the signed-in home. Nothing is sent to a
+ * model here, nothing is written to the URL, and no candidate is fabricated.
  */
-function GoalForm({ compact = false }: { compact?: boolean }) {
+function IntentForm({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
-  const [goal, setGoal] = useState("");
+  const [intent, setIntent] = useState("");
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const trimmed = goal.trim();
+    const trimmed = intent.trim();
     if (trimmed.length < 4) return;
+    // V23 U06: private relationship intent must not appear in a URL.
     writeGoalDraft(trimmed);
-    router.push(withGoal("/register", trimmed));
+    router.push("/register");
   };
 
   return (
@@ -67,27 +74,28 @@ function GoalForm({ compact = false }: { compact?: boolean }) {
         className="font-mono text-[10.5px] uppercase tracking-[0.18em]"
         style={{ color: FAINT }}
       >
-        What do you want to get done?
+        Who would you like to meet?
       </label>
       <textarea
         id="goal-input"
         name="goal"
-        value={goal}
-        onChange={(e) => setGoal(e.target.value)}
+        value={intent}
+        onChange={(e) => setIntent(e.target.value)}
         rows={compact ? 2 : 3}
         maxLength={240}
         className="mt-2.5 w-full resize-none rounded-xl border px-4 py-3 text-[16px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-[#8a5a1e]"
         style={{ borderColor: LINE, background: WHITE, color: INK }}
-        placeholder="e.g. Get three quotes for a home repair and compare them"
+        placeholder="e.g. I'd like to meet someone who wants a long-term relationship and lives nearby"
       />
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
           type="submit"
           className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-[14.5px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
           style={{ background: INK }}
-          disabled={goal.trim().length < 4}
+          disabled={intent.trim().length < 4}
+          data-testid="intent-submit"
         >
-          Try with a goal
+          Start with this intent
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -97,16 +105,16 @@ function GoalForm({ compact = false }: { compact?: boolean }) {
           className="inline-flex min-h-11 items-center rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors hover:bg-black/[0.03]"
           style={{ borderColor: LINE, color: INK }}
         >
-          See a real walkthrough
+          How an introduction works
         </Link>
       </div>
       {!compact && (
         <div className="mt-5 flex flex-wrap gap-2">
-          {EXAMPLES.map((sample) => (
+          {INTENT_EXAMPLES.map((sample) => (
             <button
               key={sample}
               type="button"
-              onClick={() => setGoal(sample)}
+              onClick={() => setIntent(sample)}
               className="cursor-pointer rounded-full border px-3 py-2 text-left text-[12px] leading-snug transition-colors hover:bg-black/[0.03]"
               style={{ borderColor: LINE, color: MUTED }}
             >
@@ -124,68 +132,63 @@ function GoalForm({ compact = false }: { compact?: boolean }) {
 const STEPS = [
   {
     n: "01",
-    t: "Say the goal",
-    d: "Write what you want done in your own words. No setup, no template to fill in first.",
+    t: "Say who you want to meet",
+    d: "Describe the kind of relationship you are looking for and the boundaries that matter to you. You can edit it later.",
   },
   {
     n: "02",
-    t: "Approve what matters",
-    d: "Read the proposed steps, edit them, and decide which actions need your explicit yes.",
+    t: "Both people decide",
+    d: "You see a small number of real candidates with the reasons for each. Nothing is shared until both sides say yes.",
   },
   {
     n: "03",
-    t: "See what happened",
-    d: "Each step leaves a record you can open. A task being created is not the same as the result being achieved.",
+    t: "Meet, talk, follow through",
+    d: "After a proper introduction you can talk, plan to meet and each give feedback. A sent message is not a relationship result.",
   },
 ];
 
-const SCENARIOS = [
+/** Two products, kept visibly separate (STRATEGY_LOCK §2). */
+const PRODUCTS = [
   {
-    t: "For one person",
-    d: "Turn a messy personal task into a short list of steps, and be reminded when a decision is yours to make.",
-    now: "Goal to editable steps · explicit decisions · an in-app record",
-    later: "Sending those steps to outside services on your behalf",
+    t: "For people",
+    d: "You want fewer wrong introductions and more people worth knowing. You set the intent, see why someone was suggested, and keep the choice to accept or decline.",
+    now: "Relationship intent · explained candidates · a real choice for both sides",
+    later: "Published real introduction results (none yet)",
   },
   {
-    t: "For a small team",
-    d: "Agree on who does what before anything runs, and keep a record of what was actually approved.",
-    now: "Shared tasks · a second person must approve consequential actions",
-    later: "Automatic delivery to external calendars or mail",
-  },
-  {
-    t: "For a relationship",
-    d: "Arrange an introduction only after both people have agreed to share the relevant details.",
-    now: "Field-level consent · silence means no · withdrawal of access",
-    later: "Independent confirmation that the introduction really happened",
+    t: "For community organisers",
+    d: "You look after a group of real members and want to make a small number of well-reviewed introductions, then follow what happened.",
+    now: "Separate member records · review before anything is sent · follow-up records",
+    later: "Paid pilot pricing and organisation-level reporting (not approved)",
   },
 ];
 
 const BOUNDARIES = [
   {
-    state: "Available today",
+    state: "Working today",
     tone: SIGNAL_DEEP,
     items: [
-      "Turn a goal into steps you can edit",
-      "Decide which fields another person may see",
-      "Keep an in-app record of what was run",
+      "State and edit a relationship intent",
+      "Two independent decisions before contact details are shared",
+      "Field-level disclosure, withdrawal and a visible record",
     ],
   },
   {
-    state: "Needs your approval",
+    state: "Needs both people",
     tone: INK,
     items: [
-      "Any consequential action waits for an explicit decision",
-      "A different person must approve a request they did not raise",
-      "Approvals expire and can be withdrawn",
+      "An introduction only after both sides accept",
+      "Only the fields each person allowed can be shared",
+      "A decline stops further contact instead of being retried",
     ],
   },
   {
     state: "Not live yet",
     tone: MUTED,
     items: [
-      "Sending actions to outside services",
-      "Receipts from an external provider",
-      "Independent verification that the outcome was achieved",
+      "Any real introduction delivered to a person outside this product",
+      "Independently confirmed meeting or relationship outcomes",
+      "Published prices, customer results or success rates",
     ],
   },
 ];
@@ -225,6 +228,7 @@ export default function LandingPage() {
             {[
               ["How it works", "/how-it-works"],
               ["What works today", "/product"],
+              ["For communities", "/solutions"],
               ["Pricing", "/pricing"],
             ].map(([label, href]) => (
               <Link
@@ -264,31 +268,33 @@ export default function LandingPage() {
               className="max-w-[19ch] font-display text-[2.25rem] font-extrabold leading-[1.03] tracking-[-0.035em] sm:text-[3.15rem] lg:text-[3.5rem]"
               style={{ color: INK }}
             >
-              Say what you want done.
-              <br className="hidden sm:block" />{" "}Stay in control.
+              Meet people worth knowing.
+              <br className="hidden sm:block" />{" "}Both people choose.
               <br className="hidden sm:block" />{" "}
-              <span style={{ color: SIGNAL_DEEP }}>See what actually happened.</span>
+              <span style={{ color: SIGNAL_DEEP }}>Real connections follow.</span>
             </h1>
 
             <p className="mt-6 max-w-[42rem] text-[17px] leading-[1.6] sm:text-[18px]" style={{ color: MUTED }}>
-              Turn one goal into clear steps, approve the actions that matter, and track
-              evidence-backed progress. Then get back to your day.
+              LokFeel uses AI to understand the relationship you want, suggests a few real
+              people worth meeting with clear reasons, and only shares anything after both
+              sides agree. Less wasted social effort, more introductions you can trust.
             </p>
 
             <div className="mt-9">
-              <GoalForm />
+              <IntentForm />
             </div>
 
-            {/* Truth gate: on the same screen as the promise, not in a footer. */}
+            {/* Truth gate: on the same screen as the promise. */}
             <div
               className="mt-10 max-w-[46rem] rounded-xl border-l-2 px-4 py-3.5"
               style={{ borderColor: SIGNAL_DEEP, background: "rgba(184,134,63,0.07)" }}
             >
               <p className="text-[13.5px] leading-relaxed" style={{ color: INK }}>
                 <span className="font-semibold">Where the product stands today: </span>
-                planning, explicit approval and an in-app record are working. Sending actions
-                to outside services and independently verifying a result are not live yet.
-                We will not describe a task as a completed outcome.
+                intent capture, two-sided decisions and field-level privacy controls are
+                implemented in the product. No real introduction has been delivered to a
+                person as part of a pilot yet, and we have no customer results to publish.
+                If there is no suitable person, we will tell you rather than invent one.
               </p>
             </div>
           </div>
@@ -297,7 +303,7 @@ export default function LandingPage() {
         {/* ── THREE STEPS ── */}
         <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20">
           <h2 className="font-display text-[1.65rem] font-bold tracking-[-0.02em] sm:text-[2rem]">
-            Three steps. You stay in the loop.
+            One relationship, three honest steps.
           </h2>
           <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border sm:grid-cols-3" style={{ borderColor: LINE, background: LINE }}>
             {STEPS.map((s) => (
@@ -314,18 +320,18 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── JOB STORIES ── */}
+        {/* ── TWO PRODUCT SHAPES ── */}
         <section className="border-y" style={{ borderColor: LINE, background: WHITE }}>
           <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20">
             <h2 className="font-display text-[1.65rem] font-bold tracking-[-0.02em] sm:text-[2rem]">
-              Start with your own goal.
+              One relationship engine, two separate products.
             </h2>
             <p className="mt-3 max-w-[42rem] text-[15px] leading-relaxed" style={{ color: MUTED }}>
-              Teams and relationships are things a goal can involve, not things you have to
-              understand before you begin.
+              People looking to meet someone and community organisers looking after members
+              have different needs. We keep their pages, records and commercial terms apart.
             </p>
-            <div className="mt-8 grid gap-5 lg:grid-cols-3">
-              {SCENARIOS.map((s) => (
+            <div className="mt-8 grid gap-5 lg:grid-cols-2">
+              {PRODUCTS.map((s) => (
                 <article key={s.t} className="rounded-2xl border p-5 sm:p-6" style={{ borderColor: LINE }}>
                   <h3 className="font-display text-[17px] font-bold">{s.t}</h3>
                   <p className="mt-2 text-[14px] leading-relaxed" style={{ color: MUTED }}>
@@ -334,7 +340,7 @@ export default function LandingPage() {
                   <dl className="mt-5 space-y-3 text-[12.5px] leading-relaxed">
                     <div>
                       <dt className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: SIGNAL_DEEP }}>
-                        Now
+                        In the product
                       </dt>
                       <dd className="mt-1" style={{ color: INK }}>{s.now}</dd>
                     </div>
@@ -359,8 +365,8 @@ export default function LandingPage() {
                 What you can count on today.
               </h2>
               <p className="mt-3 max-w-[40rem] text-[15px] leading-relaxed" style={{ color: MUTED }}>
-                Every capability is labelled. If it is not live, we say so here rather than
-                letting a screenshot imply otherwise.
+                Every capability is labelled. A decline, a withdrawal or a block must stop
+                further contact. An in-app record is never presented as a real meeting.
               </p>
             </div>
             <Link
@@ -394,14 +400,15 @@ export default function LandingPage() {
         <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-6">
           <div className="rounded-3xl px-6 py-11 sm:px-10 sm:py-14" style={{ background: INK }}>
             <h2 className="max-w-[22ch] font-display text-[1.85rem] font-bold leading-[1.08] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.3rem]">
-              Bring one real goal. Keep the rest of your day.
+              Tell us who is worth meeting. Both of you stay in control.
             </h2>
             <p className="mt-4 max-w-[38rem] text-[14.5px] leading-relaxed" style={{ color: "rgba(242,241,236,0.72)" }}>
-              Your goal is carried into signup, so you do not have to start over after creating
-              an account.
+              Your intent is kept on this device until you create an account. We never put
+              private relationship preferences in a link, and we never show you an invented
+              person when there is no suitable match.
             </p>
             <div className="mt-8">
-              <GoalForm compact />
+              <IntentForm compact />
             </div>
           </div>
         </section>
@@ -422,6 +429,7 @@ export default function LandingPage() {
             {[
               ["How it works", "/how-it-works"],
               ["What works today", "/product"],
+              ["For communities", "/solutions"],
               ["Pricing", "/pricing"],
               ["Help", "/help"],
               ["Log in", "/login"],

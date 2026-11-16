@@ -22,22 +22,21 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://lokfeel.com"),
+  // V23 STRATEGY_LOCK §1/§4：对外只讲真实关系价值，不作通用 Agent OS 叙事，
+  // 不宣称 "verified outcome"，不出现 MCP/A2A/WorkspaceSpec 等技术词。
   title: {
-    default: "LokFeel — Connection OS for AI-native teams",
+    default: "LokFeel — Meet people worth knowing",
     template: "%s | LokFeel",
   },
   description:
-    "Describe an outcome and LokFeel compiles it into a structured workspace — missions, per-field consent and AI agents — then runs the pipeline with your team. Every number traceable, every outcome verified.",
+    "LokFeel helps real people meet the right people: clearer relationship intent, a small number of explained introductions, and a real choice for both sides before anything is shared.",
   keywords: [
-    "AI workspace",
-    "connection OS",
-    "AI agents",
-    "mission orchestration",
-    "consent management",
-    "agent interoperability",
-    "MCP server",
-    "A2A protocol",
-    "SaaS AI platform",
+    "meaningful introductions",
+    "mutual consent",
+    "real connections",
+    "relationship intent",
+    "trusted introduction",
+    "community introductions",
     "lokfeel",
   ],
   authors: [{ name: "LokFeel Team" }],
@@ -52,9 +51,9 @@ export const metadata: Metadata = {
   //    需要显式 canonical 的页面请各自在 `export const metadata` 里声明自己的绝对 URL；
   //    守卫见 `tests/e2e-ci/smoke.spec.ts` ⑦（子页 canonical 若存在，必须等于自身 URL）。
   openGraph: {
-    title: "LokFeel — Connection OS for AI-native teams",
+    title: "LokFeel — Meet people worth knowing",
     description:
-      "Compile a goal into a workspace of missions, consent gates and AI agents — then run it with your team.",
+      "LokFeel helps real people meet the right people: clearer relationship intent, explained introductions, and a real choice for both sides before anything is shared.",
     siteName: "LokFeel",
     type: "website",
     locale: "en_US",
@@ -63,15 +62,15 @@ export const metadata: Metadata = {
         url: 'https://app.lokfeel.com/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'LokFeel — Connection OS for AI-native teams',
+        alt: 'LokFeel — Meet people worth knowing',
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LokFeel — Connection OS for AI-native teams",
+    title: "LokFeel — Meet people worth knowing",
     description:
-      "Compile a goal into a workspace of missions, consent gates and AI agents.",
+      "Clearer relationship intent, explained introductions, and a real choice for both sides before anything is shared.",
     creator: "@lokfeel",
     images: ['https://app.lokfeel.com/opengraph-image'],
   },

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "1.0",
+  "capturedAt": "2026-11-16T07:09:47.280Z",
+  "capturedAtLocal": "2026-11-16 15:09 GMT+8",
+  "evidenceLevel": "LIVE_READONLY_GET",
+  "discipline": "git ls-remote 与生产 GET 为本文件唯一权威来源；本地报告、脚本退出码、系统通知均不作为事实依据。脱敏：未采集 cookie/Authorization/set-cookie。",
+  "sourcePackage": {
+    "zipPath": "/Users/frankzhao/Downloads/LOKFEEL_V23_%E5%85%B3%E7%B3%BB%E4%B8%8E%E7%94%9F%E6%88%90%E5%BC%8F%E7%A4%BE%E4%BA%A4%E6%88%98%E7%95%A5%E6%95%B4%E6%94%B9%E4%BD%9C%E6%88%98%E5%8C%85.zip",
+    "zipSha256": "d92823860490f064e961eab7788998015a01f2cd8fe5334185dd4dafc099122b",
+    "archiveDir": "docs/v23/spec/lokfeel_v23/",
+    "fileCount": 7,
+    "files": {
+      "00_WORKBUDDY_V23_EXECUTIVE_ORDER.md": "5ee04368aa7559a5f591084c4e9ff950cb73adbdf51c612c86ea37fbcf42924f",
+      "01_V23_STRATEGY_AND_PRD.md": "777827626226a649218f4cec22aa709d25bc9079f51a8239c2f9d1a35005030b",
+      "02_V23_WORKBUDDY_TASKS.json": "e9aa4893e852f504582bc1e568dafe2493194ccf6e4dfbe6d8326269b2cf3148",
+      "02_V23_WORKBUDDY_TASKS.md": "4ff0026143e00609e5d5b1b704dc6acb06504ec03aceda540263ece46d7cc4b9",
+      "03_V23_DATA_API_AND_QA_CONTRACTS.md": "9a648fd3a4e910311c6970481e3b17e2707dfb52788ce8ced6c45a1b5e2b319f",
+      "04_V23_RELEASE_AND_ROUTE_AUDIT.md": "75b0e145f7971f4653fd1c3f4c1f5d25440c0dc63b5e8ce2dae2750e85976d93",
+      "README.md": "5b1f1288f219896a12b121b452dd15dac7910ec0c63c9b9613780a7571ebf8d6"
+    },
+    "honestBoundary": "作战包是战略/任务设计，不是已执行、已验收或已发布的成果；README.md 第 14-16 行明确要求 WorkBuddy 重新取证。"
+  },
+  "fourSha": {
+    "remoteMain": "cad717e92542395e4346e49d388f09be78ec1557",
+    "remoteMainSource": "git ls-remote origin refs/heads/main (LIVE, 2026-11-16)",
+    "localV22Head": "6bab34c0b7ac2e20f54fda95d2af80aab3567f6a",
+    "localV22HeadBranch": "v22/strategy-recovery",
+    "v22BaselineTag": "de6b3b9 (tag: baseline/20261116)",
+    "production": "b50e53e",
+    "productionSource": "GET https://app.lokfeel.com/api/health -> commit=b50e53e, commitSource=env, builtAt=2026-11-14T08:38:05.985Z",
+    "productionIsRemoteMain": false,
+    "preview": "NOT_AVAILABLE",
+    "v23WorkingBranch": "v23/relationship-reset (created from 6bab34c, NOT pushed)"
+  },
+  "productionProbe": {
+    "base": "https://app.lokfeel.com",
+    "method": "GET only, curl --noproxy '*', no credentials sent",
+    "health": {
+      "http": 200,
+      "status": "healthy",
+      "version": "0.1.0",
+      "dbLatencyMs": 1100,
+      "payments": {
+        "configured": false,
+        "charging": true,
+        "channels": { "dodo.checkout": true, "dodo.webhook": true },
+        "missing": ["CREEM_API_KEY", "CREEM_WEBHOOK_SECRET", "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]
+      },
+      "botModule": { "enabled": true, "enabledSource": "env" }
+    },
+    "pricing": {
+      "http": 200,
+      "unapprovedPriceLeak": true,
+      "visibleAmounts": ["$89.00", "$199.00", "$449.00", "From $89/mo"],
+      "note": "$12/$20/$23 为 React Flight 序列化标记，不是价格；前四项为页面可见金额。"
+    },
+    "plansApi": {
+      "http": 200,
+      "catalogVersion": "2026-11-13.1",
+      "approvedAt": "2026-11-13",
+      "checkoutReady": true,
+      "commercialApprovalStatus": "APPROVED",
+      "environment": "live_mode",
+      "planCount": 3,
+      "amountsCents": [8900, 19900, 44900],
+      "failClosedInProduction": false,
+      "note": "本地 6bab34c 已实现 PRICING_APPROVED=false 的 SSR/JSON 双门，但未部署；线上仍为 b50e53e 的旧目录。"
+    },
+    "home": { "http": 200, "v22HeroPresent": false, "note": "未命中 V22 'Say what you want done'，线上为旧 Hero。" },
+    "apiV1Health": { "http": 404 }
+  },
+  "schema": {
+    "source": "prisma/schema/*.prisma (9 files, directory mode via prisma.config.ts:8)",
+    "provider": "sqlite / libSQL(Turso) at deploy",
+    "modelCount": 66,
+    "generatedClient": "src/generated/schema.prisma (3506 lines, generated, committed)",
+    "latestMigration": "20261115120000_v21_batch2_execution_loop",
+    "migrationDiscipline": "prisma/migrations/*.sql 多为变更记录；生产由 scripts/connection/migrate.mjs 批次脚本管理，禁止直接 prisma migrate deploy / db push 到生产。",
+    "v23MigrationStatus": "NOT_EXECUTED"
+  },
+  "routeAudit": {
+    "v22LiveAudit": "17 LIVE / 7 REDIRECT_NO_AUTH",
+    "v23Reaudit": "NOT_TESTED",
+    "discipline": "匿名访问工作区 ?view= 被重定向到登录只证明登录保护有效，不等于工作区已测试。"
+  },
+  "businessEvidence": {
+    "verifiedIntroductions": "NO_SAMPLE",
+    "mutualConsentPairs": "NO_SAMPLE",
+    "realDeliveryReceipts": "NO_SAMPLE",
+    "realUsersInterviewed": "NO_SAMPLE",
+    "realPayments": "NO_SAMPLE",
+    "note": "V23 全部关系业务指标均为 NO_SAMPLE；项目内 2925 个 Jest 用例、AgentRun/Mission/ExecutionVerification 记录均不构成关系价值证据。"
+  },
+  "goNoGo": "NO_GO",
+  "unresolved": [
+    "生产未批准定价与 checkoutReady=true 的 LIVE 风险（R03），需要 Owner 决定最小可逆热修复或摘除支付密钥；本轮不擅自改生产。",
+    "首个商业场景（建议：成人长期关系 Verified Introduction）需 Owner 确认。",
+    "远端 main 未受保护、无 required CI、Preview 不可用（Q03）。",
+    "G15/V23 S15 性能历史债 TBT 9/9 MISS 延续。"
+  ]
+}

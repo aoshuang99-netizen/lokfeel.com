@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0",
+  "source": "three independent read-only audit lines; file:line evidence in ASSET_INVENTORY.md",
+  "method": "Glob/Grep/Read only; no source modification, no DB, no tests during inventory",
+  "prisma": { "schemaFiles": 9, "modelCount": 66, "provider": "sqlite", "generatorOutput": "src/generated", "latestMigration": "20261115120000_v21_batch2_execution_loop", "v23MigrationExecuted": false },
+  "counts": { "REUSE": 46, "MODIFY": 24, "BUILD": 6, "DEPRECATE": 22, "NOT_FOUND": 6 },
+  "reuse_core": [
+    "ConnectionProposal + ProposalDecision (mutual consent state machine)",
+    "discloseSubject + field-catalog (default-deny field-level disclosure)",
+    "withTenant(cap) + Organization/Membership/TenantAuditEvent",
+    "IdempotencyRecord + withIdempotency",
+    "WorkflowJob + NotificationDelivery + jobDedupeKey/deliveryDedupeKey",
+    "Conversation/IMMessage/MessageReceipt + /api/im/*",
+    "Outcome + OutcomeVerification three-level derivation",
+    "AgentRun/AgentApproval/AgentExecution (demoted to infrastructure)",
+    "BillingEvent/UsageRecord + Dodo signature verification",
+    "CommunityBridge/BridgeMemberOptIn (cross-community dual opt-in)",
+    "PRICING_APPROVED=false SSR/JSON fail-closed gate (local only, NOT deployed)",
+    "proxy.ts security headers / region policy / CORS exact host"
+  ],
+  "build_required": [
+    "RelationshipIntent (+revision)",
+    "IdentityVerification",
+    "DisclosureGrant",
+    "RelationshipOutcomeEvidence",
+    "src/lib/relationship/* (domain service layer)",
+    "src/lib/safety/isBlockedEitherWay"
+  ],
+  "critical_gaps": [
+    "Block table exists but ZERO business-path enforcement (S07/S11 BLOCKER)",
+    "bothConsentStillValid: no independent revoke/expiry check on the consent records",
+    "business write + outbox enqueue are not in one DB transaction",
+    "INTRO_SENT not bound to real provider delivery event; providerMessageId can be pre-created",
+    "/api/v1/reports lacks tenant isolation",
+    "src/lib/consent, src/lib/verification, src/lib/safety, src/lib/relationship directories NOT FOUND"
+  ],
+  "deprecate_but_keep_compat": [
+    "Match/MatchReaction + /api/matches/* (Introduction != Match)",
+    "ConsentRequest/ConsentGrant (IM media-level, not relationship consent)",
+    "Bot* / SincerityWallet / B2C Subscription+Payment(Stripe)",
+    "analytics-report.tsx demo metrics",
+    "avatar-utils.ts stock human portraits fallback",
+    "relationship-engine-preview.tsx / discover/user-list.tsx / pitch-editor.tsx (orphan fake-data components)",
+    "chat/* unmounted duplicate realtime stack"
+  ],
+  "honestBoundary": "Inventory describes local source only. Production runs b50e53e; no claim here about what is live."
+}

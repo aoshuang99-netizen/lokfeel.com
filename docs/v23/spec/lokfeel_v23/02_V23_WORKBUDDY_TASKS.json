@@ -1,0 +1,702 @@
+{
+  "version": "V23.0",
+  "generatedAt": "2026-11-16",
+  "baseline": "6bab34c (WorkBuddy reported local branch), cad717e (remote main), b50e53e (last reported production); MUST recheck",
+  "goNoGo": "NO_GO",
+  "total": 37,
+  "tasks": [
+    {
+      "id": "R00",
+      "phase": "R0 战略定轨",
+      "priority": "P0",
+      "owner": "Product Owner + WorkBuddy PM",
+      "title": "以 V23 取代 V22 通用 ONE Goal 定位；固定一句话、首个双边关系场景、两产品线、反目标",
+      "code_scope": "docs/v23/STRATEGY_LOCK.md; capability-register.yaml; legacy/V22 impact report",
+      "dependencies": [],
+      "acceptance": "V23 目标、MVP 边界、Claim ID 及跨产品拆分均有签字记录；未签字保持 PENDING",
+      "negative_control": "把“任意个人事务”写成首页主场景时战略门自动 FAIL",
+      "gate": "S00",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "R01",
+      "phase": "R0 版本与资产",
+      "priority": "P0",
+      "owner": "Reality Auditor",
+      "title": "冻结生产、远端、本地 6bab34c 候选与 V21 提交链；核实不可变构建来源和旧 B2C 能力",
+      "code_scope": "scripts/qa/v23-source-inventory.mjs; docs/v23/BASELINE.json",
+      "dependencies": [],
+      "acceptance": "分别报告四 SHA、构建时间、schema、路由、支付真实状态；17 LIVE / 7 工作区未登录不算 LIVE；按真实当前值更新",
+      "negative_control": "无登录态 / 302 不能当页面完成；无法取证=NOT_TESTED",
+      "gate": "S01",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "R02",
+      "phase": "R0 制止扩散",
+      "priority": "P0",
+      "owner": "Engineering Lead",
+      "title": "停止通用 Agent OS 新功能并建立 Relation-first architecture decision record",
+      "code_scope": "docs/v23/ARCHITECTURE_ADR.md; backlog freeze",
+      "dependencies": [
+        "R00"
+      ],
+      "acceptance": "所有活跃开发项均有 Relationship outcome 关联；无关事项暂停不删除既有代码",
+      "negative_control": "AgentRun/WorkspaceSpec 数量不能作为用户价值 KPI",
+      "gate": "S00",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "R03",
+      "phase": "R0 现网保护",
+      "priority": "P0",
+      "owner": "Security + Billing",
+      "title": "现网未批准定价和营销承诺隔离；维持 Dodo 商业门及已有合法事件",
+      "code_scope": "src/config/products.ts; src/config/pricing-gate.ts; src/app/api/payments/dodo/*; proxy.ts",
+      "dependencies": [
+        "R01"
+      ],
+      "acceptance": "GET Pricing/JSON 不泄未批价；未批准已登录 checkout 返回业务拒绝；不会影响历史订阅和合法 Webhook",
+      "negative_control": "匿名 401 不代替已登录 503；不擅自改生产环境",
+      "gate": "S13",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "R04",
+      "phase": "R0 对比实验",
+      "priority": "P0",
+      "owner": "UX Research + Product",
+      "title": "访谈历史目标用户与关系运营者；明确首个 MVP 垂类及供需分布",
+      "code_scope": "docs/v23/DISCOVERY_PROTOCOL.md",
+      "dependencies": [
+        "R00"
+      ],
+      "acceptance": "20 需求者+10 被引荐方+3 运营者目标；真实同意与访谈记录，非代理模拟",
+      "negative_control": "没有采访真实人类 => UNTESTED, 不以合成用户放行",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D01",
+      "phase": "P1 关系数据",
+      "priority": "P0",
+      "owner": "Backend + Data Architect",
+      "title": "设计 RelationshipIntent、VerifiedProfile、Candidate、Introduction、Consent、FollowUp、OutcomeEvidence 实体与租户隔离",
+      "code_scope": "prisma/schema.prisma; prisma/migrations/*; src/lib/relationship/*",
+      "dependencies": [
+        "R01",
+        "R00"
+      ],
+      "acceptance": "迁移含唯一/外键/行级租户控制；schema 与 client 一致；旧版兼容及脱敏回滚演练 PASS",
+      "negative_control": "跨租户 ID 或旧认证 cookie 读取他人档案必须拒绝",
+      "gate": "S02",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D02",
+      "phase": "P1 用户身份",
+      "priority": "P0",
+      "owner": "Backend + Trust",
+      "title": "验证等级分离：UNVERIFIED、SELF_REPORTED、DOCUMENT_CHECKED 等；成人门槛与隐私级别",
+      "code_scope": "src/lib/verification/*; src/app/api/verification/*",
+      "dependencies": [
+        "D01"
+      ],
+      "acceptance": "任一 verified 显示都有 provider/event evidence；失败按 UNKNOWN 展示；禁伪造通过",
+      "negative_control": "无 provider 证据但前端展示 Verified => FAIL",
+      "gate": "S03",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D03",
+      "phase": "P1 意图抽取",
+      "priority": "P0",
+      "owner": "AI + Backend",
+      "title": "从自然语言生成 RelationshipIntent（目标、边界、场景、偏好、禁忌、时效），缺字段只问关键问题",
+      "code_scope": "src/lib/agent/skills.ts; src/lib/relationship/intent.ts; api relationship-intents",
+      "dependencies": [
+        "D01"
+      ],
+      "acceptance": "服务端 schema 双校验；AI/规则来源分明；保存版本、可编辑、不推断敏感属性",
+      "negative_control": "模型离线不得降级为 AI 成功；注入/空JSON/竞态负例",
+      "gate": "S04",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D04",
+      "phase": "P1 候选池",
+      "priority": "P0",
+      "owner": "Backend + Supply",
+      "title": "只从获授权真人供给中检索可被推荐候选；验证库存和城市/社群覆盖率",
+      "code_scope": "src/lib/relationship/candidates/*; candidate api",
+      "dependencies": [
+        "D01",
+        "D02",
+        "D03"
+      ],
+      "acceptance": "存在真人+有效同意+场景兼容的候选才能显示；候选不足真实空态",
+      "negative_control": "零候选绝不能自动生成真人图片/简介填屏",
+      "gate": "S05",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D05",
+      "phase": "P1 AI 排序",
+      "priority": "P0",
+      "owner": "ML + Trust",
+      "title": "硬约束过滤→软约束解释排序→风险/未知置信度→可人工覆核",
+      "code_scope": "src/lib/relationship/ranking/*; tests/relationship/ranking*",
+      "dependencies": [
+        "D03",
+        "D04"
+      ],
+      "acceptance": "top K 均有具体公开允许的解释；不推荐硬冲突；离线 baseline 与人工比较",
+      "negative_control": "敏感属性/未知信息不能被模型暗补为匹配事实",
+      "gate": "S06",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D06",
+      "phase": "P1 双向同意",
+      "priority": "P0",
+      "owner": "Backend Security",
+      "title": "双向 opt-in、字段级目的授权、有效期、撤销、反骚扰",
+      "code_scope": "src/lib/consent/*; src/app/api/v1/connections/*",
+      "dependencies": [
+        "D01",
+        "D04"
+      ],
+      "acceptance": "接收/拒绝分别记服务端主体与权限版本；双方未同意不得放联系信息",
+      "negative_control": "并发撤销与发送、单方同意、冒用身份、跨租户访问必须 fail-closed",
+      "gate": "S07",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D07",
+      "phase": "P1 真实介绍",
+      "priority": "P0",
+      "owner": "Backend + Communication",
+      "title": "Introduction lifecycle：建议→双方同意→真实发送/确认；接入一种获授权真实投递通道",
+      "code_scope": "src/lib/relationship/introductions/*; messaging provider adapter",
+      "dependencies": [
+        "D05",
+        "D06"
+      ],
+      "acceptance": "至少10次真实双向同意试点介绍；provider receipt 与 introductionId 对账、去重",
+      "negative_control": "内网 RECIEPT/SENT 不等于外部已送达；重试不重复通知",
+      "gate": "S08",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D08",
+      "phase": "P1 沟通体验",
+      "priority": "P0",
+      "owner": "Frontend + Backend",
+      "title": "复用已有聊天/连接记录，把介绍上下文带入双方可见的受控对话",
+      "code_scope": "src/app/(dashboard)/dashboard/chats/*; dashboard/connections/*",
+      "dependencies": [
+        "D07"
+      ],
+      "acceptance": "双方只见获授权信息；消息状态可复验；举报/拉黑即停新联系",
+      "negative_control": "拒绝后的新消息/泄露对方限制级资料 => FAIL",
+      "gate": "S09",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D09",
+      "phase": "P1 后续进展",
+      "priority": "P0",
+      "owner": "Relation Ops",
+      "title": "真实交流/线下会面/取消/爽约/双向反馈与下一次决定",
+      "code_scope": "src/lib/relationship/follow-up/*; src/app/api/relationship/outcomes/*",
+      "dependencies": [
+        "D07",
+        "D08"
+      ],
+      "acceptance": "记录各方自报来源、时间、缺失；支持不同关系场景，婚恋与职业场景不能混指标",
+      "negative_control": "一方自报不得标双方验证；未响应不能当已见面",
+      "gate": "S10",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D10",
+      "phase": "P1 证据分级",
+      "priority": "P0",
+      "owner": "Trust + Data",
+      "title": "独立 OutcomeEvidence 及 EvidenceLevel；不把机器人回执或审批记录当真实关系成功",
+      "code_scope": "prisma/schema.prisma; src/lib/relationship/evidence/*",
+      "dependencies": [
+        "D09"
+      ],
+      "acceptance": "用户/顾问/Provider 事件各有独立级别；能追溯纠错与撤销；所有指标采样有分母",
+      "negative_control": "Mission CLOSED/Agent EXECUTED 被误判 Verified Introduction 时 gate 必 FAIL",
+      "gate": "S10",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D11",
+      "phase": "P1 风险安全",
+      "priority": "P0",
+      "owner": "Safety + Legal",
+      "title": "成人保护、举报/拉黑、诈骗检测、人工升级、线下见面安全提醒",
+      "code_scope": "src/lib/safety/*; src/app/api/reports/*",
+      "dependencies": [
+        "D02",
+        "D06"
+      ],
+      "acceptance": "举报有可见回执和 SLA 工作流；拉黑后新增提案、消息、介绍都拒绝",
+      "negative_control": "遭举报用户能继续向举报方引荐或私信 => BLOCKER",
+      "gate": "S11",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "D12",
+      "phase": "P1 数据边界",
+      "priority": "P0",
+      "owner": "Privacy + Security",
+      "title": "B2C 与 SaaS 隔离、跨社群/跨用途 consent、安全审计与保留删除流程",
+      "code_scope": "src/lib/tenant/*; src/lib/bridge/*; privacy policies",
+      "dependencies": [
+        "D01",
+        "D06"
+      ],
+      "acceptance": "各关系用途单独授权；成员离开社群后未来共享截止；导出/删除按政策处理",
+      "negative_control": "婚恋敏感数据自动暴露给雇主/活动主办方 => BLOCKER",
+      "gate": "S11",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U01",
+      "phase": "P2 面向人的界面",
+      "priority": "P0",
+      "owner": "Product Design",
+      "title": "建立 Relationship-first IA：发现 / 引荐 / 消息 / 进展；7 key 保兼容，但不是主页导航",
+      "code_scope": "src/app/(landing)/page.tsx; src/app/workspace/living-workspace.tsx; living-shell",
+      "dependencies": [
+        "R00",
+        "D03"
+      ],
+      "acceptance": "10名真人中>=8名5秒内答对“帮助真人建立可信关系”；主按钮进入关系目标",
+      "negative_control": "用户回答“这是AI任务管理软件”占多数 => FAIL",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U02",
+      "phase": "P2 官网首页",
+      "priority": "P0",
+      "owner": "Frontend + Copy",
+      "title": "首页一屏讲真实连接价值、两方同意与清晰边界，真实情景，无技术词堆叠",
+      "code_scope": "src/app/(landing)/page.tsx; src/config/brand.ts",
+      "dependencies": [
+        "R00",
+        "U01"
+      ],
+      "acceptance": "桌面和手机第一屏定位、对象、CTA、可信边界完整；无假案例、无未批价格",
+      "negative_control": "随手输入“帮我写代码”被误路由成全能 Agent => FAIL",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U03",
+      "phase": "P2 消费者主页",
+      "priority": "P0",
+      "owner": "Frontend + UX",
+      "title": "重构登录后首页：关系意图/推荐候选/等待我同意/介绍进展/聊天",
+      "code_scope": "src/app/(dashboard)/dashboard/{page,explore,connections}*",
+      "dependencies": [
+        "U01",
+        "D04",
+        "D06"
+      ],
+      "acceptance": "在90秒内完成初次关系意图或明确知道目前无合适供给；加载/空/错三态",
+      "negative_control": "主屏出现MCP、Mission pipeline或4个读不到统计卡 => FAIL",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U04",
+      "phase": "P2 介绍卡",
+      "priority": "P0",
+      "owner": "Frontend + Accessibility",
+      "title": "候选卡展示真实/未知信息、共识与冲突、双方意愿状态及可操作授权",
+      "code_scope": "dashboard/matches/*; components/relationship/*",
+      "dependencies": [
+        "D05",
+        "D06"
+      ],
+      "acceptance": "不超权显示照片/联系方式；推荐理由具体；举报拒绝可达",
+      "negative_control": "自动给陌生人展示限制级验证数据 => BLOCKER",
+      "gate": "S07",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U05",
+      "phase": "P2 SaaS 控制台",
+      "priority": "P1",
+      "owner": "Frontend SaaS",
+      "title": "为顾问/社群运营者实现审核队列、成员、引荐、跟进、指标、风险",
+      "code_scope": "console existing routes verify; no new os",
+      "dependencies": [
+        "D07",
+        "D09"
+      ],
+      "acceptance": "顾问对每次介绍明确标识人工复核与授权；原始成员数据仅本组织可见",
+      "negative_control": "将B2C用户一键加入SaaS营销名单 => FAIL",
+      "gate": "S09",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U06",
+      "phase": "P2 端到端注册",
+      "priority": "P0",
+      "owner": "Frontend Auth",
+      "title": "首页关系目标→注册/验证→同一草稿恢复→完成必要资料→候选/无库存",
+      "code_scope": "(auth)/register; (dashboard)/dashboard/onboarding; goal-draft",
+      "dependencies": [
+        "D03",
+        "U03"
+      ],
+      "acceptance": "真实邮件/登录凭据、刷新前进后退与两端可用；私密偏好不暴露在 URL",
+      "negative_control": "只通过浏览器边界 mock 却宣称注册真实 E2E => FAIL",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U07",
+      "phase": "P2 公共页重写",
+      "priority": "P0",
+      "owner": "Marketing + Product",
+      "title": "Product/Solutions/How/Stories/About/Help 只讲真实社交闭环；旧 B2C/Hlua 分产品隔离",
+      "code_scope": "(public)/{product,solutions,how-it-works,stories,about,help}/page.tsx",
+      "dependencies": [
+        "U01"
+      ],
+      "acceptance": "所有公开宣称有 Claim ID 与能力状态；例子以 Demo 明示；产品英语/工作区中文一致",
+      "negative_control": "通用 Agent SaaS、已验证假案例、旧品牌混入均 FAIL",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "U08",
+      "phase": "P2 视觉质量",
+      "priority": "P0",
+      "owner": "UX + QA",
+      "title": "设计 Token、Figma 可编辑映射、7视口、状态截图、可访问性与文案",
+      "code_scope": "src/styles or globals.css; Figma components",
+      "dependencies": [
+        "U02",
+        "U03"
+      ],
+      "acceptance": "7视口无溢出；axe严重0、键盘焦点、200% zoom、读屏、动效可减",
+      "negative_control": "黑屏/字体超界/按钮无响应任一P0即FAIL",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "B01",
+      "phase": "P3 收费",
+      "priority": "P0",
+      "owner": "Commerce + Legal",
+      "title": "拆分Relationship Assessment/Verified Introduction/会员与SaaS产品目录，所有价格实验先审批",
+      "code_scope": "src/config/products.ts; src/app/(public)/pricing/page.tsx",
+      "dependencies": [
+        "R00",
+        "R03"
+      ],
+      "acceptance": "D1未批则SSR/API/checkout不显示或创建新交易；旧B2C和Hlua权益不混账",
+      "negative_control": "200 JSON暗泄价格或未批 checkout 建立 session => BLOCKER",
+      "gate": "S13",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "B02",
+      "phase": "P3 支付",
+      "priority": "P0",
+      "owner": "Billing + QA",
+      "title": "Dodo test_mode真实订单→官方Webhook→Ledger→关系权益→退款/失败重试",
+      "code_scope": "src/app/api/payments/dodo/*; ledger tests",
+      "dependencies": [
+        "B01",
+        "D07"
+      ],
+      "acceptance": "真实Provider eventId、验签、DB、权益一致；退款/续费/拒付反向一致",
+      "negative_control": "自签自验或账本零样本不得 PASS",
+      "gate": "S13",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "B03",
+      "phase": "P3 SaaS定价",
+      "priority": "P1",
+      "owner": "Business + Finance",
+      "title": "访谈后提出组织 SaaS 试点单价、规模、人工成本、ROI，不和B2C收费合并",
+      "code_scope": "docs/v23/SAAS_PRICING_EXPERIMENT.md",
+      "dependencies": [
+        "R04",
+        "U05"
+      ],
+      "acceptance": "至少3机构意向及1份单位经济情景；均标假设/事实",
+      "negative_control": "将历史假设价格写进当前收费 API => FAIL",
+      "gate": "S13",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "B04",
+      "phase": "P3 增长",
+      "priority": "P1",
+      "owner": "Growth + Trust",
+      "title": "供应侧招募/邀请、关系 referral、真实供给密度与合规渠道",
+      "code_scope": "docs/v23/GTM_SUPPLY_PLAN.md",
+      "dependencies": [
+        "R04",
+        "D04"
+      ],
+      "acceptance": "每个试点城市/社群报告合格供给及可被引荐密度；无无授权外呼",
+      "negative_control": "自动抓取私人社媒资料或制造假会员 => BLOCKER",
+      "gate": "S14",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "B05",
+      "phase": "P3 测量与实验",
+      "priority": "P0",
+      "owner": "Analytics + ML",
+      "title": "事件口径、漏斗、AI vs人工/规则基线、匿名结果与缺失率",
+      "code_scope": "src/lib/analytics/*; docs/v23/METRICS_DICT.md",
+      "dependencies": [
+        "D07",
+        "D09"
+      ],
+      "acceptance": "分母非空、渠道/群体、来源时间、缺失率清晰；无样本展示NO_SAMPLE",
+      "negative_control": "仅看注册和Agent调用次数宣称产品成功 => FAIL",
+      "gate": "S14",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "Q01",
+      "phase": "P4 工程稳定",
+      "priority": "P0",
+      "owner": "Performance Engineer",
+      "title": "9页真实Trace长任务归因，首屏按需加载/SSR-RSC；保业务行为",
+      "code_scope": "living-workspace; public pages; webpack/next config",
+      "dependencies": [
+        "U03"
+      ],
+      "acceptance": "9/9 TBT<=200ms；LCP<=2.5s；CLS<=0.1，同设备节流至少3轮，Trace留档",
+      "negative_control": "任何未测页、改阈值/降节流或移除真实交互 => FAIL",
+      "gate": "S15",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "Q02",
+      "phase": "P4 独立审计",
+      "priority": "P0",
+      "owner": "Codex Independent QA",
+      "title": "真正独立审计战略、权限、数据、真实交付与 UI",
+      "code_scope": "PR+checks+evidence",
+      "dependencies": [
+        "D01",
+        "D07",
+        "U02",
+        "U03"
+      ],
+      "acceptance": " Reviewer 对源SHA复跑所有 P0，报告与 WorkBuddy 断言逐项对照",
+      "negative_control": "同一子代理自己签字 => FAIL",
+      "gate": "S16",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "Q03",
+      "phase": "P4 CI治理",
+      "priority": "P0",
+      "owner": "Release + GitHub admin",
+      "title": "保护 main、required status、审查后合并、Preview由批准分支触发",
+      "code_scope": "GitHub ruleset; workflows; Netlify build settings",
+      "dependencies": [
+        "R01"
+      ],
+      "acceptance": "GitHub API实读protected/ruleset有效；未通过 required check不能合并；无直接main上线",
+      "negative_control": "只写YAML / gh不存在当挡箭牌 / skip netlify误发布 => FAIL",
+      "gate": "S16",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "Q04",
+      "phase": "P4 生产迁移",
+      "priority": "P0",
+      "owner": "Data + SRE",
+      "title": "Prisma迁移旧新版兼容、备份恢复及关系新增实体迁移",
+      "code_scope": "prisma/migrations; release plan",
+      "dependencies": [
+        "D01"
+      ],
+      "acceptance": "干净DB+历史快照迁移/验证/恢复；先迁移后代码发版且安全窗口",
+      "negative_control": "db push或未备份直接 prod migrate => BLOCKER",
+      "gate": "S16",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "Q05",
+      "phase": "P4 真用户验证",
+      "priority": "P0",
+      "owner": "UX Researcher",
+      "title": "10名用户认识/同意/介绍/反馈真人可用性测试，含双边用户",
+      "code_scope": "docs/v23/USER_TEST_PROTOCOL.md",
+      "dependencies": [
+        "U03",
+        "D07"
+      ],
+      "acceptance": ">=8/10 5秒说对“可信真人连接”；>=8/10无需提示完成核心意图/双向授权任务；复盘失败录屏",
+      "negative_control": "AI代理模拟真人不能充数；目标人数不足继续UNTESTED",
+      "gate": "S12",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "Q06",
+      "phase": "P4 发布",
+      "priority": "P0",
+      "owner": "Release Agent",
+      "title": "冻结唯一可重建RC，Preview与生产候选一致；Owner单次批准",
+      "code_scope": "RELEASE_MANIFEST.json; rollback.json; CI logs",
+      "dependencies": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "B02"
+      ],
+      "acceptance": "每个强制Gate PASS；生产SHA=批准RC，关系主链真E2E、48h观察与安全回滚证据",
+      "negative_control": "只有本地绿或生产旧SHA => NO_GO",
+      "gate": "S17",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    },
+    {
+      "id": "Q07",
+      "phase": "P4 生产持续质量",
+      "priority": "P1",
+      "owner": "Ops + Trust",
+      "title": "48小时后继续对账、安全事件、引荐完成率、供给密度与投诉",
+      "code_scope": "monitoring dashboards; evidence logs",
+      "dependencies": [
+        "Q06"
+      ],
+      "acceptance": "告警可定位到真实介绍ID；安全撤销、Webhook和数据一致性可回放",
+      "negative_control": "0交易或0引荐不能宣称业务可用性PASS",
+      "gate": "S17",
+      "status": "TODO",
+      "evidence_level": "NOT_TESTED",
+      "source_sha": null,
+      "evidence_path": null
+    }
+  ]
+}

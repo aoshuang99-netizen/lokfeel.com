@@ -137,13 +137,13 @@ interface OrgOverview {
 // `tier` 只决定「一级 4 主任务 / 二级『更多』3 项」的呈现层级，不改 key、不改深链。
 // label / hint 全中文，技术专名与英文行动词不进用户可见导航。
 const NAV: LivingNavItem[] = [
-  { key: 'now', label: '开始', hint: '今天要推进什么', ready: true, tier: 'primary' },
-  { key: 'missions', label: '我的任务', hint: '你交代过的事都在这里', ready: true, tier: 'primary' },
-  { key: 'consent', label: '待我确认', hint: '哪些动作等我点头', ready: true, tier: 'primary' },
-  { key: 'outcomes', label: '成果', hint: '做成了什么，怎么核验', ready: true, tier: 'primary' },
-  { key: 'studio', label: '方案编辑', hint: '把目标摊成能改的步骤', ready: true, tier: 'more' },
-  { key: 'field', label: '关系网络', hint: '谁认识谁，谁在等你', ready: true, tier: 'more' },
-  { key: 'agents', label: '执行记录', hint: '每一步是谁做的、卡在哪', ready: true, tier: 'more' },
+  { key: 'now', label: '发现适合的人', hint: '目前有哪些值得认识的人', ready: true, tier: 'primary' },
+  { key: 'missions', label: '我的介绍', hint: '已发出与待回应的介绍', ready: true, tier: 'primary' },
+  { key: 'consent', label: '等待双方确认', hint: '我和对方分别做了什么选择', ready: true, tier: 'primary' },
+  { key: 'outcomes', label: '关系进展', hint: '交流、见面与双方反馈', ready: true, tier: 'primary' },
+  { key: 'studio', label: '引荐方案', hint: '双方理由与授权范围', ready: true, tier: 'more' },
+  { key: 'field', label: '关系网络', hint: '仅显示授权范围内的成员', ready: true, tier: 'more' },
+  { key: 'agents', label: 'AI 辅助记录', hint: '筛选理由、草稿与人工复核', ready: true, tier: 'more' },
 ]
 
 /**

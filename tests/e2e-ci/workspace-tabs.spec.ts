@@ -9,9 +9,10 @@ import { VIEWPORTS, assertMobileLayout } from './lib/measure';
  * `authed-mobile.spec.ts` 量的是**页面级**版面（只进 Now 那一屏）；而 `/workspace`
  * 是同一路由里的多个视图，非默认屏"页面级没溢出"完全不代表它们没溢出。
  *
- * V22 · DEV03（信息架构迁移）：导航从「7 个平铺 label」改成
- *   · 一级 4 个中文主任务（直接可见）：开始 / 我的任务 / 待我确认 / 成果
- *   · 二级「更多」3 项（先展开再点）：方案编辑 / 关系网络 / 执行记录
+ * V22 · DEV03（信息架构迁移）：导航从「7 个平铺 label」改成一级/二级两层。
+ * V23 · U01（2026-11-16 relationship-first reset）：一级 4 个主任务改为
+ *   · 发现适合的人 / 我的介绍 / 等待双方确认 / 关系进展
+ *   · 二级「更多」3 项：引荐方案 / 关系网络 / AI 辅助记录
  * 7 个内部 key 一个没删，`?view=` 深链接全部保留 —— 本夹具把
  * now / studio / field / consent / outcomes / agents / missions 七个 key 全覆盖。
  *
@@ -31,13 +32,13 @@ const AUTHED_STATE = 'test-results/authed-state.json';
  * 改名不改 key —— 这里的 key 就是 URL `?view=` 的值，7 个全覆盖。
  */
 const VIEWS = [
-  { key: 'now', label: '开始', tier: 'primary' },
-  { key: 'missions', label: '我的任务', tier: 'primary' },
-  { key: 'consent', label: '待我确认', tier: 'primary' },
-  { key: 'outcomes', label: '成果', tier: 'primary' },
-  { key: 'studio', label: '方案编辑', tier: 'more' },
+  { key: 'now', label: '发现适合的人', tier: 'primary' },
+  { key: 'missions', label: '我的介绍', tier: 'primary' },
+  { key: 'consent', label: '等待双方确认', tier: 'primary' },
+  { key: 'outcomes', label: '关系进展', tier: 'primary' },
+  { key: 'studio', label: '引荐方案', tier: 'more' },
   { key: 'field', label: '关系网络', tier: 'more' },
-  { key: 'agents', label: '执行记录', tier: 'more' },
+  { key: 'agents', label: 'AI 辅助记录', tier: 'more' },
 ] as const;
 
 const PRIMARY_VIEWS = VIEWS.filter((v) => v.tier === 'primary');

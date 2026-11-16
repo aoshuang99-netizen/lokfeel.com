@@ -5,12 +5,15 @@
  * `checkoutReady=true` 与 `live_mode` 同时出现在一门未获批的收银台上（R-15 的土壤）。
  * 2026-11-13 产品所有者下达重新定价指令，目录转为 APPROVED。
  *
- * 本套件因此钉住的是**两个方向**，而不是只钉住"关着"：
- *   · 已批准 + 有 approvalRef ⇒ 注入合法 live 凭据时 enabled 必须为 true；
- *   · 无凭据 ⇒ enabled 必须为 false（缺凭据不能靠"已批准"绕过）。
+ * V23 · R03（2026-11-16）：目录 APPROVED 只是必要条件之一。`pricing-gate.ts`
+ * 的 `PRICING_APPROVED` 是 Owner 显式书面开关，当前为 **false**（D1 未签字）。
+ * 因此本套件钉住的是**当前真实状态**：即使目录 APPROVED + 凭据齐备，
+ * 收银台也必须关着 —— 泄价事故（生产 b50e53e / docs/v23/LIVE_RISK_AUDIT.md）
+ * 的根因正是把目录自设 APPROVED 当成了批准。
  *
  * 反过来，若哪天有人把 approvalRef 清空却又想开卖，`validateCatalog()` 与
  * `tests/commercial/products.test.ts` 会同时报红 —— 那才是"实现者自我授权"的入口。
+ * Owner 开关的正向路径由 commercial-gate.test.ts 以 mock 钉住，本套件不 mock。
  */
 import { readCheckoutGate } from '@/lib/payments/commercial-gate'
 import { getProduct } from '@/config/products'
@@ -22,7 +25,7 @@ const LIVE_ENV: Record<string, string> = {
   DODO_PAYMENTS_ENVIRONMENT: 'live_mode',
 }
 
-describe('收银台门禁 · 真实目录（2026-11-13 重新定价后）', () => {
+describe('收银台门禁 · 真实目录（V23 R03：Owner 开关未签 ⇒ 恒关）', () => {
   it('真实目录为 APPROVED，且批准引用可溯源', () => {
     const pricing = getProduct('connection-os').pricing
     expect(pricing.status).toBe('APPROVED')
@@ -31,21 +34,23 @@ describe('收银台门禁 · 真实目录（2026-11-13 重新定价后）', () =
     expect(pricing.displayPrice).toBeTruthy()
   })
 
-  it('注入完整凭据 + 已批准 ⇒ enabled 为 true（两道门都过）', () => {
+  it('注入完整凭据 + 目录 APPROVED，但 PRICING_APPROVED=false ⇒ enabled 必须为 false', () => {
     const gate = readCheckoutGate(LIVE_ENV)
     expect(gate.credentialsReady).toBe(true)
-    expect(gate.commercialApproved).toBe(true)
-    expect(gate.enabled).toBe(true)
+    // 目录已 APPROVED，但 Owner 三重门的开关未签 —— 商业门整体为关。
+    expect(gate.commercialApproved).toBe(false)
+    expect(gate.enabled).toBe(false)
     expect(gate.approval.status).toBe('APPROVED')
-    expect(gate.approval.ref).toContain('PRICING_APPROVAL')
+    // 门关时 gate 不对外暴露批准引用（approval.ref=null），批准溯源仍以目录为准。
+    expect(gate.approval.ref).toBeNull()
   })
 
-  it('负控：没有凭据时，已批准也不能开卖', () => {
+  it('负控：没有凭据时，更是完全不能开卖', () => {
     const gate = readCheckoutGate({})
     expect(gate.enabled).toBe(false)
     expect(gate.credentialsReady).toBe(false)
-    expect(gate.commercialApproved).toBe(true)
-    // enabled 必须是两道门的合取，而不是任一道
+    expect(gate.commercialApproved).toBe(false)
+    // enabled 必须是各道门的合取，而不是任一道
     expect(gate.enabled).toBe(gate.credentialsReady && gate.commercialApproved)
   })
 

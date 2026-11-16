@@ -1,0 +1,117 @@
+# V23 能力事实源（Claim gate 读取）
+# status: available(有真实实现) | gated(代码有但业务未验证) | planned(未实现) | prohibited(禁止对外表达)
+# evidence: 只描述本地/源码事实，不等于线上可用
+version: V23.0
+reviewOwner: PENDING_BUSINESS_OWNER
+strategyStatus: OWNER_REVIEW_REQUIRED
+frozenPositioning: "AI-Native Relationship & Generative Social Platform"
+valueUnit: Verified Introduction
+mainline:
+  - Real Person
+  - Relationship Intent
+  - AI Recommendation
+  - Mutual Consent
+  - Verified Introduction
+  - Communication
+  - Follow-up
+  - Relationship Outcome
+
+capabilities:
+  - id: CAP-IDENTITY
+    claim: "真实的人与身份"
+    object: User + Profile
+    status: gated
+    evidence: "cardVerified/isVerified 为布尔列，无 provider/event 证据；IdentityVerification 为 BUILD"
+  - id: CAP-INTENT
+    claim: "关系意图与需求理解"
+    object: SocialIntent (拟 RelationshipIntent)
+    status: gated
+    evidence: "SocialIntent 存在但缺 context/nonNegotiables/boundaries/版本"
+  - id: CAP-RECOMMENDATION
+    claim: "AI 发现与推荐合适连接 + 解释"
+    object: ConnectionProposal.rationale + discloseSubject
+    status: gated
+    evidence: "服务端可解释投影已有；规则基线/AI 增量对照 NO_SAMPLE"
+  - id: CAP-MUTUAL-CONSENT
+    claim: "双方同意、隐私与安全边界"
+    object: ConnectionProposal + ProposalDecision
+    status: available
+    evidence: "单方 ACCEPT 不进 MUTUALLY_ACCEPTED；执行时 CAS 复检（代码层）"
+  - id: CAP-BLOCK-ENFORCEMENT
+    claim: "拒绝后不会继续受到打扰"
+    object: Block
+    status: gated
+    evidence: "NOT FOUND 业务拦截；本轮补 isBlockedEitherWay"
+  - id: CAP-INTRODUCTION
+    claim: "生成式介绍、对话和互动"
+    object: IntroductionWorkflow + Conversation + IMMessage
+    status: gated
+    evidence: "站内链路已有；真实外部投递 NO_SAMPLE"
+  - id: CAP-FOLLOWUP
+    claim: "关系反馈与结果证据"
+    object: Outcome + OutcomeVerification (拟 RelationshipOutcomeEvidence)
+    status: gated
+    evidence: "三级派生已有；事件流/外部证据 NO_SAMPLE"
+  - id: CAP-SAFETY
+    claim: "安全、身份、举报与隐私"
+    object: UserReport + Block + /api/v1/reports
+    status: gated
+    evidence: "reports 无租户隔离；跨线拦截待补"
+  - id: CAP-PRICING
+    claim: "定价与订阅"
+    object: pricing-gate + dodo/plans
+    status: prohibited
+    evidence: "PRICING_APPROVED=false 本地 fail-closed；生产 b50e53e 仍泄漏金额，D1 未批"
+  - id: CAP-AGENT-OS
+    claim: "通用个人 Agent OS / ONE Goal / WorkspaceSpec / MCP / A2A"
+    object: 内部底座
+    status: prohibited
+    evidence: "V22 批准标准已作废；禁止作为消费者购买理由"
+  - id: CAP-VERIFIED-OUTCOME
+    claim: "已验证关系成功 / 案例 / 契合度分数 / 成功率预测"
+    object: 无
+    status: prohibited
+    evidence: "NO_SAMPLE；模型输出不得作证据"
+  - id: CAP-LEGAL-ENTITY
+    claim: "法人主体 / 注册地址 / SLA / 雇佣承诺"
+    object: 无
+    status: prohibited
+    evidence: "D8 未核验；不得代填"
+
+uiBannedTerms:
+  - "Connection OS"
+  - "Agent OS"
+  - "WorkspaceSpec"
+  - "INTENT_EXTRACTION"
+  - "MISSION PIPELINE"
+  - "COMPILER"
+  - "MCP server with five tools"
+  - "A2A"
+  - "Token"
+  - "LokFee!"
+  - "AI Relationship Matching Engine"
+  - "Every outcome verified"
+  - "verified outcome"
+  - "97%"
+  - "soulmate"
+uiBannedPrices:
+  - "$89"
+  - "$199"
+  - "$449"
+  - "$49"
+  - "$999"
+  - "14-day trial"
+  - "14 天试用"
+uiBannedLegal:
+  - "LokFeel Inc."
+  - "Registered address"
+  - "Unlimited PTO"
+  - "equity options"
+
+negativeControls:
+  - "零候选不得生成假用户/假照片/假分数填屏"
+  - "单方同意不得 dispatch；撤回与并发发送必须 fail-closed"
+  - "拉黑后新增提案/消息/介绍全部 403"
+  - "provider SENT 不得标 MEETING_COMPLETED"
+  - "Mission CLOSED / Agent EXECUTED / ExecutionVerification 不得判 Verified Introduction"
+  - "匿名 401 不代替已登录 503；200 JSON 不得暗泄未批价格"
