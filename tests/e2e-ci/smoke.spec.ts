@@ -96,7 +96,7 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
    * "这里不卖什么"一节**必须**提到 H-Points 才能把边界说清楚 ⇒ 断言与意图相反。
    * 字面串断言容易变成"禁止解释"，所以改成**结构断言**（链接数 / 金额正则）。
    */
-  test('⑥ 定价页是 Connection OS 自己的页面（不是 Hlua 的结账页）', async ({ page }) => {
+  test('⑥ 定价页是 LokFeel 自己的页面（不是 Hlua 的结账页）', async ({ page }) => {
     const res = await page.goto('/pricing', { waitUntil: 'domcontentloaded' });
     expect(res?.status(), 'GET /pricing 应 200').toBe(200);
 
@@ -106,7 +106,10 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
     );
 
     const html = await page.content();
-    expect(html, '页面应讲 Connection OS').toContain('Connection OS');
+    // V23 · U02：品牌品类冻结为 AI-Native Relationship & Generative Social Platform，
+    // "Connection OS" 已作废。这里只钉「是本产品自己的页面」——品牌名在，
+    // 且不得导流到 Hlua 结账页（下面两条结构断言）。
+    expect(html, '页面应讲 LokFeel').toContain('LokFeel');
 
     // 不导流：任何指向 Hlua 结账页的链接都是回归
     await expect(page.locator('a[href*="pay.html"]'), '不得出现指向 Hlua 结账页的链接').toHaveCount(0);
@@ -117,19 +120,22 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
     // 而是"永远不准卖"。改成先读服务端判定，再双向断言 —— 两个方向都能抓：
     //   · APPROVED 却仍显示"定价尚未公布" ⇒ 页面没跟上目录（客户看不到已公布的价格）
     //   · 未批准却出现金额 ⇒ 对外承诺了一个还没批的价（这才是原始回归）
+    // V23 · R03：批准状态必须读服务端**当前契约** `pricingPublished`
+    //（旧版 `commercialApproval.status` 是 products.ts 自设值，曾造成生产泄价）。
+    // 双向断言仍能抓两类回归：未批却标价 / 已批却藏价。
     const plansRes = await page.request.get('/api/payments/dodo/plans');
     const plans = await plansRes.json();
-    const approved = plans?.commercialApproval?.status === 'APPROVED';
+    const approved = plans?.pricingPublished === true;
 
     const bodyText = await page.locator('body').innerText();
     if (approved) {
       expect(bodyText, '定价已获批 ⇒ 页面必须公布金额').toMatch(/\$\s?\d/);
-      expect(bodyText, '定价已获批却仍写"尚未公布"，说明页面没跟上目录').not.toContain(
-        '定价尚未公布'
-      );
     } else {
       expect(bodyText, '未获批定价 ⇒ 页面上不该有金额').not.toMatch(/\$\s?\d/);
-      expect(bodyText, '应显式说明定价尚未公布').toContain('定价尚未公布');
+      expect(
+        bodyText,
+        '应显式说明定价尚未公布（V23 公开面英文 / 旧中文均可）'
+      ).toMatch(/Pricing is not published yet|定价尚未公布/);
     }
   });
 
