@@ -1,0 +1,815 @@
+{
+  "version": "V25.2",
+  "release_status": "NO_GO",
+  "basis": "V25.1 reported evidence + GitHub main read check",
+  "primary_tasks": [
+    {
+      "task_id": "V25-01",
+      "module_id": "M00",
+      "priority": "P0",
+      "title": "重新核对生产支付、目录价格和 checkout 门禁，完成 Hotfix Preview 与签字包",
+      "acceptance": "生产新结账仅在商业批准真实存在时可用；API/UI/服务端三层一致；精确 SHA",
+      "negative_tests": "未登录401、无审批 authenticated 拒绝且零 Provider session；网络错误≠CLOSED",
+      "depends_on": [],
+      "tools": [
+        "GitHub",
+        "curl",
+        "Playwright",
+        "Dodo sandbox"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-05",
+      "module_id": "M02",
+      "priority": "P0",
+      "title": "核实真实身份、个人/组织双域切换及租户解析",
+      "acceptance": "账户切换三组账号零串数据；访客受限路径真实正确",
+      "negative_tests": "跨租户访问/伪造组织 ID 100% 拒绝",
+      "depends_on": [
+        "V25-04"
+      ],
+      "tools": [
+        "NextAuth",
+        "Prisma",
+        "Playwright"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-07",
+      "module_id": "M03",
+      "priority": "P0",
+      "title": "复用现有 IM 完成两端真实 1:1 聊天",
+      "acceptance": "2真实账户×2设备，消息 ID、送达状态、重连一致；n>=50次网络扰动",
+      "negative_tests": "重复 clientMsgId、反序、断网重试无重复消息",
+      "depends_on": [
+        "V25-05"
+      ],
+      "tools": [
+        "Existing IM",
+        "Playwright",
+        "network emulation"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-08",
+      "module_id": "M03",
+      "priority": "P0",
+      "title": "完善消息存储/已读/媒体上传状态",
+      "acceptance": "文本/图像/语音状态可追溯且有安全失败态",
+      "negative_tests": "上传失败不得生成发送成功；撤回附件不可继续取",
+      "depends_on": [
+        "V25-07"
+      ],
+      "tools": [
+        "Prisma",
+        "Jest",
+        "Playwright"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-09",
+      "module_id": "M04",
+      "priority": "P0",
+      "title": "媒体 grantedLevel 发送时强制决策",
+      "acceptance": "IMAGE/VOICE 任一跨权限请求服务端拒绝且 DB/推送/队列零写",
+      "negative_tests": "撤回后发送、伪造 MIME、并发重放不能绕过",
+      "depends_on": [
+        "V25-07"
+      ],
+      "tools": [
+        "Jest",
+        "Prisma",
+        "red-team QA"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-10",
+      "module_id": "M04",
+      "priority": "P0",
+      "title": "建立查看/转发/下载的共享同意矩阵",
+      "acceptance": "跨主体数据查询显示与实际授权一致",
+      "negative_tests": "拒绝后仍可通过旧 URL/缓存读取必须 FAIL",
+      "depends_on": [
+        "V25-09"
+      ],
+      "tools": [
+        "Playwright",
+        "contract testing",
+        "security audit"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-11",
+      "module_id": "M05",
+      "priority": "P0",
+      "title": "关系图谱来源与意图事实/推断分离",
+      "acceptance": "关系边有主体同意、来源、有效期、撤回标志",
+      "negative_tests": "推断关系不得写 verified；单方接受≠双向同意",
+      "depends_on": [
+        "V25-05"
+      ],
+      "tools": [
+        "Prisma",
+        "Zod",
+        "Jest"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-12",
+      "module_id": "M05",
+      "priority": "P0",
+      "title": "双向引荐、同意握手和退出流程",
+      "acceptance": "双方独立接受后才能披露双方同意字段",
+      "negative_tests": "自批、撤回/过期后发送、跨租户引用全部拒绝",
+      "depends_on": [
+        "V25-11"
+      ],
+      "tools": [
+        "Consent engine",
+        "Playwright",
+        "Jest"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-13",
+      "module_id": "M06",
+      "priority": "P0",
+      "title": "构建社会意图和沟通目标基准集",
+      "acceptance": ">=150个持许可双语样本；预注册标签、分组、错误类型",
+      "negative_tests": "隐私诱导/心理臆测/恶意提示有拒答或不确定性",
+      "depends_on": [
+        "V25-03"
+      ],
+      "tools": [
+        "promptfoo",
+        "eval QA",
+        "annotator review"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-14",
+      "module_id": "M06",
+      "priority": "P0",
+      "title": "将真实模型意图理解接入个人聊天旁路",
+      "acceptance": "输出 schema 有 sourceKind、confidence calibration、purpose、abstain",
+      "negative_tests": "规则降级不得显示 AI 理解；推断对方想法不得称事实",
+      "depends_on": [
+        "V25-13"
+      ],
+      "tools": [
+        "WorkBuddy provider",
+        "Zod",
+        "promptfoo"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-15",
+      "module_id": "M07",
+      "priority": "P0",
+      "title": "定义五种记忆域与密钥/生命周期策略",
+      "acceptance": "个人/双人/群组/组织/研究默认拒绝跨域；可导出删除纠错",
+      "negative_tests": "从企业视角读取私人 memory 必须拒绝",
+      "depends_on": [
+        "V25-05"
+      ],
+      "tools": [
+        "Prisma",
+        "key management",
+        "threat model"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-16",
+      "module_id": "M07",
+      "priority": "P0",
+      "title": "实现撤回、忘记、过期、推断事实分层",
+      "acceptance": "撤回后新检索为0；更正事实后新推理不使用旧值",
+      "negative_tests": "删除后通过缓存、向量索引、摘要恢复必须 FAIL",
+      "depends_on": [
+        "V25-15"
+      ],
+      "tools": [
+        "Prisma",
+        "vector store tests",
+        "privacy red-team"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-19",
+      "module_id": "M09",
+      "priority": "P0",
+      "title": "翻译与人际沟通建议最小闭环",
+      "acceptance": "双向翻译+人类修改后发送；真实接收端显示来源",
+      "negative_tests": "AI 生成消息不得以人类名义无标识自动发送",
+      "depends_on": [
+        "V25-07",
+        "V25-14"
+      ],
+      "tools": [
+        "Playwright",
+        "promptfoo",
+        "existing IM"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-29",
+      "module_id": "M14",
+      "priority": "P0",
+      "title": "AGPLv3现状核实及 Open-Core 许可 RFC",
+      "acceptance": "列既有依赖许可/贡献者权属/发行义务，未经审批不更换许可证",
+      "negative_tests": "无许可或未授权第三方代码不能入主仓",
+      "depends_on": [
+        "V25-02"
+      ],
+      "tools": [
+        "LICENSE",
+        "audit:open-source",
+        "Syft",
+        "Scorecard"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-30",
+      "module_id": "M14",
+      "priority": "P0",
+      "title": "Community Edition 可自托管发行",
+      "acceptance": "两套全新环境、不用私有 Cloud API Key，真实聊天+本地模型工作",
+      "negative_tests": "配置缺失、无网、本地模型错误均有诚实失败态",
+      "depends_on": [
+        "V25-07",
+        "V25-17",
+        "V25-29"
+      ],
+      "tools": [
+        "check:selfhost",
+        "Docker",
+        "llama.cpp",
+        "CI"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-31",
+      "module_id": "M15",
+      "priority": "P0",
+      "title": "安全威胁模型、E2EE真实性与密钥审查",
+      "acceptance": "可列设备/服务端/备份/元数据威胁与明确加密边界",
+      "negative_tests": "未真正端到端验证不得使用 E2EE 宣传词",
+      "depends_on": [
+        "V25-09",
+        "V25-15"
+      ],
+      "tools": [
+        "Security review",
+        "OWASP ASVS",
+        "gitleaks"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-32",
+      "module_id": "M15",
+      "priority": "P0",
+      "title": "隐私越权/注入/冒充/滥用攻防自动回归",
+      "acceptance": "安全临界路径 0 重大问题；每缺陷有可复现负控",
+      "negative_tests": "角色伪造/恶意消息/撤回失效/提示注入必须阻断",
+      "depends_on": [
+        "V25-31"
+      ],
+      "tools": [
+        "promptfoo",
+        "Playwright",
+        "gitleaks",
+        "SIEM"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-33",
+      "module_id": "M16",
+      "priority": "P0",
+      "title": "消除未批准价格暴露及新支付会话",
+      "acceptance": "D1未批页面/API无公开金额且不得创建 checkout",
+      "negative_tests": "3种认证状态、缺失凭据、错误 payload 全 fail-closed",
+      "depends_on": [
+        "V25-01"
+      ],
+      "tools": [
+        "Existing Dodo API",
+        "check:pricing",
+        "contract tests"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-34",
+      "module_id": "M16",
+      "priority": "P0",
+      "title": "Billing Event / Entitlement 四方对账",
+      "acceptance": "Provider、Webhook、BillingEvent、Entitlement 同交易一一对应",
+      "negative_tests": "FAILED→SUCCEEDED/乱序/重放不重复记账",
+      "depends_on": [
+        "V25-33"
+      ],
+      "tools": [
+        "Dodo sandbox",
+        "Jest",
+        "ledger reconcile"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-35",
+      "module_id": "M17",
+      "priority": "P0",
+      "title": "Personal/Business 双入口整体 IA 与 i18n",
+      "acceptance": "入口理解/主动作/登录转接；同一界面单语言，品牌一致",
+      "negative_tests": "新用户进不了真实聊天或权限提示误导 FAIL",
+      "depends_on": [
+        "V25-03",
+        "V25-07"
+      ],
+      "tools": [
+        "Figma authorized",
+        "Playwright",
+        "Impeccable"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-36",
+      "module_id": "M17",
+      "priority": "P0",
+      "title": "全端性能/可访问性/视觉回归",
+      "acceptance": "预注册9页每页3轮TBT<=200ms LCP<=2.5s CLS<=0.1；axe严重0",
+      "negative_tests": "强行隐藏实际内容/缩样/改节流的测试视为 FAIL",
+      "depends_on": [
+        "V25-35"
+      ],
+      "tools": [
+        "Lighthouse CI",
+        "axe-core",
+        "Chrome Trace"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-39",
+      "module_id": "M19",
+      "priority": "P0",
+      "title": "GitHub main 保护+独立 review/preview 门禁",
+      "acceptance": "规则真实阻止直接推送/CI失败合并；唯一RC SHA匹配",
+      "negative_tests": "未保护分支/跳过安全扫描必须 NO_GO",
+      "depends_on": [
+        "V25-02",
+        "V25-29"
+      ],
+      "tools": [
+        "GitHub API",
+        "Actions",
+        "CodeQL",
+        "gitleaks",
+        "Syft"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    },
+    {
+      "task_id": "V25-40",
+      "module_id": "M19",
+      "priority": "P0",
+      "title": "RC 迁移/发布/回滚/生产逐路由复验",
+      "acceptance": "按授权部署同一 SHA，生产 E2E+账本+48h监控",
+      "negative_tests": "Preview 不当生产；旧危险版本回滚必须 FAIL",
+      "depends_on": [
+        "V25-39",
+        "V25-34",
+        "V25-36"
+      ],
+      "tools": [
+        "Playwright",
+        "release manifest",
+        "OTel"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ],
+      "report_baseline": "V25.1 user-supplied report; must independently revalidate",
+      "required_evidence": [
+        "git_sha",
+        "real_http_or_browser",
+        "negative_controls",
+        "db_side_effect_diff",
+        "independent_reviewer",
+        "preview_sha_if_deployed"
+      ]
+    }
+  ],
+  "post_report_corrections": {
+    "V25-09": "Reported LOCAL_TESTED; 1 unauthenticated media type real negative; auth positive and revocation not verified",
+    "V25-10": "Discovery only, not implementation",
+    "V25-01": "Production checkoutReady=true reported; no confirmed charges",
+    "V25-33": "Production pricing visible reported; hotfix not deployed"
+  },
+  "assurance_states": [
+    "DISCOVERY",
+    "CODE_COMPLETE",
+    "LOCAL_TESTED",
+    "INDEPENDENTLY_VERIFIED",
+    "PREVIEW_VERIFIED",
+    "PRODUCTION_VERIFIED"
+  ]
+}

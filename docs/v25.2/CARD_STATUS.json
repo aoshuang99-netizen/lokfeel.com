@@ -1,0 +1,344 @@
+{
+  "version": "V25.2",
+  "base_sha": "669c0aec91bca01f0337877ec2d6b1aa2ea33fb8",
+  "zip_sha256": "07feaf38f6af3399b17bb3aea8a4193c688e8980021c81a0a8ebd822954671ef",
+  "release_status": "NO_GO",
+  "assurance_states": [
+    "DISCOVERY",
+    "CODE_COMPLETE",
+    "LOCAL_TESTED",
+    "INDEPENDENTLY_VERIFIED",
+    "PREVIEW_VERIFIED",
+    "PRODUCTION_VERIFIED"
+  ],
+  "cards": [
+    {
+      "task_id": "V25-01",
+      "module_id": "M00",
+      "priority": "P0",
+      "depends_on": [],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-05",
+      "module_id": "M02",
+      "priority": "P0",
+      "depends_on": [
+        "V25-04"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-07",
+      "module_id": "M03",
+      "priority": "P0",
+      "depends_on": [
+        "V25-05"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-08",
+      "module_id": "M03",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-09",
+      "module_id": "M04",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-10",
+      "module_id": "M04",
+      "priority": "P0",
+      "depends_on": [
+        "V25-09"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-11",
+      "module_id": "M05",
+      "priority": "P0",
+      "depends_on": [
+        "V25-05"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-12",
+      "module_id": "M05",
+      "priority": "P0",
+      "depends_on": [
+        "V25-11"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-13",
+      "module_id": "M06",
+      "priority": "P0",
+      "depends_on": [
+        "V25-03"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-14",
+      "module_id": "M06",
+      "priority": "P0",
+      "depends_on": [
+        "V25-13"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-15",
+      "module_id": "M07",
+      "priority": "P0",
+      "depends_on": [
+        "V25-05"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-16",
+      "module_id": "M07",
+      "priority": "P0",
+      "depends_on": [
+        "V25-15"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-19",
+      "module_id": "M09",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07",
+        "V25-14"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-29",
+      "module_id": "M14",
+      "priority": "P0",
+      "depends_on": [
+        "V25-02"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-30",
+      "module_id": "M14",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07",
+        "V25-17",
+        "V25-29"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-31",
+      "module_id": "M15",
+      "priority": "P0",
+      "depends_on": [
+        "V25-09",
+        "V25-15"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-32",
+      "module_id": "M15",
+      "priority": "P0",
+      "depends_on": [
+        "V25-31"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-33",
+      "module_id": "M16",
+      "priority": "P0",
+      "depends_on": [
+        "V25-01"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-34",
+      "module_id": "M16",
+      "priority": "P0",
+      "depends_on": [
+        "V25-33"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-35",
+      "module_id": "M17",
+      "priority": "P0",
+      "depends_on": [
+        "V25-03",
+        "V25-07"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-36",
+      "module_id": "M17",
+      "priority": "P0",
+      "depends_on": [
+        "V25-35"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-39",
+      "module_id": "M19",
+      "priority": "P0",
+      "depends_on": [
+        "V25-02",
+        "V25-29"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    },
+    {
+      "task_id": "V25-40",
+      "module_id": "M19",
+      "priority": "P0",
+      "depends_on": [
+        "V25-39",
+        "V25-34",
+        "V25-36"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH",
+      "verdict": "DISCOVERY",
+      "code_sha": null,
+      "reviewer": null,
+      "real_http": null,
+      "verdict_note": ""
+    }
+  ]
+}

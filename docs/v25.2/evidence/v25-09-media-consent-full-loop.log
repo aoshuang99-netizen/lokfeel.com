@@ -1,0 +1,94 @@
+{
+  "allPass": true,
+  "results": [
+    {
+      "label": "1 no-grant IMAGE",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REQUIRED",
+      "expect": "403/MEDIA_CONSENT_REQUIRED",
+      "dbDiff": 0,
+      "pass": true
+    },
+    {
+      "label": "2 L1-grant IMAGE",
+      "status": 200,
+      "code": null,
+      "expect": "200/-",
+      "dbDiff": 1,
+      "pass": true
+    },
+    {
+      "label": "3 L1-grant VOICE (low level)",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REQUIRED",
+      "expect": "403/MEDIA_CONSENT_REQUIRED",
+      "dbDiff": 0,
+      "pass": true
+    },
+    {
+      "label": "4 L2-grant VOICE",
+      "status": 200,
+      "code": null,
+      "expect": "200/-",
+      "dbDiff": 1,
+      "pass": true
+    },
+    {
+      "label": "5 revoked grant IMAGE",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REQUIRED",
+      "expect": "403/MEDIA_CONSENT_REQUIRED",
+      "dbDiff": 0,
+      "pass": true
+    },
+    {
+      "label": "6 expired grant IMAGE",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REQUIRED",
+      "expect": "403/MEDIA_CONSENT_REQUIRED",
+      "dbDiff": 0,
+      "pass": true
+    },
+    {
+      "label": "7 disguised TEXT (image payload)",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REQUIRED",
+      "expect": "403/MEDIA_CONSENT_REQUIRED",
+      "dbDiff": 0,
+      "pass": true
+    },
+    {
+      "label": "8 reverse-direction grant",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REQUIRED",
+      "expect": "403/MEDIA_CONSENT_REQUIRED",
+      "dbDiff": 0,
+      "pass": true
+    },
+    {
+      "label": "9 cross-conversation grant",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REQUIRED",
+      "expect": "403/MEDIA_CONSENT_REQUIRED",
+      "dbDiff": 0,
+      "pass": true
+    },
+    {
+      "label": "10a replay setup IMAGE",
+      "status": 200,
+      "code": null,
+      "expect": "200/-",
+      "dbDiff": 1,
+      "pass": true
+    },
+    {
+      "label": "10b revoked replay old clientMsgId",
+      "status": 403,
+      "code": "MEDIA_CONSENT_REVOKED_REPLAY",
+      "expect": "403/MEDIA_CONSENT_REVOKED_REPLAY",
+      "dbDiff": 0,
+      "leaksSecret": false,
+      "pass": true
+    }
+  ]
+}
