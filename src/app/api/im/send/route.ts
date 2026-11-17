@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { safeRequestBody } from "@/lib/safe-json";
 import { handleBotReply } from "@/lib/im/bot-reply";
 import { checkSendPermission } from "@/lib/im/message-guards";
+import { checkMediaGrant, requiredLevelForMessageType } from "@/lib/im/consent-guard";
 import { IMMessageType } from "@/generated";
 
 /** 客户端被允许声明的消息类型白名单。SYSTEM 等枚举绝不可由客户端指定。 */
@@ -118,6 +119,36 @@ export async function POST(req: NextRequest) {
     });
     if (!verdict.ok) {
       return NextResponse.json(verdict.body, { status: verdict.status });
+    }
+
+    // ── V25-09 / M04 · MEDIA CONSENT GATE（P0 隐私硬门禁）──
+    // 前提缺口：此前 mediaLevel 仅由客户端 msgType 推导、consentState 硬编码
+    // CONSENT_NONE，发送执行点从未校验接收方是否授权该档位媒体 —— 任何人都能
+    // 声明 IMAGE/VOICE 直接投递。这里在**任何写操作之前**（事务、Pusher、
+    // bot reply 全在下方）做最小权限默认拒绝：
+    //   · 授权方向 receiver(granter) → sender(grantee)，不跨会话、不看缓存；
+    //   · 无有效 grant（不存在/撤销/过期/档位不足）⇒ 403 且零写；
+    //   · TEXT 不受影响（基础通信能力）。
+    const requiredMediaLevel = requiredLevelForMessageType(msgType);
+    if (requiredMediaLevel) {
+      const mediaVerdict = await checkMediaGrant({
+        receiverId,
+        senderId: userId,
+        conversationId,
+        requiredLevel: requiredMediaLevel,
+      });
+      if (!mediaVerdict.granted) {
+        return NextResponse.json(
+          {
+            error: "MEDIA_CONSENT_REQUIRED",
+            code: "MEDIA_CONSENT_REQUIRED",
+            requiredLevel: mediaVerdict.requiredLevel,
+            grantedLevel: mediaVerdict.effectiveLevel,
+            reason: mediaVerdict.reason,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Atomic transaction: create message + update conversation (prevents data inconsistency)
