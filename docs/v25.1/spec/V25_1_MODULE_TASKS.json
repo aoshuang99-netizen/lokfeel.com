@@ -1,0 +1,1393 @@
+{
+  "spec_version": "25.1",
+  "status": "PROPOSED_NOT_EXECUTED",
+  "model_source": "WorkBuddy latest V25-00~02 report; 2026-11-17 GitHub read-only spot-check",
+  "product_goal": "Open Generative AI Social Platform for Personal, Business, Community/Developer",
+  "release_policy": "NO_GO until all applicable mandatory gates independently PASS and Owner approves production SHA",
+  "modules": [
+    {
+      "module_id": "M00",
+      "name": "事实源、发布止损与决策",
+      "priority": "P0",
+      "owner": "Release/Security",
+      "recommended_tools": [
+        "GitHub connector",
+        "git",
+        "curl",
+        "Playwright",
+        "existing check:pricing"
+      ],
+      "user_outcome": "产线错价/未经批准开通检查",
+      "hard_gate": "明确生产/候选/主仓/预览 SHA；商业未批不得发起新的结账；所有敏感变更须审批"
+    },
+    {
+      "module_id": "M01",
+      "name": "产品定义与共用领域协议",
+      "priority": "P0",
+      "owner": "Product/Architect",
+      "recommended_tools": [
+        "GitHub",
+        "Codex",
+        "Zod",
+        "OpenAPI",
+        "Pact/contract tests"
+      ],
+      "user_outcome": "Personal / Business / Developer 使用同一版本化数据契约",
+      "hard_gate": "三类客户各能完成一个典型场景；API 契约 diff 后无无意破坏；禁以 Mission 替代社交成果"
+    },
+    {
+      "module_id": "M02",
+      "name": "身份、组织、真人真实性",
+      "priority": "P0",
+      "owner": "Backend/Security",
+      "recommended_tools": [
+        "NextAuth",
+        "Prisma",
+        "Jest",
+        "Playwright"
+      ],
+      "user_outcome": "个人/企业双域及会话隔离；不假称未实施的真人核验",
+      "hard_gate": "无授权跨用户/跨租户读取0；账号切换不串私聊/记忆；身份状态如实显示"
+    },
+    {
+      "module_id": "M03",
+      "name": "聊天与实时消息",
+      "priority": "P0",
+      "owner": "IM Backend/Frontend",
+      "recommended_tools": [
+        "现有 /api/im、Pusher",
+        "Playwright",
+        "Jest",
+        "Toxiproxy 或 network simulation"
+      ],
+      "user_outcome": "双真实账号发送/接收/已读/离线重试可复核",
+      "hard_gate": "两用户两设备消息对齐、顺序稳定、客户端消息幂等、无副作用重复0"
+    },
+    {
+      "module_id": "M04",
+      "name": "多模态消息的授权执行点",
+      "priority": "P0",
+      "owner": "Security/IM",
+      "recommended_tools": [
+        "Prisma",
+        "Jest",
+        "Playwright",
+        "promptfoo",
+        "threat modeling"
+      ],
+      "user_outcome": "IMAGE/VOICE 发送时检查 grantedLevel",
+      "hard_gate": "未授权媒体 403 且 DB/队列/推送 0 写；撤回、并发、转发和重放不能绕过"
+    },
+    {
+      "module_id": "M05",
+      "name": "关系图谱、身份可见性与同意",
+      "priority": "P0",
+      "owner": "Relationship/Security",
+      "recommended_tools": [
+        "Prisma",
+        "Zod",
+        "Jest",
+        "property-based tests"
+      ],
+      "user_outcome": "联系/引荐/共享许可显式状态",
+      "hard_gate": "拒绝/撤销可即时阻断未执行动作；关系推测不得写成双方确认事实"
+    },
+    {
+      "module_id": "M06",
+      "name": "社交生成模型与意图理解",
+      "priority": "P0",
+      "owner": "AI/Research",
+      "recommended_tools": [
+        "现有 WorkBuddy provider",
+        "promptfoo",
+        "Zod",
+        "holdout evaluator"
+      ],
+      "user_outcome": "私人意图、情境、沟通目的澄清",
+      "hard_gate": "无证据不得断言对方情绪；≥150条独立双语评测及失败类型报告"
+    },
+    {
+      "module_id": "M07",
+      "name": "Private/Shared Relationship Memory",
+      "priority": "P0",
+      "owner": "Privacy/Data",
+      "recommended_tools": [
+        "Prisma",
+        "key management/KMS evaluation",
+        "property tests",
+        "threat model"
+      ],
+      "user_outcome": "个人记忆、双人同意共享、群共享、企业知识严格隔离",
+      "hard_gate": "跨域检索 0；撤回后不能再被新推理访问；删除/导出/更正可测"
+    },
+    {
+      "module_id": "M08",
+      "name": "Social Intelligence Router & 模型适配",
+      "priority": "P0",
+      "owner": "AI Platform",
+      "recommended_tools": [
+        "WorkBuddy provider",
+        "local inference adapter",
+        "vLLM",
+        "llama.cpp",
+        "OpenTelemetry"
+      ],
+      "user_outcome": "权限优先、可替换模型、预算/风险路由",
+      "hard_gate": "无凭据时诚实降级；未获许可不得转私聊到云模型；记录 route_reason"
+    },
+    {
+      "module_id": "M09",
+      "name": "私有生成式沟通助手",
+      "priority": "P0",
+      "owner": "AI Product/Safety",
+      "recommended_tools": [
+        "LLM eval",
+        "promptfoo",
+        "Playwright",
+        "red-team scripts"
+      ],
+      "user_outcome": "翻译、表达建议、沟通草稿/摘要",
+      "hard_gate": "AI 内容清楚标注；不替用户自动发送；跨语言误译敏感语义能提示不确定性"
+    },
+    {
+      "module_id": "M10",
+      "name": "Spaces 与双人/多人协作",
+      "priority": "P1",
+      "owner": "Frontend/Collab",
+      "recommended_tools": [
+        "React/Next.js",
+        "Playwright",
+        "axe-core",
+        "existing IM"
+      ],
+      "user_outcome": "个人小群/企业 Space 的邀请/权限",
+      "hard_gate": "退出或移除后无新消息和记忆访问；成员名单和组消息一致"
+    },
+    {
+      "module_id": "M11",
+      "name": "Agent/Consent/工具行为与真实回执",
+      "priority": "P0",
+      "owner": "Agent/Security",
+      "recommended_tools": [
+        "现有 Agent/Mission",
+        "MCP/A2A",
+        "Jest",
+        "Playwright",
+        "provider sandbox"
+      ],
+      "user_outcome": "批准前后动作分离，真实发送与回执绑定",
+      "hard_gate": "0未授权外部发送；重复事件不重复执行；真实外部动作需 Provider receipt"
+    },
+    {
+      "module_id": "M12",
+      "name": "Business SaaS 与企业治理",
+      "priority": "P1",
+      "owner": "Enterprise",
+      "recommended_tools": [
+        "Prisma/RBAC",
+        "Playwright",
+        "OWASP ASVS",
+        "OTel"
+      ],
+      "user_outcome": "租户空间、组织 AI、管理员权限、企业审计",
+      "hard_gate": "管理员不得读取成员个人 Vault；两企业交叉测试 0 泄漏"
+    },
+    {
+      "module_id": "M13",
+      "name": "开放协议、API、SDK 与兼容",
+      "priority": "P1",
+      "owner": "Platform/DevRel",
+      "recommended_tools": [
+        "OpenAPI",
+        "existing check:openapi-contract",
+        "Matrix PoC",
+        "MCP",
+        "A2A"
+      ],
+      "user_outcome": "开放消息/Agent/模型适配契约与 SDK",
+      "hard_gate": "独立样例客户端可调用；版本向后兼容；跨协议不绕过 Consent"
+    },
+    {
+      "module_id": "M14",
+      "name": "开源 Community Edition、自托管与许可",
+      "priority": "P0",
+      "owner": "Open Source/Legal/DevOps",
+      "recommended_tools": [
+        "LICENSE AGPLv3",
+        "check:selfhost",
+        "audit:open-source",
+        "Docker",
+        "Syft",
+        "Scorecard"
+      ],
+      "user_outcome": "可运行社区版和贡献治理",
+      "hard_gate": "两个独立干净环境无需 LokFeel Cloud 密钥即可聊天及本地 AI；许可裁决留痕"
+    },
+    {
+      "module_id": "M15",
+      "name": "信任、安全、加密与反滥用",
+      "priority": "P0",
+      "owner": "Security/Privacy",
+      "recommended_tools": [
+        "gitleaks",
+        "Syft",
+        "Scorecard",
+        "promptfoo",
+        "OWASP ASVS",
+        "crypto review"
+      ],
+      "user_outcome": "未授权泄露/骚扰/冒充、E2EE 声明审计",
+      "hard_gate": "零重大越权、零真实密钥泄漏；没有端到端威胁验证不声称 E2EE"
+    },
+    {
+      "module_id": "M16",
+      "name": "商业订阅与多产品账本隔离",
+      "priority": "P0",
+      "owner": "Billing",
+      "recommended_tools": [
+        "existing check:pricing",
+        "check:products",
+        "Dodo sandbox",
+        "ledger audit"
+      ],
+      "user_outcome": "未批准价格不能购买，B2C/新 SaaS 不串",
+      "hard_gate": "不重复入账、不串权益；沙箱 webhook 真投递、乱序与重试通过"
+    },
+    {
+      "module_id": "M17",
+      "name": "Personal/Business UX 与前端设计",
+      "priority": "P0",
+      "owner": "Design/Frontend",
+      "recommended_tools": [
+        "Figma (authorized)",
+        "Playwright",
+        "axe-core",
+        "Lighthouse CI",
+        "Impeccable"
+      ],
+      "user_outcome": "四主入口、两个角色、真实交互、移动优先",
+      "hard_gate": "非技术用户五秒识别主动作；7 视口零溢出、严重无障碍0"
+    },
+    {
+      "module_id": "M18",
+      "name": "评测、MoE 科研与学习闭环",
+      "priority": "P1",
+      "owner": "ML Research/Independent QA",
+      "recommended_tools": [
+        "promptfoo",
+        "Python",
+        "vLLM/llama.cpp",
+        "VEC eval",
+        "OTel"
+      ],
+      "user_outcome": "模型路由 vs Sparse MoE 等预算实验",
+      "hard_gate": "盲测无数据泄漏；质量/成本/隐私分别出报告，未胜强基线不得升级"
+    },
+    {
+      "module_id": "M19",
+      "name": "CI/CD、发布与生产可观测",
+      "priority": "P0",
+      "owner": "Release/QA",
+      "recommended_tools": [
+        "GitHub rulesets",
+        "Playwright",
+        "Lighthouse CI",
+        "OTel",
+        "gitleaks",
+        "Syft"
+      ],
+      "user_outcome": "唯一 RC SHA、受保护 main、preview、回滚、生产复验",
+      "hard_gate": "所有适用强制门禁 PASS；实际生产 SHA 一致；48h 观察期有证据"
+    },
+    {
+      "module_id": "M20",
+      "name": "Personal + 企业试点与商业实证",
+      "priority": "P1",
+      "owner": "Product/Research",
+      "recommended_tools": [
+        "Playwright",
+        "analytics",
+        "consented interviews",
+        "experiment notebook"
+      ],
+      "user_outcome": "真实用户社交与企业群落双试点",
+      "hard_gate": "双端聊天/关系助益有真实观察；不拿模拟评价或消息数作真实满意度"
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "V25-01",
+      "module_id": "M00",
+      "priority": "P0",
+      "title": "重新核对生产支付、目录价格和 checkout 门禁，完成 Hotfix Preview 与签字包",
+      "acceptance": "生产新结账仅在商业批准真实存在时可用；API/UI/服务端三层一致；精确 SHA",
+      "negative_tests": "未登录401、无审批 authenticated 拒绝且零 Provider session；网络错误≠CLOSED",
+      "depends_on": [],
+      "tools": [
+        "GitHub",
+        "curl",
+        "Playwright",
+        "Dodo sandbox"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-02",
+      "module_id": "M00",
+      "priority": "P0",
+      "title": "建立真实版本图和商业决策状态源",
+      "acceptance": "本地、远端、生产、Preview SHA 可溯源；自填 APPROVED 不算授权",
+      "negative_tests": "任意 SHA 漂移/审批引用缺失 MUST FAIL",
+      "depends_on": [
+        "V25-01"
+      ],
+      "tools": [
+        "git",
+        "GitHub API",
+        "release manifest"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-03",
+      "module_id": "M01",
+      "priority": "P0",
+      "title": "形成 Personal/Business/Builder 三场景用户旅程和能力真值表",
+      "acceptance": "三个场景逐节点有真实 API/权限/价值/收费归属",
+      "negative_tests": "功能无后端或缺数据标 PLANNED",
+      "depends_on": [
+        "V25-02"
+      ],
+      "tools": [
+        "GitHub",
+        "product research",
+        "OpenAPI"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-04",
+      "module_id": "M01",
+      "priority": "P0",
+      "title": "冻结 Social Domain 版本化契约及旧路由适配",
+      "acceptance": "source of truth、迁移图、兼容旧 chat/match/mission；Contract Tests 100%",
+      "negative_tests": "旧深链跳错、旧资料丢失需 FAIL",
+      "depends_on": [
+        "V25-03"
+      ],
+      "tools": [
+        "Prisma",
+        "Zod",
+        "OpenAPI",
+        "Jest"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-05",
+      "module_id": "M02",
+      "priority": "P0",
+      "title": "核实真实身份、个人/组织双域切换及租户解析",
+      "acceptance": "账户切换三组账号零串数据；访客受限路径真实正确",
+      "negative_tests": "跨租户访问/伪造组织 ID 100% 拒绝",
+      "depends_on": [
+        "V25-04"
+      ],
+      "tools": [
+        "NextAuth",
+        "Prisma",
+        "Playwright"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-06",
+      "module_id": "M02",
+      "priority": "P1",
+      "title": "身份验证与真人状态来源分级",
+      "acceptance": "声明 verified 必须有可审计验证来源/时间/过期",
+      "negative_tests": "人工自填或 AI 推断不能生成 VERIFIED",
+      "depends_on": [
+        "V25-05"
+      ],
+      "tools": [
+        "Prisma",
+        "audit",
+        "identity provider evaluation"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-07",
+      "module_id": "M03",
+      "priority": "P0",
+      "title": "复用现有 IM 完成两端真实 1:1 聊天",
+      "acceptance": "2真实账户×2设备，消息 ID、送达状态、重连一致；n>=50次网络扰动",
+      "negative_tests": "重复 clientMsgId、反序、断网重试无重复消息",
+      "depends_on": [
+        "V25-05"
+      ],
+      "tools": [
+        "Existing IM",
+        "Playwright",
+        "network emulation"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-08",
+      "module_id": "M03",
+      "priority": "P0",
+      "title": "完善消息存储/已读/媒体上传状态",
+      "acceptance": "文本/图像/语音状态可追溯且有安全失败态",
+      "negative_tests": "上传失败不得生成发送成功；撤回附件不可继续取",
+      "depends_on": [
+        "V25-07"
+      ],
+      "tools": [
+        "Prisma",
+        "Jest",
+        "Playwright"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-09",
+      "module_id": "M04",
+      "priority": "P0",
+      "title": "媒体 grantedLevel 发送时强制决策",
+      "acceptance": "IMAGE/VOICE 任一跨权限请求服务端拒绝且 DB/推送/队列零写",
+      "negative_tests": "撤回后发送、伪造 MIME、并发重放不能绕过",
+      "depends_on": [
+        "V25-07"
+      ],
+      "tools": [
+        "Jest",
+        "Prisma",
+        "red-team QA"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-10",
+      "module_id": "M04",
+      "priority": "P0",
+      "title": "建立查看/转发/下载的共享同意矩阵",
+      "acceptance": "跨主体数据查询显示与实际授权一致",
+      "negative_tests": "拒绝后仍可通过旧 URL/缓存读取必须 FAIL",
+      "depends_on": [
+        "V25-09"
+      ],
+      "tools": [
+        "Playwright",
+        "contract testing",
+        "security audit"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-11",
+      "module_id": "M05",
+      "priority": "P0",
+      "title": "关系图谱来源与意图事实/推断分离",
+      "acceptance": "关系边有主体同意、来源、有效期、撤回标志",
+      "negative_tests": "推断关系不得写 verified；单方接受≠双向同意",
+      "depends_on": [
+        "V25-05"
+      ],
+      "tools": [
+        "Prisma",
+        "Zod",
+        "Jest"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-12",
+      "module_id": "M05",
+      "priority": "P0",
+      "title": "双向引荐、同意握手和退出流程",
+      "acceptance": "双方独立接受后才能披露双方同意字段",
+      "negative_tests": "自批、撤回/过期后发送、跨租户引用全部拒绝",
+      "depends_on": [
+        "V25-11"
+      ],
+      "tools": [
+        "Consent engine",
+        "Playwright",
+        "Jest"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-13",
+      "module_id": "M06",
+      "priority": "P0",
+      "title": "构建社会意图和沟通目标基准集",
+      "acceptance": ">=150个持许可双语样本；预注册标签、分组、错误类型",
+      "negative_tests": "隐私诱导/心理臆测/恶意提示有拒答或不确定性",
+      "depends_on": [
+        "V25-03"
+      ],
+      "tools": [
+        "promptfoo",
+        "eval QA",
+        "annotator review"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-14",
+      "module_id": "M06",
+      "priority": "P0",
+      "title": "将真实模型意图理解接入个人聊天旁路",
+      "acceptance": "输出 schema 有 sourceKind、confidence calibration、purpose、abstain",
+      "negative_tests": "规则降级不得显示 AI 理解；推断对方想法不得称事实",
+      "depends_on": [
+        "V25-13"
+      ],
+      "tools": [
+        "WorkBuddy provider",
+        "Zod",
+        "promptfoo"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-15",
+      "module_id": "M07",
+      "priority": "P0",
+      "title": "定义五种记忆域与密钥/生命周期策略",
+      "acceptance": "个人/双人/群组/组织/研究默认拒绝跨域；可导出删除纠错",
+      "negative_tests": "从企业视角读取私人 memory 必须拒绝",
+      "depends_on": [
+        "V25-05"
+      ],
+      "tools": [
+        "Prisma",
+        "key management",
+        "threat model"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-16",
+      "module_id": "M07",
+      "priority": "P0",
+      "title": "实现撤回、忘记、过期、推断事实分层",
+      "acceptance": "撤回后新检索为0；更正事实后新推理不使用旧值",
+      "negative_tests": "删除后通过缓存、向量索引、摘要恢复必须 FAIL",
+      "depends_on": [
+        "V25-15"
+      ],
+      "tools": [
+        "Prisma",
+        "vector store tests",
+        "privacy red-team"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-17",
+      "module_id": "M08",
+      "priority": "P0",
+      "title": "统一模型适配与路由接口",
+      "acceptance": "至少 2 种可替换后端+规则路径；route_reason/预算/风险完备",
+      "negative_tests": "不能使用被禁止云路由；失效必须标 DEGRADED",
+      "depends_on": [
+        "V25-15"
+      ],
+      "tools": [
+        "existing WorkBuddy provider",
+        "llama.cpp",
+        "vLLM",
+        "OTel"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-18",
+      "module_id": "M08",
+      "priority": "P0",
+      "title": "隐私优先推理路径与路由决策审计",
+      "acceptance": "私密内容默认仅许可位置处理，模型调用可追溯 consentRef",
+      "negative_tests": "无许可上传远程模型=安全 FAIL",
+      "depends_on": [
+        "V25-17"
+      ],
+      "tools": [
+        "OpenTelemetry",
+        "privacy E2E",
+        "policy tests"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-19",
+      "module_id": "M09",
+      "priority": "P0",
+      "title": "翻译与人际沟通建议最小闭环",
+      "acceptance": "双向翻译+人类修改后发送；真实接收端显示来源",
+      "negative_tests": "AI 生成消息不得以人类名义无标识自动发送",
+      "depends_on": [
+        "V25-07",
+        "V25-14"
+      ],
+      "tools": [
+        "Playwright",
+        "promptfoo",
+        "existing IM"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-20",
+      "module_id": "M09",
+      "priority": "P1",
+      "title": "情绪/关系语境解释安全框架",
+      "acceptance": "输出是可能性和澄清问题，不断言心理疾病/意图",
+      "negative_tests": "冲突场景不得操纵/胁迫用户与关系对象",
+      "depends_on": [
+        "V25-13",
+        "V25-19"
+      ],
+      "tools": [
+        "promptfoo",
+        "manual social eval"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-21",
+      "module_id": "M10",
+      "priority": "P1",
+      "title": "多主体群与 Spaces 权限",
+      "acceptance": "多群/个人组织双轨；邀请退出后访问边界正确",
+      "negative_tests": "被移除群成员无法继续获取新群消息/AI 摘要",
+      "depends_on": [
+        "V25-07",
+        "V25-12"
+      ],
+      "tools": [
+        "Playwright",
+        "Prisma",
+        "Jest"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-22",
+      "module_id": "M10",
+      "priority": "P1",
+      "title": "群组生成式协作（共识摘要/安排）",
+      "acceptance": "共享 AI 的身份明确、参与者可取消，摘要需可纠错",
+      "negative_tests": "1人指令不应调用其他人私有数据",
+      "depends_on": [
+        "V25-21",
+        "V25-19"
+      ],
+      "tools": [
+        "OpenTelemetry",
+        "promptfoo",
+        "Playwright"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-23",
+      "module_id": "M11",
+      "priority": "P0",
+      "title": "工具权限沙箱/审批/实际回执关联",
+      "acceptance": "执行 ID、批准主体、工具 ID、返回回执全链路绑定",
+      "negative_tests": "0未授权发送/支付/资料披露；重放不重做动作",
+      "depends_on": [
+        "V25-12",
+        "V25-17"
+      ],
+      "tools": [
+        "MCP/A2A",
+        "existing agent",
+        "provider sandbox"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-24",
+      "module_id": "M11",
+      "priority": "P1",
+      "title": "开放插件执行审计及撤销",
+      "acceptance": "撤销后插件调用拒绝；危险操作有 Need You 确认",
+      "negative_tests": "工具输出提示注入不能授权新操作",
+      "depends_on": [
+        "V25-23"
+      ],
+      "tools": [
+        "promptfoo",
+        "signed manifests",
+        "security tests"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-25",
+      "module_id": "M12",
+      "priority": "P1",
+      "title": "组织 Spaces / 管理台权限与数据边界",
+      "acceptance": "RBAC 成员/管理员/组织 AI 三身份测完，审计可查询",
+      "negative_tests": "组织管理员读取私人 Vault 0 成功",
+      "depends_on": [
+        "V25-05",
+        "V25-15"
+      ],
+      "tools": [
+        "Prisma",
+        "Playwright",
+        "ASVS"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-26",
+      "module_id": "M12",
+      "priority": "P1",
+      "title": "企业社群关系协作试点工作流",
+      "acceptance": "会员邀请/对话/权限/反馈可验证；避免 CRM 泛化",
+      "negative_tests": "企业撤销的连接不能继续由 Agent 执行",
+      "depends_on": [
+        "V25-25",
+        "V25-23"
+      ],
+      "tools": [
+        "Playwright",
+        "OTel",
+        "business QA"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-27",
+      "module_id": "M13",
+      "priority": "P1",
+      "title": "公开 OpenAPI / SDK 模型与消息契约",
+      "acceptance": "示例 SDK 客户端独立调用并通过协议兼容用例",
+      "negative_tests": "版本升迁不得破坏原客户端，Consent 不得被 SDK 绕过",
+      "depends_on": [
+        "V25-04",
+        "V25-23"
+      ],
+      "tools": [
+        "check:openapi-contract",
+        "API SDK tests"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-28",
+      "module_id": "M13",
+      "priority": "P1",
+      "title": "Matrix/MCP/A2A 兼容实验而非大迁移",
+      "acceptance": "每协议完成 PoC/许可/安全/性能决策 RFC",
+      "negative_tests": "外部协议绕过双向授权立即 FAIL",
+      "depends_on": [
+        "V25-27"
+      ],
+      "tools": [
+        "matrix-rust-sdk",
+        "MCP/A2A",
+        "license review"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-29",
+      "module_id": "M14",
+      "priority": "P0",
+      "title": "AGPLv3现状核实及 Open-Core 许可 RFC",
+      "acceptance": "列既有依赖许可/贡献者权属/发行义务，未经审批不更换许可证",
+      "negative_tests": "无许可或未授权第三方代码不能入主仓",
+      "depends_on": [
+        "V25-02"
+      ],
+      "tools": [
+        "LICENSE",
+        "audit:open-source",
+        "Syft",
+        "Scorecard"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-30",
+      "module_id": "M14",
+      "priority": "P0",
+      "title": "Community Edition 可自托管发行",
+      "acceptance": "两套全新环境、不用私有 Cloud API Key，真实聊天+本地模型工作",
+      "negative_tests": "配置缺失、无网、本地模型错误均有诚实失败态",
+      "depends_on": [
+        "V25-07",
+        "V25-17",
+        "V25-29"
+      ],
+      "tools": [
+        "check:selfhost",
+        "Docker",
+        "llama.cpp",
+        "CI"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-31",
+      "module_id": "M15",
+      "priority": "P0",
+      "title": "安全威胁模型、E2EE真实性与密钥审查",
+      "acceptance": "可列设备/服务端/备份/元数据威胁与明确加密边界",
+      "negative_tests": "未真正端到端验证不得使用 E2EE 宣传词",
+      "depends_on": [
+        "V25-09",
+        "V25-15"
+      ],
+      "tools": [
+        "Security review",
+        "OWASP ASVS",
+        "gitleaks"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-32",
+      "module_id": "M15",
+      "priority": "P0",
+      "title": "隐私越权/注入/冒充/滥用攻防自动回归",
+      "acceptance": "安全临界路径 0 重大问题；每缺陷有可复现负控",
+      "negative_tests": "角色伪造/恶意消息/撤回失效/提示注入必须阻断",
+      "depends_on": [
+        "V25-31"
+      ],
+      "tools": [
+        "promptfoo",
+        "Playwright",
+        "gitleaks",
+        "SIEM"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-33",
+      "module_id": "M16",
+      "priority": "P0",
+      "title": "消除未批准价格暴露及新支付会话",
+      "acceptance": "D1未批页面/API无公开金额且不得创建 checkout",
+      "negative_tests": "3种认证状态、缺失凭据、错误 payload 全 fail-closed",
+      "depends_on": [
+        "V25-01"
+      ],
+      "tools": [
+        "Existing Dodo API",
+        "check:pricing",
+        "contract tests"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-34",
+      "module_id": "M16",
+      "priority": "P0",
+      "title": "Billing Event / Entitlement 四方对账",
+      "acceptance": "Provider、Webhook、BillingEvent、Entitlement 同交易一一对应",
+      "negative_tests": "FAILED→SUCCEEDED/乱序/重放不重复记账",
+      "depends_on": [
+        "V25-33"
+      ],
+      "tools": [
+        "Dodo sandbox",
+        "Jest",
+        "ledger reconcile"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-35",
+      "module_id": "M17",
+      "priority": "P0",
+      "title": "Personal/Business 双入口整体 IA 与 i18n",
+      "acceptance": "入口理解/主动作/登录转接；同一界面单语言，品牌一致",
+      "negative_tests": "新用户进不了真实聊天或权限提示误导 FAIL",
+      "depends_on": [
+        "V25-03",
+        "V25-07"
+      ],
+      "tools": [
+        "Figma authorized",
+        "Playwright",
+        "Impeccable"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-36",
+      "module_id": "M17",
+      "priority": "P0",
+      "title": "全端性能/可访问性/视觉回归",
+      "acceptance": "预注册9页每页3轮TBT<=200ms LCP<=2.5s CLS<=0.1；axe严重0",
+      "negative_tests": "强行隐藏实际内容/缩样/改节流的测试视为 FAIL",
+      "depends_on": [
+        "V25-35"
+      ],
+      "tools": [
+        "Lighthouse CI",
+        "axe-core",
+        "Chrome Trace"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-37",
+      "module_id": "M18",
+      "priority": "P1",
+      "title": "规则、稠密模型、路由与 Sparse MoE 对照实验",
+      "acceptance": "封存集、质量/隐私/延迟/完整成本公平对照",
+      "negative_tests": "没有外部证据不得宣称自研 MoE 更优",
+      "depends_on": [
+        "V25-13",
+        "V25-17"
+      ],
+      "tools": [
+        "promptfoo",
+        "vLLM",
+        "llama.cpp",
+        "Python eval"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-38",
+      "module_id": "M18",
+      "priority": "P1",
+      "title": "VEC 只读学习与社交结果反馈",
+      "acceptance": "只读许可数据来源，撤回后不可再次用于新训练",
+      "negative_tests": "模型自评不算独立验证；用户隐私默认不进入训练",
+      "depends_on": [
+        "V25-16",
+        "V25-37"
+      ],
+      "tools": [
+        "VEC eval",
+        "DLP",
+        "privacy audits"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-39",
+      "module_id": "M19",
+      "priority": "P0",
+      "title": "GitHub main 保护+独立 review/preview 门禁",
+      "acceptance": "规则真实阻止直接推送/CI失败合并；唯一RC SHA匹配",
+      "negative_tests": "未保护分支/跳过安全扫描必须 NO_GO",
+      "depends_on": [
+        "V25-02",
+        "V25-29"
+      ],
+      "tools": [
+        "GitHub API",
+        "Actions",
+        "CodeQL",
+        "gitleaks",
+        "Syft"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-40",
+      "module_id": "M19",
+      "priority": "P0",
+      "title": "RC 迁移/发布/回滚/生产逐路由复验",
+      "acceptance": "按授权部署同一 SHA，生产 E2E+账本+48h监控",
+      "negative_tests": "Preview 不当生产；旧危险版本回滚必须 FAIL",
+      "depends_on": [
+        "V25-39",
+        "V25-34",
+        "V25-36"
+      ],
+      "tools": [
+        "Playwright",
+        "release manifest",
+        "OTel"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-41",
+      "module_id": "M20",
+      "priority": "P1",
+      "title": "Personal 受邀试点与对照评估",
+      "acceptance": "10+真实试点者，预设完成率/隐私理解/人工时间/沟通效果",
+      "negative_tests": "模拟成员不算真人；仅活跃度上升不算关系质量改善",
+      "depends_on": [
+        "V25-19",
+        "V25-36"
+      ],
+      "tools": [
+        "consented interviews",
+        "analytics",
+        "UX research"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    },
+    {
+      "task_id": "V25-42",
+      "module_id": "M20",
+      "priority": "P1",
+      "title": "Business 组织试点及单位经济",
+      "acceptance": "至少 2 个授权试点组织，记录可复核 SaaS 工作流和成本",
+      "negative_tests": "无合同/授权不算已落地企业客户",
+      "depends_on": [
+        "V25-26",
+        "V25-30"
+      ],
+      "tools": [
+        "usage metering",
+        "interviews",
+        "finance model"
+      ],
+      "status": "TODO",
+      "evidence_required": [
+        "source_sha",
+        "test_command_and_exit",
+        "negative_test_log",
+        "real_api_or_ui_proof",
+        "independent_reviewer",
+        "verdict"
+      ]
+    }
+  ]
+}

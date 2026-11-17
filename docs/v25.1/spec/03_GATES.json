@@ -1,0 +1,87 @@
+{
+  "spec": "V25.1",
+  "default": "NOT_TESTED",
+  "release_status": "NO_GO",
+  "gates": [
+    {
+      "id": "G00",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G01",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G02",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G03",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G04",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G05",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G06",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G07",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G08",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G09",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G10",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G11",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G12",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G13",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G14",
+      "status": "NOT_TESTED",
+      "required": true
+    },
+    {
+      "id": "G15",
+      "status": "NOT_TESTED",
+      "required": true
+    }
+  ]
+}

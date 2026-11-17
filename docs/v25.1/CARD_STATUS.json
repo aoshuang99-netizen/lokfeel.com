@@ -1,0 +1,622 @@
+{
+  "spec": "V25.1",
+  "source_sha256": "94289801c7046df4fe2a612227562f2de7498694398c8de96f8d004f8161cff2",
+  "base_sha": "d920b4230af71374aba399b969c1836a5ab19c20",
+  "default_verdict": "NOT_TESTED",
+  "release_status": "NO_GO",
+  "status_ladder": [
+    "TODO",
+    "CODE_COMPLETE",
+    "LOCAL_TESTED",
+    "INDEPENDENTLY_VERIFIED",
+    "PREVIEW_VERIFIED",
+    "PRODUCTION_VERIFIED"
+  ],
+  "cards": [
+    {
+      "task_id": "V25-01",
+      "module": "M00",
+      "priority": "P0",
+      "depends_on": [],
+      "status": "DISCOVERY_COMPLETE",
+      "verdict": "DISCOVERY_COMPLETE",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": "生产只读复核完成：b50e53e / checkoutReady=true / live_mode / From $89。热修复未部署，待 U-1。见 V25-01_FACT_EVIDENCE.md"
+    },
+    {
+      "task_id": "V25-02",
+      "module": "M00",
+      "priority": "P0",
+      "depends_on": [
+        "V25-01"
+      ],
+      "status": "DISCOVERY_COMPLETE",
+      "verdict": "DISCOVERY_COMPLETE",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": "四 SHA 溯源完成（本地 d920b42/远端 cad717e/生产 b50e53e/Preview NA）"
+    },
+    {
+      "task_id": "V25-03",
+      "module": "M01",
+      "priority": "P0",
+      "depends_on": [
+        "V25-02"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-04",
+      "module": "M01",
+      "priority": "P0",
+      "depends_on": [
+        "V25-03"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-05",
+      "module": "M02",
+      "priority": "P0",
+      "depends_on": [
+        "V25-04"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-06",
+      "module": "M02",
+      "priority": "P1",
+      "depends_on": [
+        "V25-05"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-07",
+      "module": "M03",
+      "priority": "P0",
+      "depends_on": [
+        "V25-05"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-08",
+      "module": "M03",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-09",
+      "module": "M04",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07"
+      ],
+      "status": "LOCAL_TESTED",
+      "verdict": "LOCAL_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": "consent-guard.ts + send route 媒体门禁；jest 11/11（含零写断言）；真实 HTTP 403/零写 PASS。未独立审查"
+    },
+    {
+      "task_id": "V25-10",
+      "module": "M04",
+      "priority": "P0",
+      "depends_on": [
+        "V25-09"
+      ],
+      "status": "DISCOVERY_COMPLETE",
+      "verdict": "DISCOVERY_COMPLETE",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": "确认媒体内联 base64 无独立 URL 绕过面；查看/转发/下载同意矩阵属 BUILD，撤销后历史可见性需产品定义，不虚报完成"
+    },
+    {
+      "task_id": "V25-11",
+      "module": "M05",
+      "priority": "P0",
+      "depends_on": [
+        "V25-05"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-12",
+      "module": "M05",
+      "priority": "P0",
+      "depends_on": [
+        "V25-11"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-13",
+      "module": "M06",
+      "priority": "P0",
+      "depends_on": [
+        "V25-03"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-14",
+      "module": "M06",
+      "priority": "P0",
+      "depends_on": [
+        "V25-13"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-15",
+      "module": "M07",
+      "priority": "P0",
+      "depends_on": [
+        "V25-05"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-16",
+      "module": "M07",
+      "priority": "P0",
+      "depends_on": [
+        "V25-15"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-17",
+      "module": "M08",
+      "priority": "P0",
+      "depends_on": [
+        "V25-15"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-18",
+      "module": "M08",
+      "priority": "P0",
+      "depends_on": [
+        "V25-17"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-19",
+      "module": "M09",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07",
+        "V25-14"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-20",
+      "module": "M09",
+      "priority": "P1",
+      "depends_on": [
+        "V25-13",
+        "V25-19"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-21",
+      "module": "M10",
+      "priority": "P1",
+      "depends_on": [
+        "V25-07",
+        "V25-12"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-22",
+      "module": "M10",
+      "priority": "P1",
+      "depends_on": [
+        "V25-21",
+        "V25-19"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-23",
+      "module": "M11",
+      "priority": "P0",
+      "depends_on": [
+        "V25-12",
+        "V25-17"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-24",
+      "module": "M11",
+      "priority": "P1",
+      "depends_on": [
+        "V25-23"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-25",
+      "module": "M12",
+      "priority": "P1",
+      "depends_on": [
+        "V25-05",
+        "V25-15"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-26",
+      "module": "M12",
+      "priority": "P1",
+      "depends_on": [
+        "V25-25",
+        "V25-23"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-27",
+      "module": "M13",
+      "priority": "P1",
+      "depends_on": [
+        "V25-04",
+        "V25-23"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-28",
+      "module": "M13",
+      "priority": "P1",
+      "depends_on": [
+        "V25-27"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-29",
+      "module": "M14",
+      "priority": "P0",
+      "depends_on": [
+        "V25-02"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-30",
+      "module": "M14",
+      "priority": "P0",
+      "depends_on": [
+        "V25-07",
+        "V25-17",
+        "V25-29"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-31",
+      "module": "M15",
+      "priority": "P0",
+      "depends_on": [
+        "V25-09",
+        "V25-15"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-32",
+      "module": "M15",
+      "priority": "P0",
+      "depends_on": [
+        "V25-31"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-33",
+      "module": "M16",
+      "priority": "P0",
+      "depends_on": [
+        "V25-01"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-34",
+      "module": "M16",
+      "priority": "P0",
+      "depends_on": [
+        "V25-33"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-35",
+      "module": "M17",
+      "priority": "P0",
+      "depends_on": [
+        "V25-03",
+        "V25-07"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-36",
+      "module": "M17",
+      "priority": "P0",
+      "depends_on": [
+        "V25-35"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-37",
+      "module": "M18",
+      "priority": "P1",
+      "depends_on": [
+        "V25-13",
+        "V25-17"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-38",
+      "module": "M18",
+      "priority": "P1",
+      "depends_on": [
+        "V25-16",
+        "V25-37"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-39",
+      "module": "M19",
+      "priority": "P0",
+      "depends_on": [
+        "V25-02",
+        "V25-29"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-40",
+      "module": "M19",
+      "priority": "P0",
+      "depends_on": [
+        "V25-39",
+        "V25-34",
+        "V25-36"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-41",
+      "module": "M20",
+      "priority": "P1",
+      "depends_on": [
+        "V25-19",
+        "V25-36"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    },
+    {
+      "task_id": "V25-42",
+      "module": "M20",
+      "priority": "P1",
+      "depends_on": [
+        "V25-26",
+        "V25-30"
+      ],
+      "status": "TODO",
+      "verdict": "NOT_TESTED",
+      "code_sha": null,
+      "evidence_sha256": null,
+      "independent_reviewer": null,
+      "note": ""
+    }
+  ]
+}
