@@ -1,0 +1,24 @@
+﻿task_id,priority,subsystem,required_work,acceptance_evidence
+A00,P0,R0/CICD,生产/remote/local SHA、DB、冻结门、Pricing 安全复核,实时 curl/浏览器、git remote、deploy ID、回滚点；失败即阻断生产写
+A01,P0,源码资产,"inventory `/api/chats`, matches, introductions, consent, agents, relationship graph",每项标 REUSE/ADAPT/DEPRECATE/MISSING + 文件行/真实响应
+A02,P0,战略锁,统一英文/中文产品故事、场景边界、命名/导航，隔离旧 B2C/Hlua/Connection OS,20 名潜在客户定性测试准备、10 名真实试点前置认知测；首页不得有 MCP/Studio 术语
+A03,P0,信息架构,首页、Chats、People、Spaces、You、组织 Console 页面完整可操作,六视口视觉 + DOM、所有链接/焦点/返回/刷新，0 幽灵按钮
+A04,P0,用户身份,真实用户、账户恢复、设备配对、AI 身份标注，机器人与真人隔离,人工造机器人不能领取 verified-person；跨账号伪装负例 100%拒绝
+A05,P0,基础消息,1:1、群、离线队列、撤回、附件权限，选择成熟 E2EE 实现,双设备消息真实往返，密钥轮换/备份、离线重试、重复零副作用
+A06,P0,Local Vault,加密个人记忆、证据级别、老化/删除、按作用域检索,断网可检索本人、撤销后不可共享、加密密钥不入日志
+A07,P0,SIR/QE,多专家路由、来源/置信证据、模棱两可时澄清,强基线对照，不能只测模型自己打分；B4 MoE 非强制
+A08,P0,情境 AI,私人沟通改写、翻译、观点澄清、误读风险提示,真实用户认可，未经同意不能自动发送；敏感推断显式不确定
+A09,P0,Consent,双向许可、群级与字段级范围、过期/撤回；权限检查服务端,拒绝/撤回后新读写 0，跨租户/关系越权 0
+A10,P0,Shared Spaces,双人共同 Capsule、群空间、明确 AI 参与声明,真实 2+ 客户端，最小共享、加入退出换密钥、无后门侧栏
+A11,P0,社交动作,经批准的邀请、共同计划、消息发送和回执,真实 Provider/服务端回执，不把站内计划写成外部成功
+A12,P0,Outcome,社交成果证据、双方自愿确认、无结果诚实显示,SELF_REPORTED≠MUTUAL_CONFIRMED≠PROVIDER_PROVEN
+A13,P0,安全与治理,滥用/骚扰/假冒举报、未成年保护、申诉、隐私说明,提交→处理→回执闭环，敏感材料不暴露给未经授权工作人员
+A14,P0,i18n/a11y,中文/英文一致、真实翻译、键盘、200% zoom,无混语、无横向溢出、axe 0 critical/serious + 手工读屏
+A15,P0,性能,旧 9 页面 G15 trace 归因、首屏降 JS、手机电量基准,原设备配置实跑，9/9 TBT达标，零功能回归
+A16,P0,独立审计,Codex/外部 reviewer 安全与功能独立验收,与 WorkBuddy 开发主体不同，重跑原始日志，阻断缺陷零
+A17,P0,发布,feature PR、保护 main、Netlify 受控、迁移及备份验证,未经审批不能发布；生产 SHA=批准 SHA；G13 生产复验+48h监控
+B18,P1,组织 SaaS,组织成员、授权引荐、活动、共同 Space、数据域隔离,管理员无法见个人 Vault；组织结算/订阅无跨线混账
+B19,P1,开放生态,Matrix/官方 API 插件之一，经批准联通,真实被支持的双向通信；安全退化/退出机制；禁非官方私聊爬取
+R20,R&D,社会评测,SMMU/SocialArena/NICE 派生私有封存集、多语言和坏例,人审、对照、sealed holdout、标注一致性报告
+R21,R&D,MoE 较量,小 dense + QE +记忆 vs sparse MoE 相同设备同质量,p95/内存/能耗/成本；MoE劣于基线则不启用
+R22,R&D,VEC,只读 opt-in 匿名化错误案例 → 反例候选 → 影子评测,私聊原文默认 0 出站；研究成功不改变生产权限
