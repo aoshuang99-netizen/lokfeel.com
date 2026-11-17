@@ -51,15 +51,63 @@ export function requiredLevelForMessageType(msgType: string): MediaAccessLevel |
  * V25.2 P0-SEC-02：从 payload 内容嗅探媒体档位，防止"把媒体伪装成 TEXT"绕过门禁。
  * 上传接口返回 `data:image/jpeg;base64,...`（见 /api/upload:184/287），因此内联
  * data URL 是真实媒体格式，不能只信客户端声明的 msgType。
- *   · data:image/*  ⇒ L1_IMAGE
- *   · data:audio/* / data:video/audio 等 ⇒ L2_VOICE（保守归到已定义最高媒体档）
- * 只识别**字符串开头**的 data URL，避免正文里引用 data URI 文字被误判。
+ *
+ * V25.3 T02 加固：仅靠 `data:image/*` 前缀正则**不完整**——攻击者可用
+ * `data:text/plain;base64,<真图片字节>` 或普通图片 URL 伪装。这里在原有前缀判定
+ * 之外补两类嗅探（仍只看字符串开头，避免正文引用误判）：
+ *   1. base64 魔数：JPEG(FFD8)/PNG(89504E47)/GIF(GIF8)/WEBP(RIFF..WEBP)
+ *      ⇒ L1_IMAGE；MP3(ID3)/OGG(OggS)/WAV(RIFF..WAVE)/WEBM(1A45DFA3) ⇒ L2_VOICE；
+ *   2. 普通 http(s) URL 以图片/音频扩展名结尾 ⇒ 对应档位（媒体引用同样需授权）。
+ * 任何一类命中都取最高档。魔数识别在 base64 解码后进行，避免 MIME 头被篡改误导。
  */
+
+/** base64 串开头（去掉 data:...;base64, 前缀后）→ 档位；按字节魔数判定。 */
+function sniffBase64Magic(b64Head: string): MediaAccessLevel | null {
+  // 只取前 32 个 base64 字符做魔数比对，before any '=' padding
+  const s = b64Head.replace(/[^A-Za-z0-9+/]/g, '').slice(0, 32)
+  // 图片魔数（base64 编码后的前缀）
+  const imageSig = ['/9j/', 'iVBOR', 'R0lGOD', 'UklGRi', 'UklGRho', 'PHN2Zy'] // jpeg/png/gif/webp/svg
+  if (imageSig.some((sig) => s.startsWith(sig))) return 'L1_IMAGE'
+  // WEBP 另一种 RIFF 写法 UklGR....WEBP；用包含判断兜底
+  if (s.startsWith('UklGR') && /WEBP/i.test(b64Head.slice(0, 64))) return 'L1_IMAGE'
+  // 音频魔数：ID3(mp3)=SUQz, OggS=T2dnU, WAVE in RIFF=UklGR...WAVE, WEBM=GkXfo
+  const audioSig = ['SUQz', 'T2dnU', 'GkXfo', 'GkXf']
+  if (audioSig.some((sig) => s.startsWith(sig))) return 'L2_VOICE'
+  if (s.startsWith('UklGR') && /WAVE/i.test(b64Head.slice(0, 64))) return 'L2_VOICE'
+  return null
+}
+
+/** 普通 URL / 带扩展名的媒体引用 → 档位。 */
+function sniffMediaUrl(url: string): MediaAccessLevel | null {
+  // 去掉 query/hash，只看路径尾部的扩展名
+  const path = url.split(/[?#]/)[0].toLowerCase()
+  if (/\.(png|jpe?g|gif|webp|bmp|avif|svg)(\b|$)/.test(path)) return 'L1_IMAGE'
+  if (/\.(mp3|wav|ogg|m4a|aac|webm|opus|flac)(\b|$)/.test(path)) return 'L2_VOICE'
+  return null
+}
+
 export function sniffContentMediaLevel(content: unknown): MediaAccessLevel | null {
   if (typeof content !== 'string') return null
-  const head = content.trimStart().slice(0, 40).toLowerCase()
+  const original = content.trimStart().slice(0, 160)
+  const head = original.toLowerCase()
+
+  // (1) 原 V25.2 前缀判定
   if (head.startsWith('data:image/')) return 'L1_IMAGE'
   if (head.startsWith('data:audio/') || head.startsWith('data:video/')) return 'L2_VOICE'
+
+  // (2) data:*;base64,<payload> —— 不管声明的 MIME 是什么，按 base64 魔数判定。
+  //     注意：base64 大小写敏感，必须用原始串（head 已 lower-case 会破坏魔数）。
+  const b64Match = /^data:[^;,]*;base64,([A-Za-z0-9+/]{4,})/.exec(original)
+  if (b64Match) {
+    const magicLevel = sniffBase64Magic(b64Match[1])
+    if (magicLevel) return magicLevel
+  }
+
+  // (3) 普通 URL 媒体引用（http/https/协议相对/以媒体扩展名结尾的相对路径）
+  if (/^(https?:)?\/\//.test(head) || /^\/[\w./-]+\.(png|jpe?g|gif|webp|mp3|wav|ogg|m4a|webm)/.test(head)) {
+    return sniffMediaUrl(head)
+  }
+
   return null
 }
 

@@ -8,6 +8,7 @@ import {
   checkMediaGrant,
   resolveRequiredMediaLevel,
 } from "@/lib/im/consent-guard";
+import { safePayloadForDisclosure } from "@/lib/im/media-disclosure";
 import { IMMessageType } from "@/generated";
 
 /** 客户端被允许声明的消息类型白名单。SYSTEM 等枚举绝不可由客户端指定。 */
@@ -235,6 +236,27 @@ export async function POST(req: NextRequest) {
       return msg;
     });
 
+    // ── V25.3 T02 · 实时披露之前重新判决（P0 隐私） ──
+    // 写侧门禁（上方）保证"未授权不能落库"，但 Pusher 实时广播与 Bot 上下文是
+    // **两条独立的新披露路径**：它们曾直接外发 message.payload / content 原文。
+    // 这里对每条路径单独过一次统一判决，且只使用返回的 safePayload：
+    //   · view（实时推送给接收方）：以接收方为 actor 复核当前授权——即便消息已
+    //     落库，若授权在写后/发前这一瞬被撤销，实时通道也不得泄露原文；
+    //   · process_ai（Bot 分类上下文）：媒体一律拒绝，Bot 只拿到占位符；
+    //     TEXT 无媒体披露面，正常放行，Bot 回复能力不受影响。
+    const disclosureSubject = {
+      actorId: receiverId,
+      senderId: userId,
+      conversationId,
+      mediaLevel: message.mediaLevel,
+      payload: message.payload,
+      msgType: message.msgType,
+    };
+    const [realtimePayload, botSafeContent] = await Promise.all([
+      safePayloadForDisclosure("view", disclosureSubject),
+      safePayloadForDisclosure("process_ai", disclosureSubject),
+    ]);
+
     // Send real-time notification via Pusher (IM v2 format)
     // Pusher is optional - if not configured, polling will handle message delivery
     const pusherServer = getPusherServer();
@@ -250,11 +272,15 @@ export async function POST(req: NextRequest) {
           convId: conversationId,
           seq: message.seq,
           msgType: message.msgType,
-          payload: message.payload,
+          // V25.3 T02：实时载荷用判决后的安全内容，撤销/越权时为占位符。
+          payload: realtimePayload,
           encryptionMode: "SERVER",
           complianceTags: [],
           consentState: message.consentState,
           mediaLevel: message.mediaLevel,
+          // V25.3 T02：与读取侧同契约——原文被撤销/越权遮盖时置 true，
+          // 前端据此避免把占位符当作图片/音频 URL 渲染。
+          mediaRedacted: realtimePayload !== message.payload,
           ruleResult: "PASS",
           isEdited: false,
           isDeleted: false,
@@ -289,7 +315,9 @@ export async function POST(req: NextRequest) {
     // IMPORTANT: Must await — bot reply must be written to DB BEFORE we return,
     // otherwise Vercel Serverless will kill the process and the reply never gets saved.
     try {
-      await handleBotReply(conversationId, userId, receiverId, content);
+      // V25.3 T02：Bot 上下文只喂判决后的内容——媒体为占位符，绝不把 data URL
+      // / 媒体原文送进 Bot 分类与交互日志（日志/分析埋点同样不得含 base64）。
+      await handleBotReply(conversationId, userId, receiverId, botSafeContent);
     } catch (botErr) {
       console.error("[IM] Bot reply error (message still saved):", botErr);
     }

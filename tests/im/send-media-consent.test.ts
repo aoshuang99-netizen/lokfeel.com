@@ -26,6 +26,11 @@ jest.mock('@/lib/im/consent-guard', () => {
   }
 })
 jest.mock('@/lib/pusher', () => ({ getPusherServer: jest.fn() }))
+// V25.3 T02：统一披露判决在集成层用真实实现（负例用 checkMediaGrant mock 驱动）
+jest.mock('@/lib/im/media-disclosure', () => {
+  const actual = jest.requireActual('@/lib/im/media-disclosure')
+  return { ...actual, safePayloadForDisclosure: jest.fn(actual.safePayloadForDisclosure) }
+})
 
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
@@ -35,6 +40,7 @@ import { handleBotReply } from '@/lib/im/bot-reply'
 import { checkSendPermission } from '@/lib/im/message-guards'
 import { checkMediaGrant } from '@/lib/im/consent-guard'
 import { getPusherServer } from '@/lib/pusher'
+import { safePayloadForDisclosure } from '@/lib/im/media-disclosure'
 import { POST } from '@/app/api/im/send/route'
 
 const authMock = auth as unknown as jest.Mock
@@ -46,6 +52,7 @@ const sendPerm = checkSendPermission as unknown as jest.Mock
 const mediaGrant = checkMediaGrant as unknown as jest.Mock
 const botReply = handleBotReply as unknown as jest.Mock
 const pusherServer = getPusherServer as unknown as jest.Mock
+const safeDisclosure = safePayloadForDisclosure as unknown as jest.Mock
 
 function send() {
   // route 内部用 safeRequestBody(req)，各用例通过 mock 它来注入 body
@@ -75,6 +82,9 @@ beforeEach(() => {
   })
   pusherServer.mockReturnValue(null)
   botReply.mockResolvedValue(undefined)
+  // 默认走真实判决（TEXT 原文放行）；需要模拟撤销竞态的用例各自覆盖。
+  const actualDisclosure = jest.requireActual('@/lib/im/media-disclosure').safePayloadForDisclosure
+  safeDisclosure.mockImplementation(actualDisclosure)
 })
 
 describe('POST /api/im/send · 媒体授权执行点', () => {
@@ -152,6 +162,73 @@ describe('POST /api/im/send · 媒体授权执行点', () => {
     expect(res.status).toBe(403)
     expect(mediaGrant.mock.calls[0][0].requiredLevel).toBe('L1_IMAGE')
     expect(transaction).not.toHaveBeenCalled()
+  })
+
+  it('🔒 T02 实时披露：媒体消息经 Pusher 广播的 payload 必须是判决后安全内容，不得泄露原文', async () => {
+    const trigger = jest.fn(async () => undefined)
+    pusherServer.mockReturnValue({ trigger })
+    safeBodyMock.mockImplementation(async () => ({
+      conversationId: 'c1',
+      content: 'data:image/png;base64,SECRETPIXELS',
+      msgType: 'IMAGE',
+    }))
+    transaction.mockResolvedValue({
+      id: 'm1',
+      payload: 'data:image/png;base64,SECRETPIXELS',
+      msgType: 'IMAGE',
+      mediaLevel: 'L1_IMAGE',
+      consentState: 'CONSENT_GRANTED',
+      clientMsgId: null,
+      createdAt: new Date(),
+      seq: 1,
+      sender: { id: 'u_sender', name: 'A', profile: null },
+    })
+    // 写侧门禁放行，但实时披露判决把原文遮盖（撤销竞态模拟）
+    mediaGrant.mockResolvedValue({ granted: true, reason: 'GRANTED' })
+    safeDisclosure.mockImplementation(async (action: string) =>
+      action === 'view' ? '[媒体内容已被撤回授权，无法查看]' : 'hello',
+    )
+
+    const res = await send()
+    expect(res.status).toBe(200)
+    // 两条 Pusher 触发的载荷都不得含媒体原文
+    expect(trigger).toHaveBeenCalledTimes(2)
+    for (const call of trigger.mock.calls) {
+      const emitted = JSON.stringify(call[2])
+      expect(emitted).not.toContain('SECRETPIXELS')
+      expect(emitted).not.toContain('data:image')
+      expect(call[2].message.mediaRedacted).toBe(true)
+    }
+    // process_ai 判决以"process_ai"动作调用（媒体被拒）
+    expect(safeDisclosure.mock.calls.some((c: unknown[]) => c[0] === 'process_ai')).toBe(true)
+  })
+
+  it('🔒 T02 Bot 上下文：媒体原文不进 handleBotReply（拿到的是 process_ai 判决后的内容）', async () => {
+    safeBodyMock.mockImplementation(async () => ({
+      conversationId: 'c1',
+      content: 'data:audio/webm;base64,SECRETAUDIO',
+      msgType: 'VOICE',
+    }))
+    transaction.mockResolvedValue({
+      id: 'm1',
+      payload: 'data:audio/webm;base64,SECRETAUDIO',
+      msgType: 'VOICE',
+      mediaLevel: 'L2_VOICE',
+      consentState: 'CONSENT_GRANTED',
+      clientMsgId: null,
+      createdAt: new Date(),
+      seq: 1,
+      sender: { id: 'u_sender', name: 'A', profile: null },
+    })
+    safeDisclosure.mockImplementation(async (action: string) =>
+      action === 'process_ai' ? '[媒体内容已被撤回授权，无法查看]' : 'data:audio/webm;base64,SECRETAUDIO',
+    )
+    const res = await send()
+    expect(res.status).toBe(200)
+    expect(botReply).toHaveBeenCalledTimes(1)
+    const botContent = botReply.mock.calls[0][3]
+    expect(botContent).not.toContain('SECRETAUDIO')
+    expect(botContent).not.toContain('data:')
   })
 
   it('🔒 幂等重放：撤销后旧 clientMsgId 重试 → 403 且不返回媒体原文', async () => {

@@ -13,6 +13,7 @@
 
 import { db } from '@/lib/db';
 import { jsonArr, toJson } from '@/lib/json-helpers';
+import { shouldRedactIncomingMedia, MEDIA_REDACTED_PLACEHOLDER } from './consent-guard';
 import {
   IMMessageType,
   ConversationState,
@@ -275,6 +276,8 @@ export async function getConversationsByUserId(
           senderId: true,
           createdAt: true,
           isDeleted: true,
+          // V25.3 T02：会话预览的最后一条媒体消息需按当前授权复核。
+          mediaLevel: true,
         },
       },
     },
@@ -283,11 +286,21 @@ export async function getConversationsByUserId(
   const hasMore = conversations.length > limit;
   const items = hasMore ? conversations.slice(0, -1) : conversations;
 
-  // Determine the other user in each conversation
-  const result: ConversationListItem[] = items.map((conv) => {
+  // Determine the other user in each conversation.
+  // V25.3 T02：lastMessage 原文可能是媒体（data URL / 媒体引用）——逐条按
+  // 当前 ConsentGrant 复核；撤销/过期 ⇒ 占位符，零原文回显（与 list.ts 同策）。
+  const result: ConversationListItem[] = await Promise.all(items.map(async (conv) => {
     const otherParticipant = conv.participants.find((p) => p.userId !== userId);
     const currentParticipant = conv.participants.find((p) => p.userId === userId);
     const lastMessage = conv.imMessages?.[0];
+
+    const content = lastMessage && !lastMessage.isDeleted
+      ? (await shouldRedactIncomingMedia(
+          { senderId: lastMessage.senderId, mediaLevel: (lastMessage as { mediaLevel?: string | null }).mediaLevel ?? null },
+          userId,
+          conv.id,
+        ) ? MEDIA_REDACTED_PLACEHOLDER : lastMessage.payload)
+      : undefined;
 
     return {
       convId: conv.id,
@@ -301,7 +314,7 @@ export async function getConversationsByUserId(
         : { id: '', name: 'Unknown', presence: 'OFFLINE' as PresenceStatus },
       lastMessage: lastMessage && !lastMessage.isDeleted
         ? {
-            content: lastMessage.payload,
+            content: content!,
             senderId: lastMessage.senderId,
             msgType: lastMessage.msgType as IMMessageType,
             timestamp: lastMessage.createdAt.getTime(),
@@ -315,7 +328,7 @@ export async function getConversationsByUserId(
       state: conv.state,
       vaultExpiresAt: conv.vaultExpiresAt?.getTime(),
     };
-  });
+  }));
 
   return {
     conversations: result,

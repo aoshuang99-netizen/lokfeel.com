@@ -1,0 +1,157 @@
+{
+  "version": "V25.3",
+  "status": "PROPOSED_NOT_EXECUTED",
+  "basis": "2026-11-17 user-supplied WorkBuddy V25.2 execution report",
+  "historical_cards_preserved": true,
+  "release": "NO_GO",
+  "tasks": [
+    {
+      "track": "T01",
+      "existing_card_ids": "V25-01/V25-33",
+      "priority": "P0",
+      "owner": "Release/Billing",
+      "deliverable": "Minimum safe checkout hotfix",
+      "acceptance": "Reviewed remote preview + authenticated payment rejection + zero provider sessions",
+      "tools": [
+        "git",
+        "GitHub",
+        "Netlify",
+        "Playwright",
+        "Dodo"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T02",
+      "existing_card_ids": "V25-09/V25-10",
+      "priority": "P0",
+      "owner": "IM Security",
+      "deliverable": "Consent across socket/push/bot/history/export",
+      "acceptance": "All disclosure paths fail-closed; revoke/replay/trace 0 leakage",
+      "tools": [
+        "Jest",
+        "Prisma",
+        "Playwright",
+        "Pusher",
+        "Gitleaks"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T03",
+      "existing_card_ids": "V25-05/V25-07/V25-08",
+      "priority": "P0",
+      "owner": "IM",
+      "deliverable": "Two-account cross-device communication",
+      "acceptance": "20 real messages + 50 network disruptions + server/receiver receipts",
+      "tools": [
+        "Playwright",
+        "Prisma",
+        "Pusher"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T04",
+      "existing_card_ids": "V25-13/V25-14/V25-19",
+      "priority": "P0",
+      "owner": "AI Lead",
+      "deliverable": "Private AI drafting/translation",
+      "acceptance": "150 independent bilingual evals; unauthorized sends and remote exposure 0",
+      "tools": [
+        "Provider",
+        "promptfoo",
+        "Playwright",
+        "OTel"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T05",
+      "existing_card_ids": "V25-11/V25-12/V25-15/V25-16",
+      "priority": "P0",
+      "owner": "Privacy/Data",
+      "deliverable": "Relationship and memory isolation",
+      "acceptance": "75 policy combinations, 0 cross-domain read, revoke blocks next inference",
+      "tools": [
+        "Prisma",
+        "KMS",
+        "Jest"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T06",
+      "existing_card_ids": "V25-29/V25-30",
+      "priority": "P1",
+      "owner": "Open Source",
+      "deliverable": "Community Edition self-host",
+      "acceptance": "2 clean environments without Cloud keys, working chat + local model",
+      "tools": [
+        "Docker",
+        "Syft",
+        "Scorecard",
+        "llama.cpp"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T07",
+      "existing_card_ids": "V25-31/V25-32/V25-39",
+      "priority": "P0",
+      "owner": "Independent Reviewer",
+      "deliverable": "Security + protected main + CI",
+      "acceptance": "Independent RED/GREEN and live branch rule denial test",
+      "tools": [
+        "GitHub",
+        "CodeQL",
+        "Gitleaks",
+        "promptfoo"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T08",
+      "existing_card_ids": "V25-35/V25-36",
+      "priority": "P1",
+      "owner": "UX/Performance",
+      "deliverable": "Personal/Business experiences",
+      "acceptance": "7 viewports; axe 0 critical; 9/9 TBT<=200 LCP<=2.5 CLS<=0.1",
+      "tools": [
+        "Figma",
+        "Playwright",
+        "axe",
+        "Lighthouse"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T09",
+      "existing_card_ids": "V25-34",
+      "priority": "P0",
+      "owner": "Billing",
+      "deliverable": "Real Dodo test-mode E2E",
+      "acceptance": "Provider event-signature-ledger-entitlement match; 0 duplicates",
+      "tools": [
+        "Dodo",
+        "Prisma"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    },
+    {
+      "track": "T10",
+      "existing_card_ids": "V25-40",
+      "priority": "P0",
+      "owner": "Release",
+      "deliverable": "Approved RC deploy and G13",
+      "acceptance": "Exact approved SHA and migration, safe rollback, production evidence",
+      "tools": [
+        "GitHub",
+        "Netlify",
+        "Prisma",
+        "Playwright"
+      ],
+      "status": "NOT_TESTED_THIS_BATCH"
+    }
+  ]
+}
