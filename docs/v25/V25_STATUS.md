@@ -7,7 +7,7 @@
 
 | 项 | 值 |
 |---|---|
-| 本地 worktree | `07486db`（`v25/open-ai-social`，本批提交见下） |
+| 本地 worktree | `947624e`（`v25/open-ai-social`，本批提交；基线 `07486db`） |
 | 远端 main | `cad717e`（`git ls-remote`） |
 | 生产 | `b50e53e` / `commitSource=env` / builtAt `2026-11-14T08:38Z`（LIVE GET） |
 | Preview | NOT_AVAILABLE |
