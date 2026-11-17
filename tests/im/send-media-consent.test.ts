@@ -17,12 +17,14 @@ jest.mock('@/lib/prisma', () => ({
 jest.mock('@/lib/safe-json', () => ({ safeRequestBody: jest.fn() }))
 jest.mock('@/lib/im/bot-reply', () => ({ handleBotReply: jest.fn() }))
 jest.mock('@/lib/im/message-guards', () => ({ checkSendPermission: jest.fn() }))
-jest.mock('@/lib/im/consent-guard', () => ({
-  checkMediaGrant: jest.fn(),
-  requiredLevelForMessageType: jest.fn((t: string) =>
-    t === 'IMAGE' ? 'L1_IMAGE' : t === 'VOICE' ? 'L2_VOICE' : null,
-  ),
-}))
+jest.mock('@/lib/im/consent-guard', () => {
+  const actual = jest.requireActual('@/lib/im/consent-guard')
+  return {
+    ...actual,
+    checkMediaGrant: jest.fn(),
+    // resolveRequiredMediaLevel 用真实实现，让 content 嗅探/伪装检测在集成层生效
+  }
+})
 jest.mock('@/lib/pusher', () => ({ getPusherServer: jest.fn() }))
 
 import { NextRequest } from 'next/server'
@@ -136,5 +138,49 @@ describe('POST /api/im/send · 媒体授权执行点', () => {
     expect(res.status).toBe(200)
     expect(mediaGrant).toHaveBeenCalledTimes(1)
     expect(transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it('🔒 伪装 TEXT：payload 是 data:image ⇒ 仍触发媒体门禁（未授权 403）', async () => {
+    safeBodyMock.mockImplementation(async () => ({
+      conversationId: 'c1',
+      content: 'data:image/png;base64,AAAA',
+      // 客户端不声明 msgType 或声明 TEXT，试图绕过
+      msgType: 'TEXT',
+    }))
+    mediaGrant.mockResolvedValue({ granted: false, reason: 'NO_GRANT', effectiveLevel: null })
+    const res = await send()
+    expect(res.status).toBe(403)
+    expect(mediaGrant.mock.calls[0][0].requiredLevel).toBe('L1_IMAGE')
+    expect(transaction).not.toHaveBeenCalled()
+  })
+
+  it('🔒 幂等重放：撤销后旧 clientMsgId 重试 → 403 且不返回媒体原文', async () => {
+    // 模拟历史已存在的一条 IMAGE 消息（曾用授权发出）
+    msgFind.mockResolvedValue({
+      id: 'old_msg',
+      clientMsgId: 'c-replay',
+      payload: 'data:image/png;base64,SECRET',
+      msgType: 'IMAGE',
+      createdAt: new Date(),
+      seq: 1,
+      sender: { id: 'u_sender', name: 'A', profile: null },
+    })
+    safeBodyMock.mockImplementation(async () => ({
+      conversationId: 'c1',
+      content: 'anything',
+      clientMsgId: 'c-replay',
+      msgType: 'TEXT', // 攻击者甚至伪装成 TEXT 重试
+    }))
+    mediaGrant.mockResolvedValue({ granted: false, reason: 'NO_GRANT', effectiveLevel: null })
+
+    const res = await send()
+    expect(res.status).toBe(403)
+    const body = await res.json()
+    expect(body.code).toBe('MEDIA_CONSENT_REVOKED_REPLAY')
+    // 关键：响应体不得含媒体原文
+    expect(JSON.stringify(body)).not.toContain('SECRET')
+    // 用 existing 的真实 msgType 判定（不是请求伪装的 TEXT）
+    expect(mediaGrant.mock.calls[0][0].requiredLevel).toBe('L1_IMAGE')
+    expect(transaction).not.toHaveBeenCalled()
   })
 })

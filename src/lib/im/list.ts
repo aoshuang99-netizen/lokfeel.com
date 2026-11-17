@@ -31,6 +31,7 @@
 
 import { db } from '@/lib/db';
 import { hasLegacyChatTables } from './legacy-capability';
+import { shouldRedactIncomingMedia, MEDIA_REDACTED_PLACEHOLDER } from './consent-guard';
 
 /** 统一的会话列表项。字段命名与前端 `ChatItem` 对齐，避免前端做二次映射。 */
 export interface UnifiedChatItem {
@@ -134,14 +135,16 @@ export async function buildConversationList(userId: string): Promise<UnifiedChat
       imMessages: {
         orderBy: { seq: 'desc' },
         take: 1,
-        select: { id: true, payload: true, msgType: true, senderId: true, createdAt: true },
+        select: { id: true, payload: true, msgType: true, senderId: true, createdAt: true, mediaLevel: true },
       },
     },
     orderBy: { lastMessageAt: 'desc' },
     take: LIST_LIMIT,
   });
 
-  const items: UnifiedChatItem[] = conversations.map((conv) => {
+  // V25.2 P0-SEC-03：会话预览的最后一条消息可能是媒体（base64 头会泄露），
+  // 逐条按当前授权复核；撤销/过期 ⇒ 占位符，不泄露任何媒体原文。
+  const items: UnifiedChatItem[] = await Promise.all(conversations.map(async (conv) => {
     const isUserA = conv.userAId === userId;
     const otherUser = isUserA ? conv.userB : conv.userA;
     const unreadCount = isUserA ? conv.unreadCountA : conv.unreadCountB;
@@ -167,7 +170,13 @@ export async function buildConversationList(userId: string): Promise<UnifiedChat
       },
       lastMessage: last
         ? {
-            content: (last.payload || '').slice(0, 100),
+            content: last.senderId !== userId && await shouldRedactIncomingMedia(
+              { senderId: last.senderId, mediaLevel: last.mediaLevel },
+              userId,
+              conv.id,
+            )
+              ? MEDIA_REDACTED_PLACEHOLDER
+              : (last.payload || '').slice(0, 100),
             msgType: last.msgType,
             timestamp: last.createdAt.toISOString(),
             isFromMe: last.senderId === userId,
@@ -181,7 +190,7 @@ export async function buildConversationList(userId: string): Promise<UnifiedChat
       lastReadAt: null,
       source: 'conversation',
     };
-  });
+  }));
 
   // ═══ 2.5 匹配分补齐（阶段 5 软着陆） ═══
   // 阶段 5 删掉 ChatRoom 后 `room.match.matchScore` 不复存在，匹配分需要一个
@@ -252,5 +261,8 @@ export async function buildConversationList(userId: string): Promise<UnifiedChat
 
 /** 对外响应形状：剔除内部 source 字段 */
 export function toPublicChatItems(items: UnifiedChatItem[]) {
-  return items.map(({ source: _source, ...rest }) => rest);
+  return items.map(({ source, ...rest }) => {
+    void source; // 显式消费内部字段，仅用于从响应中剔除
+    return rest;
+  });
 }

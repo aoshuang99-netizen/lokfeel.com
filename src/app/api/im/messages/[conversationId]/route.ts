@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  shouldRedactIncomingMedia,
+  MEDIA_REDACTED_PLACEHOLDER,
+} from "@/lib/im/consent-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +42,12 @@ export async function GET(
     const limit = parseInt(searchParams.get("limit") || "50");
 
     // Build where clause
-    const where: any = {
+    // V25.2：消除存量 any —— 显式声明实际用到的过滤字段形状。
+    const where: {
+      conversationId: string;
+      isDeleted: boolean;
+      seq?: { gt: number };
+    } = {
       conversationId,
       isDeleted: false,
     };
@@ -76,21 +85,34 @@ export async function GET(
       },
     });
 
-    const formattedMessages = messages.map((msg) => ({
-      id: msg.id,
-      content: msg.payload,
-      type: msg.msgType,
-      createdAt: msg.createdAt,
-      sender: {
-        id: msg.sender.id,
-        name: msg.sender.profile?.displayName || msg.sender.name || "Unknown",
-        avatar: msg.sender.profile?.avatar,
-      },
-      isFromMe: msg.senderId === userId,
-      isRead: msg.receipts.length > 0 && msg.receipts[0].readAt !== null,
-      // P1-6 阶段 4：暴露 seq 供前端做**增量轮询**游标。
-      // 此前不返回 seq，前端只能按 createdAt 比较增量 —— 同毫秒多条消息会漏拉。
-      seq: msg.seq,
+    // ── V25.2 P0-SEC-03：读取侧授权复核 ──
+    // 写侧门禁只防"未授权发送"，不能保证"撤销后历史读取"仍受控。
+    // 对方发的媒体消息在每次读取时按当前 ConsentGrant 复核；撤销/过期
+    // ⇒ 用占位符替换 payload（元数据/seq 保留，媒体原文不再返回）。
+    // 注意：已送达并留在接收设备本地的副本技术上无法远程收回，此处只保证
+    // 未来经本 API 的受控读取遵循新策略。
+    const formattedMessages = await Promise.all(messages.map(async (msg) => {
+      const redact = await shouldRedactIncomingMedia(
+        { senderId: msg.senderId, mediaLevel: msg.mediaLevel },
+        userId,
+        conversationId,
+      );
+      return {
+        id: msg.id,
+        content: redact ? MEDIA_REDACTED_PLACEHOLDER : msg.payload,
+        type: msg.msgType,
+        createdAt: msg.createdAt,
+        sender: {
+          id: msg.sender.id,
+          name: msg.sender.profile?.displayName || msg.sender.name || "Unknown",
+          avatar: msg.sender.profile?.avatar,
+        },
+        isFromMe: msg.senderId === userId,
+        isRead: msg.receipts.length > 0 && msg.receipts[0].readAt !== null,
+        seq: msg.seq,
+        // 读取侧脱敏标记，供前端避免把占位符当图片 URL 渲染
+        mediaRedacted: redact,
+      };
     }));
 
     return NextResponse.json({

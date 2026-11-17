@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { safeRequestBody } from "@/lib/safe-json";
 import { handleBotReply } from "@/lib/im/bot-reply";
 import { checkSendPermission } from "@/lib/im/message-guards";
-import { checkMediaGrant, requiredLevelForMessageType } from "@/lib/im/consent-guard";
+import {
+  checkMediaGrant,
+  resolveRequiredMediaLevel,
+} from "@/lib/im/consent-guard";
 import { IMMessageType } from "@/generated";
 
 /** 客户端被允许声明的消息类型白名单。SYSTEM 等枚举绝不可由客户端指定。 */
@@ -82,6 +85,32 @@ export async function POST(req: NextRequest) {
         },
       });
       if (existing) {
+        // ── V25.2 P0-SEC-02：幂等重放不得绕过媒体授权 ──
+        // 攻击场景：A 曾在有授权时发过媒体，B 撤销后 A 用**同一个 clientMsgId**
+        // 重放（甚至把 msgType 伪装成 TEXT）。若直接返回 existing.payload，等于
+        // 在撤销后重新暴露媒体原文。这里用 existing 自身的真实 msgType + payload
+        // 重算档位并复核当前授权；未授权一律 403，且不返回任何媒体内容。
+        const replayLevel = resolveRequiredMediaLevel(existing.msgType, existing.payload);
+        if (replayLevel) {
+          const replayVerdict = await checkMediaGrant({
+            receiverId,
+            senderId: userId,
+            conversationId,
+            requiredLevel: replayLevel,
+          });
+          if (!replayVerdict.granted) {
+            return NextResponse.json(
+              {
+                error: "MEDIA_CONSENT_REQUIRED",
+                code: "MEDIA_CONSENT_REVOKED_REPLAY",
+                requiredLevel: replayVerdict.requiredLevel,
+                grantedLevel: replayVerdict.effectiveLevel,
+                reason: replayVerdict.reason,
+              },
+              { status: 403 }
+            );
+          }
+        }
         return NextResponse.json({
           success: true,
           duplicate: true,
@@ -129,7 +158,9 @@ export async function POST(req: NextRequest) {
     //   · 授权方向 receiver(granter) → sender(grantee)，不跨会话、不看缓存；
     //   · 无有效 grant（不存在/撤销/过期/档位不足）⇒ 403 且零写；
     //   · TEXT 不受影响（基础通信能力）。
-    const requiredMediaLevel = requiredLevelForMessageType(msgType);
+    // V25.2：档位取"声明 msgType"与"payload 内容嗅探"的较高者，堵住
+    // 「把媒体伪装成 TEXT / 伪造 MIME」——客户端改 msgType 也绕不过内容嗅探。
+    const requiredMediaLevel = resolveRequiredMediaLevel(msgType, content);
     if (requiredMediaLevel) {
       const mediaVerdict = await checkMediaGrant({
         receiverId,
@@ -170,8 +201,9 @@ export async function POST(req: NextRequest) {
           msgType,
           payload: content,
           encryptionMode: "SERVER",
-          consentState: "CONSENT_NONE",
-          mediaLevel: msgType === "IMAGE" ? "L1_IMAGE" : msgType === "VOICE" ? "L2_VOICE" : "L0_TEXT",
+          // V25.2：记录"已验证档位"而非声明类型，供 V25-10 读取侧据此复核。
+          consentState: requiredMediaLevel ? "CONSENT_GRANTED" : "CONSENT_NONE",
+          mediaLevel: requiredMediaLevel ?? "L0_TEXT",
           ruleResult: "PASS",
         },
         include: {
@@ -221,8 +253,8 @@ export async function POST(req: NextRequest) {
           payload: message.payload,
           encryptionMode: "SERVER",
           complianceTags: [],
-          consentState: "CONSENT_NONE",
-          mediaLevel: message.msgType === "IMAGE" ? "L1_IMAGE" : message.msgType === "VOICE" ? "L2_VOICE" : "L0_TEXT",
+          consentState: message.consentState,
+          mediaLevel: message.mediaLevel,
           ruleResult: "PASS",
           isEdited: false,
           isDeleted: false,

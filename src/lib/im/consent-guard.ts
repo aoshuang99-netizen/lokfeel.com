@@ -47,6 +47,35 @@ export function requiredLevelForMessageType(msgType: string): MediaAccessLevel |
   }
 }
 
+/**
+ * V25.2 P0-SEC-02：从 payload 内容嗅探媒体档位，防止"把媒体伪装成 TEXT"绕过门禁。
+ * 上传接口返回 `data:image/jpeg;base64,...`（见 /api/upload:184/287），因此内联
+ * data URL 是真实媒体格式，不能只信客户端声明的 msgType。
+ *   · data:image/*  ⇒ L1_IMAGE
+ *   · data:audio/* / data:video/audio 等 ⇒ L2_VOICE（保守归到已定义最高媒体档）
+ * 只识别**字符串开头**的 data URL，避免正文里引用 data URI 文字被误判。
+ */
+export function sniffContentMediaLevel(content: unknown): MediaAccessLevel | null {
+  if (typeof content !== 'string') return null
+  const head = content.trimStart().slice(0, 40).toLowerCase()
+  if (head.startsWith('data:image/')) return 'L1_IMAGE'
+  if (head.startsWith('data:audio/') || head.startsWith('data:video/')) return 'L2_VOICE'
+  return null
+}
+
+/**
+ * 发送所需的最终媒体档位 = 声明类型档位 与 内容嗅探档位 的**较高者**。
+ * 这是防伪装的核心：即使客户端声明 TEXT，只要 payload 是媒体 data URL，
+ * 仍按媒体档位要求授权。两个 null 才表示纯文本、无需授权。
+ */
+export function resolveRequiredMediaLevel(msgType: string, content: unknown): MediaAccessLevel | null {
+  const declared = requiredLevelForMessageType(msgType)
+  const sniffed = sniffContentMediaLevel(content)
+  if (!declared) return sniffed
+  if (!sniffed) return declared
+  return (MEDIA_LEVEL_RANK[sniffed] ?? -1) > (MEDIA_LEVEL_RANK[declared] ?? -1) ? sniffed : declared
+}
+
 export type MediaGrantVerdict =
   | { granted: true; requiredLevel: MediaAccessLevel; effectiveLevel: MediaAccessLevel; reason: 'GRANTED' }
   | {
@@ -56,10 +85,10 @@ export type MediaGrantVerdict =
       reason: 'NO_GRANT' | 'INSUFFICIENT_LEVEL'
     }
 
-/** 守卫只需要 consentGrant.findFirst——缩小测试 mock 面。 */
+/** 守卫只需要 consentGrant.findMany——缩小测试 mock 面。 */
 export interface MediaGrantClient {
   consentGrant: {
-    findFirst: (args: {
+    findMany: (args: {
       where: {
         granterId: string
         granteeId: string
@@ -69,7 +98,7 @@ export interface MediaGrantClient {
         OR: Array<{ expiresAt: null } | { expiresAt: { gt: Date } }>
       }
       select: { grantedLevel: true }
-    }) => Promise<{ grantedLevel: MediaAccessLevel } | null>
+    }) => Promise<Array<{ grantedLevel: MediaAccessLevel }>>
   }
 }
 
@@ -88,9 +117,12 @@ export async function checkMediaGrant(
 ): Promise<MediaGrantVerdict> {
   const { receiverId, senderId, conversationId, requiredLevel } = params
 
-  let grant: { grantedLevel: MediaAccessLevel } | null = null
+  let grants: Array<{ grantedLevel: MediaAccessLevel }> = []
   try {
-    grant = await client.consentGrant.findFirst({
+    // V25.2：取**所有**有效 grant 的最高档，而不是 findFirst 的任意一条。
+    // 否则同一会话里先 L1 后 L2 两条并存时，findFirst 可能命中旧 L1，
+    // 导致已获 L2 授权的用户发 VOICE 被误拒（真实 HTTP 闭环实测到该缺陷）。
+    grants = await client.consentGrant.findMany({
       where: {
         granterId: receiverId, // 接收方是数据主人
         granteeId: senderId, // 发送方是被授权人
@@ -106,11 +138,15 @@ export async function checkMediaGrant(
     return { granted: false, requiredLevel, effectiveLevel: null, reason: 'NO_GRANT' }
   }
 
-  if (!grant) {
+  if (!grants.length) {
     return { granted: false, requiredLevel, effectiveLevel: null, reason: 'NO_GRANT' }
   }
 
-  const effective = (grant.grantedLevel ?? 'L0_TEXT') as MediaAccessLevel
+  // 取最高档；未知档位 rank=-1，不影响其它有效 grant。
+  const effective = grants.reduce<MediaAccessLevel>((best, g) => {
+    const cur = (g.grantedLevel ?? 'L0_TEXT') as MediaAccessLevel
+    return (MEDIA_LEVEL_RANK[cur] ?? -1) > (MEDIA_LEVEL_RANK[best] ?? -1) ? cur : best
+  }, 'L0_TEXT')
   const effectiveRank = MEDIA_LEVEL_RANK[effective] ?? -1
   const requiredRank = MEDIA_LEVEL_RANK[requiredLevel] ?? Number.POSITIVE_INFINITY
 
@@ -119,4 +155,36 @@ export async function checkMediaGrant(
   }
 
   return { granted: true, requiredLevel, effectiveLevel: effective, reason: 'GRANTED' }
+}
+
+/**
+ * V25.2 P0-SEC-03：读取侧媒体脱敏占位符。
+ * 撤销授权后，历史媒体消息仍可枚举（消息元数据、seq、发送者），但媒体原文
+ * 不再随读取/预览响应返回。规范化占位符不泄露任何 base64 内容。
+ */
+export const MEDIA_REDACTED_PLACEHOLDER = '[媒体内容已被撤回授权，无法查看]'
+
+/**
+ * 判断一条读取中的消息是否需要在当前查看者视角下脱敏。
+ *   · 自己发的：始终可见（发送方对自己产出内容的访问不受"对方撤销"影响）；
+ *   · 对方发的媒体（mediaLevel≠L0）：以"查看者=granter、发送者=grantee"复核
+ *     当前有效授权；撤销/过期/档位不足 ⇒ 脱敏。
+ * 默认拒绝：查询异常 ⇒ 脱敏（fail closed）。
+ */
+export async function shouldRedactIncomingMedia(
+  msg: { senderId: string; mediaLevel: string | null },
+  viewerId: string,
+  conversationId: string,
+  client?: MediaGrantClient,
+): Promise<boolean> {
+  const level = msg.mediaLevel
+  if (!level || level === 'L0_TEXT') return false
+  if (msg.senderId === viewerId) return false
+  const required = level as MediaAccessLevel
+  if (!(required in MEDIA_LEVEL_RANK)) return true // 未知档位保守脱敏
+  const verdict = await checkMediaGrant(
+    { receiverId: viewerId, senderId: msg.senderId, conversationId, requiredLevel: required },
+    client,
+  )
+  return !verdict.granted
 }
