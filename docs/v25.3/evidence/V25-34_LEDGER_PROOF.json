@@ -1,0 +1,562 @@
+{
+  "task": "V25-34",
+  "runAt": "2026-11-18T05:31:03.668Z",
+  "dbFile": "/tmp/v253-dodo-ledger.db",
+  "handlerInvocations": 11,
+  "steps": [
+    {
+      "id": "S1",
+      "scenario": "首单 payment.succeeded：开通→建款→收款三条",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "type": "payment.succeeded",
+        "webhookId": "whv_1794979864921_t4za2i",
+        "applied": 3,
+        "replayed": 0,
+        "plan": "GROWTH",
+        "status": "ACTIVE"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "ACTIVE",
+        "paidTotalCents": 14900,
+        "netPaidCents": 14900,
+        "eventCount": 3
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "scenario": "同事件重放：账本不重复入账",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "type": "payment.succeeded",
+        "webhookId": "whv_1794979865330_whhv9x",
+        "applied": 0,
+        "replayed": 2,
+        "plan": "GROWTH",
+        "status": "ACTIVE"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "ACTIVE",
+        "paidTotalCents": 14900,
+        "netPaidCents": 14900,
+        "eventCount": 3
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        }
+      ]
+    },
+    {
+      "id": "S3",
+      "scenario": "续费 renewed：新增一笔成功收款",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "type": "subscription.renewed",
+        "webhookId": "whv_1794979865385_2egoel",
+        "applied": 2,
+        "replayed": 0,
+        "plan": "GROWTH",
+        "status": "ACTIVE"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "ACTIVE",
+        "paidTotalCents": 29800,
+        "netPaidCents": 29800,
+        "eventCount": 5
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_002"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_002:succeeded"
+        }
+      ]
+    },
+    {
+      "id": "S4",
+      "scenario": "乱序重放：renewed 与 succeeded 同键，整体回放不重复",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "type": "payment.succeeded",
+        "webhookId": "whv_1794979865495_fdyoyw",
+        "applied": 0,
+        "replayed": 2,
+        "plan": "GROWTH",
+        "status": "ACTIVE"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "ACTIVE",
+        "paidTotalCents": 29800,
+        "netPaidCents": 29800,
+        "eventCount": 5
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_002"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_002:succeeded"
+        }
+      ]
+    },
+    {
+      "id": "S5a",
+      "scenario": "同笔先 failed：记一笔失败",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "type": "payment.failed",
+        "webhookId": "whv_1794979865517_xftd6q",
+        "applied": 2,
+        "replayed": 0,
+        "plan": "GROWTH",
+        "status": "PAST_DUE"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "PAST_DUE",
+        "paidTotalCents": 29800,
+        "netPaidCents": 29800,
+        "eventCount": 7
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_002"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_002:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_003"
+        },
+        {
+          "type": "CHARGE_FAILED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": "card_declined",
+          "dedupeKey": "dodo:charge-settled:pay_v253_003:failed"
+        }
+      ]
+    },
+    {
+      "id": "S5b",
+      "scenario": "同笔后 succeeded：不可改判，deferred 告警而非静默吞",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "deferred": true,
+        "type": "payment.succeeded",
+        "reason": "ledger_rejected"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "PAST_DUE",
+        "paidTotalCents": 29800,
+        "netPaidCents": 29800,
+        "eventCount": 7
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_002"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_002:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_003"
+        },
+        {
+          "type": "CHARGE_FAILED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": "card_declined",
+          "dedupeKey": "dodo:charge-settled:pay_v253_003:failed"
+        }
+      ]
+    },
+    {
+      "id": "S6a",
+      "scenario": "subscription.cancelled：权益收敛到 CANCELED",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "type": "subscription.cancelled",
+        "webhookId": "whv_1794979865652_loth9g",
+        "applied": 1,
+        "replayed": 0,
+        "plan": "GROWTH",
+        "status": "CANCELED"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "CANCELED",
+        "paidTotalCents": 29800,
+        "netPaidCents": 29800,
+        "eventCount": 8
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_002"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_002:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_003"
+        },
+        {
+          "type": "CHARGE_FAILED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": "card_declined",
+          "dedupeKey": "dodo:charge-settled:pay_v253_003:failed"
+        },
+        {
+          "type": "SUBSCRIPTION_CANCELED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": "用户/商户取消订阅（Dodo subscription.cancelled）",
+          "dedupeKey": "dodo:sub-canceled:sub_v253_A"
+        }
+      ]
+    },
+    {
+      "id": "S6b",
+      "scenario": "重复取消：幂等，不写第二条",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "ignored": "subscription_not_live(CANCELED)",
+        "type": "subscription.cancelled"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "CANCELED",
+        "paidTotalCents": 29800,
+        "netPaidCents": 29800,
+        "eventCount": 8
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_A"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_001"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_001",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_001:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_002"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_002",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_002:succeeded"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_003"
+        },
+        {
+          "type": "CHARGE_FAILED",
+          "chargeId": "pay_v253_003",
+          "amountCents": 14900,
+          "reason": "card_declined",
+          "dedupeKey": "dodo:charge-settled:pay_v253_003:failed"
+        },
+        {
+          "type": "SUBSCRIPTION_CANCELED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": "用户/商户取消订阅（Dodo subscription.cancelled）",
+          "dedupeKey": "dodo:sub-canceled:sub_v253_A"
+        }
+      ]
+    },
+    {
+      "id": "S7",
+      "scenario": "跨租户：orgB 事件独立入账，orgA 不变",
+      "httpStatus": 200,
+      "response": {
+        "ok": true,
+        "type": "payment.succeeded",
+        "webhookId": "whv_1794979865717_hhdkv3",
+        "applied": 3,
+        "replayed": 0,
+        "plan": "GROWTH",
+        "status": "ACTIVE"
+      },
+      "ledgerAfter": {
+        "plan": "GROWTH",
+        "status": "ACTIVE",
+        "paidTotalCents": 14900,
+        "netPaidCents": 14900,
+        "eventCount": 3
+      },
+      "billingEventRows": [
+        {
+          "type": "SUBSCRIPTION_STARTED",
+          "chargeId": null,
+          "amountCents": null,
+          "reason": null,
+          "dedupeKey": "dodo:sub-start:sub_v253_B"
+        },
+        {
+          "type": "CHARGE_CREATED",
+          "chargeId": "pay_v253_B1",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-created:pay_v253_B1"
+        },
+        {
+          "type": "CHARGE_SUCCEEDED",
+          "chargeId": "pay_v253_B1",
+          "amountCents": 14900,
+          "reason": null,
+          "dedupeKey": "dodo:charge-settled:pay_v253_B1:succeeded"
+        }
+      ]
+    }
+  ],
+  "crossTenant": {
+    "orgAEventCount": 8,
+    "orgBEventCount": 3,
+    "leak": false
+  },
+  "signatureNegative": {
+    "forgedSignatureStatus": 401,
+    "replayedOldTimestampStatus": 401
+  },
+  "verdict": "PASS",
+  "failures": []
+}
