@@ -127,6 +127,8 @@ model Organization {
   // 只有 `organizationId` 建了真 FK。
   usageRecords  UsageRecord[]
   billingEvents BillingEvent[]
+  /// V25.5 P0.1 · R-15 Durable Inbox（验签事件收件箱，含中间态与人工复核队列）。
+  billingInboxEvents BillingInboxEvent[]
 
   // ── T09 Agent Runtime 反向关系（agent.prisma）──
   //

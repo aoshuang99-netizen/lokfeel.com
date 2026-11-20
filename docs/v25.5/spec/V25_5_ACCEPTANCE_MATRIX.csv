@@ -1,0 +1,9 @@
+﻿Task_ID,Existing_IDs,Priority,Depends_On,Owner,Acceptance,Current_Status
+P0.0,V25-01/V25-33,P0,,Billing/Release,Safe fail-closed no new checkout without approval; existing subscription/webhooks intact; authenticated and unauthenticated negatives; no unsafe rollback.,NOT_TESTED
+P0.1,V25-34,P0,,Billing Backend,Signed event durably ACKed; failed->succeeded reconciled to SETTLED or REQUIRES_REVIEW; 18 red-green cases; no silent drop.,NOT_TESTED
+P0.2,V25-34,P0,P0.1,Billing Backend,12 refund cases; duplicate and partial refund safe; sum refunded <= captured; provider confirmation separate.,NOT_TESTED
+P0.3,V25-09/V25-10,P0,,IM Security,"No new unauthorized disclosure via socket, logs, bot, preview, AI, history, notification after revoke; raw evidence per sink.",NOT_TESTED
+P0.4,V25-05/V25-07/V25-08,P0,,IM Product,Two separate accounts; >=20 messages; >=50 network perturbations; zero duplicate or cross-conversation leaks; real receiver seen.,NOT_TESTED
+P0.5,V25-13/V25-14/V25-19,P0,P0.3;P0.4,Social AI,150 frozen bilingual evaluation cases; user approves send; zero unauthorized cloud processing or auto-send; real receiver receives.,NOT_TESTED
+P0.6,V25-31/V25-32/V25-39/V25-40,P0,,Codex/Release/Security,Reviewer re-runs tests; main protected by actual rules; compliance assessment; exact SHA preview and approved release.,NOT_TESTED
+P1.0,V25-29/V25-30/V25-35/V25-36,P1,,Open Source/UX,2 clean installs chat+local AI; 7 viewports; all 9 pages meet frozen TBT/LCP/CLS limits.,NOT_TESTED

@@ -1,0 +1,93 @@
+{
+  "version": "V25.5",
+  "date": "2026-11-20",
+  "status": "PLANNED_NOT_TESTED",
+  "source": "User-supplied WorkBuddy report plus GitHub main read",
+  "tasks": [
+    {
+      "id": "P0.0",
+      "existing_ids": "V25-01/V25-33",
+      "title": "Production payment safety candidate",
+      "priority": "P0",
+      "depends_on": [],
+      "owner": "Billing/Release",
+      "acceptance": "Safe fail-closed no new checkout without approval; existing subscription/webhooks intact; authenticated and unauthenticated negatives; no unsafe rollback.",
+      "state": "NOT_TESTED"
+    },
+    {
+      "id": "P0.1",
+      "existing_ids": "V25-34",
+      "title": "R15 durable event inbox and final settlement",
+      "priority": "P0",
+      "depends_on": [],
+      "owner": "Billing Backend",
+      "acceptance": "Signed event durably ACKed; failed->succeeded reconciled to SETTLED or REQUIRES_REVIEW; 18 red-green cases; no silent drop.",
+      "state": "NOT_TESTED"
+    },
+    {
+      "id": "P0.2",
+      "existing_ids": "V25-34",
+      "title": "Refund and dispute ledger",
+      "priority": "P0",
+      "depends_on": [
+        "P0.1"
+      ],
+      "owner": "Billing Backend",
+      "acceptance": "12 refund cases; duplicate and partial refund safe; sum refunded <= captured; provider confirmation separate.",
+      "state": "NOT_TESTED"
+    },
+    {
+      "id": "P0.3",
+      "existing_ids": "V25-09/V25-10",
+      "title": "IM push/socket/AI/media leakage containment",
+      "priority": "P0",
+      "depends_on": [],
+      "owner": "IM Security",
+      "acceptance": "No new unauthorized disclosure via socket, logs, bot, preview, AI, history, notification after revoke; raw evidence per sink.",
+      "state": "NOT_TESTED"
+    },
+    {
+      "id": "P0.4",
+      "existing_ids": "V25-05/V25-07/V25-08",
+      "title": "Two actor chat E2E",
+      "priority": "P0",
+      "depends_on": [],
+      "owner": "IM Product",
+      "acceptance": "Two separate accounts; >=20 messages; >=50 network perturbations; zero duplicate or cross-conversation leaks; real receiver seen.",
+      "state": "NOT_TESTED"
+    },
+    {
+      "id": "P0.5",
+      "existing_ids": "V25-13/V25-14/V25-19",
+      "title": "AI private message assistance",
+      "priority": "P0",
+      "depends_on": [
+        "P0.3",
+        "P0.4"
+      ],
+      "owner": "Social AI",
+      "acceptance": "150 frozen bilingual evaluation cases; user approves send; zero unauthorized cloud processing or auto-send; real receiver receives.",
+      "state": "NOT_TESTED"
+    },
+    {
+      "id": "P0.6",
+      "existing_ids": "V25-31/V25-32/V25-39/V25-40",
+      "title": "Independent reviewer and safe release governance",
+      "priority": "P0",
+      "depends_on": [],
+      "owner": "Codex/Release/Security",
+      "acceptance": "Reviewer re-runs tests; main protected by actual rules; compliance assessment; exact SHA preview and approved release.",
+      "state": "NOT_TESTED"
+    },
+    {
+      "id": "P1.0",
+      "existing_ids": "V25-29/V25-30/V25-35/V25-36",
+      "title": "Self-hosting and 9-page UI performance",
+      "priority": "P1",
+      "depends_on": [],
+      "owner": "Open Source/UX",
+      "acceptance": "2 clean installs chat+local AI; 7 viewports; all 9 pages meet frozen TBT/LCP/CLS limits.",
+      "state": "NOT_TESTED"
+    }
+  ]
+}

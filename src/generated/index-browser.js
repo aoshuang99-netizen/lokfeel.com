@@ -224,6 +224,28 @@ exports.Prisma.UsageRecordScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.BillingInboxEventScalarFieldEnum = {
+  id: 'id',
+  deliveryId: 'deliveryId',
+  eventId: 'eventId',
+  organizationId: 'organizationId',
+  type: 'type',
+  paymentId: 'paymentId',
+  subscriptionId: 'subscriptionId',
+  amountCents: 'amountCents',
+  currency: 'currency',
+  payloadHash: 'payloadHash',
+  status: 'status',
+  attempts: 'attempts',
+  lastNote: 'lastNote',
+  providerTruth: 'providerTruth',
+  resolutionCommands: 'resolutionCommands',
+  appliedToLedger: 'appliedToLedger',
+  receivedAt: 'receivedAt',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.BotProfileScalarFieldEnum = {
   id: 'id',
   profileId: 'profileId',
@@ -1147,9 +1169,25 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 exports.AgentRunStatus = exports.$Enums.AgentRunStatus = {
   PROPOSED: 'PROPOSED',
@@ -1216,6 +1254,16 @@ exports.UsageUnit = exports.$Enums.UsageUnit = {
   INTRODUCTION: 'INTRODUCTION',
   OUTCOME: 'OUTCOME',
   VERIFICATION: 'VERIFICATION'
+};
+
+exports.InboxEventStatus = exports.$Enums.InboxEventStatus = {
+  RECEIVED: 'RECEIVED',
+  APPLIED: 'APPLIED',
+  SETTLED: 'SETTLED',
+  NEEDS_PROVIDER_RECONCILIATION: 'NEEDS_PROVIDER_RECONCILIATION',
+  RETRYABLE: 'RETRYABLE',
+  REQUIRES_REVIEW: 'REQUIRES_REVIEW',
+  DEAD_LETTER: 'DEAD_LETTER'
 };
 
 exports.BotType = exports.$Enums.BotType = {
@@ -1661,6 +1709,7 @@ exports.Prisma.ModelName = {
   AgentDeliveryTarget: 'AgentDeliveryTarget',
   BillingEvent: 'BillingEvent',
   UsageRecord: 'UsageRecord',
+  BillingInboxEvent: 'BillingInboxEvent',
   BotProfile: 'BotProfile',
   BotInteractionLog: 'BotInteractionLog',
   BotLearningBatch: 'BotLearningBatch',

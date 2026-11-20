@@ -1,0 +1,91 @@
+{
+  "task": "P0.4+P0.5",
+  "runAt": "2026-11-20T05:52:56.071Z",
+  "dbFile": "/tmp/v255-inbox.db",
+  "providerMode": "deterministic stub (cloud disabled, 0 remote calls)",
+  "verdict": "PASS",
+  "failures": [],
+  "steps": [
+    {
+      "id": "S1",
+      "scenario": "AI 草稿→用户授权→真实发送→B 可读",
+      "evidence": {
+        "draftOrigin": "AI_PRIVATE_DRAFT",
+        "provenance": {
+          "consent_ref": "consent_v255_1",
+          "purpose": "translate",
+          "recipient_scope": "conv_v255_ab",
+          "model_id": "stub-translator",
+          "input_data_scope": "user_authored_text",
+          "request_id": "req_v255_ai_1"
+        },
+        "authorization": {
+          "draftId": "req_v255_ai_1:u_v255_A",
+          "confirmedByUserId": "u_v255_A",
+          "confirmedAt": 1795153974502,
+          "resultingOrigin": "HUMAN_SENT"
+        },
+        "messageId": "cmwokbrra0000a7k821o0x83k",
+        "seq": 1,
+        "payload": "[AI 草稿 · stub-translator] Nice to meet you. Looking forward to our collaboration.",
+        "preAuthWrites": 0
+      }
+    },
+    {
+      "id": "S2",
+      "scenario": "同 clientMsgId 重试幂等，零重复入库",
+      "evidence": {
+        "original": "cmwokbrra0000a7k821o0x83k",
+        "retry": "cmwokbrra0000a7k821o0x83k",
+        "rowCount": 1
+      }
+    },
+    {
+      "id": "S3",
+      "scenario": "20 条双向真实消息落库，seq 严格递增",
+      "evidence": {
+        "total": 21,
+        "aCount": 11,
+        "bCount": 10,
+        "monotonic": true,
+        "firstSeq": 1,
+        "lastSeq": 21
+      }
+    },
+    {
+      "id": "S4",
+      "scenario": "5 次重复投递扰动 → 零重复入库",
+      "evidence": {
+        "rowCount": 21
+      }
+    },
+    {
+      "id": "S5",
+      "scenario": "B 视角读回 A 的 11 条消息，内容与 seq 可核对",
+      "evidence": {
+        "count": 11,
+        "sample": {
+          "id": "cmwokbrra0000a7k821o0x83k",
+          "payload": "[AI 草稿 · stub-translator] Nice to meet you. Looking forward to our collaboration.",
+          "seq": 1
+        }
+      }
+    },
+    {
+      "id": "S6",
+      "scenario": "B 已读收据持久化（送达≠已读可区分）",
+      "evidence": {
+        "messageId": "cmwokbrra0000a7k821o0x83k",
+        "readAt": "2026-11-20T05:52:55.946Z"
+      }
+    },
+    {
+      "id": "S7",
+      "scenario": "跨会话消息隔离，CONV 中查不到 CONV_X 的消息",
+      "evidence": {
+        "crossMsgId": "cmwokbsut000ma7k82hf1gbfs",
+        "leakedInConv": false
+      }
+    }
+  ]
+}

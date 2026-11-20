@@ -87,6 +87,11 @@ export type BillingEvent = $Result.DefaultSelection<Prisma.$BillingEventPayload>
  */
 export type UsageRecord = $Result.DefaultSelection<Prisma.$UsageRecordPayload>
 /**
+ * Model BillingInboxEvent
+ * 
+ */
+export type BillingInboxEvent = $Result.DefaultSelection<Prisma.$BillingInboxEventPayload>
+/**
  * Model BotProfile
  * 
  */
@@ -527,6 +532,19 @@ export const BillingGatewayStatus: {
 };
 
 export type BillingGatewayStatus = (typeof BillingGatewayStatus)[keyof typeof BillingGatewayStatus]
+
+
+export const InboxEventStatus: {
+  RECEIVED: 'RECEIVED',
+  APPLIED: 'APPLIED',
+  SETTLED: 'SETTLED',
+  NEEDS_PROVIDER_RECONCILIATION: 'NEEDS_PROVIDER_RECONCILIATION',
+  RETRYABLE: 'RETRYABLE',
+  REQUIRES_REVIEW: 'REQUIRES_REVIEW',
+  DEAD_LETTER: 'DEAD_LETTER'
+};
+
+export type InboxEventStatus = (typeof InboxEventStatus)[keyof typeof InboxEventStatus]
 
 
 export const BotType: {
@@ -1179,6 +1197,10 @@ export type BillingGatewayStatus = $Enums.BillingGatewayStatus
 
 export const BillingGatewayStatus: typeof $Enums.BillingGatewayStatus
 
+export type InboxEventStatus = $Enums.InboxEventStatus
+
+export const InboxEventStatus: typeof $Enums.InboxEventStatus
+
 export type BotType = $Enums.BotType
 
 export const BotType: typeof $Enums.BotType
@@ -1581,6 +1603,16 @@ export class PrismaClient<
     * ```
     */
   get usageRecord(): Prisma.UsageRecordDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.billingInboxEvent`: Exposes CRUD operations for the **BillingInboxEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BillingInboxEvents
+    * const billingInboxEvents = await prisma.billingInboxEvent.findMany()
+    * ```
+    */
+  get billingInboxEvent(): Prisma.BillingInboxEventDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.botProfile`: Exposes CRUD operations for the **BotProfile** model.
@@ -2625,6 +2657,7 @@ export namespace Prisma {
     AgentDeliveryTarget: 'AgentDeliveryTarget',
     BillingEvent: 'BillingEvent',
     UsageRecord: 'UsageRecord',
+    BillingInboxEvent: 'BillingInboxEvent',
     BotProfile: 'BotProfile',
     BotInteractionLog: 'BotInteractionLog',
     BotLearningBatch: 'BotLearningBatch',
@@ -2699,7 +2732,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "communityBridge" | "bridgeMemberOptIn" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organizationInvitation" | "organization" | "membership" | "tenantAuditEvent" | "missionSpecRevision" | "executionVerification" | "agentRunStageEvent"
+      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "billingInboxEvent" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "communityBridge" | "bridgeMemberOptIn" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organizationInvitation" | "organization" | "membership" | "tenantAuditEvent" | "missionSpecRevision" | "executionVerification" | "agentRunStageEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3218,6 +3251,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UsageRecordCountArgs<ExtArgs>
             result: $Utils.Optional<UsageRecordCountAggregateOutputType> | number
+          }
+        }
+      }
+      BillingInboxEvent: {
+        payload: Prisma.$BillingInboxEventPayload<ExtArgs>
+        fields: Prisma.BillingInboxEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BillingInboxEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BillingInboxEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>
+          }
+          findFirst: {
+            args: Prisma.BillingInboxEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BillingInboxEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>
+          }
+          findMany: {
+            args: Prisma.BillingInboxEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>[]
+          }
+          create: {
+            args: Prisma.BillingInboxEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>
+          }
+          createMany: {
+            args: Prisma.BillingInboxEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BillingInboxEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>[]
+          }
+          delete: {
+            args: Prisma.BillingInboxEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>
+          }
+          update: {
+            args: Prisma.BillingInboxEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.BillingInboxEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BillingInboxEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BillingInboxEventUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>[]
+          }
+          upsert: {
+            args: Prisma.BillingInboxEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BillingInboxEventPayload>
+          }
+          aggregate: {
+            args: Prisma.BillingInboxEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBillingInboxEvent>
+          }
+          groupBy: {
+            args: Prisma.BillingInboxEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BillingInboxEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BillingInboxEventCountArgs<ExtArgs>
+            result: $Utils.Optional<BillingInboxEventCountAggregateOutputType> | number
           }
         }
       }
@@ -7717,6 +7824,7 @@ export namespace Prisma {
     agentDeliveryTarget?: AgentDeliveryTargetOmit
     billingEvent?: BillingEventOmit
     usageRecord?: UsageRecordOmit
+    billingInboxEvent?: BillingInboxEventOmit
     botProfile?: BotProfileOmit
     botInteractionLog?: BotInteractionLogOmit
     botLearningBatch?: BotLearningBatchOmit
@@ -8604,6 +8712,7 @@ export namespace Prisma {
     outcomeVerifications: number
     usageRecords: number
     billingEvents: number
+    billingInboxEvents: number
     agentRuns: number
     agentCalls: number
     agentApprovals: number
@@ -8629,6 +8738,7 @@ export namespace Prisma {
     outcomeVerifications?: boolean | OrganizationCountOutputTypeCountOutcomeVerificationsArgs
     usageRecords?: boolean | OrganizationCountOutputTypeCountUsageRecordsArgs
     billingEvents?: boolean | OrganizationCountOutputTypeCountBillingEventsArgs
+    billingInboxEvents?: boolean | OrganizationCountOutputTypeCountBillingInboxEventsArgs
     agentRuns?: boolean | OrganizationCountOutputTypeCountAgentRunsArgs
     agentCalls?: boolean | OrganizationCountOutputTypeCountAgentCallsArgs
     agentApprovals?: boolean | OrganizationCountOutputTypeCountAgentApprovalsArgs
@@ -8758,6 +8868,13 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountBillingEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BillingEventWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountBillingInboxEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BillingInboxEventWhereInput
   }
 
   /**
@@ -17396,6 +17513,1309 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UsageRecordInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BillingInboxEvent
+   */
+
+  export type AggregateBillingInboxEvent = {
+    _count: BillingInboxEventCountAggregateOutputType | null
+    _avg: BillingInboxEventAvgAggregateOutputType | null
+    _sum: BillingInboxEventSumAggregateOutputType | null
+    _min: BillingInboxEventMinAggregateOutputType | null
+    _max: BillingInboxEventMaxAggregateOutputType | null
+  }
+
+  export type BillingInboxEventAvgAggregateOutputType = {
+    amountCents: number | null
+    attempts: number | null
+  }
+
+  export type BillingInboxEventSumAggregateOutputType = {
+    amountCents: number | null
+    attempts: number | null
+  }
+
+  export type BillingInboxEventMinAggregateOutputType = {
+    id: string | null
+    deliveryId: string | null
+    eventId: string | null
+    organizationId: string | null
+    type: string | null
+    paymentId: string | null
+    subscriptionId: string | null
+    amountCents: number | null
+    currency: string | null
+    payloadHash: string | null
+    status: $Enums.InboxEventStatus | null
+    attempts: number | null
+    lastNote: string | null
+    appliedToLedger: boolean | null
+    receivedAt: Date | null
+    updatedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type BillingInboxEventMaxAggregateOutputType = {
+    id: string | null
+    deliveryId: string | null
+    eventId: string | null
+    organizationId: string | null
+    type: string | null
+    paymentId: string | null
+    subscriptionId: string | null
+    amountCents: number | null
+    currency: string | null
+    payloadHash: string | null
+    status: $Enums.InboxEventStatus | null
+    attempts: number | null
+    lastNote: string | null
+    appliedToLedger: boolean | null
+    receivedAt: Date | null
+    updatedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type BillingInboxEventCountAggregateOutputType = {
+    id: number
+    deliveryId: number
+    eventId: number
+    organizationId: number
+    type: number
+    paymentId: number
+    subscriptionId: number
+    amountCents: number
+    currency: number
+    payloadHash: number
+    status: number
+    attempts: number
+    lastNote: number
+    providerTruth: number
+    resolutionCommands: number
+    appliedToLedger: number
+    receivedAt: number
+    updatedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type BillingInboxEventAvgAggregateInputType = {
+    amountCents?: true
+    attempts?: true
+  }
+
+  export type BillingInboxEventSumAggregateInputType = {
+    amountCents?: true
+    attempts?: true
+  }
+
+  export type BillingInboxEventMinAggregateInputType = {
+    id?: true
+    deliveryId?: true
+    eventId?: true
+    organizationId?: true
+    type?: true
+    paymentId?: true
+    subscriptionId?: true
+    amountCents?: true
+    currency?: true
+    payloadHash?: true
+    status?: true
+    attempts?: true
+    lastNote?: true
+    appliedToLedger?: true
+    receivedAt?: true
+    updatedAt?: true
+    createdAt?: true
+  }
+
+  export type BillingInboxEventMaxAggregateInputType = {
+    id?: true
+    deliveryId?: true
+    eventId?: true
+    organizationId?: true
+    type?: true
+    paymentId?: true
+    subscriptionId?: true
+    amountCents?: true
+    currency?: true
+    payloadHash?: true
+    status?: true
+    attempts?: true
+    lastNote?: true
+    appliedToLedger?: true
+    receivedAt?: true
+    updatedAt?: true
+    createdAt?: true
+  }
+
+  export type BillingInboxEventCountAggregateInputType = {
+    id?: true
+    deliveryId?: true
+    eventId?: true
+    organizationId?: true
+    type?: true
+    paymentId?: true
+    subscriptionId?: true
+    amountCents?: true
+    currency?: true
+    payloadHash?: true
+    status?: true
+    attempts?: true
+    lastNote?: true
+    providerTruth?: true
+    resolutionCommands?: true
+    appliedToLedger?: true
+    receivedAt?: true
+    updatedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type BillingInboxEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BillingInboxEvent to aggregate.
+     */
+    where?: BillingInboxEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BillingInboxEvents to fetch.
+     */
+    orderBy?: BillingInboxEventOrderByWithRelationInput | BillingInboxEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BillingInboxEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BillingInboxEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BillingInboxEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BillingInboxEvents
+    **/
+    _count?: true | BillingInboxEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: BillingInboxEventAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: BillingInboxEventSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BillingInboxEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BillingInboxEventMaxAggregateInputType
+  }
+
+  export type GetBillingInboxEventAggregateType<T extends BillingInboxEventAggregateArgs> = {
+        [P in keyof T & keyof AggregateBillingInboxEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBillingInboxEvent[P]>
+      : GetScalarType<T[P], AggregateBillingInboxEvent[P]>
+  }
+
+
+
+
+  export type BillingInboxEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BillingInboxEventWhereInput
+    orderBy?: BillingInboxEventOrderByWithAggregationInput | BillingInboxEventOrderByWithAggregationInput[]
+    by: BillingInboxEventScalarFieldEnum[] | BillingInboxEventScalarFieldEnum
+    having?: BillingInboxEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BillingInboxEventCountAggregateInputType | true
+    _avg?: BillingInboxEventAvgAggregateInputType
+    _sum?: BillingInboxEventSumAggregateInputType
+    _min?: BillingInboxEventMinAggregateInputType
+    _max?: BillingInboxEventMaxAggregateInputType
+  }
+
+  export type BillingInboxEventGroupByOutputType = {
+    id: string
+    deliveryId: string
+    eventId: string
+    organizationId: string
+    type: string
+    paymentId: string | null
+    subscriptionId: string | null
+    amountCents: number | null
+    currency: string | null
+    payloadHash: string
+    status: $Enums.InboxEventStatus
+    attempts: number
+    lastNote: string | null
+    providerTruth: JsonValue | null
+    resolutionCommands: JsonValue | null
+    appliedToLedger: boolean
+    receivedAt: Date
+    updatedAt: Date
+    createdAt: Date
+    _count: BillingInboxEventCountAggregateOutputType | null
+    _avg: BillingInboxEventAvgAggregateOutputType | null
+    _sum: BillingInboxEventSumAggregateOutputType | null
+    _min: BillingInboxEventMinAggregateOutputType | null
+    _max: BillingInboxEventMaxAggregateOutputType | null
+  }
+
+  type GetBillingInboxEventGroupByPayload<T extends BillingInboxEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BillingInboxEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BillingInboxEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BillingInboxEventGroupByOutputType[P]>
+            : GetScalarType<T[P], BillingInboxEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BillingInboxEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    deliveryId?: boolean
+    eventId?: boolean
+    organizationId?: boolean
+    type?: boolean
+    paymentId?: boolean
+    subscriptionId?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    payloadHash?: boolean
+    status?: boolean
+    attempts?: boolean
+    lastNote?: boolean
+    providerTruth?: boolean
+    resolutionCommands?: boolean
+    appliedToLedger?: boolean
+    receivedAt?: boolean
+    updatedAt?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["billingInboxEvent"]>
+
+  export type BillingInboxEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    deliveryId?: boolean
+    eventId?: boolean
+    organizationId?: boolean
+    type?: boolean
+    paymentId?: boolean
+    subscriptionId?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    payloadHash?: boolean
+    status?: boolean
+    attempts?: boolean
+    lastNote?: boolean
+    providerTruth?: boolean
+    resolutionCommands?: boolean
+    appliedToLedger?: boolean
+    receivedAt?: boolean
+    updatedAt?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["billingInboxEvent"]>
+
+  export type BillingInboxEventSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    deliveryId?: boolean
+    eventId?: boolean
+    organizationId?: boolean
+    type?: boolean
+    paymentId?: boolean
+    subscriptionId?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    payloadHash?: boolean
+    status?: boolean
+    attempts?: boolean
+    lastNote?: boolean
+    providerTruth?: boolean
+    resolutionCommands?: boolean
+    appliedToLedger?: boolean
+    receivedAt?: boolean
+    updatedAt?: boolean
+    createdAt?: boolean
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["billingInboxEvent"]>
+
+  export type BillingInboxEventSelectScalar = {
+    id?: boolean
+    deliveryId?: boolean
+    eventId?: boolean
+    organizationId?: boolean
+    type?: boolean
+    paymentId?: boolean
+    subscriptionId?: boolean
+    amountCents?: boolean
+    currency?: boolean
+    payloadHash?: boolean
+    status?: boolean
+    attempts?: boolean
+    lastNote?: boolean
+    providerTruth?: boolean
+    resolutionCommands?: boolean
+    appliedToLedger?: boolean
+    receivedAt?: boolean
+    updatedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type BillingInboxEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "deliveryId" | "eventId" | "organizationId" | "type" | "paymentId" | "subscriptionId" | "amountCents" | "currency" | "payloadHash" | "status" | "attempts" | "lastNote" | "providerTruth" | "resolutionCommands" | "appliedToLedger" | "receivedAt" | "updatedAt" | "createdAt", ExtArgs["result"]["billingInboxEvent"]>
+  export type BillingInboxEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type BillingInboxEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+  export type BillingInboxEventIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
+  }
+
+  export type $BillingInboxEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BillingInboxEvent"
+    objects: {
+      organization: Prisma.$OrganizationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * Provider delivery id（Standard Webhooks `webhook-id`）—— 首要幂等键，全局唯一。
+       */
+      deliveryId: string
+      /**
+       * Provider event id（可能与 deliveryId 不同）—— 次幂等键。
+       */
+      eventId: string
+      organizationId: string
+      /**
+       * 事件类型（payment.succeeded / payment.failed / ...）。
+       */
+      type: string
+      paymentId: string | null
+      subscriptionId: string | null
+      amountCents: number | null
+      currency: string | null
+      /**
+       * 规范化 payload 的 sha256（**不存原文**，敏感信息最小化）。
+       */
+      payloadHash: string
+      /**
+       * 工作流状态（由 inbox 状态机写入，非账本派生值）。
+       */
+      status: $Enums.InboxEventStatus
+      /**
+       * 已尝试处理次数（重试/核验耗尽 → DEAD_LETTER）。
+       */
+      attempts: number
+      /**
+       * 最近一次判决说明/拒绝原因（only reason，不含敏感原文）。
+       */
+      lastNote: string | null
+      /**
+       * Provider 权威核验快照（JSON：`{status, verified, ...}`）；null = 未核验。
+       */
+      providerTruth: Prisma.JsonValue | null
+      /**
+       * 判决产生的结算命令（JSON 数组）；用于审计与 worker 崩溃后恢复重放。
+       */
+      resolutionCommands: Prisma.JsonValue | null
+      /**
+       * 幂等标记：账本命令是否已真实落库（防止"判决了但没写账"）。
+       */
+      appliedToLedger: boolean
+      receivedAt: Date
+      updatedAt: Date
+      createdAt: Date
+    }, ExtArgs["result"]["billingInboxEvent"]>
+    composites: {}
+  }
+
+  type BillingInboxEventGetPayload<S extends boolean | null | undefined | BillingInboxEventDefaultArgs> = $Result.GetResult<Prisma.$BillingInboxEventPayload, S>
+
+  type BillingInboxEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BillingInboxEventFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BillingInboxEventCountAggregateInputType | true
+    }
+
+  export interface BillingInboxEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BillingInboxEvent'], meta: { name: 'BillingInboxEvent' } }
+    /**
+     * Find zero or one BillingInboxEvent that matches the filter.
+     * @param {BillingInboxEventFindUniqueArgs} args - Arguments to find a BillingInboxEvent
+     * @example
+     * // Get one BillingInboxEvent
+     * const billingInboxEvent = await prisma.billingInboxEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BillingInboxEventFindUniqueArgs>(args: SelectSubset<T, BillingInboxEventFindUniqueArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BillingInboxEvent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BillingInboxEventFindUniqueOrThrowArgs} args - Arguments to find a BillingInboxEvent
+     * @example
+     * // Get one BillingInboxEvent
+     * const billingInboxEvent = await prisma.billingInboxEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BillingInboxEventFindUniqueOrThrowArgs>(args: SelectSubset<T, BillingInboxEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BillingInboxEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BillingInboxEventFindFirstArgs} args - Arguments to find a BillingInboxEvent
+     * @example
+     * // Get one BillingInboxEvent
+     * const billingInboxEvent = await prisma.billingInboxEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BillingInboxEventFindFirstArgs>(args?: SelectSubset<T, BillingInboxEventFindFirstArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BillingInboxEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BillingInboxEventFindFirstOrThrowArgs} args - Arguments to find a BillingInboxEvent
+     * @example
+     * // Get one BillingInboxEvent
+     * const billingInboxEvent = await prisma.billingInboxEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BillingInboxEventFindFirstOrThrowArgs>(args?: SelectSubset<T, BillingInboxEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BillingInboxEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BillingInboxEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BillingInboxEvents
+     * const billingInboxEvents = await prisma.billingInboxEvent.findMany()
+     * 
+     * // Get first 10 BillingInboxEvents
+     * const billingInboxEvents = await prisma.billingInboxEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const billingInboxEventWithIdOnly = await prisma.billingInboxEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BillingInboxEventFindManyArgs>(args?: SelectSubset<T, BillingInboxEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BillingInboxEvent.
+     * @param {BillingInboxEventCreateArgs} args - Arguments to create a BillingInboxEvent.
+     * @example
+     * // Create one BillingInboxEvent
+     * const BillingInboxEvent = await prisma.billingInboxEvent.create({
+     *   data: {
+     *     // ... data to create a BillingInboxEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends BillingInboxEventCreateArgs>(args: SelectSubset<T, BillingInboxEventCreateArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BillingInboxEvents.
+     * @param {BillingInboxEventCreateManyArgs} args - Arguments to create many BillingInboxEvents.
+     * @example
+     * // Create many BillingInboxEvents
+     * const billingInboxEvent = await prisma.billingInboxEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BillingInboxEventCreateManyArgs>(args?: SelectSubset<T, BillingInboxEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BillingInboxEvents and returns the data saved in the database.
+     * @param {BillingInboxEventCreateManyAndReturnArgs} args - Arguments to create many BillingInboxEvents.
+     * @example
+     * // Create many BillingInboxEvents
+     * const billingInboxEvent = await prisma.billingInboxEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BillingInboxEvents and only return the `id`
+     * const billingInboxEventWithIdOnly = await prisma.billingInboxEvent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BillingInboxEventCreateManyAndReturnArgs>(args?: SelectSubset<T, BillingInboxEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BillingInboxEvent.
+     * @param {BillingInboxEventDeleteArgs} args - Arguments to delete one BillingInboxEvent.
+     * @example
+     * // Delete one BillingInboxEvent
+     * const BillingInboxEvent = await prisma.billingInboxEvent.delete({
+     *   where: {
+     *     // ... filter to delete one BillingInboxEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BillingInboxEventDeleteArgs>(args: SelectSubset<T, BillingInboxEventDeleteArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BillingInboxEvent.
+     * @param {BillingInboxEventUpdateArgs} args - Arguments to update one BillingInboxEvent.
+     * @example
+     * // Update one BillingInboxEvent
+     * const billingInboxEvent = await prisma.billingInboxEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BillingInboxEventUpdateArgs>(args: SelectSubset<T, BillingInboxEventUpdateArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BillingInboxEvents.
+     * @param {BillingInboxEventDeleteManyArgs} args - Arguments to filter BillingInboxEvents to delete.
+     * @example
+     * // Delete a few BillingInboxEvents
+     * const { count } = await prisma.billingInboxEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BillingInboxEventDeleteManyArgs>(args?: SelectSubset<T, BillingInboxEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BillingInboxEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BillingInboxEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BillingInboxEvents
+     * const billingInboxEvent = await prisma.billingInboxEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BillingInboxEventUpdateManyArgs>(args: SelectSubset<T, BillingInboxEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BillingInboxEvents and returns the data updated in the database.
+     * @param {BillingInboxEventUpdateManyAndReturnArgs} args - Arguments to update many BillingInboxEvents.
+     * @example
+     * // Update many BillingInboxEvents
+     * const billingInboxEvent = await prisma.billingInboxEvent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BillingInboxEvents and only return the `id`
+     * const billingInboxEventWithIdOnly = await prisma.billingInboxEvent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BillingInboxEventUpdateManyAndReturnArgs>(args: SelectSubset<T, BillingInboxEventUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BillingInboxEvent.
+     * @param {BillingInboxEventUpsertArgs} args - Arguments to update or create a BillingInboxEvent.
+     * @example
+     * // Update or create a BillingInboxEvent
+     * const billingInboxEvent = await prisma.billingInboxEvent.upsert({
+     *   create: {
+     *     // ... data to create a BillingInboxEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BillingInboxEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BillingInboxEventUpsertArgs>(args: SelectSubset<T, BillingInboxEventUpsertArgs<ExtArgs>>): Prisma__BillingInboxEventClient<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BillingInboxEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BillingInboxEventCountArgs} args - Arguments to filter BillingInboxEvents to count.
+     * @example
+     * // Count the number of BillingInboxEvents
+     * const count = await prisma.billingInboxEvent.count({
+     *   where: {
+     *     // ... the filter for the BillingInboxEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends BillingInboxEventCountArgs>(
+      args?: Subset<T, BillingInboxEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BillingInboxEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BillingInboxEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BillingInboxEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BillingInboxEventAggregateArgs>(args: Subset<T, BillingInboxEventAggregateArgs>): Prisma.PrismaPromise<GetBillingInboxEventAggregateType<T>>
+
+    /**
+     * Group by BillingInboxEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BillingInboxEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BillingInboxEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BillingInboxEventGroupByArgs['orderBy'] }
+        : { orderBy?: BillingInboxEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BillingInboxEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBillingInboxEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BillingInboxEvent model
+   */
+  readonly fields: BillingInboxEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BillingInboxEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BillingInboxEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BillingInboxEvent model
+   */
+  interface BillingInboxEventFieldRefs {
+    readonly id: FieldRef<"BillingInboxEvent", 'String'>
+    readonly deliveryId: FieldRef<"BillingInboxEvent", 'String'>
+    readonly eventId: FieldRef<"BillingInboxEvent", 'String'>
+    readonly organizationId: FieldRef<"BillingInboxEvent", 'String'>
+    readonly type: FieldRef<"BillingInboxEvent", 'String'>
+    readonly paymentId: FieldRef<"BillingInboxEvent", 'String'>
+    readonly subscriptionId: FieldRef<"BillingInboxEvent", 'String'>
+    readonly amountCents: FieldRef<"BillingInboxEvent", 'Int'>
+    readonly currency: FieldRef<"BillingInboxEvent", 'String'>
+    readonly payloadHash: FieldRef<"BillingInboxEvent", 'String'>
+    readonly status: FieldRef<"BillingInboxEvent", 'InboxEventStatus'>
+    readonly attempts: FieldRef<"BillingInboxEvent", 'Int'>
+    readonly lastNote: FieldRef<"BillingInboxEvent", 'String'>
+    readonly providerTruth: FieldRef<"BillingInboxEvent", 'Json'>
+    readonly resolutionCommands: FieldRef<"BillingInboxEvent", 'Json'>
+    readonly appliedToLedger: FieldRef<"BillingInboxEvent", 'Boolean'>
+    readonly receivedAt: FieldRef<"BillingInboxEvent", 'DateTime'>
+    readonly updatedAt: FieldRef<"BillingInboxEvent", 'DateTime'>
+    readonly createdAt: FieldRef<"BillingInboxEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BillingInboxEvent findUnique
+   */
+  export type BillingInboxEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * Filter, which BillingInboxEvent to fetch.
+     */
+    where: BillingInboxEventWhereUniqueInput
+  }
+
+  /**
+   * BillingInboxEvent findUniqueOrThrow
+   */
+  export type BillingInboxEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * Filter, which BillingInboxEvent to fetch.
+     */
+    where: BillingInboxEventWhereUniqueInput
+  }
+
+  /**
+   * BillingInboxEvent findFirst
+   */
+  export type BillingInboxEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * Filter, which BillingInboxEvent to fetch.
+     */
+    where?: BillingInboxEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BillingInboxEvents to fetch.
+     */
+    orderBy?: BillingInboxEventOrderByWithRelationInput | BillingInboxEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BillingInboxEvents.
+     */
+    cursor?: BillingInboxEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BillingInboxEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BillingInboxEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BillingInboxEvents.
+     */
+    distinct?: BillingInboxEventScalarFieldEnum | BillingInboxEventScalarFieldEnum[]
+  }
+
+  /**
+   * BillingInboxEvent findFirstOrThrow
+   */
+  export type BillingInboxEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * Filter, which BillingInboxEvent to fetch.
+     */
+    where?: BillingInboxEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BillingInboxEvents to fetch.
+     */
+    orderBy?: BillingInboxEventOrderByWithRelationInput | BillingInboxEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BillingInboxEvents.
+     */
+    cursor?: BillingInboxEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BillingInboxEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BillingInboxEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BillingInboxEvents.
+     */
+    distinct?: BillingInboxEventScalarFieldEnum | BillingInboxEventScalarFieldEnum[]
+  }
+
+  /**
+   * BillingInboxEvent findMany
+   */
+  export type BillingInboxEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * Filter, which BillingInboxEvents to fetch.
+     */
+    where?: BillingInboxEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BillingInboxEvents to fetch.
+     */
+    orderBy?: BillingInboxEventOrderByWithRelationInput | BillingInboxEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BillingInboxEvents.
+     */
+    cursor?: BillingInboxEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BillingInboxEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BillingInboxEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BillingInboxEvents.
+     */
+    distinct?: BillingInboxEventScalarFieldEnum | BillingInboxEventScalarFieldEnum[]
+  }
+
+  /**
+   * BillingInboxEvent create
+   */
+  export type BillingInboxEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * The data needed to create a BillingInboxEvent.
+     */
+    data: XOR<BillingInboxEventCreateInput, BillingInboxEventUncheckedCreateInput>
+  }
+
+  /**
+   * BillingInboxEvent createMany
+   */
+  export type BillingInboxEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BillingInboxEvents.
+     */
+    data: BillingInboxEventCreateManyInput | BillingInboxEventCreateManyInput[]
+  }
+
+  /**
+   * BillingInboxEvent createManyAndReturn
+   */
+  export type BillingInboxEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * The data used to create many BillingInboxEvents.
+     */
+    data: BillingInboxEventCreateManyInput | BillingInboxEventCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BillingInboxEvent update
+   */
+  export type BillingInboxEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * The data needed to update a BillingInboxEvent.
+     */
+    data: XOR<BillingInboxEventUpdateInput, BillingInboxEventUncheckedUpdateInput>
+    /**
+     * Choose, which BillingInboxEvent to update.
+     */
+    where: BillingInboxEventWhereUniqueInput
+  }
+
+  /**
+   * BillingInboxEvent updateMany
+   */
+  export type BillingInboxEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BillingInboxEvents.
+     */
+    data: XOR<BillingInboxEventUpdateManyMutationInput, BillingInboxEventUncheckedUpdateManyInput>
+    /**
+     * Filter which BillingInboxEvents to update
+     */
+    where?: BillingInboxEventWhereInput
+    /**
+     * Limit how many BillingInboxEvents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BillingInboxEvent updateManyAndReturn
+   */
+  export type BillingInboxEventUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * The data used to update BillingInboxEvents.
+     */
+    data: XOR<BillingInboxEventUpdateManyMutationInput, BillingInboxEventUncheckedUpdateManyInput>
+    /**
+     * Filter which BillingInboxEvents to update
+     */
+    where?: BillingInboxEventWhereInput
+    /**
+     * Limit how many BillingInboxEvents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BillingInboxEvent upsert
+   */
+  export type BillingInboxEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * The filter to search for the BillingInboxEvent to update in case it exists.
+     */
+    where: BillingInboxEventWhereUniqueInput
+    /**
+     * In case the BillingInboxEvent found by the `where` argument doesn't exist, create a new BillingInboxEvent with this data.
+     */
+    create: XOR<BillingInboxEventCreateInput, BillingInboxEventUncheckedCreateInput>
+    /**
+     * In case the BillingInboxEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BillingInboxEventUpdateInput, BillingInboxEventUncheckedUpdateInput>
+  }
+
+  /**
+   * BillingInboxEvent delete
+   */
+  export type BillingInboxEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    /**
+     * Filter which BillingInboxEvent to delete.
+     */
+    where: BillingInboxEventWhereUniqueInput
+  }
+
+  /**
+   * BillingInboxEvent deleteMany
+   */
+  export type BillingInboxEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BillingInboxEvents to delete
+     */
+    where?: BillingInboxEventWhereInput
+    /**
+     * Limit how many BillingInboxEvents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BillingInboxEvent without action
+   */
+  export type BillingInboxEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
   }
 
 
@@ -81707,6 +83127,7 @@ export namespace Prisma {
     outcomeVerifications?: boolean | Organization$outcomeVerificationsArgs<ExtArgs>
     usageRecords?: boolean | Organization$usageRecordsArgs<ExtArgs>
     billingEvents?: boolean | Organization$billingEventsArgs<ExtArgs>
+    billingInboxEvents?: boolean | Organization$billingInboxEventsArgs<ExtArgs>
     agentRuns?: boolean | Organization$agentRunsArgs<ExtArgs>
     agentCalls?: boolean | Organization$agentCallsArgs<ExtArgs>
     agentApprovals?: boolean | Organization$agentApprovalsArgs<ExtArgs>
@@ -81761,6 +83182,7 @@ export namespace Prisma {
     outcomeVerifications?: boolean | Organization$outcomeVerificationsArgs<ExtArgs>
     usageRecords?: boolean | Organization$usageRecordsArgs<ExtArgs>
     billingEvents?: boolean | Organization$billingEventsArgs<ExtArgs>
+    billingInboxEvents?: boolean | Organization$billingInboxEventsArgs<ExtArgs>
     agentRuns?: boolean | Organization$agentRunsArgs<ExtArgs>
     agentCalls?: boolean | Organization$agentCallsArgs<ExtArgs>
     agentApprovals?: boolean | Organization$agentApprovalsArgs<ExtArgs>
@@ -81791,6 +83213,10 @@ export namespace Prisma {
       outcomeVerifications: Prisma.$OutcomeVerificationPayload<ExtArgs>[]
       usageRecords: Prisma.$UsageRecordPayload<ExtArgs>[]
       billingEvents: Prisma.$BillingEventPayload<ExtArgs>[]
+      /**
+       * V25.5 P0.1 · R-15 Durable Inbox（验签事件收件箱，含中间态与人工复核队列）。
+       */
+      billingInboxEvents: Prisma.$BillingInboxEventPayload<ExtArgs>[]
       agentRuns: Prisma.$AgentRunPayload<ExtArgs>[]
       agentCalls: Prisma.$AgentCallPayload<ExtArgs>[]
       agentApprovals: Prisma.$AgentApprovalPayload<ExtArgs>[]
@@ -82218,6 +83644,7 @@ export namespace Prisma {
     outcomeVerifications<T extends Organization$outcomeVerificationsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$outcomeVerificationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OutcomeVerificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     usageRecords<T extends Organization$usageRecordsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$usageRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UsageRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     billingEvents<T extends Organization$billingEventsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$billingEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BillingEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    billingInboxEvents<T extends Organization$billingInboxEventsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$billingInboxEventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BillingInboxEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agentRuns<T extends Organization$agentRunsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentRunsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agentCalls<T extends Organization$agentCallsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentCallsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentCallPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agentApprovals<T extends Organization$agentApprovalsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$agentApprovalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentApprovalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -83031,6 +84458,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: BillingEventScalarFieldEnum | BillingEventScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.billingInboxEvents
+   */
+  export type Organization$billingInboxEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BillingInboxEvent
+     */
+    select?: BillingInboxEventSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BillingInboxEvent
+     */
+    omit?: BillingInboxEventOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BillingInboxEventInclude<ExtArgs> | null
+    where?: BillingInboxEventWhereInput
+    orderBy?: BillingInboxEventOrderByWithRelationInput | BillingInboxEventOrderByWithRelationInput[]
+    cursor?: BillingInboxEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BillingInboxEventScalarFieldEnum | BillingInboxEventScalarFieldEnum[]
   }
 
   /**
@@ -88824,6 +90275,31 @@ export namespace Prisma {
   export type UsageRecordScalarFieldEnum = (typeof UsageRecordScalarFieldEnum)[keyof typeof UsageRecordScalarFieldEnum]
 
 
+  export const BillingInboxEventScalarFieldEnum: {
+    id: 'id',
+    deliveryId: 'deliveryId',
+    eventId: 'eventId',
+    organizationId: 'organizationId',
+    type: 'type',
+    paymentId: 'paymentId',
+    subscriptionId: 'subscriptionId',
+    amountCents: 'amountCents',
+    currency: 'currency',
+    payloadHash: 'payloadHash',
+    status: 'status',
+    attempts: 'attempts',
+    lastNote: 'lastNote',
+    providerTruth: 'providerTruth',
+    resolutionCommands: 'resolutionCommands',
+    appliedToLedger: 'appliedToLedger',
+    receivedAt: 'receivedAt',
+    updatedAt: 'updatedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type BillingInboxEventScalarFieldEnum = (typeof BillingInboxEventScalarFieldEnum)[keyof typeof BillingInboxEventScalarFieldEnum]
+
+
   export const BotProfileScalarFieldEnum: {
     id: 'id',
     profileId: 'profileId',
@@ -89927,12 +91403,37 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
   export const NullsOrder: {
     first: 'first',
     last: 'last'
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+  export const QueryMode: {
+    default: 'default',
+    insensitive: 'insensitive'
+  };
+
+  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
   /**
@@ -90035,6 +91536,27 @@ export namespace Prisma {
    * Reference to a field of type 'UsageUnit'
    */
   export type EnumUsageUnitFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UsageUnit'>
+    
+
+
+  /**
+   * Reference to a field of type 'InboxEventStatus'
+   */
+  export type EnumInboxEventStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InboxEventStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -91072,6 +92594,134 @@ export namespace Prisma {
     sourceId?: StringWithAggregatesFilter<"UsageRecord"> | string
     dedupeKey?: StringWithAggregatesFilter<"UsageRecord"> | string
     createdAt?: DateTimeWithAggregatesFilter<"UsageRecord"> | Date | string
+  }
+
+  export type BillingInboxEventWhereInput = {
+    AND?: BillingInboxEventWhereInput | BillingInboxEventWhereInput[]
+    OR?: BillingInboxEventWhereInput[]
+    NOT?: BillingInboxEventWhereInput | BillingInboxEventWhereInput[]
+    id?: StringFilter<"BillingInboxEvent"> | string
+    deliveryId?: StringFilter<"BillingInboxEvent"> | string
+    eventId?: StringFilter<"BillingInboxEvent"> | string
+    organizationId?: StringFilter<"BillingInboxEvent"> | string
+    type?: StringFilter<"BillingInboxEvent"> | string
+    paymentId?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    subscriptionId?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    amountCents?: IntNullableFilter<"BillingInboxEvent"> | number | null
+    currency?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    payloadHash?: StringFilter<"BillingInboxEvent"> | string
+    status?: EnumInboxEventStatusFilter<"BillingInboxEvent"> | $Enums.InboxEventStatus
+    attempts?: IntFilter<"BillingInboxEvent"> | number
+    lastNote?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    providerTruth?: JsonNullableFilter<"BillingInboxEvent">
+    resolutionCommands?: JsonNullableFilter<"BillingInboxEvent">
+    appliedToLedger?: BoolFilter<"BillingInboxEvent"> | boolean
+    receivedAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    updatedAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    createdAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }
+
+  export type BillingInboxEventOrderByWithRelationInput = {
+    id?: SortOrder
+    deliveryId?: SortOrder
+    eventId?: SortOrder
+    organizationId?: SortOrder
+    type?: SortOrder
+    paymentId?: SortOrderInput | SortOrder
+    subscriptionId?: SortOrderInput | SortOrder
+    amountCents?: SortOrderInput | SortOrder
+    currency?: SortOrderInput | SortOrder
+    payloadHash?: SortOrder
+    status?: SortOrder
+    attempts?: SortOrder
+    lastNote?: SortOrderInput | SortOrder
+    providerTruth?: SortOrderInput | SortOrder
+    resolutionCommands?: SortOrderInput | SortOrder
+    appliedToLedger?: SortOrder
+    receivedAt?: SortOrder
+    updatedAt?: SortOrder
+    createdAt?: SortOrder
+    organization?: OrganizationOrderByWithRelationInput
+  }
+
+  export type BillingInboxEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    deliveryId?: string
+    organizationId_eventId?: BillingInboxEventOrganizationIdEventIdCompoundUniqueInput
+    AND?: BillingInboxEventWhereInput | BillingInboxEventWhereInput[]
+    OR?: BillingInboxEventWhereInput[]
+    NOT?: BillingInboxEventWhereInput | BillingInboxEventWhereInput[]
+    eventId?: StringFilter<"BillingInboxEvent"> | string
+    organizationId?: StringFilter<"BillingInboxEvent"> | string
+    type?: StringFilter<"BillingInboxEvent"> | string
+    paymentId?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    subscriptionId?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    amountCents?: IntNullableFilter<"BillingInboxEvent"> | number | null
+    currency?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    payloadHash?: StringFilter<"BillingInboxEvent"> | string
+    status?: EnumInboxEventStatusFilter<"BillingInboxEvent"> | $Enums.InboxEventStatus
+    attempts?: IntFilter<"BillingInboxEvent"> | number
+    lastNote?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    providerTruth?: JsonNullableFilter<"BillingInboxEvent">
+    resolutionCommands?: JsonNullableFilter<"BillingInboxEvent">
+    appliedToLedger?: BoolFilter<"BillingInboxEvent"> | boolean
+    receivedAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    updatedAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    createdAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    organization?: XOR<OrganizationScalarRelationFilter, OrganizationWhereInput>
+  }, "id" | "deliveryId" | "organizationId_eventId">
+
+  export type BillingInboxEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    deliveryId?: SortOrder
+    eventId?: SortOrder
+    organizationId?: SortOrder
+    type?: SortOrder
+    paymentId?: SortOrderInput | SortOrder
+    subscriptionId?: SortOrderInput | SortOrder
+    amountCents?: SortOrderInput | SortOrder
+    currency?: SortOrderInput | SortOrder
+    payloadHash?: SortOrder
+    status?: SortOrder
+    attempts?: SortOrder
+    lastNote?: SortOrderInput | SortOrder
+    providerTruth?: SortOrderInput | SortOrder
+    resolutionCommands?: SortOrderInput | SortOrder
+    appliedToLedger?: SortOrder
+    receivedAt?: SortOrder
+    updatedAt?: SortOrder
+    createdAt?: SortOrder
+    _count?: BillingInboxEventCountOrderByAggregateInput
+    _avg?: BillingInboxEventAvgOrderByAggregateInput
+    _max?: BillingInboxEventMaxOrderByAggregateInput
+    _min?: BillingInboxEventMinOrderByAggregateInput
+    _sum?: BillingInboxEventSumOrderByAggregateInput
+  }
+
+  export type BillingInboxEventScalarWhereWithAggregatesInput = {
+    AND?: BillingInboxEventScalarWhereWithAggregatesInput | BillingInboxEventScalarWhereWithAggregatesInput[]
+    OR?: BillingInboxEventScalarWhereWithAggregatesInput[]
+    NOT?: BillingInboxEventScalarWhereWithAggregatesInput | BillingInboxEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BillingInboxEvent"> | string
+    deliveryId?: StringWithAggregatesFilter<"BillingInboxEvent"> | string
+    eventId?: StringWithAggregatesFilter<"BillingInboxEvent"> | string
+    organizationId?: StringWithAggregatesFilter<"BillingInboxEvent"> | string
+    type?: StringWithAggregatesFilter<"BillingInboxEvent"> | string
+    paymentId?: StringNullableWithAggregatesFilter<"BillingInboxEvent"> | string | null
+    subscriptionId?: StringNullableWithAggregatesFilter<"BillingInboxEvent"> | string | null
+    amountCents?: IntNullableWithAggregatesFilter<"BillingInboxEvent"> | number | null
+    currency?: StringNullableWithAggregatesFilter<"BillingInboxEvent"> | string | null
+    payloadHash?: StringWithAggregatesFilter<"BillingInboxEvent"> | string
+    status?: EnumInboxEventStatusWithAggregatesFilter<"BillingInboxEvent"> | $Enums.InboxEventStatus
+    attempts?: IntWithAggregatesFilter<"BillingInboxEvent"> | number
+    lastNote?: StringNullableWithAggregatesFilter<"BillingInboxEvent"> | string | null
+    providerTruth?: JsonNullableWithAggregatesFilter<"BillingInboxEvent">
+    resolutionCommands?: JsonNullableWithAggregatesFilter<"BillingInboxEvent">
+    appliedToLedger?: BoolWithAggregatesFilter<"BillingInboxEvent"> | boolean
+    receivedAt?: DateTimeWithAggregatesFilter<"BillingInboxEvent"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BillingInboxEvent"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"BillingInboxEvent"> | Date | string
   }
 
   export type BotProfileWhereInput = {
@@ -96422,6 +98072,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationListRelationFilter
     usageRecords?: UsageRecordListRelationFilter
     billingEvents?: BillingEventListRelationFilter
+    billingInboxEvents?: BillingInboxEventListRelationFilter
     agentRuns?: AgentRunListRelationFilter
     agentCalls?: AgentCallListRelationFilter
     agentApprovals?: AgentApprovalListRelationFilter
@@ -96453,6 +98104,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationOrderByRelationAggregateInput
     usageRecords?: UsageRecordOrderByRelationAggregateInput
     billingEvents?: BillingEventOrderByRelationAggregateInput
+    billingInboxEvents?: BillingInboxEventOrderByRelationAggregateInput
     agentRuns?: AgentRunOrderByRelationAggregateInput
     agentCalls?: AgentCallOrderByRelationAggregateInput
     agentApprovals?: AgentApprovalOrderByRelationAggregateInput
@@ -96487,6 +98139,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationListRelationFilter
     usageRecords?: UsageRecordListRelationFilter
     billingEvents?: BillingEventListRelationFilter
+    billingInboxEvents?: BillingInboxEventListRelationFilter
     agentRuns?: AgentRunListRelationFilter
     agentCalls?: AgentCallListRelationFilter
     agentApprovals?: AgentApprovalListRelationFilter
@@ -97642,6 +99295,159 @@ export namespace Prisma {
     sourceType?: StringFieldUpdateOperationsInput | string
     sourceId?: StringFieldUpdateOperationsInput | string
     dedupeKey?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BillingInboxEventCreateInput = {
+    id?: string
+    deliveryId: string
+    eventId: string
+    type: string
+    paymentId?: string | null
+    subscriptionId?: string | null
+    amountCents?: number | null
+    currency?: string | null
+    payloadHash: string
+    status?: $Enums.InboxEventStatus
+    attempts?: number
+    lastNote?: string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: boolean
+    receivedAt: Date | string
+    updatedAt?: Date | string
+    createdAt?: Date | string
+    organization: OrganizationCreateNestedOneWithoutBillingInboxEventsInput
+  }
+
+  export type BillingInboxEventUncheckedCreateInput = {
+    id?: string
+    deliveryId: string
+    eventId: string
+    organizationId: string
+    type: string
+    paymentId?: string | null
+    subscriptionId?: string | null
+    amountCents?: number | null
+    currency?: string | null
+    payloadHash: string
+    status?: $Enums.InboxEventStatus
+    attempts?: number
+    lastNote?: string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: boolean
+    receivedAt: Date | string
+    updatedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type BillingInboxEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deliveryId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: NullableIntFieldUpdateOperationsInput | number | null
+    currency?: NullableStringFieldUpdateOperationsInput | string | null
+    payloadHash?: StringFieldUpdateOperationsInput | string
+    status?: EnumInboxEventStatusFieldUpdateOperationsInput | $Enums.InboxEventStatus
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastNote?: NullableStringFieldUpdateOperationsInput | string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: BoolFieldUpdateOperationsInput | boolean
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    organization?: OrganizationUpdateOneRequiredWithoutBillingInboxEventsNestedInput
+  }
+
+  export type BillingInboxEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deliveryId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: NullableIntFieldUpdateOperationsInput | number | null
+    currency?: NullableStringFieldUpdateOperationsInput | string | null
+    payloadHash?: StringFieldUpdateOperationsInput | string
+    status?: EnumInboxEventStatusFieldUpdateOperationsInput | $Enums.InboxEventStatus
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastNote?: NullableStringFieldUpdateOperationsInput | string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: BoolFieldUpdateOperationsInput | boolean
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BillingInboxEventCreateManyInput = {
+    id?: string
+    deliveryId: string
+    eventId: string
+    organizationId: string
+    type: string
+    paymentId?: string | null
+    subscriptionId?: string | null
+    amountCents?: number | null
+    currency?: string | null
+    payloadHash: string
+    status?: $Enums.InboxEventStatus
+    attempts?: number
+    lastNote?: string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: boolean
+    receivedAt: Date | string
+    updatedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type BillingInboxEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deliveryId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: NullableIntFieldUpdateOperationsInput | number | null
+    currency?: NullableStringFieldUpdateOperationsInput | string | null
+    payloadHash?: StringFieldUpdateOperationsInput | string
+    status?: EnumInboxEventStatusFieldUpdateOperationsInput | $Enums.InboxEventStatus
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastNote?: NullableStringFieldUpdateOperationsInput | string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: BoolFieldUpdateOperationsInput | boolean
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BillingInboxEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deliveryId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    organizationId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: NullableIntFieldUpdateOperationsInput | number | null
+    currency?: NullableStringFieldUpdateOperationsInput | string | null
+    payloadHash?: StringFieldUpdateOperationsInput | string
+    status?: EnumInboxEventStatusFieldUpdateOperationsInput | $Enums.InboxEventStatus
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastNote?: NullableStringFieldUpdateOperationsInput | string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: BoolFieldUpdateOperationsInput | boolean
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -103774,6 +105580,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -103805,6 +105612,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -103836,6 +105644,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -103867,6 +105676,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -105053,6 +106863,139 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUsageUnitFilter<$PrismaModel>
     _max?: NestedEnumUsageUnitFilter<$PrismaModel>
+  }
+
+  export type EnumInboxEventStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.InboxEventStatus | EnumInboxEventStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.InboxEventStatus[]
+    notIn?: $Enums.InboxEventStatus[]
+    not?: NestedEnumInboxEventStatusFilter<$PrismaModel> | $Enums.InboxEventStatus
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type BillingInboxEventOrganizationIdEventIdCompoundUniqueInput = {
+    organizationId: string
+    eventId: string
+  }
+
+  export type BillingInboxEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    deliveryId?: SortOrder
+    eventId?: SortOrder
+    organizationId?: SortOrder
+    type?: SortOrder
+    paymentId?: SortOrder
+    subscriptionId?: SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    payloadHash?: SortOrder
+    status?: SortOrder
+    attempts?: SortOrder
+    lastNote?: SortOrder
+    providerTruth?: SortOrder
+    resolutionCommands?: SortOrder
+    appliedToLedger?: SortOrder
+    receivedAt?: SortOrder
+    updatedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BillingInboxEventAvgOrderByAggregateInput = {
+    amountCents?: SortOrder
+    attempts?: SortOrder
+  }
+
+  export type BillingInboxEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    deliveryId?: SortOrder
+    eventId?: SortOrder
+    organizationId?: SortOrder
+    type?: SortOrder
+    paymentId?: SortOrder
+    subscriptionId?: SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    payloadHash?: SortOrder
+    status?: SortOrder
+    attempts?: SortOrder
+    lastNote?: SortOrder
+    appliedToLedger?: SortOrder
+    receivedAt?: SortOrder
+    updatedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BillingInboxEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    deliveryId?: SortOrder
+    eventId?: SortOrder
+    organizationId?: SortOrder
+    type?: SortOrder
+    paymentId?: SortOrder
+    subscriptionId?: SortOrder
+    amountCents?: SortOrder
+    currency?: SortOrder
+    payloadHash?: SortOrder
+    status?: SortOrder
+    attempts?: SortOrder
+    lastNote?: SortOrder
+    appliedToLedger?: SortOrder
+    receivedAt?: SortOrder
+    updatedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type BillingInboxEventSumOrderByAggregateInput = {
+    amountCents?: SortOrder
+    attempts?: SortOrder
+  }
+
+  export type EnumInboxEventStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.InboxEventStatus | EnumInboxEventStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.InboxEventStatus[]
+    notIn?: $Enums.InboxEventStatus[]
+    not?: NestedEnumInboxEventStatusWithAggregatesFilter<$PrismaModel> | $Enums.InboxEventStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumInboxEventStatusFilter<$PrismaModel>
+    _max?: NestedEnumInboxEventStatusFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type EnumBotTypeFilter<$PrismaModel = never> = {
@@ -109331,6 +111274,12 @@ export namespace Prisma {
     none?: BillingEventWhereInput
   }
 
+  export type BillingInboxEventListRelationFilter = {
+    every?: BillingInboxEventWhereInput
+    some?: BillingInboxEventWhereInput
+    none?: BillingInboxEventWhereInput
+  }
+
   export type AgentRunListRelationFilter = {
     every?: AgentRunWhereInput
     some?: AgentRunWhereInput
@@ -109388,6 +111337,10 @@ export namespace Prisma {
   }
 
   export type BillingEventOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type BillingInboxEventOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -110036,6 +111989,24 @@ export namespace Prisma {
     upsert?: OrganizationUpsertWithoutUsageRecordsInput
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutUsageRecordsInput, OrganizationUpdateWithoutUsageRecordsInput>, OrganizationUncheckedUpdateWithoutUsageRecordsInput>
+  }
+
+  export type OrganizationCreateNestedOneWithoutBillingInboxEventsInput = {
+    create?: XOR<OrganizationCreateWithoutBillingInboxEventsInput, OrganizationUncheckedCreateWithoutBillingInboxEventsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutBillingInboxEventsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
+  export type EnumInboxEventStatusFieldUpdateOperationsInput = {
+    set?: $Enums.InboxEventStatus
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutBillingInboxEventsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutBillingInboxEventsInput, OrganizationUncheckedCreateWithoutBillingInboxEventsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutBillingInboxEventsInput
+    upsert?: OrganizationUpsertWithoutBillingInboxEventsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutBillingInboxEventsInput, OrganizationUpdateWithoutBillingInboxEventsInput>, OrganizationUncheckedUpdateWithoutBillingInboxEventsInput>
   }
 
   export type EnumBotTypeFieldUpdateOperationsInput = {
@@ -113626,6 +115597,13 @@ export namespace Prisma {
     connect?: BillingEventWhereUniqueInput | BillingEventWhereUniqueInput[]
   }
 
+  export type BillingInboxEventCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<BillingInboxEventCreateWithoutOrganizationInput, BillingInboxEventUncheckedCreateWithoutOrganizationInput> | BillingInboxEventCreateWithoutOrganizationInput[] | BillingInboxEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BillingInboxEventCreateOrConnectWithoutOrganizationInput | BillingInboxEventCreateOrConnectWithoutOrganizationInput[]
+    createMany?: BillingInboxEventCreateManyOrganizationInputEnvelope
+    connect?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+  }
+
   export type AgentRunCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<AgentRunCreateWithoutOrganizationInput, AgentRunUncheckedCreateWithoutOrganizationInput> | AgentRunCreateWithoutOrganizationInput[] | AgentRunUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: AgentRunCreateOrConnectWithoutOrganizationInput | AgentRunCreateOrConnectWithoutOrganizationInput[]
@@ -113778,6 +115756,13 @@ export namespace Prisma {
     connectOrCreate?: BillingEventCreateOrConnectWithoutOrganizationInput | BillingEventCreateOrConnectWithoutOrganizationInput[]
     createMany?: BillingEventCreateManyOrganizationInputEnvelope
     connect?: BillingEventWhereUniqueInput | BillingEventWhereUniqueInput[]
+  }
+
+  export type BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<BillingInboxEventCreateWithoutOrganizationInput, BillingInboxEventUncheckedCreateWithoutOrganizationInput> | BillingInboxEventCreateWithoutOrganizationInput[] | BillingInboxEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BillingInboxEventCreateOrConnectWithoutOrganizationInput | BillingInboxEventCreateOrConnectWithoutOrganizationInput[]
+    createMany?: BillingInboxEventCreateManyOrganizationInputEnvelope
+    connect?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
   }
 
   export type AgentRunUncheckedCreateNestedManyWithoutOrganizationInput = {
@@ -114048,6 +116033,20 @@ export namespace Prisma {
     update?: BillingEventUpdateWithWhereUniqueWithoutOrganizationInput | BillingEventUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: BillingEventUpdateManyWithWhereWithoutOrganizationInput | BillingEventUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: BillingEventScalarWhereInput | BillingEventScalarWhereInput[]
+  }
+
+  export type BillingInboxEventUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<BillingInboxEventCreateWithoutOrganizationInput, BillingInboxEventUncheckedCreateWithoutOrganizationInput> | BillingInboxEventCreateWithoutOrganizationInput[] | BillingInboxEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BillingInboxEventCreateOrConnectWithoutOrganizationInput | BillingInboxEventCreateOrConnectWithoutOrganizationInput[]
+    upsert?: BillingInboxEventUpsertWithWhereUniqueWithoutOrganizationInput | BillingInboxEventUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: BillingInboxEventCreateManyOrganizationInputEnvelope
+    set?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    disconnect?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    delete?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    connect?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    update?: BillingInboxEventUpdateWithWhereUniqueWithoutOrganizationInput | BillingInboxEventUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: BillingInboxEventUpdateManyWithWhereWithoutOrganizationInput | BillingInboxEventUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: BillingInboxEventScalarWhereInput | BillingInboxEventScalarWhereInput[]
   }
 
   export type AgentRunUpdateManyWithoutOrganizationNestedInput = {
@@ -114356,6 +116355,20 @@ export namespace Prisma {
     update?: BillingEventUpdateWithWhereUniqueWithoutOrganizationInput | BillingEventUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: BillingEventUpdateManyWithWhereWithoutOrganizationInput | BillingEventUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: BillingEventScalarWhereInput | BillingEventScalarWhereInput[]
+  }
+
+  export type BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<BillingInboxEventCreateWithoutOrganizationInput, BillingInboxEventUncheckedCreateWithoutOrganizationInput> | BillingInboxEventCreateWithoutOrganizationInput[] | BillingInboxEventUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: BillingInboxEventCreateOrConnectWithoutOrganizationInput | BillingInboxEventCreateOrConnectWithoutOrganizationInput[]
+    upsert?: BillingInboxEventUpsertWithWhereUniqueWithoutOrganizationInput | BillingInboxEventUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: BillingInboxEventCreateManyOrganizationInputEnvelope
+    set?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    disconnect?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    delete?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    connect?: BillingInboxEventWhereUniqueInput | BillingInboxEventWhereUniqueInput[]
+    update?: BillingInboxEventUpdateWithWhereUniqueWithoutOrganizationInput | BillingInboxEventUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: BillingInboxEventUpdateManyWithWhereWithoutOrganizationInput | BillingInboxEventUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: BillingInboxEventScalarWhereInput | BillingInboxEventScalarWhereInput[]
   }
 
   export type AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput = {
@@ -114832,6 +116845,41 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumUsageUnitFilter<$PrismaModel>
     _max?: NestedEnumUsageUnitFilter<$PrismaModel>
+  }
+
+  export type NestedEnumInboxEventStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.InboxEventStatus | EnumInboxEventStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.InboxEventStatus[]
+    notIn?: $Enums.InboxEventStatus[]
+    not?: NestedEnumInboxEventStatusFilter<$PrismaModel> | $Enums.InboxEventStatus
+  }
+
+  export type NestedEnumInboxEventStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.InboxEventStatus | EnumInboxEventStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.InboxEventStatus[]
+    notIn?: $Enums.InboxEventStatus[]
+    not?: NestedEnumInboxEventStatusWithAggregatesFilter<$PrismaModel> | $Enums.InboxEventStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumInboxEventStatusFilter<$PrismaModel>
+    _max?: NestedEnumInboxEventStatusFilter<$PrismaModel>
+  }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type NestedEnumBotTypeFilter<$PrismaModel = never> = {
@@ -115781,6 +117829,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
@@ -115811,6 +117860,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
@@ -115979,6 +118029,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
@@ -116009,6 +118060,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -116174,6 +118226,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
@@ -116204,6 +118257,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
@@ -116307,6 +118361,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
@@ -116337,6 +118392,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -116430,6 +118486,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
@@ -116460,6 +118517,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
@@ -116563,6 +118621,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
@@ -116593,6 +118652,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -116686,6 +118746,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -116716,6 +118777,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -116819,6 +118881,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -116849,6 +118912,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -116942,6 +119006,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -116972,6 +119037,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -117075,6 +119141,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -117105,6 +119172,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -117197,6 +119265,7 @@ export namespace Prisma {
     outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -117227,6 +119296,7 @@ export namespace Prisma {
     outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -117273,6 +119343,7 @@ export namespace Prisma {
     outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -117303,6 +119374,7 @@ export namespace Prisma {
     outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -117333,6 +119405,7 @@ export namespace Prisma {
     outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -117363,6 +119436,7 @@ export namespace Prisma {
     outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -117409,6 +119483,7 @@ export namespace Prisma {
     outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -117438,6 +119513,147 @@ export namespace Prisma {
     introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
     outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentExecutions?: AgentExecutionUncheckedUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationCreateWithoutBillingInboxEventsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventCreateNestedManyWithoutOrganizationInput
+    invitations?: OrganizationInvitationCreateNestedManyWithoutOrganizationInput
+    missions?: MissionCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
+    usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
+    billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
+    agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
+    agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
+    agentExecutions?: AgentExecutionCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutBillingInboxEventsInput = {
+    id?: string
+    name: string
+    slug: string
+    status?: $Enums.OrganizationStatus
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutOrganizationInput
+    auditEvents?: TenantAuditEventUncheckedCreateNestedManyWithoutOrganizationInput
+    invitations?: OrganizationInvitationUncheckedCreateNestedManyWithoutOrganizationInput
+    missions?: MissionUncheckedCreateNestedManyWithoutOrganizationInput
+    missionParticipations?: MissionParticipationUncheckedCreateNestedManyWithoutOrganizationInput
+    idempotencyRecords?: IdempotencyRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    socialIntents?: SocialIntentUncheckedCreateNestedManyWithoutOrganizationInput
+    connectionProposals?: ConnectionProposalUncheckedCreateNestedManyWithoutOrganizationInput
+    proposalDecisions?: ProposalDecisionUncheckedCreateNestedManyWithoutOrganizationInput
+    workflowJobs?: WorkflowJobUncheckedCreateNestedManyWithoutOrganizationInput
+    notificationDeliveries?: NotificationDeliveryUncheckedCreateNestedManyWithoutOrganizationInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
+    outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
+    usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
+    billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
+    agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
+    agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
+    agentExecutions?: AgentExecutionUncheckedCreateNestedManyWithoutOrganizationInput
+    agentDeliveryTargets?: AgentDeliveryTargetUncheckedCreateNestedManyWithoutOrganizationInput
+    bridgeMemberOptIns?: BridgeMemberOptInUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutBillingInboxEventsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutBillingInboxEventsInput, OrganizationUncheckedCreateWithoutBillingInboxEventsInput>
+  }
+
+  export type OrganizationUpsertWithoutBillingInboxEventsInput = {
+    update: XOR<OrganizationUpdateWithoutBillingInboxEventsInput, OrganizationUncheckedUpdateWithoutBillingInboxEventsInput>
+    create: XOR<OrganizationCreateWithoutBillingInboxEventsInput, OrganizationUncheckedCreateWithoutBillingInboxEventsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutBillingInboxEventsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutBillingInboxEventsInput, OrganizationUncheckedUpdateWithoutBillingInboxEventsInput>
+  }
+
+  export type OrganizationUpdateWithoutBillingInboxEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUpdateManyWithoutOrganizationNestedInput
+    invitations?: OrganizationInvitationUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
+    usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
+    billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
+    agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
+    agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
+    agentExecutions?: AgentExecutionUpdateManyWithoutOrganizationNestedInput
+    agentDeliveryTargets?: AgentDeliveryTargetUpdateManyWithoutOrganizationNestedInput
+    bridgeMemberOptIns?: BridgeMemberOptInUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutBillingInboxEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    status?: EnumOrganizationStatusFieldUpdateOperationsInput | $Enums.OrganizationStatus
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutOrganizationNestedInput
+    auditEvents?: TenantAuditEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    invitations?: OrganizationInvitationUncheckedUpdateManyWithoutOrganizationNestedInput
+    missions?: MissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    missionParticipations?: MissionParticipationUncheckedUpdateManyWithoutOrganizationNestedInput
+    idempotencyRecords?: IdempotencyRecordUncheckedUpdateManyWithoutOrganizationNestedInput
+    socialIntents?: SocialIntentUncheckedUpdateManyWithoutOrganizationNestedInput
+    connectionProposals?: ConnectionProposalUncheckedUpdateManyWithoutOrganizationNestedInput
+    proposalDecisions?: ProposalDecisionUncheckedUpdateManyWithoutOrganizationNestedInput
+    workflowJobs?: WorkflowJobUncheckedUpdateManyWithoutOrganizationNestedInput
+    notificationDeliveries?: NotificationDeliveryUncheckedUpdateManyWithoutOrganizationNestedInput
+    introductionWorkflows?: IntroductionWorkflowUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
+    outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
+    usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -117578,6 +119794,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -117608,6 +119825,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -117703,6 +119921,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -117733,6 +119952,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -117762,6 +119982,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -117792,6 +120013,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -118068,6 +120290,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -118098,6 +120321,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -118352,6 +120576,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -118382,6 +120607,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -118596,6 +120822,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -118626,6 +120853,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -118836,6 +121064,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -118866,6 +121095,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -119080,6 +121310,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -119110,6 +121341,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -119320,6 +121552,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -119350,6 +121583,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -119396,6 +121630,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -119426,6 +121661,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -119456,6 +121692,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -119486,6 +121723,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -119871,6 +122109,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -119901,6 +122140,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -120296,6 +122536,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -120326,6 +122567,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -120526,6 +122768,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -120556,6 +122799,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -120752,6 +122996,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -120782,6 +123027,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -120828,6 +123074,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -120858,6 +123105,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -120888,6 +123136,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -120918,6 +123167,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -120964,6 +123214,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -120994,6 +123245,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -121024,6 +123276,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -121054,6 +123307,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -121137,6 +123391,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -121167,6 +123422,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -133506,6 +135762,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -133536,6 +135793,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -133611,6 +135869,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -133641,6 +135900,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -133701,6 +135961,7 @@ export namespace Prisma {
     outcomes?: OutcomeCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -133731,6 +135992,7 @@ export namespace Prisma {
     outcomes?: OutcomeUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -133810,6 +136072,7 @@ export namespace Prisma {
     outcomes?: OutcomeUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -133840,6 +136103,7 @@ export namespace Prisma {
     outcomes?: OutcomeUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -133909,6 +136173,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -133939,6 +136204,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -133985,6 +136251,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -134015,6 +136282,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -134617,6 +136885,57 @@ export namespace Prisma {
 
   export type BillingEventCreateManyOrganizationInputEnvelope = {
     data: BillingEventCreateManyOrganizationInput | BillingEventCreateManyOrganizationInput[]
+  }
+
+  export type BillingInboxEventCreateWithoutOrganizationInput = {
+    id?: string
+    deliveryId: string
+    eventId: string
+    type: string
+    paymentId?: string | null
+    subscriptionId?: string | null
+    amountCents?: number | null
+    currency?: string | null
+    payloadHash: string
+    status?: $Enums.InboxEventStatus
+    attempts?: number
+    lastNote?: string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: boolean
+    receivedAt: Date | string
+    updatedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type BillingInboxEventUncheckedCreateWithoutOrganizationInput = {
+    id?: string
+    deliveryId: string
+    eventId: string
+    type: string
+    paymentId?: string | null
+    subscriptionId?: string | null
+    amountCents?: number | null
+    currency?: string | null
+    payloadHash: string
+    status?: $Enums.InboxEventStatus
+    attempts?: number
+    lastNote?: string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: boolean
+    receivedAt: Date | string
+    updatedAt?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type BillingInboxEventCreateOrConnectWithoutOrganizationInput = {
+    where: BillingInboxEventWhereUniqueInput
+    create: XOR<BillingInboxEventCreateWithoutOrganizationInput, BillingInboxEventUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type BillingInboxEventCreateManyOrganizationInputEnvelope = {
+    data: BillingInboxEventCreateManyOrganizationInput | BillingInboxEventCreateManyOrganizationInput[]
   }
 
   export type AgentRunCreateWithoutOrganizationInput = {
@@ -135270,6 +137589,47 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"BillingEvent"> | Date | string
   }
 
+  export type BillingInboxEventUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: BillingInboxEventWhereUniqueInput
+    update: XOR<BillingInboxEventUpdateWithoutOrganizationInput, BillingInboxEventUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<BillingInboxEventCreateWithoutOrganizationInput, BillingInboxEventUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type BillingInboxEventUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: BillingInboxEventWhereUniqueInput
+    data: XOR<BillingInboxEventUpdateWithoutOrganizationInput, BillingInboxEventUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type BillingInboxEventUpdateManyWithWhereWithoutOrganizationInput = {
+    where: BillingInboxEventScalarWhereInput
+    data: XOR<BillingInboxEventUpdateManyMutationInput, BillingInboxEventUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type BillingInboxEventScalarWhereInput = {
+    AND?: BillingInboxEventScalarWhereInput | BillingInboxEventScalarWhereInput[]
+    OR?: BillingInboxEventScalarWhereInput[]
+    NOT?: BillingInboxEventScalarWhereInput | BillingInboxEventScalarWhereInput[]
+    id?: StringFilter<"BillingInboxEvent"> | string
+    deliveryId?: StringFilter<"BillingInboxEvent"> | string
+    eventId?: StringFilter<"BillingInboxEvent"> | string
+    organizationId?: StringFilter<"BillingInboxEvent"> | string
+    type?: StringFilter<"BillingInboxEvent"> | string
+    paymentId?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    subscriptionId?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    amountCents?: IntNullableFilter<"BillingInboxEvent"> | number | null
+    currency?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    payloadHash?: StringFilter<"BillingInboxEvent"> | string
+    status?: EnumInboxEventStatusFilter<"BillingInboxEvent"> | $Enums.InboxEventStatus
+    attempts?: IntFilter<"BillingInboxEvent"> | number
+    lastNote?: StringNullableFilter<"BillingInboxEvent"> | string | null
+    providerTruth?: JsonNullableFilter<"BillingInboxEvent">
+    resolutionCommands?: JsonNullableFilter<"BillingInboxEvent">
+    appliedToLedger?: BoolFilter<"BillingInboxEvent"> | boolean
+    receivedAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    updatedAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+    createdAt?: DateTimeFilter<"BillingInboxEvent"> | Date | string
+  }
+
   export type AgentRunUpsertWithWhereUniqueWithoutOrganizationInput = {
     where: AgentRunWhereUniqueInput
     update: XOR<AgentRunUpdateWithoutOrganizationInput, AgentRunUncheckedUpdateWithoutOrganizationInput>
@@ -135459,6 +137819,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -135489,6 +137850,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -135652,6 +138014,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -135682,6 +138045,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -135835,6 +138199,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalCreateNestedManyWithoutOrganizationInput
@@ -135865,6 +138230,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedCreateNestedManyWithoutOrganizationInput
     usageRecords?: UsageRecordUncheckedCreateNestedManyWithoutOrganizationInput
     billingEvents?: BillingEventUncheckedCreateNestedManyWithoutOrganizationInput
+    billingInboxEvents?: BillingInboxEventUncheckedCreateNestedManyWithoutOrganizationInput
     agentRuns?: AgentRunUncheckedCreateNestedManyWithoutOrganizationInput
     agentCalls?: AgentCallUncheckedCreateNestedManyWithoutOrganizationInput
     agentApprovals?: AgentApprovalUncheckedCreateNestedManyWithoutOrganizationInput
@@ -135911,6 +138277,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUpdateManyWithoutOrganizationNestedInput
@@ -135941,6 +138308,7 @@ export namespace Prisma {
     outcomeVerifications?: OutcomeVerificationUncheckedUpdateManyWithoutOrganizationNestedInput
     usageRecords?: UsageRecordUncheckedUpdateManyWithoutOrganizationNestedInput
     billingEvents?: BillingEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    billingInboxEvents?: BillingInboxEventUncheckedUpdateManyWithoutOrganizationNestedInput
     agentRuns?: AgentRunUncheckedUpdateManyWithoutOrganizationNestedInput
     agentCalls?: AgentCallUncheckedUpdateManyWithoutOrganizationNestedInput
     agentApprovals?: AgentApprovalUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -139239,6 +141607,27 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type BillingInboxEventCreateManyOrganizationInput = {
+    id?: string
+    deliveryId: string
+    eventId: string
+    type: string
+    paymentId?: string | null
+    subscriptionId?: string | null
+    amountCents?: number | null
+    currency?: string | null
+    payloadHash: string
+    status?: $Enums.InboxEventStatus
+    attempts?: number
+    lastNote?: string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: boolean
+    receivedAt: Date | string
+    updatedAt?: Date | string
+    createdAt?: Date | string
+  }
+
   export type AgentRunCreateManyOrganizationInput = {
     id?: string
     skill: string
@@ -139991,6 +142380,69 @@ export namespace Prisma {
     dedupeKey?: StringFieldUpdateOperationsInput | string
     requestHash?: NullableStringFieldUpdateOperationsInput | string | null
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BillingInboxEventUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deliveryId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: NullableIntFieldUpdateOperationsInput | number | null
+    currency?: NullableStringFieldUpdateOperationsInput | string | null
+    payloadHash?: StringFieldUpdateOperationsInput | string
+    status?: EnumInboxEventStatusFieldUpdateOperationsInput | $Enums.InboxEventStatus
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastNote?: NullableStringFieldUpdateOperationsInput | string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: BoolFieldUpdateOperationsInput | boolean
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BillingInboxEventUncheckedUpdateWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deliveryId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: NullableIntFieldUpdateOperationsInput | number | null
+    currency?: NullableStringFieldUpdateOperationsInput | string | null
+    payloadHash?: StringFieldUpdateOperationsInput | string
+    status?: EnumInboxEventStatusFieldUpdateOperationsInput | $Enums.InboxEventStatus
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastNote?: NullableStringFieldUpdateOperationsInput | string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: BoolFieldUpdateOperationsInput | boolean
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BillingInboxEventUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    deliveryId?: StringFieldUpdateOperationsInput | string
+    eventId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    paymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionId?: NullableStringFieldUpdateOperationsInput | string | null
+    amountCents?: NullableIntFieldUpdateOperationsInput | number | null
+    currency?: NullableStringFieldUpdateOperationsInput | string | null
+    payloadHash?: StringFieldUpdateOperationsInput | string
+    status?: EnumInboxEventStatusFieldUpdateOperationsInput | $Enums.InboxEventStatus
+    attempts?: IntFieldUpdateOperationsInput | number
+    lastNote?: NullableStringFieldUpdateOperationsInput | string | null
+    providerTruth?: NullableJsonNullValueInput | InputJsonValue
+    resolutionCommands?: NullableJsonNullValueInput | InputJsonValue
+    appliedToLedger?: BoolFieldUpdateOperationsInput | boolean
+    receivedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

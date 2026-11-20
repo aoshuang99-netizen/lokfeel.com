@@ -1,0 +1,206 @@
+{
+  "task": "P0.1/V25-34",
+  "runAt": "2026-11-20T05:44:17.738Z",
+  "dbFile": "/tmp/v255-inbox.db",
+  "providerMode": "LOCAL_DETERMINISTIC_INJECT (PROVIDER_NOT_TESTED)",
+  "verdict": "PASS",
+  "failures": [],
+  "steps": [
+    {
+      "id": "S0",
+      "scenario": "构造先失败的账本状态",
+      "result": {
+        "ledger": {
+          "organizationId": "org_e2e",
+          "status": "PAST_DUE",
+          "charges": [
+            {
+              "chargeId": "pay_v255_1",
+              "status": "FAILED",
+              "amountCents": 14900,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "S2",
+      "scenario": "收件幂等 + ACK 绑定持久化",
+      "result": {
+        "first": {
+          "inserted": true,
+          "id": "cmwok0ono0003juk8u19u8843",
+          "status": "RECEIVED"
+        },
+        "duplicate": {
+          "inserted": false,
+          "id": "cmwok0ono0003juk8u19u8843",
+          "status": "RECEIVED"
+        },
+        "inbox": {
+          "status": "RECEIVED",
+          "attempts": 0,
+          "appliedToLedger": false,
+          "lastNote": null,
+          "eventId": "evt_v255_r15_1"
+        }
+      }
+    },
+    {
+      "id": "S3",
+      "scenario": "无 Provider 凭据 → 核验态、零权益授予",
+      "result": {
+        "process": {
+          "status": "NEEDS_PROVIDER_RECONCILIATION",
+          "note": "PROVIDER_UNVERIFIED payment=pay_v255_1: PROVIDER_NOT_TESTED (local deterministic inject)",
+          "appliedCommands": 0,
+          "replayedCommands": 0
+        },
+        "ledger": {
+          "organizationId": "org_e2e",
+          "status": "PAST_DUE",
+          "charges": [
+            {
+              "chargeId": "pay_v255_1",
+              "status": "FAILED",
+              "amountCents": 14900,
+              "currency": "USD"
+            }
+          ]
+        },
+        "inbox": {
+          "status": "NEEDS_PROVIDER_RECONCILIATION",
+          "attempts": 1,
+          "appliedToLedger": false,
+          "lastNote": "PROVIDER_UNVERIFIED payment=pay_v255_1: PROVIDER_NOT_TESTED (local deterministic inject)",
+          "eventId": "evt_v255_r15_1"
+        }
+      }
+    },
+    {
+      "id": "S4",
+      "scenario": "Provider 确认 paid → 补偿结算 SETTLED",
+      "result": {
+        "process": {
+          "status": "SETTLED",
+          "note": "RECOVERED_TO_SETTLED payment=pay_v255_1 recovery=pay_v255_1:recovered:evt_v255_r15_1",
+          "appliedCommands": 2,
+          "replayedCommands": 0
+        },
+        "ledger": {
+          "organizationId": "org_e2e",
+          "status": "ACTIVE",
+          "charges": [
+            {
+              "chargeId": "pay_v255_1",
+              "status": "FAILED",
+              "amountCents": 14900,
+              "currency": "USD"
+            },
+            {
+              "chargeId": "pay_v255_1:recovered:evt_v255_r15_1",
+              "status": "SUCCEEDED",
+              "amountCents": 14900,
+              "currency": "USD"
+            }
+          ]
+        },
+        "inbox": {
+          "status": "SETTLED",
+          "attempts": 2,
+          "appliedToLedger": true,
+          "lastNote": "RECOVERED_TO_SETTLED payment=pay_v255_1 recovery=pay_v255_1:recovered:evt_v255_r15_1",
+          "eventId": "evt_v255_r15_1"
+        }
+      }
+    },
+    {
+      "id": "S5",
+      "scenario": "worker 重启重放同一 delivery → 零重复入账",
+      "result": {
+        "process": {
+          "status": "SETTLED",
+          "note": "NOT_PROCESSABLE(SETTLED)",
+          "appliedCommands": 0,
+          "replayedCommands": 0
+        },
+        "ledger": {
+          "organizationId": "org_e2e",
+          "status": "ACTIVE",
+          "charges": [
+            {
+              "chargeId": "pay_v255_1",
+              "status": "FAILED",
+              "amountCents": 14900,
+              "currency": "USD"
+            },
+            {
+              "chargeId": "pay_v255_1:recovered:evt_v255_r15_1",
+              "status": "SUCCEEDED",
+              "amountCents": 14900,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "S6",
+      "scenario": "跨租户事件独立结算，orgA 账本零变化",
+      "result": {
+        "process": {
+          "status": "SETTLED",
+          "note": "RECOVERED_TO_SETTLED payment=pay_v255_B recovery=pay_v255_B:recovered:evt_v255_cross",
+          "appliedCommands": 2,
+          "replayedCommands": 0
+        },
+        "orgALedger": {
+          "organizationId": "org_e2e",
+          "status": "ACTIVE",
+          "charges": [
+            {
+              "chargeId": "pay_v255_1",
+              "status": "FAILED",
+              "amountCents": 14900,
+              "currency": "USD"
+            },
+            {
+              "chargeId": "pay_v255_1:recovered:evt_v255_r15_1",
+              "status": "SUCCEEDED",
+              "amountCents": 14900,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "S7",
+      "scenario": "Provider 确认未付 → DEAD_LETTER（不授予权益）",
+      "result": {
+        "process": {
+          "status": "DEAD_LETTER",
+          "note": "PROVIDER_SAYS_UNPAID payment=pay_v255_2",
+          "appliedCommands": 0,
+          "replayedCommands": 0
+        },
+        "inbox": {
+          "status": "DEAD_LETTER",
+          "attempts": 1,
+          "appliedToLedger": false,
+          "lastNote": "PROVIDER_SAYS_UNPAID payment=pay_v255_2",
+          "eventId": "evt_v255_unpaid"
+        }
+      }
+    },
+    {
+      "id": "S8",
+      "scenario": "待处理/复核队列可观测",
+      "result": {
+        "count": 0,
+        "statuses": []
+      }
+    }
+  ]
+}
