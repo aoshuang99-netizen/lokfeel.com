@@ -97,8 +97,11 @@
 
 ### 2.3 发布差异（哈希 / CI / Preview / SHA）
 - 源码哈希对照见第 0 节表（全部相对 main 变化）。
-- 分支：`ui-remediation/20261121`，提交后记录唯一 SHA。
-- CI / Preview：推送后由 `rc/**` 触发器产生 Run ID 与 Preview URL，见最终状态页。
+- 分支：`ui-remediation/20261121`（代码提交 `01c2cd0`，证据提交 `dec2468`）；远端双别名：
+  `ui-remediation/20261121` 与 `rc/ui-remediation-20261121` 均 = `dec246804c7ee31e55e33d8a5dcdd43932762f76`（`git ls-remote` 复核）。main 仍 `cad717e` 未污染。
+- **远端 CI Run `44880974280`**：Build/Typecheck/Jest/gitleaks 全绿；租户审计由红转绿；失败从基线 5 项降到 4 项（Migration/Dependency/E2E-SEC08/Lint），无新增失败。逐项见 `CI_FAILURE_TRIAGE.md`。
+- **Cloudflare Preview Run `44880974284` → success**（隔离 worker `lokfeel-preview.aoshuang99.workers.dev`）；本环境出网超时，运行时未独立验证，不升级为 PREVIEW_VERIFIED。
+- 生产仍未部署：真实用户访问生产域名看到的仍是 main `cad717e` 旧版，本轮 UI 整改尚未上线。
 
 ## 3. 未通过 / 阻断（诚实结论）
 - **PREVIEW_VERIFIED / PRODUCTION_VERIFIED：未达成**。本地真实浏览器 PASS ≠ 生产可用。

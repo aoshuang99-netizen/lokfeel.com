@@ -83,3 +83,29 @@
 4. W/Personal Alpha：真实模型凭据就绪后再开 AI 全链；当前维持诚实不可用态。
 
 **总体裁决：NO_GO（维持）。** 本地候选 → 远端 CI → Preview 部署链路已打通，产物是真实远端 SHA + CI Run ID + Preview 部署；生产部署与门槛清零仍待 Owner 精确 SHA 批准与上述阻断处置。
+
+---
+
+## 六、追加：前后台 UI/UX 真实整改（2026-11-21 晚 · 用户强制纠偏令）
+
+用户独立审计指出"一半没发布、一半根本没改"。用 blob 哈希核实属实：`/dashboard`、`/console`、`/connections`、`/workspace` 与 main 完全相同。本轮据此做了真实整改，**唯一新增候选 SHA**：
+
+| 项 | 值 |
+|---|---|
+| 整改分支 | `ui-remediation/20261121`（从 W 候选 `8de107c` 切出） |
+| 代码提交 | `01c2cd0`（6 页面重写 + 租户审计 baseline 真修）|
+| 唯一候选 SHA（审批对象） | **`dec246804c7ee31e55e33d8a5dcdd43932762f76`**（证据文档提交，源码等于 `01c2cd0`）|
+| 远端别名 | `ui-remediation/20261121`、`rc/ui-remediation-20261121` 均 = `dec2468`（ls-remote 复核）|
+| 远端 CI | Run `44880974280`：Build/Typecheck/Jest/gitleaks 全绿；**租户审计由红转绿**；失败 5→4，无新增失败 |
+| Cloudflare Preview | Run `44880974284` → success（隔离 worker，运行时未独立验证，不升级 PREVIEW_VERIFIED）|
+
+**关键事实**：已登录访问 `/dashboard` 会被 307 到 `/workspace`（`next.config.ts:184`）——这是"改了首页用户却看不到"的根因之一。因此用户真正看到的个人首页 `/workspace` Now 屏已落实四入口（Chats 带真实未读数 / People / Spaces / My AI 诚实不可用态），不是只改 legacy 的 `dashboard/page.tsx`。
+
+**三类证据**（目录 `docs/v25.6/ga-closure/ui-remediation/`）：
+1. 视觉差异：before/after 各 16 张同视口截图（PC 1440 + 移动 390），6 个页面 body/CTA 有实质差异，8 个页面相对 main blob 全部变化；
+2. 功能差异：`api-proofs.json` 真实 API 回执 10/10 PASS（含匿名 401 权限负例）+ PC/移动双录屏（13/14 步 OK，唯一失败是移动端空态被布局隐藏的已知行为）；
+3. 发布差异：blob 哈希对照 + 唯一 SHA + CI Run ID + Preview Run ID（见上）。
+
+CI 五项失败的逐项根因/最小修复/原始日志见 `ui-remediation/CI_FAILURE_TRIAGE.md`：租户审计真修转绿；Migration（真实迁移未登记）、Dependency（CVE 时间漂移，拒绝豁免）、E2E（SEC-08 夹具缺失）、Lint（新增债需真修）四项保持红，**不用刷基线/改断言骗取绿色**。
+
+**边界维持**：本地 REAL_BROWSER_TESTED ≠ PRODUCTION_VERIFIED；生产仍为旧版 `cad717e`，本轮 UI 整改未部署。投产仍须 Owner 对精确 SHA 批准 + 人类 Reviewer + Preview 运行时验收。

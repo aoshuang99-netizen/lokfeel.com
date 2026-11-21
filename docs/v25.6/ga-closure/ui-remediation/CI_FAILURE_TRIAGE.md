@@ -14,6 +14,15 @@
 | **E2E（浏览器冒烟）** | `SEC-08 Consent 撤销后继续执行被拒 — 需要 Connection/Consent 夹具（跨 4 张表）；本轮无本地库可验证`；Sentry 注入 warn 非致命 | 该负例需要真实 Connection+Consent 夹具，CI 冒烟环境未造数 | 需补跨 4 表的夹具或改用已有 `/api/im/ai-consent` 真流程造数（UX06 已验证 9/9 服务端授权负例）。**不改断言**，补真实夹具后重跑 | ⚠️ 保持红（夹具缺失，非功能缺陷）|
 | **Lint（棘轮）** | 10 条新增：`ai-assist-route.test.ts any+1`、`v21-batch3-approval-separation (fatal)+1`、`spec-editor set-state-in-effect+1`、`mission-board set-state-in-effect+1`、`register unused-vars 3→4`、`v256-ai-consent-proof any+1`、`v21-workspace-shots (fatal)+1`、`v21-batch2-visual (fatal)+1`、`execution-panel set-state-in-effect+2` | 均为 V25.6/V21 开发留下的新增 lint 债，逐文件×逐规则被棘轮拦住 | 真修逐条修（any→精确类型、unused 删除、set-state-in-effect 需重构状态逻辑）；**不刷 lint:baseline 全量吸收**。本轮时间聚焦 UI 整改，列为遗留待逐条真修 | ⚠️ 保持红（新增 lint 债，需真修）|
 
+## 整改后远端 CI 复跑（2026-11-21）
+
+对整改候选 `dec246804c7ee31e55e33d8a5dcdd43932762f76`（分支 `rc/ui-remediation-20261121`）触发真实远端 CI：
+
+- **CI Run `44880974280`**：Build / Typecheck / Jest / gitleaks / 支付凭据 / cron / Perf SLO / 上线预检 **全绿**；
+  **租户作用域审计由红转绿**（baseline 真修生效）。
+- 失败从基线 run `44876968402` 的 **5 项降到 4 项**：Migration / Dependency / E2E(SEC-08) / Lint，annotations 与基线逐条一致——**UI 改动没有引入任何新失败**。
+- **Cloudflare Preview Run `44880974284` → success**（隔离 worker `lokfeel-preview.aoshuang99.workers.dev`，未碰生产）。本环境出网超时，运行时仍未经独立环境验证，不升级为 PREVIEW_VERIFIED。
+
 ## 诚实结论
 
 - 五项中**只有租户审计是真修并转绿**；其余四项保持红，原因分别是：真实迁移未登记、安全债拒绝豁免、E2E 夹具缺失、新增 lint 债需真修。
