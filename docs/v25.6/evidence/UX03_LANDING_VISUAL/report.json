@@ -1,0 +1,89 @@
+{
+  "task": "UX03/UX15 首页七档视口 + axe",
+  "version": "V25.6",
+  "generatedAt": "2026-11-20T07:08:26.633Z",
+  "base": "http://127.0.0.1:3100",
+  "evidenceType": "REAL_BROWSER (local HTTP, anonymous, non-production)",
+  "honestBoundary": "布局/axe 证据 ≠ 5 秒真人盲测；截图 ≠ Figma 可编辑源",
+  "viewports": [
+    {
+      "viewport": "320",
+      "width": 320,
+      "height": 720,
+      "h1": "Say it better — with AI. Whether to send is your call.",
+      "valuePromiseOk": true,
+      "overflowPx": 0,
+      "h1FontSize": 36,
+      "axeCriticalSerious": [],
+      "screenshot": "docs/v25.6/evidence/UX03_LANDING_VISUAL/landing-320.png"
+    },
+    {
+      "viewport": "375",
+      "width": 375,
+      "height": 812,
+      "h1": "Say it better — with AI. Whether to send is your call.",
+      "valuePromiseOk": true,
+      "overflowPx": 0,
+      "h1FontSize": 36,
+      "axeCriticalSerious": [],
+      "screenshot": "docs/v25.6/evidence/UX03_LANDING_VISUAL/landing-375.png"
+    },
+    {
+      "viewport": "390",
+      "width": 390,
+      "height": 844,
+      "h1": "Say it better — with AI. Whether to send is your call.",
+      "valuePromiseOk": true,
+      "overflowPx": 0,
+      "h1FontSize": 36,
+      "axeCriticalSerious": [],
+      "screenshot": "docs/v25.6/evidence/UX03_LANDING_VISUAL/landing-390.png"
+    },
+    {
+      "viewport": "768",
+      "width": 768,
+      "height": 1024,
+      "h1": "Say it better — with AI. Whether to send is your call.",
+      "valuePromiseOk": true,
+      "overflowPx": 0,
+      "h1FontSize": 50.4,
+      "axeCriticalSerious": [],
+      "screenshot": "docs/v25.6/evidence/UX03_LANDING_VISUAL/landing-768.png"
+    },
+    {
+      "viewport": "1024",
+      "width": 1024,
+      "height": 768,
+      "h1": "Say it better — with AI. Whether to send is your call.",
+      "valuePromiseOk": true,
+      "overflowPx": 0,
+      "h1FontSize": 56,
+      "axeCriticalSerious": [],
+      "screenshot": "docs/v25.6/evidence/UX03_LANDING_VISUAL/landing-1024.png"
+    },
+    {
+      "viewport": "1440",
+      "width": 1440,
+      "height": 900,
+      "h1": "Say it better — with AI. Whether to send is your call.",
+      "valuePromiseOk": true,
+      "overflowPx": 0,
+      "h1FontSize": 56,
+      "axeCriticalSerious": [],
+      "screenshot": "docs/v25.6/evidence/UX03_LANDING_VISUAL/landing-1440.png"
+    },
+    {
+      "viewport": "1920",
+      "width": 1920,
+      "height": 1080,
+      "h1": "Say it better — with AI. Whether to send is your call.",
+      "valuePromiseOk": true,
+      "overflowPx": 0,
+      "h1FontSize": 56,
+      "axeCriticalSerious": [],
+      "screenshot": "docs/v25.6/evidence/UX03_LANDING_VISUAL/landing-1920.png"
+    }
+  ],
+  "failures": [],
+  "verdict": "PASS"
+}

@@ -1,0 +1,21 @@
+﻿ID,当前/目标URL,产品面,目标角色,用户问题,主交互动作,真实后端数据链,需要删减/禁止,优先源码,因果KPI,硬验收
+WEB-01,/,官网,个人 / 企业 / Builder,我能得到什么价值？,主CTA 开始对话 + 次入口 For Teams,登录态→实际Chats；游客→注册带可信回跳,首屏真实能力开关；无假成功案例,"源码: landing/page.tsx, public nav",5秒理解率、CTA→首聊天率,7视口、错误路由、未开功能诚实标签
+WEB-02,/product,官网,有意了解功能的用户,AI比普通聊天多做了什么？,真实文字→草稿→确认→收信 walkthrough,从有权限的沙箱记录渲染；无案例改为说明并标注,禁止 WorkspaceSpec/MCP充当首屏卖点,public/product/page.tsx,到注册/试用有效点击率,实际能力追溯，演示标注隔离
+WEB-03,/solutions,官网,个人/企业决策者,个人与企业怎么用？,切换两个场景，进入对应应用,每段基于真实能力/可用状态,不复制三段“通用行业应用”长文,public/solutions/page.tsx,有效试用占比,无伪客户/虚假案例
+WEB-04,/how-it-works,官网,首次访客,怎么安全开始？,3步过程→实际注册/聊天,仅当前可运行步骤可点,无完成状态静态pipeline,public/how-it-works/page.tsx,理解率/继续率,所有步骤后台实际接口映射
+WEB-05,/stories,官网,潜在用户,有证据吗？,真实案例且获使用授权; 否则展示研究进度,引用匿名真实 opt-in 事件,禁止 fake Verified/外部价格/伪商标,public/stories/page.tsx,案例认可/试用点击,无独立证据则无“成功结果”模块
+WEB-06,/pricing,官网,购买决策者,究竟能买什么？,批准后仅显示确切套餐和权益,"gate三层：UI, plans JSON, logged checkout",未批不露金额及购买 CTA,public/pricing/page.tsx; billing endpoints,非法checkout创建数=0,Owner批准之前保持关闭，历史用户可管理
+AUTH-01,/login & /register,认证,新个人用户,第一步最少什么？,注册→首聊天，保存非敏感草稿,auth会话+安全 callback,不得重定向到旧Dating/纯Dashboard,"(auth)/login, register",首次聊天完成率,无开放重定向，无隐私query
+USER-01,/dashboard,个人路由,已登录个人,我现在能做什么？,默认到Chats/最近对话；必要时提示开启AI,Personal最短路径,移除无关Dating评分/统计大屏,(dashboard)/dashboard/page.tsx,进入首次真实沟通时间,0无来源统计、0假联系人
+USER-02,/dashboard/chats,个人,个人首次用户,怎样发第一条消息？,选人/新建合法会话/开始新消息,真实会话列表+权限真实,当前远端空页旧LokFee!需改,(dashboard)/dashboard/chats/page.tsx,首聊天开启率,empty→真实邀请/联系人，不留空壳
+USER-03,/dashboard/chats/[roomId],个人,聊天中的人,AI帮我说清楚，再由我发送,输入→私人AI→对比→编辑→确认→发送→收信,ai-consent+ai-assist+im/send+messages,草稿绝不自动发；状态三层,page-content.tsx + im API,有效AI草稿率/用户批准率/送达,真实model trace、receipt、撤回负例
+USER-04,/dashboard/connections,个人,希望经营关系的人,哪些连接是我愿意继续的？,联系人/邀请/双向同意/真实会话,实际contacts与consent对象,旧Likes/Matches转高级/Legacy,connections/page.tsx,有意义连接接受率,无算法无解释分数
+USER-05,/dashboard/explore,个人,探索社群的人,适合参加的真实Space？,真实已授权Space列表→加入,API真实可入群资格,不要生成虚假成员卡或滑卡,explore/page-content.tsx,合法Space进入率,零库存显示邀请/创建入口
+USER-06,/dashboard/profile & /settings,个人,担忧隐私的人,我的AI知道什么？,权限、记忆、撤回、导出、删除,个人Vault+AIProcessingConsent真实记录,移走默认敏感偏好巨型标签,profile/settings pages,隐私控制完成率,不同数据域清晰、撤回实时生效
+LEGACY-01,/workspace?view=*,兼容,已有高级用户,旧深链仍能找到功能,保留7 key并引导到新价值入口,兼容映射不丢 mission/proposal/outcomes,技术流水线降到Advanced,workspace/living-workspace.tsx,旧路径任务成功率,无404、无数据损失
+BIZ-01,/console,企业,运营/社群管理员,哪些人现在需要我做什么？,待确认/待介绍/未回复三类真实待办,"workflow overview + pipeline, 记录深链",队列/Sent统计归运营明细而非首屏,console/page.tsx,待办处理成功率、首次协作时间,卡片有sourceId/asOf/CTA、无假趋势
+BIZ-02,/console/members,企业,企业管理员,如何邀请真实成员协作？,邀请→接收→加入真实Space,members/invitations真实API,只显示当前权限可操作动作,console/members/page.tsx,邀请接受率、成功协作数,无邮件成功假回执、RBAC负例
+BIZ-03,/console/connections,企业,社群运营,如何在双方同意下促成介绍？,一方请求→双方允许→发送引荐→跟进,connections/pipeline + consent,技术状态用自然文案展示,console/connections/page.tsx,真实引荐/确认率,跨组织、撤回、过期拒绝
+BIZ-04,/console/agents & /console/outcomes,企业,高级运营,AI 帮忙做了什么、有什么证据？,从真实活动点开依据/审批/结果,"真实 AgentRun, action, outcome evidence",无成果不画增长图,console pages,独立核验率/平均人工分钟,“生成完成”≠关系结果成功
+BIZ-05,/console/settings,企业,Owner/Admin,我的组织数据是否受保护？,权限、模型区域、成员数据保留策略,org permission+consent+model policy,个人Vault不可列举,console/settings/page.tsx,权限自助率,跨租户0成功
+DEV-01,/developers or /open-source (需核实路由),开源,开发者,如何复现？,Get started→安装→本地IM+AI,"docs git release, Docker selfhost",没有发行版不宣传已自托管,New route/README; check:selfhost,成功安装数/步骤错误率,两干净环境，零云密钥

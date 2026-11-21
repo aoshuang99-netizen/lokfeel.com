@@ -1,0 +1,88 @@
+{
+  "task": "GA-02",
+  "release_wave": "S_SECURITY_HOTFIX",
+  "verdict": "LOCAL_TESTED_NOT_DEPLOYED",
+  "generatedAt": "2026-11-21T05:40:00+08:00",
+  "authorizationBoundary": "未 push、未部署、未改 Netlify 环境变量、未调用生产 checkout POST、未创建 Provider 会话、未扣款。Owner 精确 SHA 批准前保持 NO_GO。",
+  "productionProbe": {
+    "base": "https://app.lokfeel.com",
+    "health": {
+      "command": "curl --noproxy '*' -sS -i --max-time 20 https://app.lokfeel.com/api/health",
+      "httpStatus": 200,
+      "commit": "b50e53e",
+      "commitSource": "env",
+      "builtAt": "2026-11-14T08:38:05.985Z",
+      "paymentsConfigured": false,
+      "paymentsCharging": true,
+      "dodoCheckoutChannel": true
+    },
+    "plans": {
+      "command": "curl --noproxy '*' -sS --max-time 20 https://app.lokfeel.com/api/payments/dodo/plans",
+      "checkoutReady": true,
+      "environment": "live_mode",
+      "pricesObserved": ["$89.00", "$199.00", "$449.00"],
+      "note": "只读 GET；没有向生产发送 checkout POST，避免触发真实 Provider 创建。"
+    },
+    "pricingPage": {
+      "command": "curl --noproxy '*' -sS --max-time 20 https://app.lokfeel.com/pricing | grep -o -E '\\$[0-9]+|Get Started'",
+      "visibleAmountTokens": 29,
+      "visibleGetStarted": 2
+    },
+    "remoteMain": {
+      "command": "git ls-remote origin refs/heads/main",
+      "sha": "cad717e92542395e4346e49d388f09be78ec1557"
+    }
+  },
+  "productionAncestor": {
+    "short": "b50e53e",
+    "full": "b50e53e48a9cc5b91ba2196654ea0ec69aead22b",
+    "verifiedBy": "git rev-parse b50e53e^{commit}; git merge-base --is-ancestor b50e53e cad717e",
+    "ancestorOfRemoteMain": true
+  },
+  "patch": {
+    "baseSha": "b50e53e48a9cc5b91ba2196654ea0ec69aead22b",
+    "worktree": "/tmp/lokfeel-hotfix-b50e53e",
+    "files": [
+      "src/config/pricing-gate.ts",
+      "src/lib/payments/commercial-gate.ts",
+      "src/app/api/payments/dodo/plans/route.ts",
+      "src/app/(public)/pricing/page.tsx",
+      "tests/billing/commercial-gate.test.ts",
+      "tests/api/v22-pricing-json-gate.test.ts",
+      "tests/billing/hotfix-provider-zero.test.ts"
+    ],
+    "semantics": "PRICING_APPROVED 显式 Owner 开关为 false；commercialApproved 需要开关 + 目录 APPROVED + approvalRef 三重合取；plans API 与定价页 fail-closed；已登录 checkout 在创建 Provider 会话前返回 PRICING_NOT_APPROVED。"
+  },
+  "tests": [
+    {
+      "command": "jest tests/billing/commercial-gate.test.ts tests/api/v22-pricing-json-gate.test.ts tests/billing/hotfix-provider-zero.test.ts --runInBand",
+      "beforePatch": "RED：@/config/pricing-gate 模块缺失；旧代码无法表达 Owner 开关",
+      "afterPatch": "PASS 3 suites / 10 tests",
+      "exitCode": 0
+    }
+  ],
+  "negativeCases": [
+    "目录 APPROVED + approvalRef + 凭据齐备但 Owner 开关 false => enabled=false",
+    "plans JSON 返回 pricingPublished=false、plans=[]，无金额/折扣/试用字段",
+    "已登录且角色允许、通道与配置均可用时，checkout POST 返回 503 PRICING_NOT_APPROVED，Provider create 调用 0 次"
+  ],
+  "notVerified": [
+    "生产真实登录态 checkout（无授权，未发送 POST）",
+    "独立 Reviewer 异环境复现",
+    "真实 Preview 部署与 Preview SHA",
+    "旧订阅/Webhook/退款回归的运行态验证（仅确认补丁未改这些路由）"
+  ],
+  "rollback": {
+    "backoutTarget": "b50e53e48a9cc5b91ba2196654ea0ec69aead22b",
+    "acceptable": false,
+    "reason": "该祖先已被独立探测为 checkoutReady=true / live_mode；回滚到它会重新开放收费。",
+    "safeRollback": "若后续已部署更新的 P/P1 波，则回滚到本 Hotfix SHA；若 Hotfix 本身失败，先在 Netlify 摘除 DODO_PAYMENTS_API_KEY 保持通道关闭，再修复后重新部署，不得回到 b50e53e。"
+  },
+  "ownerApprovalRequired": {
+    "exactSha": "7ad2aaad4e03712483fd9f784c3b69c168c957fa",
+    "migration": "无",
+    "configuration": "无；PRICING_APPROVED 为代码常量 false",
+    "releaseScope": "仅商业 fail-closed；不含 UI 新版、AI、数据库新表",
+    "decision": "NO_GO"
+  }
+}

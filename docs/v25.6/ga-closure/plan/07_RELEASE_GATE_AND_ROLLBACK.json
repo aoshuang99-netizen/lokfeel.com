@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1.0",
+  "generated_for": "V25.6 GA closure",
+  "status": "DESIGN_ONLY",
+  "gate_status_default": "NOT_TESTED",
+  "separate_releases": [
+    {
+      "wave": "S_SECURITY_HOTFIX",
+      "scope": "only commercial fail-closed on production ancestor",
+      "required": [
+        "Owner approves exact safety SHA",
+        "production current SHA independently probed",
+        "anonymous and authenticated checkout 0 Provider create if unapproved",
+        "plans JSON and pricing page 0 unapproved claims",
+        "existing subscription/webhook unaffected",
+        "rollback to another safely closed build",
+        "post deploy health/auth/checkout probes"
+      ],
+      "not_required": [
+        "Figma source",
+        "10-person product usability",
+        "Social MoE"
+      ]
+    },
+    {
+      "wave": "P_PERSONAL_PRIVATE_ALPHA",
+      "scope": "allowlisted personal chats + user-approved real AI writing (or honestly disable AI)",
+      "required": [
+        "git working tree committed with candidate SHA",
+        "full typecheck/build/E2E in CI same SHA",
+        "separate test provider key in isolated Preview; no production key export",
+        "model provenance trace and server signed consent",
+        "chat 2 independent contexts and negative tests",
+        "no unauthorized outbound, model calls or data access",
+        "independent security review",
+        "database expansion migrations verified and Owner approved",
+        "Preview SHA verified; owner approval for exact release",
+        "Registration localStorage/URL/logs contain zero plaintext password/OTP/token; legacy saved form state cleaned"
+      ],
+      "defer_to_GA": [
+        "10-person 5-second and first-value usability if strictly allowlisted and transparently incomplete",
+        "full Business Beta",
+        "self-host release"
+      ]
+    },
+    {
+      "wave": "B_BUSINESS_BETA",
+      "scope": "real organization space and action-focused console",
+      "required": [
+        "two actual isolated test organizations and members",
+        "organization personal Vault isolation and AI context boundaries",
+        "real workflow connection and consent",
+        "all primary metrics source-backed and drilldown works",
+        "no fake population/verified outcome",
+        "independent tenant security review",
+        "Owner approval for business cohort"
+      ]
+    },
+    {
+      "wave": "O_OPEN_SOURCE",
+      "scope": "community edition, docs, SDK",
+      "required": [
+        "OSI license validated with counsel for redistribution scope",
+        "2 independent clean selfhost IM+local model success",
+        "no production cloud key required",
+        "dependency license/SBOM scan",
+        "security and contribution docs",
+        "versioned release integrity"
+      ]
+    },
+    {
+      "wave": "GA_PUBLIC",
+      "scope": "public user-accessible launch",
+      "required": [
+        "all applicable safety gates pass",
+        "10 independent target users ≥8/10 5-second value understanding",
+        "10 independent target users ≥8/10 90s real draft and 180s send",
+        "≥150 frozen samples human evaluation meaning retention target≥90% with uncertainty",
+        "7 viewport + 200% zoom + keyboard/axe checks",
+        "9 core pages LHCI repeated same config LCP<=2.5s CLS<=.1 TBT<=200ms",
+        "independent reviewer; required checks real",
+        "current privacy/terms/commercial truth + payment merchant approval or closed billing",
+        "exact preview and production SHA with feature flag and rollback",
+        "48h production monitoring/incident response"
+      ]
+    }
+  ],
+  "critical_fail_conditions": [
+    "unauthorized third party/model content exposure",
+    "fake E2EE/verified/testimonials",
+    "unapproved checkout provider create",
+    "production migration without approved plan",
+    "silent loss of user messages",
+    "prod release without exact SHA owner approval",
+    "rollback to unsafe pricing",
+    "plaintext registration password/OTP persisted in localStorage or leaked via logs/URL"
+  ],
+  "candidate_template": {
+    "release_id": null,
+    "branch": null,
+    "source_sha": null,
+    "preview_sha": null,
+    "prod_sha_before": null,
+    "migrations": [],
+    "schema_hash": null,
+    "feature_flags": {},
+    "backout_sha": null,
+    "independent_reviewer": null,
+    "owner_approval_record": null,
+    "decision": "NO_GO"
+  }
+}

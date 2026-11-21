@@ -1,0 +1,17 @@
+﻿ID,工程成果/主张,当前证据,对应结果层,证据等级,因果判断及不足,下一次决定性实验,建议门槛
+C01,UI 双浏览器 20/20,"20/20, messageSent=DB20",L1 收发可靠,REAL_BROWSER(local),支持可靠性，不证明懂人或 AI 增量,跨实体设备，分阶段送达/已读及真实收件确认,≥20/20 两端接收；状态不虚报；不重复入库
+C02,91 次网络扰动,20 send latency +45 receive latency/500 +20 replays +6 500 subset,L1 失败恢复,REAL_BROWSER(local),注入扰动可重复，非独立自然网络故障/实时延迟,真实断连、弱网、双端后台切换、乱序以及 socket 时序,关键拒绝/恢复全部复现；误报发送成功0
+C03,AIProcessingConsent 服务端授权,43/43 + 9/9 (报告),L1 私密权控制,LOCAL_UNIT+LOCAL_DB (reported),授权检查是前置安全条件，尚未接真实云端处理,接真实模型前后、撤回时、跨租户/越权追踪,"未授权 model_call=0, 撤回后新调用0, PII 日志0"
+C04,首页 7 视口/axe,7 宽度、0严重问题(报告),L2 识别价值,LOCAL_BROWSER(reported),布局正确不代表用户理解；与真人数据无因果验证,10名陌生用户5秒读后复述+录时、不暗示,≥8/10正确识别 AI 社交价值和唯一CTA
+C05,tsc + build 0,本地 exit0 (报告),Release readiness,LOCAL_TEST(reported),无用户价值直接证据；只降低发布故障概率,将相同 SHA 的 full CI / Preview / rollback 跑通,全部 required checks PASS；精确 SHA 关联
+C06,AI 草稿 Stub,真实模型调用 0 Trace,L2 AI 交流价值,NOT_TESTED,无法验证生成质量与自主权，只验证框架,授权独立模型 sandbox、真模型产稿、证据与人工盲评,≥150 冻结样本，意图保持目标≥90%；未授权外发0
+C07,首页→注册→聊天,候选已改但未发,L2 首次价值,PARTIAL (reported),需要同一个已部署候选前后端和真人完成,10人无讲解90s草稿180s首次发送,≥8/10 + 含失败的原始 session 数据
+C08,真实消息状态,DB写入与UI收发已验证；Delivered/Read 未全验证,L2 可信沟通,PARTIAL,数据库成功≠对方设备确认,实际接收客户端收件 ack / Read事件,Sent/Delivered/Read分明；假 Delivered0
+C09,社群/企业组织隔离,本轮标 NOT_TESTED,L1 企业信任,NOT_TESTED,没有证据支持 enterprise beta,两真实组织、个人 Vault、共享空间、socket/cache模型上下文横向攻击,跨组织、跨用户读取成功0
+C10,企业 console 数字,源码绑定真实 workflow API (main),L2 企业下一步行动,SOURCE(main),数据真实，但队列指标不一定能回答“谁等我”,将待同意/待介绍/未回复映射真实详情和操作,每KPI有 sourceAsOf/drilldown/action; 0无数据装饰图
+C11,产品最重要的关系结果,尚无用户确认的真实结果,L3 CMI,NOT_TESTED,消息量不能证明关系质量,自愿反馈+真实双向互动，用对照任务验证,试点报告含分子/分母、对照组、区间、隐私许可
+C12,公域首页线上发布,当前 local 未提交，远端 main旧,L2 获客,REMOTE_SOURCE+REPORT,用户看的是旧体验，和本地代码无交付链,候选 SHA 固定→Preview→实际生产资源 hash,Preview/production SHA一致、流量与转化事件有来源
+C13,商业安全,报告生产 checkoutReady true；本轮生产不可访问,L1 用户信任/损失预防,REPORT(legacy); LIVE_NOT_VERIFIED_NOW,不能将历史报告当作最新线上事实，也不能假定已关闭,Prod独立登录/匿名页面/JSON/checkout并验 Provider无创建,未批准下可购价=0、live create=0、历史订阅仍可管理
+C14,远端治理,"main cad717e unprotected, rulesets []",Release readiness,REMOTE_SOURCE(current),没有可强制阻止未经复核代码合并的门禁,在Repo管理审批后配置 required checks 并实测拒绝,绕过审核合并失败；独立review可复现
+C15,开源平台,Community selfhost 本轮未测,L3 生态,NOT_TESTED,概念宣传不能说明开源可自托管,两干净机器跑IM+本地AI，不使用云密钥,2/2独立成功；license/SBOM/provenance通过
+C16,Figma/设计资产,可编辑Figma源未完成,L2一致性与效率,BLOCKED(report),不阻塞安全修复；影响跨端迭代一致性,代码tokens先锁定，后映射Figma组件、偏差审计,组件/状态/断点100%映射，无视觉回退

@@ -1,0 +1,238 @@
+{
+  "status": "DESIGN_ONLY_NOT_INSTRUMENTED",
+  "privacy_policy": {
+    "raw_message_text": false,
+    "raw_user_email": false,
+    "third_party_identity": false,
+    "prompt_content": false,
+    "default_pii_logging": false,
+    "cross_user_training_default": false,
+    "minimum_consent_for_research": "opt_in"
+  },
+  "events": [
+    {
+      "name": "landing_view",
+      "level": "non-content",
+      "fields": [
+        "anonymous_session_id",
+        "locale",
+        "variant",
+        "timestamp",
+        "release_sha"
+      ],
+      "purpose": "曝光分母"
+    },
+    {
+      "name": "primary_cta_clicked",
+      "fields": [
+        "anonymous_session_id",
+        "cta_id",
+        "route",
+        "release_sha"
+      ],
+      "purpose": "首入口转化"
+    },
+    {
+      "name": "signup_completed",
+      "fields": [
+        "pseudonymous_user_id",
+        "session_id",
+        "release_sha"
+      ],
+      "purpose": "真实激活"
+    },
+    {
+      "name": "conversation_opened",
+      "fields": [
+        "session_id",
+        "conversation_pseudonym",
+        "is_first"
+      ],
+      "purpose": "真实聊天可达"
+    },
+    {
+      "name": "ai_consent_granted",
+      "fields": [
+        "session_id",
+        "consent_pseudonym",
+        "scope",
+        "provider_region",
+        "expiry"
+      ],
+      "purpose": "隐私与授权漏斗"
+    },
+    {
+      "name": "ai_draft_requested",
+      "fields": [
+        "session_id",
+        "draft_pseudonym",
+        "consent_pseudonym",
+        "purpose",
+        "model_route"
+      ],
+      "purpose": "模型启动率"
+    },
+    {
+      "name": "ai_draft_ready",
+      "fields": [
+        "session_id",
+        "draft_pseudonym",
+        "model_id",
+        "duration_ms",
+        "provenance_grade",
+        "cost_micro_units"
+      ],
+      "purpose": "真实模型结果,不含内容"
+    },
+    {
+      "name": "draft_applied",
+      "fields": [
+        "session_id",
+        "draft_pseudonym",
+        "edited_boolean"
+      ],
+      "purpose": "用户是否自主采用"
+    },
+    {
+      "name": "message_send_confirmed",
+      "fields": [
+        "session_id",
+        "message_pseudonym",
+        "draft_pseudonym",
+        "conversation_pseudonym"
+      ],
+      "purpose": "首次实际发送"
+    },
+    {
+      "name": "message_persisted",
+      "fields": [
+        "message_pseudonym",
+        "server_event_id"
+      ],
+      "purpose": "发送可靠性"
+    },
+    {
+      "name": "message_client_received",
+      "fields": [
+        "message_pseudonym",
+        "recipient_device_pseudonym",
+        "received_at"
+      ],
+      "purpose": "真实接收（区别于DB存入）"
+    },
+    {
+      "name": "message_read_ack",
+      "fields": [
+        "message_pseudonym",
+        "reader_device_pseudonym",
+        "ack_at"
+      ],
+      "purpose": "真正阅读"
+    },
+    {
+      "name": "ai_consent_revoked",
+      "fields": [
+        "consent_pseudonym",
+        "revoked_at"
+      ],
+      "purpose": "撤回路径"
+    },
+    {
+      "name": "user_helpfulness_feedback",
+      "fields": [
+        "session_id",
+        "task_pseudonym",
+        "helped_boolean",
+        "scenario_id"
+      ],
+      "purpose": "自愿反馈"
+    },
+    {
+      "name": "org_action_completed",
+      "fields": [
+        "org_pseudonym",
+        "action_type",
+        "evidence_record_id"
+      ],
+      "purpose": "企业核心操作"
+    },
+    {
+      "name": "privacy_denied_operation",
+      "fields": [
+        "policy_version",
+        "operation_type",
+        "reason_code",
+        "scope"
+      ],
+      "purpose": "权限安全；注意不得含源数据"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "five_second_comprehension",
+      "definition": "答对的独立用户数 / 完成5秒题的全部独立用户",
+      "threshold_exploratory": "≥8/10",
+      "status": "NOT_TESTED"
+    },
+    {
+      "name": "time_to_first_real_ai_draft",
+      "definition": "注册/登录开始时间到首次真实模型合格草稿，可报告p50/p90及完成率",
+      "threshold_exploratory": "≥8/10 ≤90秒",
+      "status": "NOT_TESTED"
+    },
+    {
+      "name": "time_to_ai_assisted_send",
+      "definition": "注册/登录开始时间到确认发送经服务端持久的真实消息",
+      "threshold_exploratory": "≥8/10 ≤180秒",
+      "status": "NOT_TESTED"
+    },
+    {
+      "name": "meaning_retention",
+      "definition": "预注册人工盲评意图保持准确数/可判定样本数",
+      "threshold_exploratory": "≥90% on ≥150 frozen samples",
+      "status": "NOT_TESTED"
+    },
+    {
+      "name": "first_mutual_interaction_rate",
+      "definition": "首次会话双方真实消息至少一次/合格已激活账户数",
+      "threshold_exploratory": "先测基线，无发布前承诺固定阈值",
+      "status": "NOT_TESTED"
+    },
+    {
+      "name": "CMI",
+      "definition": "符合许可的人与人双向互动，且真实参与者自愿标注解决了具体沟通需要/互动有效的次数；分母为合格机会数",
+      "threshold_exploratory": "建立基线与对照，不能拿message_count替代",
+      "status": "NOT_TESTED"
+    },
+    {
+      "name": "org_action_completion",
+      "definition": "已获授权组织待办完成数/合格可操作待办数",
+      "threshold_exploratory": "需记录时长与失败原因",
+      "status": "NOT_TESTED"
+    },
+    {
+      "name": "unauthorized_disclosure_observed",
+      "definition": "冻结安全套件中的未授权披露成功数",
+      "threshold_exploratory": "0 observed across required negative tests",
+      "status": "NOT_TESTED"
+    }
+  ],
+  "experiment": {
+    "objective": "验证 AI 在相同社交意图任务上带来的因果增量",
+    "arms": [
+      "A_CHAT_ONLY",
+      "B_CHAT_WITH_USER_APPROVED_AI"
+    ],
+    "allocation": "随机分配/平衡任务、用户语言与熟悉程度",
+    "pre_register": [
+      "primary_endpoint",
+      "eligible_denominator",
+      "failure_treatment",
+      "timing",
+      "annotation_rubric",
+      "privacy_consent"
+    ],
+    "primary_endpoint": "meaning_retention or completed communication task (choose before running)",
+    "not_sufficient": "10人可用性样本不能证明总体因果效应"
+  }
+}
