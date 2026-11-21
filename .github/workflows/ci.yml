@@ -483,6 +483,19 @@ jobs:
           echo "::error::Playwright 浏览器两次安装均失败。这是 runner 侧的下载/apt 问题，不是用例失败 —— 请重跑本 job（不要跳过浏览器冒烟）。"
           exit 1
 
+      # 🔴 V25.6 GA-07/08：双浏览器真实聊天 + 注册存储审计
+      #    20 条消息全部由两个独立 BrowserContext 在真实页面输入回车发出，
+      #    经 /api/im/send 鉴权落库；含 91 次扰动、幂等重放、3 个越权负例与 AI 诚实态断言。
+      #    脚本只写本地 file: 库，账号/口令为运行时构造的测试夹具；CI 用 Playwright 缓存
+      #    的 chromium，本机需要系统 Chrome 时设 PW_CHANNEL=chrome。
+      - name: V25.6 双浏览器 20 消息 E2E
+        timeout-minutes: 12
+        run: node scripts/qa/v256-two-browser-chat-e2e-full.mjs --base=http://127.0.0.1:3000 --db=ci-e2e.db --out=docs/v25.6/evidence/UX04_05_FULL_CI
+
+      - name: GA-20 注册存储浏览器审计
+        timeout-minutes: 5
+        run: node scripts/qa/ga20-registration-storage-audit.mjs --base=http://127.0.0.1:3000 --out=docs/v25.6/ga-closure/evidence/GA20_BROWSER_STORAGE_AUDIT_CI.json
+
       # 🔴 V19.8 · WB19-82：Workspace 真实闭环探针（Intent → Spec → Mission，含 UI 层）
       #    补的是 v196 没覆盖的两层：
       #      · Schema 拒绝（need<4 / 受保护字段 disclosure.email / 缺幂等键）

@@ -44,7 +44,6 @@ import {
   Clock,
   Lock,
   Zap,
-  X,
   ShieldAlert,
   Ban,
   ChevronRight,
@@ -57,7 +56,8 @@ import {
 import Link from "next/link";
 import { isBrokenAvatarUrl, getAvatarKind, parseEmojiAvatar, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
 import { ReportModal } from "@/components/chat/report-modal";
-import { QUICK_REPLIES, AI_SUGGESTIONS } from "@/constants";
+import { AiWritingUnavailable } from "@/components/chat/ai-writing-unavailable";
+import { QUICK_REPLIES } from "@/constants";
 
 // ══════════════════════════════════════
 // EMOJI LIST
@@ -253,7 +253,6 @@ export default function ChatRoomPage() {
   const [sending, setSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
-  const [showAiSuggestions, setShowAiSuggestions] = useState(true);
   const [userLimits, setUserLimits] = useState<UserLimits | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showCardVerificationModal, setShowCardVerificationModal] = useState(false);
@@ -1002,42 +1001,7 @@ export default function ChatRoomPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          AI SUGGESTIONS
-          ═══════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {showAiSuggestions && messages.length < 3 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="px-4 py-2 bg-background-secondary border-t border-card-border"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-xs text-foreground-muted">AI Suggestions</span>
-              <button
-                onClick={() => setShowAiSuggestions(false)}
-                className="ml-auto text-foreground-subtle hover:text-foreground"
-                aria-label="Dismiss AI suggestions"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {AI_SUGGESTIONS.map((suggestion, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSend(suggestion)}
-                  className="flex-shrink-0 px-3 py-1.5 bg-background-tertiary hover:bg-background-tertiary rounded-full text-xs text-foreground transition-colors whitespace-nowrap"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AiWritingUnavailable />
 
       {/* ═══════════════════════════════════════════════════════
           QUICK REPLIES

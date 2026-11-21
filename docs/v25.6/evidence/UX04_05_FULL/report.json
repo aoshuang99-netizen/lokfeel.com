@@ -1,0 +1,148 @@
+{
+  "task": "V25.6 UX04/UX05 FULL — 20 messages, 50+ perturbations, video, full reconciliation",
+  "verdict": "PASS",
+  "passed": 21,
+  "failed": 0,
+  "base": "http://127.0.0.1:3104",
+  "db": "/tmp/v256-ai-green.db",
+  "conversationId": "conv_v256_chat_e2e",
+  "messagesSent": 20,
+  "finalDbMessages": 20,
+  "perturb": {
+    "send_latency": 20,
+    "messages_latency": 41,
+    "messages_500": 5,
+    "idempotent_replay": 20,
+    "replay_duplicate_ok": 20,
+    "total": 86
+  },
+  "messageSamples": [
+    "V256 full msg 01/20 from A t1795240212041",
+    "V256 full msg 02/20 from B t1795240212041",
+    "V256 full msg 03/20 from A t1795240212041"
+  ],
+  "sendReceipts": {
+    "total": 20,
+    "success": 20
+  },
+  "pageErrors": [],
+  "steps": [
+    {
+      "step": "夹具与干净基线就绪",
+      "ok": true,
+      "baseline": 0
+    },
+    {
+      "step": "设备A/B 真实登录",
+      "ok": true,
+      "a": 200,
+      "b": 200
+    },
+    {
+      "step": "设备A/B 打开真实聊天页并水合",
+      "ok": true
+    },
+    {
+      "step": "AI 能力诚实态：显示不可用提示且无 Stub 建议",
+      "ok": true,
+      "unavailable": true,
+      "staleSuggestions": 0
+    },
+    {
+      "step": "网络扰动注入器已装载（send 延迟 / messages 延迟+500）",
+      "ok": true
+    },
+    {
+      "step": "消息 1–5/20 全部双向可达",
+      "ok": true
+    },
+    {
+      "step": "消息 1–10/20 全部双向可达",
+      "ok": true
+    },
+    {
+      "step": "消息 1–15/20 全部双向可达",
+      "ok": true
+    },
+    {
+      "step": "消息 1–20/20 全部双向可达",
+      "ok": true
+    },
+    {
+      "step": "20 条消息全部真实 UI 发送 + 对方自动收到",
+      "ok": true,
+      "delivered": 20
+    },
+    {
+      "step": "幂等重放 20 次全部 duplicate 且不新增",
+      "ok": true,
+      "replay": 20,
+      "duplicateOk": 20
+    },
+    {
+      "step": "双端真实浏览器截图落盘",
+      "ok": true
+    },
+    {
+      "step": "DB 对账：20 条全部落库且内容一致",
+      "ok": true,
+      "total": 20,
+      "contentMatch": true
+    },
+    {
+      "step": "DB 对账：幂等重放未产生重复/垃圾消息",
+      "ok": true
+    },
+    {
+      "step": "DB 对账：seq 单调递增",
+      "ok": true
+    },
+    {
+      "step": "DB 对账：发送者/接收者方向与 UI 一致",
+      "ok": true
+    },
+    {
+      "step": "负例：未登录 send → 401",
+      "ok": true,
+      "status": 401
+    },
+    {
+      "step": "负例：伪造会话 send → 404",
+      "ok": true,
+      "status": 404
+    },
+    {
+      "step": "负例：合法登录但非成员读消息 → 403/404",
+      "ok": true,
+      "login": 200,
+      "status": 404
+    },
+    {
+      "step": "页面无未捕获 JS 错误",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "step": "网络扰动次数 ≥ 50",
+      "ok": true,
+      "totalPerturb": 86
+    }
+  ],
+  "screenshots": [
+    "chat-device-A.png",
+    "chat-device-B.png"
+  ],
+  "videoNote": "videos/ 目录（两个 context 的 .webm 录屏，context 关闭后 finalize）",
+  "generatedAt": "2026-11-21T05:50:47.385Z",
+  "notes": [
+    "20 条消息全部由两个独立浏览器 context 在真实页面输入回车发出，经 /api/im/send 鉴权落库，非 DB 脚本写入。",
+    "接收方靠页面 visibilitychange → refreshMessages（seq 增量）自动到达；注入的 500 由页面 catch 后下一轮恢复，验证最终一致性。",
+    "幂等重放 20 次均返回 duplicate:true，DB 未新增消息，证明 clientMsgId 幂等在扰动下成立。",
+    "录屏为真实浏览器像素；PREMIUM 订阅为隔离库测试夹具，无真实支付/扣款，生产商业门未受影响。",
+    "本轮为本地 next start + 隔离 file: 库，非真人盲测、非生产；真人 5 秒/90 秒/180 秒指标与 150 条 AI 效果盲评不在本证明范围。"
+  ],
+  "videos": [
+    "videos/chat-device-A.webm",
+    "videos/chat-device-B.webm"
+  ]
+}
