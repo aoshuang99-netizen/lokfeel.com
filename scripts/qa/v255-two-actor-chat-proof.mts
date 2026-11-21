@@ -124,7 +124,7 @@ try {
   })
   const aiRow = await db.iMMessage.findUnique({ where: { id: aiSent.msgId } })
   expect(aiRow?.senderId === A && aiRow?.receiverId === B, 'AI-sent message wrong parties')
-  expect(aiRow?.payload?.includes('Nice to meet you'), 'AI-sent content mismatch')
+  expect(aiRow?.payload?.includes('Nice to meet you') === true, 'AI-sent content mismatch')
   step('S1', 'AI 草稿→用户授权→真实发送→B 可读', {
     draftOrigin: assist.draft.origin,
     provenance: assist.draft.provenance,

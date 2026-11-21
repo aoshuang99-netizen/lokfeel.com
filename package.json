@@ -111,6 +111,7 @@
     "tenancy:rollback": "node scripts/tenancy/migrate.mjs rollback",
     "tenancy:verify": "node scripts/tenancy/migrate.mjs verify",
     "test": "jest",
+    "typecheck": "tsc --noEmit -p tsconfig.strict.json",
     "test:bridge": "jest tests/bridge",
     "test:connection": "jest tests/connection",
     "test:coverage": "jest --coverage",

@@ -1,0 +1,28 @@
+{
+  "//": "V25.6 UX16 — 全量类型检查专用配置。根因：主 tsconfig 的全局 **/*.ts(x)/mts 命中根目录 15 个 .next* 备份目录（56 个生成类型文件），加上 5.6MB generated Prisma client，导致 tsc 进程内存溢出 exit137。此配置把源码范围限定到 src/，显式排除所有 .next* 备份与构建产物，让 tsc 在有限内存下完成真实的全量源码类型检查。next build 仍用主 tsconfig，不受影响。",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    ".next-v*",
+    ".next-fix*",
+    ".next-dev-v*",
+    ".open-next",
+    "backups",
+    "deploy-tasks",
+    "prisma/seed.ts"
+  ]
+}
