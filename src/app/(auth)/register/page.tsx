@@ -33,33 +33,42 @@ import { useSearchParams } from "next/navigation";
 // V22 §F: carry the typed goal through signup onto the Now screen.
 import { restoreGoalDraft, withGoal, writeGoalDraft } from "@/lib/goal-draft";
 
-// ─── Registration State Persistence ───
-const REG_STATE_KEY = 'lokfeel_register_state';
-interface RegState {
-  phase: 'form' | 'verify';
-  formData: Record<string, string | boolean>;
-  sentInfo: { maskedIdentifier?: string; devMode?: boolean; code?: string };
-  savedAt: number;
-}
+// ─── Registration State Persistence (GA-20: sensitive-free whitelist) ───
+// P0 修复：旧实现把整个 formData（含 password/dob/gender/sexuality）和
+// sentInfo.code 写进 localStorage 达 24h。现在所有落盘都经过安全边界：
+// 写入只产出非敏感白名单，读取同时兼容并清洗旧格式的敏感缓存。
+import {
+  REG_STATE_KEY,
+  REG_STATE_VERSION,
+  buildPersistableRegState,
+  parsePersistedRegState,
+  type RegPhase,
+  type RegSentInfoLike,
+} from '@/lib/auth/registration-state';
 
-function saveRegState(phase: 'form' | 'verify', formData: Record<string, string | boolean>, sentInfo: any) {
+type RegSentInfo = { maskedIdentifier?: string; devMode?: boolean; code?: string };
+
+function saveRegState(phase: RegPhase, formData: Record<string, string | boolean>, sentInfo: RegSentInfo) {
   if (typeof window === 'undefined') return;
   try {
-    const state: RegState = { phase, formData, sentInfo: sentInfo || {}, savedAt: Date.now() };
-    localStorage.setItem(REG_STATE_KEY, JSON.stringify(state));
+    // 白名单投影：password / dob / gender / sexuality / code 物理上不进 payload。
+    const state = buildPersistableRegState(phase, formData, sentInfo, Date.now());
+    localStorage.setItem(REG_STATE_KEY, JSON.stringify({ version: REG_STATE_VERSION, value: state }));
   } catch { /* ignore */ }
 }
 
-function loadRegState(): RegState | null {
+function loadRegState(): ReturnType<typeof parsePersistedRegState> {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(REG_STATE_KEY);
-    if (!raw) return null;
-    const state: RegState = JSON.parse(raw);
-    if (Date.now() - state.savedAt > 24 * 60 * 60 * 1000) {
-      localStorage.removeItem(REG_STATE_KEY);
+    const state = parsePersistedRegState(raw, Date.now());
+    if (!state) {
+      // 过期或无法解析（含旧格式的敏感缓存）→ 清理，避免明文长期残留。
+      if (raw) localStorage.removeItem(REG_STATE_KEY);
       return null;
     }
+    // 读到的即白名单结构；旧格式敏感字段已被丢弃，回写一次完成就地清洗。
+    localStorage.setItem(REG_STATE_KEY, JSON.stringify({ version: REG_STATE_VERSION, value: state }));
     return state;
   } catch { return null; }
 }
@@ -137,12 +146,30 @@ export default function RegisterPage() {
     }
 
     const saved = loadRegState();
-    if (saved && saved.phase === 'verify' && saved.formData.email) {
+    // GA-20：只回填白名单非敏感字段。password / dob / gender / sexuality
+    // 永不从浏览器存储恢复（它们本就不该被持久化）。验证码 code 同样不恢复。
+    if (saved && saved.phase === 'verify' && saved.email) {
       setPhase('verify');
-      setFormData(prev => ({ ...prev, ...saved.formData }));
-      if (saved.sentInfo) setSentInfo(saved.sentInfo);
-    } else if (saved && saved.phase === 'form' && saved.formData.email) {
-      setFormData(prev => ({ ...prev, ...saved.formData }));
+      setFormData(prev => ({
+        ...prev,
+        email: saved.email,
+        name: saved.name || prev.name,
+        agreeToTerms: saved.agreeToTerms,
+        confirmAge: saved.confirmAge,
+      }));
+      setSentInfo({
+        maskedIdentifier: saved.sentInfo?.maskedIdentifier || undefined,
+        devMode: saved.sentInfo?.devMode || undefined,
+        // code 刻意不恢复：验证码必须从服务端重新发送，不能从 localStorage 复活。
+      });
+    } else if (saved && saved.phase === 'form' && saved.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: saved.email,
+        name: saved.name || prev.name,
+        agreeToTerms: saved.agreeToTerms,
+        confirmAge: saved.confirmAge,
+      }));
     }
   }, []);
 
@@ -389,9 +416,11 @@ export default function RegisterPage() {
               // prefilled so the user can create a plan right away. Without a
               // draft, keep the existing login/onboarding target untouched.
               const carriedGoal = restoreGoalDraft();
-              window.location.href = carriedGoal
+              // GA-06：注册后直达真实 Chats（作战包 AUTH-01/USER-01），
+              // 不再落进 onboarding / 空 Studio。有 goal 草稿时保留原兼容路径。
+              window.location.assign(carriedGoal
                 ? withGoal("/workspace?view=now", carriedGoal)
-                : (data.redirectTo || "/dashboard/onboarding");
+                : "/dashboard/chats");
               return;
             }
           }
@@ -403,7 +432,8 @@ export default function RegisterPage() {
       clearRegState();
       // Keep the original login target, but carry the goal onto it so the relay
       // is not lost when auto-login is unavailable.
-      router.push(withGoal("/login?registered=true", restoreGoalDraft()));
+      // GA-06：无 auto-login 时回登录页也要带真实聊天回跳，避免落到 /dashboard→workspace。
+      router.push(withGoal("/login?registered=true&callbackUrl=/dashboard/chats", restoreGoalDraft()));
     } catch (err: any) {
       setError(err.message || "Verification failed. Please try again.");
     } finally {
@@ -436,7 +466,7 @@ export default function RegisterPage() {
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-lime-400 to-lime-600 flex items-center justify-center">
               <CheckCircle2 size={22} className="text-white" />
             </div>
-            <span className="text-2xl font-bold font-display text-foreground">Lok<span className="text-primary">Fee!</span></span>
+            <span className="text-2xl font-bold font-display text-foreground">Lok<span className="text-primary">Feel</span></span>
           </div>
           <h1 className="text-2xl font-bold text-foreground font-display mb-2">Verify Your Email</h1>
           <p className="text-sm text-foreground-muted">
@@ -528,7 +558,7 @@ export default function RegisterPage() {
           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
             <User size={22} className="text-white" />
           </div>
-          <span className="text-2xl font-bold font-display text-foreground">Lok<span className="text-primary">Fee!</span></span>
+          <span className="text-2xl font-bold font-display text-foreground">Lok<span className="text-primary">Feel</span></span>
         </div>
         <h1 className="text-2xl font-bold text-foreground font-display mb-2">Join LokFeel!</h1>
         <p className="text-sm text-foreground-muted">Start your journey to meaningful connection</p>

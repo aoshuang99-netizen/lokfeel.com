@@ -1,0 +1,78 @@
+{
+  "verdict": "PASS",
+  "passed": 14,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "输入后 localStorage/sessionStorage/URL 不含明文密码",
+      "ok": true
+    },
+    {
+      "name": "输入后不含出生日期",
+      "ok": true
+    },
+    {
+      "name": "注册缓存存在且为白名单信封结构",
+      "ok": true,
+      "key": "lokfeel_register_state",
+      "len": 213
+    },
+    {
+      "name": "持久化 value 内不含密码键/值",
+      "ok": true
+    },
+    {
+      "name": "持久化 value 内不含 dob/gender/sexuality",
+      "ok": true
+    },
+    {
+      "name": "持久化保留非敏感 email 供恢复",
+      "ok": true
+    },
+    {
+      "name": "刷新后密码输入框为空（未从存储恢复）",
+      "ok": true,
+      "passwordInputLen": 0
+    },
+    {
+      "name": "刷新后 email 从白名单恢复",
+      "ok": true,
+      "restored": true,
+      "stored": "{\"version\":2,\"value\":{\"phase\":\"form\",\"email\":\"<email>\",\"name\":\"Storage Audit\",\"agreeToTerms\":false,\"confirmAge\":false,\"sentInfo\":{\"maskedIdentifier\":\"\",\"devMode\":false},\"savedAt\":17"
+    },
+    {
+      "name": "旧格式敏感缓存夹具已注入（前置非空）",
+      "ok": true
+    },
+    {
+      "name": "旧缓存中的明文密码被就地清除",
+      "ok": true,
+      "len": 211
+    },
+    {
+      "name": "旧缓存被覆盖为 v2 白名单信封",
+      "ok": true
+    },
+    {
+      "name": "旧缓存中的验证码键被清除",
+      "ok": true
+    },
+    {
+      "name": "verify 阶段存储不含明文密码",
+      "ok": true
+    },
+    {
+      "name": "verify 阶段存储不含验证码键 code",
+      "ok": true
+    }
+  ],
+  "sentRequestBodiesCount": 1,
+  "note": "测试邮箱/密码为合成夹具；发送接口被拦截，无真实邮件/SMTP。请求体仅计数不落盘明文密码。",
+  "storageRedacted": {
+    "local": {
+      "lokfeel_register_state": "{\"version\":2,\"value\":{\"phase\":\"verify\",\"email\":\"<email>\",\"name\":\"Storage Audit\",\"agreeToTerms\":true,\"confirmAge\":true,\"sentInfo\":{\"maskedIdentifier\":\"s***@example.test\",\"devMode\":false},\"savedAt\":1795239425747}}"
+    },
+    "session": {},
+    "url": "http://127.0.0.1:3104/register"
+  }
+}

@@ -25,18 +25,17 @@ export const metadata: Metadata = {
   // V23 STRATEGY_LOCK §1/§4：对外只讲真实关系价值，不作通用 Agent OS 叙事，
   // 不宣称 "verified outcome"，不出现 MCP/A2A/WorkspaceSpec 等技术词。
   title: {
-    default: "LokFeel — Meet people worth knowing",
+    default: "LokFeel — Conversations belong to people",
     template: "%s | LokFeel",
   },
   description:
-    "LokFeel helps real people meet the right people: clearer relationship intent, a small number of explained introductions, and a real choice for both sides before anything is shared.",
+    "LokFeel is where real people have conversations and stay in control of what they share. AI writing assistance is in private testing — never auto-sent, always yours to review.",
   keywords: [
-    "meaningful introductions",
-    "mutual consent",
+    "AI communication assistant",
+    "cross-language conversation",
+    "private AI draft",
+    "user-controlled consent",
     "real connections",
-    "relationship intent",
-    "trusted introduction",
-    "community introductions",
     "lokfeel",
   ],
   authors: [{ name: "LokFeel Team" }],
@@ -51,9 +50,9 @@ export const metadata: Metadata = {
   //    需要显式 canonical 的页面请各自在 `export const metadata` 里声明自己的绝对 URL；
   //    守卫见 `tests/e2e-ci/smoke.spec.ts` ⑦（子页 canonical 若存在，必须等于自身 URL）。
   openGraph: {
-    title: "LokFeel — Meet people worth knowing",
+    title: "LokFeel — Conversations belong to people",
     description:
-      "LokFeel helps real people meet the right people: clearer relationship intent, explained introductions, and a real choice for both sides before anything is shared.",
+      "Talk to real people and stay in control of what you share. AI writing assistance is being tested privately.",
     siteName: "LokFeel",
     type: "website",
     locale: "en_US",

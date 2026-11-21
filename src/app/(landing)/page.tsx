@@ -1,28 +1,34 @@
 "use client";
 
 /**
- * LANDING PAGE — V23 Relationship-first reset.
+ * LANDING PAGE — V25.6 value-first reset.
  *
- * Product lock (docs/v23/STRATEGY_LOCK.md §1):
- *   "AI-Native Relationship & Generative Social Platform"
- *   Real Person -> Relationship Intent -> AI Recommendation -> Mutual Consent
- *   -> Verified Introduction -> Communication -> Follow-up -> Relationship Outcome
+ * 5-second promise (V25.6-GA closure, copy deck §1 variant B — the honest
+ *   version used UNTIL a real model passes independent evaluation):
+ *   "Conversations belong to people."
+ *   "Talk to real people and stay in control of what you share. AI writing
+ *    assistance is being tested privately."
+ *   Variant A ("Say it better — with AI…") may ONLY ship once a real model
+ *   trace + independent review pass; claiming it early would be a fake promise.
+ *   The first screen reads as a place for REAL human conversation — NOT as a
+ *   generic AI SaaS, an enterprise console, or a dating engine.
  *
- * What changed vs the V22 page this replaces:
- *   - The first screen is about real people and trusted introductions, not an
- *     "any goal you want done" personal agent OS.
- *   - The single primary action asks what kind of relationship the visitor
- *     wants to build. It is a real draft carried into signup, not a demo.
- *   - No fake people, no compatibility percentages, no fake counters, no
- *     published prices, no "verified success" case numbers.
- *   - Relationship intent is kept in sessionStorage only. V23 U06 forbids
- *     private preferences in the URL; the legacy `?goal=` reader is retained
- *     for old links but no new link writes private intent into a URL.
- *   - Capability boundaries are on the same screen as the promise.
+ * V25.6 corrections vs the V23 "relationship-first" page this replaces:
+ *   - Lead with what the user can DO (express a thought to a real person, with
+ *     an AI draft they review), not with system modules or "meet people" funnels.
+ *   - Single primary CTA carries a real message draft into signup, so the first
+ *     action after login is a real conversation — not a configuration workspace.
+ *   - Honest capability boundary on the same screen: AI suggestions require the
+ *     user's confirmation; cloud processing requires explicit, server-issued
+ *     consent; unlaunched capabilities are never shown as available.
+ *   - No fake people, compatibility percentages, counters, published prices or
+ *     "verified success" numbers. Message draft stays in sessionStorage only —
+ *     never in a URL (private message text must not leak into links/history).
  *
- * Truth gate: there are NO real two-sided introduction samples yet. Nothing on
- * this page may imply that introductions have been delivered or that a
- * relationship outcome has been achieved.
+ * Truth gate: real cross-language AI drafts require a configured provider AND a
+ * server-issued processing consent; without them the product degrades honestly
+ * (labelled, never passed off as AI output). Nothing here implies that outcome
+ * data, pricing or publicly verified results exist.
  */
 
 import { useEffect, useState } from "react";
@@ -40,19 +46,20 @@ const FAINT = "#626a70";
 const LINE = "rgba(11,14,17,0.12)";
 const WHITE = "#ffffff";
 
-/* ───────────────────── relationship intent entry ───────────────────── */
+/* ───────────────────── real-message entry (V25.6) ───────────────────── */
 
-/** Examples describe intent only. No sensitive attributes, no invented people. */
+/** Examples are things a person might want help expressing. No invented people. */
 const INTENT_EXAMPLES = [
-  "I'd like to meet someone who shares my pace of life and wants something long-term",
-  "I want to be introduced to people in my city who care about the same things I do",
-  "Our community would like to introduce two members who could work well together",
+  "I want to reply to a colleague in English, but I'm not sure my wording is polite enough",
+  "I need to explain a sensitive decision to a friend without hurting them",
+  "I'd like to suggest a time to meet a group, clearly and without ambiguity",
 ];
 
 /**
- * IntentForm is the single primary action. The draft lives in sessionStorage
- * and is restored by /register and the signed-in home. Nothing is sent to a
- * model here, nothing is written to the URL, and no candidate is fabricated.
+ * IntentForm is the single primary action. It captures what the visitor wants
+ * to SAY to a real person. The draft lives in sessionStorage and is restored
+ * after signup into the real chat flow — nothing is sent to a model here,
+ * nothing is written to a URL, and no recipient is fabricated.
  */
 function IntentForm({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -72,9 +79,10 @@ function IntentForm({ compact = false }: { compact?: boolean }) {
       <label
         htmlFor="goal-input"
         className="font-mono text-[10.5px] uppercase tracking-[0.18em]"
-        style={{ color: FAINT }}
+        // compact 表单落在深色 CTA 区块上：用浅灰保证 ≥4.5:1（WCAG 2.2 AA）
+        style={{ color: compact ? "rgba(242,241,236,0.78)" : FAINT }}
       >
-        Who would you like to meet?
+        What would you like to say to someone?
       </label>
       <textarea
         id="goal-input"
@@ -82,10 +90,10 @@ function IntentForm({ compact = false }: { compact?: boolean }) {
         value={intent}
         onChange={(e) => setIntent(e.target.value)}
         rows={compact ? 2 : 3}
-        maxLength={240}
+        maxLength={500}
         className="mt-2.5 w-full resize-none rounded-xl border px-4 py-3 text-[16px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-[#8a5a1e]"
         style={{ borderColor: LINE, background: WHITE, color: INK }}
-        placeholder="e.g. I'd like to meet someone who wants a long-term relationship and lives nearby"
+        placeholder="e.g. I want to thank a colleague in English and suggest we talk next week"
       />
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
@@ -95,7 +103,7 @@ function IntentForm({ compact = false }: { compact?: boolean }) {
           disabled={intent.trim().length < 4}
           data-testid="intent-submit"
         >
-          Start with this intent
+          Start a real conversation
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -105,7 +113,7 @@ function IntentForm({ compact = false }: { compact?: boolean }) {
           className="inline-flex min-h-11 items-center rounded-full border px-5 py-3 text-[14.5px] font-medium transition-colors hover:bg-black/[0.03]"
           style={{ borderColor: LINE, color: INK }}
         >
-          How an introduction works
+          How private AI works
         </Link>
       </div>
       {!compact && (
@@ -132,34 +140,34 @@ function IntentForm({ compact = false }: { compact?: boolean }) {
 const STEPS = [
   {
     n: "01",
-    t: "Say who you want to meet",
-    d: "Describe the kind of relationship you are looking for and the boundaries that matter to you. You can edit it later.",
+    t: "Write what you mean",
+    d: "Type the message to a real person in your own words. No need to learn agents, workspaces or pipelines first.",
   },
   {
     n: "02",
-    t: "Both people decide",
-    d: "You see a small number of real candidates with the reasons for each. Nothing is shared until both sides say yes.",
+    t: "Let AI help — if you ask",
+    d: "Ask for a translation, a clearer tone or intent help. You see what the AI would say, where it was processed, and what it is unsure about.",
   },
   {
     n: "03",
-    t: "Meet, talk, follow through",
-    d: "After a proper introduction you can talk, plan to meet and each give feedback. A sent message is not a relationship result.",
+    t: "You review, you send",
+    d: "Edit or reject the draft. Only your confirmed message is sent, and you see real delivered and read states — never a simulated one.",
   },
 ];
 
 /** Two products, kept visibly separate (STRATEGY_LOCK §2). */
 const PRODUCTS = [
   {
-    t: "For people",
-    d: "You want fewer wrong introductions and more people worth knowing. You set the intent, see why someone was suggested, and keep the choice to accept or decline.",
-    now: "Relationship intent · explained candidates · a real choice for both sides",
-    later: "Published real introduction results (none yet)",
+    t: "For you and your contacts",
+    d: "Get across language barriers and say delicate things well, to real people you already know — with a private AI helper that respects your boundaries.",
+    now: "Real chat · reviewable AI drafts · per-use cloud consent you control",
+    later: "Independent language-quality evaluation results (not published yet)",
   },
   {
-    t: "For community organisers",
-    d: "You look after a group of real members and want to make a small number of well-reviewed introductions, then follow what happened.",
-    now: "Separate member records · review before anything is sent · follow-up records",
-    later: "Paid pilot pricing and organisation-level reporting (not approved)",
+    t: "For teams and communities",
+    d: "Give real members a shared space with AI that helps everyone understand each other — with clear roles and organisation data kept separate from private notes.",
+    now: "Separate organisation spaces · visible AI identity · explicit permissions",
+    later: "Approved pricing and organisation reports (not approved)",
   },
 ];
 
@@ -168,27 +176,27 @@ const BOUNDARIES = [
     state: "Working today",
     tone: SIGNAL_DEEP,
     items: [
-      "State and edit a relationship intent",
-      "Two independent decisions before contact details are shared",
-      "Field-level disclosure, withdrawal and a visible record",
+      "Send and receive real messages with accurate delivery and read states",
+      "AI writing help in private testing — draft-only, never auto-sent",
+      "Server-issued, revocable consent before any text reaches a cloud model",
     ],
   },
   {
-    state: "Needs both people",
+    state: "Needs your consent",
     tone: INK,
     items: [
-      "An introduction only after both sides accept",
-      "Only the fields each person allowed can be shared",
-      "A decline stops further contact instead of being retried",
+      "Cloud translation and expression help — only with an explicit grant",
+      "Any organisation knowledge used to help a member communicate",
+      "A revoke takes effect immediately for future reads and drafts",
     ],
   },
   {
     state: "Not live yet",
     tone: MUTED,
     items: [
-      "Any real introduction delivered to a person outside this product",
-      "Independently confirmed meeting or relationship outcomes",
+      "Independently evaluated language quality or 'understands you' claims",
       "Published prices, customer results or success rates",
+      "Guaranteed outcomes for relationships or group decisions",
     ],
   },
 ];
@@ -265,19 +273,18 @@ export default function LandingPage() {
         <section className="border-b pb-14 pt-28 sm:pb-20 sm:pt-36" style={{ borderColor: LINE }}>
           <div className="mx-auto max-w-6xl px-5 sm:px-6">
             <h1
-              className="max-w-[19ch] font-display text-[2.25rem] font-extrabold leading-[1.03] tracking-[-0.035em] sm:text-[3.15rem] lg:text-[3.5rem]"
+              className="max-w-[20ch] font-display text-[2.25rem] font-extrabold leading-[1.03] tracking-[-0.035em] sm:text-[3.15rem] lg:text-[3.5rem]"
               style={{ color: INK }}
             >
-              Meet people worth knowing.
-              <br className="hidden sm:block" />{" "}Both people choose.
+              Conversations belong to people.
               <br className="hidden sm:block" />{" "}
-              <span style={{ color: SIGNAL_DEEP }}>Real connections follow.</span>
+              <span style={{ color: SIGNAL_DEEP }}>You decide what you share.</span>
             </h1>
 
             <p className="mt-6 max-w-[42rem] text-[17px] leading-[1.6] sm:text-[18px]" style={{ color: MUTED }}>
-              LokFeel uses AI to understand the relationship you want, suggests a few real
-              people worth meeting with clear reasons, and only shares anything after both
-              sides agree. Less wasted social effort, more introductions you can trust.
+              Talk to real people and stay in control of what you share. AI writing assistance —
+              translation, clearer tone, intent help — is being tested privately and is not yet
+              a published capability. You can have a real conversation here today, with no setup.
             </p>
 
             <div className="mt-9">
@@ -290,11 +297,12 @@ export default function LandingPage() {
               style={{ borderColor: SIGNAL_DEEP, background: "rgba(184,134,63,0.07)" }}
             >
               <p className="text-[13.5px] leading-relaxed" style={{ color: INK }}>
-                <span className="font-semibold">Where the product stands today: </span>
-                intent capture, two-sided decisions and field-level privacy controls are
-                implemented in the product. No real introduction has been delivered to a
-                person as part of a pilot yet, and we have no customer results to publish.
-                If there is no suitable person, we will tell you rather than invent one.
+                <span className="font-semibold">Where the product stands: </span>
+                you can write to real contacts and read their replies today. AI writing help is
+                in private testing — when it is enabled for you, it only ever produces a draft
+                for your review and never sends on your behalf; cloud processing needs an
+                explicit, server-issued consent you can revoke. No outcome data, pricing or
+                verified success rates are published.
               </p>
             </div>
           </div>
@@ -303,7 +311,7 @@ export default function LandingPage() {
         {/* ── THREE STEPS ── */}
         <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20">
           <h2 className="font-display text-[1.65rem] font-bold tracking-[-0.02em] sm:text-[2rem]">
-            One relationship, three honest steps.
+            One real conversation, three honest steps.
           </h2>
           <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border sm:grid-cols-3" style={{ borderColor: LINE, background: LINE }}>
             {STEPS.map((s) => (
@@ -324,11 +332,12 @@ export default function LandingPage() {
         <section className="border-y" style={{ borderColor: LINE, background: WHITE }}>
           <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20">
             <h2 className="font-display text-[1.65rem] font-bold tracking-[-0.02em] sm:text-[2rem]">
-              One relationship engine, two separate products.
+              One private AI helper, two separate worlds.
             </h2>
             <p className="mt-3 max-w-[42rem] text-[15px] leading-relaxed" style={{ color: MUTED }}>
-              People looking to meet someone and community organisers looking after members
-              have different needs. We keep their pages, records and commercial terms apart.
+              Personal conversations and organisation spaces have different boundaries. We keep
+              their records, AI permissions and commercial terms apart — your private notes are
+              never an administrator&apos;s dashboard.
             </p>
             <div className="mt-8 grid gap-5 lg:grid-cols-2">
               {PRODUCTS.map((s) => (
@@ -365,8 +374,9 @@ export default function LandingPage() {
                 What you can count on today.
               </h2>
               <p className="mt-3 max-w-[40rem] text-[15px] leading-relaxed" style={{ color: MUTED }}>
-                Every capability is labelled. A decline, a withdrawal or a block must stop
-                further contact. An in-app record is never presented as a real meeting.
+                Every capability is labelled. A revoked consent stops future processing at once,
+                and a rejected AI draft is never sent. A draft is never presented as your own
+                words, and an in-app state is never presented as a delivery guarantee.
               </p>
             </div>
             <Link
@@ -400,12 +410,12 @@ export default function LandingPage() {
         <section className="mx-auto max-w-6xl px-5 pb-20 sm:px-6">
           <div className="rounded-3xl px-6 py-11 sm:px-10 sm:py-14" style={{ background: INK }}>
             <h2 className="max-w-[22ch] font-display text-[1.85rem] font-bold leading-[1.08] tracking-[-0.025em] text-[#f2f1ec] sm:text-[2.3rem]">
-              Tell us who is worth meeting. Both of you stay in control.
+              Start with the words you want to say.
             </h2>
             <p className="mt-4 max-w-[38rem] text-[14.5px] leading-relaxed" style={{ color: "rgba(242,241,236,0.72)" }}>
-              Your intent is kept on this device until you create an account. We never put
-              private relationship preferences in a link, and we never show you an invented
-              person when there is no suitable match.
+              Your draft stays on this device until you create an account, then opens into a real
+              conversation. We never put private message text in a link, and AI suggestions are
+              always yours to review before anything is sent.
             </p>
             <div className="mt-8">
               <IntentForm compact />
