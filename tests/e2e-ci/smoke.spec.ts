@@ -122,14 +122,16 @@ test.describe('CI 冒烟 · 构建产物可启动且守卫真实生效', () => {
     const approved = plans?.commercialApproval?.status === 'APPROVED';
 
     const bodyText = await page.locator('body').innerText();
+    // Hotfix 的定价页使用英文保守文案；中英文“尚未公布”都是合法 fail-closed 表达。
+    const unpublishedCopy = /定价尚未公布|pricing is not published yet|has not published pricing yet/i;
     if (approved) {
       expect(bodyText, '定价已获批 ⇒ 页面必须公布金额').toMatch(/\$\s?\d/);
-      expect(bodyText, '定价已获批却仍写"尚未公布"，说明页面没跟上目录').not.toContain(
-        '定价尚未公布'
+      expect(bodyText, '定价已获批却仍写"尚未公布"，说明页面没跟上目录').not.toMatch(
+        unpublishedCopy
       );
     } else {
       expect(bodyText, '未获批定价 ⇒ 页面上不该有金额').not.toMatch(/\$\s?\d/);
-      expect(bodyText, '应显式说明定价尚未公布').toContain('定价尚未公布');
+      expect(bodyText, '应显式说明定价尚未公布（中英文均可）').toMatch(unpublishedCopy);
     }
   });
 

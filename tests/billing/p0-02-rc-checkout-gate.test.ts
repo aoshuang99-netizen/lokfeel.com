@@ -22,7 +22,7 @@ const LIVE_ENV: Record<string, string> = {
   DODO_PAYMENTS_ENVIRONMENT: 'live_mode',
 }
 
-describe('收银台门禁 · 真实目录（2026-11-13 重新定价后）', () => {
+describe('收银台门禁 · D1 代码层开关为唯一开卖前提（Hotfix fail-closed）', () => {
   it('真实目录为 APPROVED，且批准引用可溯源', () => {
     const pricing = getProduct('connection-os').pricing
     expect(pricing.status).toBe('APPROVED')
@@ -31,21 +31,23 @@ describe('收银台门禁 · 真实目录（2026-11-13 重新定价后）', () =
     expect(pricing.displayPrice).toBeTruthy()
   })
 
-  it('注入完整凭据 + 已批准 ⇒ enabled 为 true（两道门都过）', () => {
+  it('目录 APPROVED + 完整凭据，但 D1 代码开关未批准 ⇒ enabled 必须为 false', () => {
     const gate = readCheckoutGate(LIVE_ENV)
     expect(gate.credentialsReady).toBe(true)
-    expect(gate.commercialApproved).toBe(true)
-    expect(gate.enabled).toBe(true)
+    // 技术门就绪不等于商业门通过：PRICING_APPROVED 是第三个、唯一的开卖开关。
+    expect(gate.commercialApproved).toBe(false)
+    expect(gate.enabled).toBe(false)
+    // 目录状态仍可溯源，但批准 ref 不得对外暴露为“已批准”。
     expect(gate.approval.status).toBe('APPROVED')
-    expect(gate.approval.ref).toContain('PRICING_APPROVAL')
+    expect(gate.approval.ref).toBeNull()
   })
 
-  it('负控：没有凭据时，已批准也不能开卖', () => {
+  it('负控：没有凭据时，即使目录自报 APPROVED 也不能开卖', () => {
     const gate = readCheckoutGate({})
     expect(gate.enabled).toBe(false)
     expect(gate.credentialsReady).toBe(false)
-    expect(gate.commercialApproved).toBe(true)
-    // enabled 必须是两道门的合取，而不是任一道
+    expect(gate.commercialApproved).toBe(false)
+    // enabled 必须是三道门的合取，而不是任一道
     expect(gate.enabled).toBe(gate.credentialsReady && gate.commercialApproved)
   })
 
