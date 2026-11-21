@@ -1,0 +1,167 @@
+{
+  "generatedAt": "2026-11-21T08:56:18.719Z",
+  "base": "http://127.0.0.1:3104",
+  "type": "LOCAL_REAL_BROWSER",
+  "pages": [
+    {
+      "route": "landing",
+      "view": "pc",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people. You decide what you share.",
+      "overflow": 0,
+      "textLen": 3863,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/landing-pc.png"
+    },
+    {
+      "route": "register",
+      "view": "pc",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
+      "overflow": 0,
+      "textLen": 1290,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/register-pc.png"
+    },
+    {
+      "route": "workspace",
+      "view": "pc",
+      "http": 200,
+      "title": "Living Workspace | LokFeel",
+      "h1": "今天想推进什么？",
+      "overflow": 0,
+      "textLen": 354,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/workspace-pc.png"
+    },
+    {
+      "route": "chats",
+      "view": "pc",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Messages",
+      "overflow": 0,
+      "textLen": 575,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/chats-pc.png"
+    },
+    {
+      "route": "connections",
+      "view": "pc",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Connections",
+      "overflow": 0,
+      "textLen": 371,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/connections-pc.png"
+    },
+    {
+      "route": "console",
+      "view": "pc",
+      "http": 200,
+      "title": "社群控制台 | LokFeel",
+      "h1": "社群总览",
+      "overflow": 0,
+      "textLen": 531,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/console-pc.png"
+    },
+    {
+      "route": "product",
+      "view": "pc",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
+      "overflow": 0,
+      "textLen": 3475,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/product-pc.png"
+    },
+    {
+      "route": "solutions",
+      "view": "pc",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
+      "overflow": 0,
+      "textLen": 2893,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/solutions-pc.png"
+    },
+    {
+      "route": "landing",
+      "view": "mobile",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people. You decide what you share.",
+      "overflow": 0,
+      "textLen": 3809,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/landing-mobile.png"
+    },
+    {
+      "route": "register",
+      "view": "mobile",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
+      "overflow": 0,
+      "textLen": 1290,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/register-mobile.png"
+    },
+    {
+      "route": "workspace",
+      "view": "mobile",
+      "http": 200,
+      "title": "Living Workspace | LokFeel",
+      "h1": "今天想推进什么？",
+      "overflow": 0,
+      "textLen": 555,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/workspace-mobile.png"
+    },
+    {
+      "route": "chats",
+      "view": "mobile",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Messages",
+      "overflow": 0,
+      "textLen": 170,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/chats-mobile.png"
+    },
+    {
+      "route": "connections",
+      "view": "mobile",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Connections",
+      "overflow": 0,
+      "textLen": 226,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/connections-mobile.png"
+    },
+    {
+      "route": "console",
+      "view": "mobile",
+      "http": 200,
+      "title": "社群控制台 | LokFeel",
+      "h1": "社群总览",
+      "overflow": 0,
+      "textLen": 523,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/console-mobile.png"
+    },
+    {
+      "route": "product",
+      "view": "mobile",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
+      "overflow": 0,
+      "textLen": 3532,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/product-mobile.png"
+    },
+    {
+      "route": "solutions",
+      "view": "mobile",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
+      "overflow": 0,
+      "textLen": 2950,
+      "shot": "docs/v25.6/ga-closure/ux04-ci-unblock/screenshots/solutions-mobile.png"
+    }
+  ]
+}

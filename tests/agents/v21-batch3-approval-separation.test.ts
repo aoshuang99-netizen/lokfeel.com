@@ -10,8 +10,6 @@
  * 纪律：这些是**拒绝路径**测试 —— 断言"没有副作用发生"，而不只是"抛了错"。
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // next-auth 是 ESM-only：只要 `src/lib/auth/auth.ts` 被真实加载，jest 就会在 require 阶段炸。
 // 这里测的是审批/执行的判定逻辑，不需要真实会话 —— mock 掉即可（与 tests/connection 同做法）。
 jest.mock('@/lib/auth/auth', () => ({ requireAuth: jest.fn(), auth: jest.fn() }))

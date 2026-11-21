@@ -224,12 +224,12 @@ test.describe('Legacy B2C · 交互可用性（390×844 · 只读）', () => {
     await expect(page.locator('h1:has-text("Connections")').first()).toBeVisible({ timeout: 20_000 });
     await waitForStableDom(page);
 
-    // 夹具没有候选人/匹配 ⇒ 必然落在某个空态上。空态不是"没测到"，
-    // 它就是新用户看到的第一屏，必须自己站得住。
-    const emptyTitles = page.getByText(/No likes yet|No matches yet|All caught up!/);
-    const count = await emptyTitles.count();
-    expect(count, '连接页应有空态文案（夹具无候选人的预期形态）').toBeGreaterThan(0);
-    await expect(emptyTitles.first()).toBeVisible();
+    // V25.6 UI 整改后连接页不再是旧的 Likes/Matches 空态（那些文案已移除），
+    // 而是一组真实可执行的入口。测试锚点随产品更新 —— 断言新用户第一屏的真实内容。
+    const realEntries = page.getByText(/邀请你认识的人|发现新的人|继续对话/);
+    const count = await realEntries.count();
+    expect(count, '连接页应给出真实入口（V25.6 主区）').toBeGreaterThan(0);
+    await expect(realEntries.first()).toBeVisible();
 
     // 空态里的 CTA 必须点得到（不被固定底栏覆盖）。
     // 只找**可见**的锚点：同名的隐藏链接在 DOM 里可能排在前面，
@@ -253,7 +253,9 @@ test.describe('Legacy B2C · 交互可用性（390×844 · 只读）', () => {
     await waitForStableDom(page);
 
     // 夹具没有会话 ⇒ 列表必然为空态。空态不是"没测到"，它是新用户看到的第一屏。
-    await expect(page.getByText('No conversations yet')).toBeVisible();
+    // `:visible` 不能省：layout 左面板有可见空态，右侧 children 还有一份隐藏副本
+    //（手机 hidden md:flex），不带它 strict mode 会命中 2 个元素而假红。
+    await expect(page.locator('text="No conversations yet" >> visible=true').first()).toBeVisible();
 
     // 空态里的出路。` :visible` 不能省：同一 href 在侧栏/底栏还有一份隐藏的副本，
     // 不带它 `.first()` 会命中隐藏那个（上一轮就是这么红的）。
