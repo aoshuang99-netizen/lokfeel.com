@@ -12,6 +12,7 @@
  *   而按总令，approvalRef 只能引用产品所有者的真实书面批准。
  */
 import { getProduct } from '@/config/products';
+import { PRICING_APPROVED } from '@/config/pricing-gate';
 import { readStoreReadiness, type EnvLike } from '@/lib/payments/dodo/config';
 
 export interface CheckoutGate {
@@ -31,7 +32,14 @@ export function readCheckoutGate(env: EnvLike = process.env): CheckoutGate {
   const store = readStoreReadiness(env);
   const product = getProduct('connection-os');
   const pricing = product.pricing;
-  const approved = pricing.status === 'APPROVED' && Boolean(pricing.approvalRef);
+  // V23 · R03：D1（定价批准）未签字时，商业门恒 false。
+  // products.ts 的 APPROVED 是实现者自设值；生产 b50e53e 曾据此把 $89/$199/$449
+  // 与 checkoutReady=true 暴露到公网（见 docs/v23/LIVE_RISK_AUDIT.md）。
+  // 只有显式的 PRICING_APPROVED + 目录状态 + 真实 approvalRef 三者同时成立才开卖。
+  const approved =
+    PRICING_APPROVED &&
+    pricing.status === 'APPROVED' &&
+    Boolean(pricing.approvalRef);
   return {
     enabled: store.ready && approved,
     credentialsReady: store.ready,

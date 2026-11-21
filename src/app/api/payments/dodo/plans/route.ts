@@ -19,6 +19,7 @@ import { NextResponse } from 'next/server';
 import { missingForChannel } from '@/lib/payments/availability';
 import { readCheckoutGate } from '@/lib/payments/commercial-gate';
 import { readDodoConfig } from '@/lib/payments/dodo/config';
+import { PRICING_APPROVED } from '@/config/pricing-gate';
 import {
   DODO_PRODUCT_ENV,
   PRICING_APPROVAL,
@@ -28,6 +29,25 @@ import {
 } from '@/config/subscription-plans';
 
 export async function GET() {
+  // V22-G10 / §F: D1 pricing approval is still PENDING. The page layer is
+  // fail-closed, so the public JSON endpoint must be too — otherwise the same
+  // unapproved amounts leave the server through a different door.
+  // `checkoutReady` alone is NOT sufficient: it answers "can we charge", not
+  // "may we publish a price". While closed we return no amount, no display
+  // string, no discount, no trial length and no plan list at all.
+  if (!PRICING_APPROVED) {
+    return NextResponse.json(
+      {
+        ok: true,
+        provider: 'dodo',
+        pricingPublished: false,
+        reason: 'pricing_approval_pending',
+        plans: [],
+      },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } },
+    );
+  }
+
   const config = readDodoConfig();
   // 🔴 G12：checkoutReady 是「对公众可售」＝ 技术就绪 AND 人工定价批准（commercial-gate）。
   // 凭据未配（本地/CI）时 gate.enabled=false —— 与旧 isPaymentChannelReady 语义一致；
