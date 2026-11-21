@@ -809,6 +809,23 @@ exports.Prisma.ConsentGrantScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AIProcessingConsentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  conversationId: 'conversationId',
+  purpose: 'purpose',
+  recipientScope: 'recipientScope',
+  processingLocation: 'processingLocation',
+  modelScope: 'modelScope',
+  status: 'status',
+  requestId: 'requestId',
+  grantedAt: 'grantedAt',
+  expiresAt: 'expiresAt',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PowerBoardRuleScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1742,6 +1759,7 @@ exports.Prisma.ModelName = {
   UserPresence: 'UserPresence',
   ConsentRequest: 'ConsentRequest',
   ConsentGrant: 'ConsentGrant',
+  AIProcessingConsent: 'AIProcessingConsent',
   PowerBoardRule: 'PowerBoardRule',
   AuditLog: 'AuditLog',
   Notification: 'Notification',

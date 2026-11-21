@@ -2337,6 +2337,35 @@ model ConsentGrant {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// V25.6 UX06 — AI PROCESSING CONSENT (server-issued, purpose-bound)
+// ═══════════════════════════════════════════════════════════════
+// 与媒体 ConsentGrant 刻意分离：媒体授权回答"你能否看到我的图片/语音"，
+// 本表回答"能否把我的原文送给远端模型、用于哪种用途、送到哪个接收范围"。
+// consentRef 必须由服务端 /api/im/ai-consent 签发；客户端字符串一律不采信。
+// 纯标量字段（不挂 User/Conversation relation）：身份来自 auth session，
+// 校验按字符串精确比对，避免为一张授权表改动核心 model 的关系网。
+model AIProcessingConsent {
+  id                 String    @id @default(cuid())
+  userId             String // 数据主体（授权人，= auth session user）
+  conversationId     String
+  purpose            String // translate | expression | reply_draft
+  recipientScope     String // 允许的接收范围（会话 id / 对方标识）
+  processingLocation String    @default("cloud") // cloud | local
+  modelScope         String? // null=不限定模型；否则允许的 model id
+  status             String    @default("ACTIVE") // ACTIVE | REVOKED | EXPIRED
+  requestId          String? // 端到端追踪
+  grantedAt          DateTime  @default(now())
+  expiresAt          DateTime
+  revokedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@index([conversationId])
+  @@index([expiresAt])
+}
+
+// ═══════════════════════════════════════════════════════════════
 // POWER BOARD — Rule engine for boundary control
 // ═══════════════════════════════════════════════════════════════
 

@@ -1,0 +1,89 @@
+{
+  "task": "UX06 服务端 AI 处理授权 DB 证明",
+  "version": "V25.6",
+  "generatedAt": "2026-11-20T06:38:34.154Z",
+  "dbFile": "/tmp/v256-consent.db",
+  "isolation": "local libSQL file, production untouched",
+  "scope": "服务端授权门（非真实模型质量；PROVIDER_NOT_TESTED）",
+  "steps": [
+    {
+      "id": "S0",
+      "scenario": "夹具：owner+member 真实会话",
+      "result": {
+        "conversationId": "conv_v256_consent_proof",
+        "userAId": "u_e2e_owner",
+        "userBId": "u_e2e_member"
+      }
+    },
+    {
+      "id": "S1",
+      "scenario": "服务端签发 consentRef 并落库",
+      "result": {
+        "consentRef": "cmwolyhjw0000nlk8iae00zzd",
+        "persisted": true,
+        "userId": "u_e2e_owner",
+        "status": "ACTIVE"
+      }
+    },
+    {
+      "id": "S2",
+      "scenario": "合法授权查库校验通过",
+      "result": {
+        "ok": true,
+        "reason": null
+      }
+    },
+    {
+      "id": "S3",
+      "scenario": "客户端伪造 consentRef → CONSENT_NOT_FOUND",
+      "result": {
+        "ok": false,
+        "reason": "CONSENT_NOT_FOUND"
+      }
+    },
+    {
+      "id": "S4",
+      "scenario": "跨用户复用授权 → CONSENT_OWNER_MISMATCH",
+      "result": {
+        "ok": false,
+        "reason": "CONSENT_OWNER_MISMATCH"
+      }
+    },
+    {
+      "id": "S5",
+      "scenario": "translate 授权挪作 expression → CONSENT_PURPOSE_MISMATCH",
+      "result": {
+        "ok": false,
+        "reason": "CONSENT_PURPOSE_MISMATCH"
+      }
+    },
+    {
+      "id": "S6",
+      "scenario": "本人撤销成功 + 重放失效 + 非本人撤销失败",
+      "result": {
+        "revoke": true,
+        "replay": "CONSENT_REVOKED",
+        "badRevoke": false
+      }
+    },
+    {
+      "id": "S7",
+      "scenario": "模型范围授权：换模型被拒",
+      "result": {
+        "ok": false,
+        "reason": "CONSENT_MODEL_NOT_ALLOWED"
+      }
+    },
+    {
+      "id": "S8",
+      "scenario": "local 授权 + wantsCloud=true → CONSENT_CLOUD_NOT_AUTHORIZED",
+      "result": {
+        "ok": false,
+        "reason": "CONSENT_CLOUD_NOT_AUTHORIZED"
+      }
+    }
+  ],
+  "failures": [],
+  "verdict": "PASS",
+  "inputHash": "sha256:1ebb5340a4ca4268"
+}

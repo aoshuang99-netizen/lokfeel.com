@@ -22,7 +22,8 @@
  */
 
 import { z } from 'zod'
-import { wrapUntrusted, detectInjection, dedupeSignals, type InjectionSignal } from '@/lib/agent/guard'
+import { wrapUntrusted, detectInjection, dedupeSignals } from '@/lib/agent/guard'
+import type { InjectionSignal } from '@/lib/agent/types'
 import type { ModelProvider } from '@/lib/agent/provider'
 import { extractJson } from '@/lib/agent/runtime'
 import {

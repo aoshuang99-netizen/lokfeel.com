@@ -273,6 +273,11 @@ export type ConsentRequest = $Result.DefaultSelection<Prisma.$ConsentRequestPayl
  */
 export type ConsentGrant = $Result.DefaultSelection<Prisma.$ConsentGrantPayload>
 /**
+ * Model AIProcessingConsent
+ * 
+ */
+export type AIProcessingConsent = $Result.DefaultSelection<Prisma.$AIProcessingConsentPayload>
+/**
  * Model PowerBoardRule
  * 
  */
@@ -1935,6 +1940,16 @@ export class PrismaClient<
   get consentGrant(): Prisma.ConsentGrantDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.aIProcessingConsent`: Exposes CRUD operations for the **AIProcessingConsent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AIProcessingConsents
+    * const aIProcessingConsents = await prisma.aIProcessingConsent.findMany()
+    * ```
+    */
+  get aIProcessingConsent(): Prisma.AIProcessingConsentDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.powerBoardRule`: Exposes CRUD operations for the **PowerBoardRule** model.
     * Example usage:
     * ```ts
@@ -2690,6 +2705,7 @@ export namespace Prisma {
     UserPresence: 'UserPresence',
     ConsentRequest: 'ConsentRequest',
     ConsentGrant: 'ConsentGrant',
+    AIProcessingConsent: 'AIProcessingConsent',
     PowerBoardRule: 'PowerBoardRule',
     AuditLog: 'AuditLog',
     Notification: 'Notification',
@@ -2732,7 +2748,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "billingInboxEvent" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "communityBridge" | "bridgeMemberOptIn" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organizationInvitation" | "organization" | "membership" | "tenantAuditEvent" | "missionSpecRevision" | "executionVerification" | "agentRunStageEvent"
+      modelProps: "agentRun" | "agentCall" | "agentApproval" | "agentExecution" | "agentDeliveryTarget" | "billingEvent" | "usageRecord" | "billingInboxEvent" | "botProfile" | "botInteractionLog" | "botLearningBatch" | "botLearningRecord" | "botPreference" | "botAvatar" | "communityBridge" | "bridgeMemberOptIn" | "mission" | "socialIntent" | "missionParticipation" | "idempotencyRecord" | "connectionProposal" | "proposalDecision" | "workflowJob" | "notificationDelivery" | "introductionWorkflow" | "user" | "account" | "session" | "verificationToken" | "profile" | "match" | "matchReaction" | "conversation" | "conversationParticipant" | "iMMessage" | "messageReceipt" | "messageReaction" | "userPresence" | "consentRequest" | "consentGrant" | "aIProcessingConsent" | "powerBoardRule" | "auditLog" | "notification" | "subscription" | "payment" | "adminAudit" | "analyticsEvent" | "systemConfig" | "adminPermission" | "customRole" | "adminRolePermission" | "adminUserRole" | "sincerityWallet" | "sincerityTransaction" | "block" | "userReport" | "analyticsEventDef" | "analyticsDailyAgg" | "outcome" | "outcomeVerification" | "organizationInvitation" | "organization" | "membership" | "tenantAuditEvent" | "missionSpecRevision" | "executionVerification" | "agentRunStageEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5696,6 +5712,80 @@ export namespace Prisma {
           }
         }
       }
+      AIProcessingConsent: {
+        payload: Prisma.$AIProcessingConsentPayload<ExtArgs>
+        fields: Prisma.AIProcessingConsentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AIProcessingConsentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AIProcessingConsentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>
+          }
+          findFirst: {
+            args: Prisma.AIProcessingConsentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AIProcessingConsentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>
+          }
+          findMany: {
+            args: Prisma.AIProcessingConsentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>[]
+          }
+          create: {
+            args: Prisma.AIProcessingConsentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>
+          }
+          createMany: {
+            args: Prisma.AIProcessingConsentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AIProcessingConsentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>[]
+          }
+          delete: {
+            args: Prisma.AIProcessingConsentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>
+          }
+          update: {
+            args: Prisma.AIProcessingConsentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>
+          }
+          deleteMany: {
+            args: Prisma.AIProcessingConsentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AIProcessingConsentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AIProcessingConsentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>[]
+          }
+          upsert: {
+            args: Prisma.AIProcessingConsentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIProcessingConsentPayload>
+          }
+          aggregate: {
+            args: Prisma.AIProcessingConsentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAIProcessingConsent>
+          }
+          groupBy: {
+            args: Prisma.AIProcessingConsentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AIProcessingConsentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AIProcessingConsentCountArgs<ExtArgs>
+            result: $Utils.Optional<AIProcessingConsentCountAggregateOutputType> | number
+          }
+        }
+      }
       PowerBoardRule: {
         payload: Prisma.$PowerBoardRulePayload<ExtArgs>
         fields: Prisma.PowerBoardRuleFieldRefs
@@ -7857,6 +7947,7 @@ export namespace Prisma {
     userPresence?: UserPresenceOmit
     consentRequest?: ConsentRequestOmit
     consentGrant?: ConsentGrantOmit
+    aIProcessingConsent?: AIProcessingConsentOmit
     powerBoardRule?: PowerBoardRuleOmit
     auditLog?: AuditLogOmit
     notification?: NotificationOmit
@@ -58872,6 +58963,1121 @@ export namespace Prisma {
 
 
   /**
+   * Model AIProcessingConsent
+   */
+
+  export type AggregateAIProcessingConsent = {
+    _count: AIProcessingConsentCountAggregateOutputType | null
+    _min: AIProcessingConsentMinAggregateOutputType | null
+    _max: AIProcessingConsentMaxAggregateOutputType | null
+  }
+
+  export type AIProcessingConsentMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    conversationId: string | null
+    purpose: string | null
+    recipientScope: string | null
+    processingLocation: string | null
+    modelScope: string | null
+    status: string | null
+    requestId: string | null
+    grantedAt: Date | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AIProcessingConsentMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    conversationId: string | null
+    purpose: string | null
+    recipientScope: string | null
+    processingLocation: string | null
+    modelScope: string | null
+    status: string | null
+    requestId: string | null
+    grantedAt: Date | null
+    expiresAt: Date | null
+    revokedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AIProcessingConsentCountAggregateOutputType = {
+    id: number
+    userId: number
+    conversationId: number
+    purpose: number
+    recipientScope: number
+    processingLocation: number
+    modelScope: number
+    status: number
+    requestId: number
+    grantedAt: number
+    expiresAt: number
+    revokedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AIProcessingConsentMinAggregateInputType = {
+    id?: true
+    userId?: true
+    conversationId?: true
+    purpose?: true
+    recipientScope?: true
+    processingLocation?: true
+    modelScope?: true
+    status?: true
+    requestId?: true
+    grantedAt?: true
+    expiresAt?: true
+    revokedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AIProcessingConsentMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    conversationId?: true
+    purpose?: true
+    recipientScope?: true
+    processingLocation?: true
+    modelScope?: true
+    status?: true
+    requestId?: true
+    grantedAt?: true
+    expiresAt?: true
+    revokedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AIProcessingConsentCountAggregateInputType = {
+    id?: true
+    userId?: true
+    conversationId?: true
+    purpose?: true
+    recipientScope?: true
+    processingLocation?: true
+    modelScope?: true
+    status?: true
+    requestId?: true
+    grantedAt?: true
+    expiresAt?: true
+    revokedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AIProcessingConsentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AIProcessingConsent to aggregate.
+     */
+    where?: AIProcessingConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIProcessingConsents to fetch.
+     */
+    orderBy?: AIProcessingConsentOrderByWithRelationInput | AIProcessingConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AIProcessingConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIProcessingConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIProcessingConsents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AIProcessingConsents
+    **/
+    _count?: true | AIProcessingConsentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AIProcessingConsentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AIProcessingConsentMaxAggregateInputType
+  }
+
+  export type GetAIProcessingConsentAggregateType<T extends AIProcessingConsentAggregateArgs> = {
+        [P in keyof T & keyof AggregateAIProcessingConsent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAIProcessingConsent[P]>
+      : GetScalarType<T[P], AggregateAIProcessingConsent[P]>
+  }
+
+
+
+
+  export type AIProcessingConsentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AIProcessingConsentWhereInput
+    orderBy?: AIProcessingConsentOrderByWithAggregationInput | AIProcessingConsentOrderByWithAggregationInput[]
+    by: AIProcessingConsentScalarFieldEnum[] | AIProcessingConsentScalarFieldEnum
+    having?: AIProcessingConsentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AIProcessingConsentCountAggregateInputType | true
+    _min?: AIProcessingConsentMinAggregateInputType
+    _max?: AIProcessingConsentMaxAggregateInputType
+  }
+
+  export type AIProcessingConsentGroupByOutputType = {
+    id: string
+    userId: string
+    conversationId: string
+    purpose: string
+    recipientScope: string
+    processingLocation: string
+    modelScope: string | null
+    status: string
+    requestId: string | null
+    grantedAt: Date
+    expiresAt: Date
+    revokedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: AIProcessingConsentCountAggregateOutputType | null
+    _min: AIProcessingConsentMinAggregateOutputType | null
+    _max: AIProcessingConsentMaxAggregateOutputType | null
+  }
+
+  type GetAIProcessingConsentGroupByPayload<T extends AIProcessingConsentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AIProcessingConsentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AIProcessingConsentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AIProcessingConsentGroupByOutputType[P]>
+            : GetScalarType<T[P], AIProcessingConsentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AIProcessingConsentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    purpose?: boolean
+    recipientScope?: boolean
+    processingLocation?: boolean
+    modelScope?: boolean
+    status?: boolean
+    requestId?: boolean
+    grantedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["aIProcessingConsent"]>
+
+  export type AIProcessingConsentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    purpose?: boolean
+    recipientScope?: boolean
+    processingLocation?: boolean
+    modelScope?: boolean
+    status?: boolean
+    requestId?: boolean
+    grantedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["aIProcessingConsent"]>
+
+  export type AIProcessingConsentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    purpose?: boolean
+    recipientScope?: boolean
+    processingLocation?: boolean
+    modelScope?: boolean
+    status?: boolean
+    requestId?: boolean
+    grantedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["aIProcessingConsent"]>
+
+  export type AIProcessingConsentSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    conversationId?: boolean
+    purpose?: boolean
+    recipientScope?: boolean
+    processingLocation?: boolean
+    modelScope?: boolean
+    status?: boolean
+    requestId?: boolean
+    grantedAt?: boolean
+    expiresAt?: boolean
+    revokedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AIProcessingConsentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "conversationId" | "purpose" | "recipientScope" | "processingLocation" | "modelScope" | "status" | "requestId" | "grantedAt" | "expiresAt" | "revokedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["aIProcessingConsent"]>
+
+  export type $AIProcessingConsentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AIProcessingConsent"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      conversationId: string
+      purpose: string
+      recipientScope: string
+      processingLocation: string
+      modelScope: string | null
+      status: string
+      requestId: string | null
+      grantedAt: Date
+      expiresAt: Date
+      revokedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["aIProcessingConsent"]>
+    composites: {}
+  }
+
+  type AIProcessingConsentGetPayload<S extends boolean | null | undefined | AIProcessingConsentDefaultArgs> = $Result.GetResult<Prisma.$AIProcessingConsentPayload, S>
+
+  type AIProcessingConsentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AIProcessingConsentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AIProcessingConsentCountAggregateInputType | true
+    }
+
+  export interface AIProcessingConsentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AIProcessingConsent'], meta: { name: 'AIProcessingConsent' } }
+    /**
+     * Find zero or one AIProcessingConsent that matches the filter.
+     * @param {AIProcessingConsentFindUniqueArgs} args - Arguments to find a AIProcessingConsent
+     * @example
+     * // Get one AIProcessingConsent
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AIProcessingConsentFindUniqueArgs>(args: SelectSubset<T, AIProcessingConsentFindUniqueArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AIProcessingConsent that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AIProcessingConsentFindUniqueOrThrowArgs} args - Arguments to find a AIProcessingConsent
+     * @example
+     * // Get one AIProcessingConsent
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AIProcessingConsentFindUniqueOrThrowArgs>(args: SelectSubset<T, AIProcessingConsentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AIProcessingConsent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIProcessingConsentFindFirstArgs} args - Arguments to find a AIProcessingConsent
+     * @example
+     * // Get one AIProcessingConsent
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AIProcessingConsentFindFirstArgs>(args?: SelectSubset<T, AIProcessingConsentFindFirstArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AIProcessingConsent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIProcessingConsentFindFirstOrThrowArgs} args - Arguments to find a AIProcessingConsent
+     * @example
+     * // Get one AIProcessingConsent
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AIProcessingConsentFindFirstOrThrowArgs>(args?: SelectSubset<T, AIProcessingConsentFindFirstOrThrowArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AIProcessingConsents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIProcessingConsentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AIProcessingConsents
+     * const aIProcessingConsents = await prisma.aIProcessingConsent.findMany()
+     * 
+     * // Get first 10 AIProcessingConsents
+     * const aIProcessingConsents = await prisma.aIProcessingConsent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const aIProcessingConsentWithIdOnly = await prisma.aIProcessingConsent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AIProcessingConsentFindManyArgs>(args?: SelectSubset<T, AIProcessingConsentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AIProcessingConsent.
+     * @param {AIProcessingConsentCreateArgs} args - Arguments to create a AIProcessingConsent.
+     * @example
+     * // Create one AIProcessingConsent
+     * const AIProcessingConsent = await prisma.aIProcessingConsent.create({
+     *   data: {
+     *     // ... data to create a AIProcessingConsent
+     *   }
+     * })
+     * 
+     */
+    create<T extends AIProcessingConsentCreateArgs>(args: SelectSubset<T, AIProcessingConsentCreateArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AIProcessingConsents.
+     * @param {AIProcessingConsentCreateManyArgs} args - Arguments to create many AIProcessingConsents.
+     * @example
+     * // Create many AIProcessingConsents
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AIProcessingConsentCreateManyArgs>(args?: SelectSubset<T, AIProcessingConsentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AIProcessingConsents and returns the data saved in the database.
+     * @param {AIProcessingConsentCreateManyAndReturnArgs} args - Arguments to create many AIProcessingConsents.
+     * @example
+     * // Create many AIProcessingConsents
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AIProcessingConsents and only return the `id`
+     * const aIProcessingConsentWithIdOnly = await prisma.aIProcessingConsent.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AIProcessingConsentCreateManyAndReturnArgs>(args?: SelectSubset<T, AIProcessingConsentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AIProcessingConsent.
+     * @param {AIProcessingConsentDeleteArgs} args - Arguments to delete one AIProcessingConsent.
+     * @example
+     * // Delete one AIProcessingConsent
+     * const AIProcessingConsent = await prisma.aIProcessingConsent.delete({
+     *   where: {
+     *     // ... filter to delete one AIProcessingConsent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AIProcessingConsentDeleteArgs>(args: SelectSubset<T, AIProcessingConsentDeleteArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AIProcessingConsent.
+     * @param {AIProcessingConsentUpdateArgs} args - Arguments to update one AIProcessingConsent.
+     * @example
+     * // Update one AIProcessingConsent
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AIProcessingConsentUpdateArgs>(args: SelectSubset<T, AIProcessingConsentUpdateArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AIProcessingConsents.
+     * @param {AIProcessingConsentDeleteManyArgs} args - Arguments to filter AIProcessingConsents to delete.
+     * @example
+     * // Delete a few AIProcessingConsents
+     * const { count } = await prisma.aIProcessingConsent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AIProcessingConsentDeleteManyArgs>(args?: SelectSubset<T, AIProcessingConsentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AIProcessingConsents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIProcessingConsentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AIProcessingConsents
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AIProcessingConsentUpdateManyArgs>(args: SelectSubset<T, AIProcessingConsentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AIProcessingConsents and returns the data updated in the database.
+     * @param {AIProcessingConsentUpdateManyAndReturnArgs} args - Arguments to update many AIProcessingConsents.
+     * @example
+     * // Update many AIProcessingConsents
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AIProcessingConsents and only return the `id`
+     * const aIProcessingConsentWithIdOnly = await prisma.aIProcessingConsent.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AIProcessingConsentUpdateManyAndReturnArgs>(args: SelectSubset<T, AIProcessingConsentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AIProcessingConsent.
+     * @param {AIProcessingConsentUpsertArgs} args - Arguments to update or create a AIProcessingConsent.
+     * @example
+     * // Update or create a AIProcessingConsent
+     * const aIProcessingConsent = await prisma.aIProcessingConsent.upsert({
+     *   create: {
+     *     // ... data to create a AIProcessingConsent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AIProcessingConsent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AIProcessingConsentUpsertArgs>(args: SelectSubset<T, AIProcessingConsentUpsertArgs<ExtArgs>>): Prisma__AIProcessingConsentClient<$Result.GetResult<Prisma.$AIProcessingConsentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AIProcessingConsents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIProcessingConsentCountArgs} args - Arguments to filter AIProcessingConsents to count.
+     * @example
+     * // Count the number of AIProcessingConsents
+     * const count = await prisma.aIProcessingConsent.count({
+     *   where: {
+     *     // ... the filter for the AIProcessingConsents we want to count
+     *   }
+     * })
+    **/
+    count<T extends AIProcessingConsentCountArgs>(
+      args?: Subset<T, AIProcessingConsentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AIProcessingConsentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AIProcessingConsent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIProcessingConsentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AIProcessingConsentAggregateArgs>(args: Subset<T, AIProcessingConsentAggregateArgs>): Prisma.PrismaPromise<GetAIProcessingConsentAggregateType<T>>
+
+    /**
+     * Group by AIProcessingConsent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIProcessingConsentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AIProcessingConsentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AIProcessingConsentGroupByArgs['orderBy'] }
+        : { orderBy?: AIProcessingConsentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AIProcessingConsentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAIProcessingConsentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AIProcessingConsent model
+   */
+  readonly fields: AIProcessingConsentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AIProcessingConsent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AIProcessingConsentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AIProcessingConsent model
+   */
+  interface AIProcessingConsentFieldRefs {
+    readonly id: FieldRef<"AIProcessingConsent", 'String'>
+    readonly userId: FieldRef<"AIProcessingConsent", 'String'>
+    readonly conversationId: FieldRef<"AIProcessingConsent", 'String'>
+    readonly purpose: FieldRef<"AIProcessingConsent", 'String'>
+    readonly recipientScope: FieldRef<"AIProcessingConsent", 'String'>
+    readonly processingLocation: FieldRef<"AIProcessingConsent", 'String'>
+    readonly modelScope: FieldRef<"AIProcessingConsent", 'String'>
+    readonly status: FieldRef<"AIProcessingConsent", 'String'>
+    readonly requestId: FieldRef<"AIProcessingConsent", 'String'>
+    readonly grantedAt: FieldRef<"AIProcessingConsent", 'DateTime'>
+    readonly expiresAt: FieldRef<"AIProcessingConsent", 'DateTime'>
+    readonly revokedAt: FieldRef<"AIProcessingConsent", 'DateTime'>
+    readonly createdAt: FieldRef<"AIProcessingConsent", 'DateTime'>
+    readonly updatedAt: FieldRef<"AIProcessingConsent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AIProcessingConsent findUnique
+   */
+  export type AIProcessingConsentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * Filter, which AIProcessingConsent to fetch.
+     */
+    where: AIProcessingConsentWhereUniqueInput
+  }
+
+  /**
+   * AIProcessingConsent findUniqueOrThrow
+   */
+  export type AIProcessingConsentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * Filter, which AIProcessingConsent to fetch.
+     */
+    where: AIProcessingConsentWhereUniqueInput
+  }
+
+  /**
+   * AIProcessingConsent findFirst
+   */
+  export type AIProcessingConsentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * Filter, which AIProcessingConsent to fetch.
+     */
+    where?: AIProcessingConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIProcessingConsents to fetch.
+     */
+    orderBy?: AIProcessingConsentOrderByWithRelationInput | AIProcessingConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AIProcessingConsents.
+     */
+    cursor?: AIProcessingConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIProcessingConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIProcessingConsents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIProcessingConsents.
+     */
+    distinct?: AIProcessingConsentScalarFieldEnum | AIProcessingConsentScalarFieldEnum[]
+  }
+
+  /**
+   * AIProcessingConsent findFirstOrThrow
+   */
+  export type AIProcessingConsentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * Filter, which AIProcessingConsent to fetch.
+     */
+    where?: AIProcessingConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIProcessingConsents to fetch.
+     */
+    orderBy?: AIProcessingConsentOrderByWithRelationInput | AIProcessingConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AIProcessingConsents.
+     */
+    cursor?: AIProcessingConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIProcessingConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIProcessingConsents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIProcessingConsents.
+     */
+    distinct?: AIProcessingConsentScalarFieldEnum | AIProcessingConsentScalarFieldEnum[]
+  }
+
+  /**
+   * AIProcessingConsent findMany
+   */
+  export type AIProcessingConsentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * Filter, which AIProcessingConsents to fetch.
+     */
+    where?: AIProcessingConsentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIProcessingConsents to fetch.
+     */
+    orderBy?: AIProcessingConsentOrderByWithRelationInput | AIProcessingConsentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AIProcessingConsents.
+     */
+    cursor?: AIProcessingConsentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIProcessingConsents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIProcessingConsents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIProcessingConsents.
+     */
+    distinct?: AIProcessingConsentScalarFieldEnum | AIProcessingConsentScalarFieldEnum[]
+  }
+
+  /**
+   * AIProcessingConsent create
+   */
+  export type AIProcessingConsentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AIProcessingConsent.
+     */
+    data: XOR<AIProcessingConsentCreateInput, AIProcessingConsentUncheckedCreateInput>
+  }
+
+  /**
+   * AIProcessingConsent createMany
+   */
+  export type AIProcessingConsentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AIProcessingConsents.
+     */
+    data: AIProcessingConsentCreateManyInput | AIProcessingConsentCreateManyInput[]
+  }
+
+  /**
+   * AIProcessingConsent createManyAndReturn
+   */
+  export type AIProcessingConsentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * The data used to create many AIProcessingConsents.
+     */
+    data: AIProcessingConsentCreateManyInput | AIProcessingConsentCreateManyInput[]
+  }
+
+  /**
+   * AIProcessingConsent update
+   */
+  export type AIProcessingConsentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AIProcessingConsent.
+     */
+    data: XOR<AIProcessingConsentUpdateInput, AIProcessingConsentUncheckedUpdateInput>
+    /**
+     * Choose, which AIProcessingConsent to update.
+     */
+    where: AIProcessingConsentWhereUniqueInput
+  }
+
+  /**
+   * AIProcessingConsent updateMany
+   */
+  export type AIProcessingConsentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AIProcessingConsents.
+     */
+    data: XOR<AIProcessingConsentUpdateManyMutationInput, AIProcessingConsentUncheckedUpdateManyInput>
+    /**
+     * Filter which AIProcessingConsents to update
+     */
+    where?: AIProcessingConsentWhereInput
+    /**
+     * Limit how many AIProcessingConsents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AIProcessingConsent updateManyAndReturn
+   */
+  export type AIProcessingConsentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * The data used to update AIProcessingConsents.
+     */
+    data: XOR<AIProcessingConsentUpdateManyMutationInput, AIProcessingConsentUncheckedUpdateManyInput>
+    /**
+     * Filter which AIProcessingConsents to update
+     */
+    where?: AIProcessingConsentWhereInput
+    /**
+     * Limit how many AIProcessingConsents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AIProcessingConsent upsert
+   */
+  export type AIProcessingConsentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AIProcessingConsent to update in case it exists.
+     */
+    where: AIProcessingConsentWhereUniqueInput
+    /**
+     * In case the AIProcessingConsent found by the `where` argument doesn't exist, create a new AIProcessingConsent with this data.
+     */
+    create: XOR<AIProcessingConsentCreateInput, AIProcessingConsentUncheckedCreateInput>
+    /**
+     * In case the AIProcessingConsent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AIProcessingConsentUpdateInput, AIProcessingConsentUncheckedUpdateInput>
+  }
+
+  /**
+   * AIProcessingConsent delete
+   */
+  export type AIProcessingConsentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+    /**
+     * Filter which AIProcessingConsent to delete.
+     */
+    where: AIProcessingConsentWhereUniqueInput
+  }
+
+  /**
+   * AIProcessingConsent deleteMany
+   */
+  export type AIProcessingConsentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AIProcessingConsents to delete
+     */
+    where?: AIProcessingConsentWhereInput
+    /**
+     * Limit how many AIProcessingConsents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AIProcessingConsent without action
+   */
+  export type AIProcessingConsentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIProcessingConsent
+     */
+    select?: AIProcessingConsentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIProcessingConsent
+     */
+    omit?: AIProcessingConsentOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model PowerBoardRule
    */
 
@@ -90959,6 +92165,26 @@ export namespace Prisma {
   export type ConsentGrantScalarFieldEnum = (typeof ConsentGrantScalarFieldEnum)[keyof typeof ConsentGrantScalarFieldEnum]
 
 
+  export const AIProcessingConsentScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    conversationId: 'conversationId',
+    purpose: 'purpose',
+    recipientScope: 'recipientScope',
+    processingLocation: 'processingLocation',
+    modelScope: 'modelScope',
+    status: 'status',
+    requestId: 'requestId',
+    grantedAt: 'grantedAt',
+    expiresAt: 'expiresAt',
+    revokedAt: 'revokedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AIProcessingConsentScalarFieldEnum = (typeof AIProcessingConsentScalarFieldEnum)[keyof typeof AIProcessingConsentScalarFieldEnum]
+
+
   export const PowerBoardRuleScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
@@ -96268,6 +97494,103 @@ export namespace Prisma {
     revokedAt?: DateTimeNullableWithAggregatesFilter<"ConsentGrant"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ConsentGrant"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ConsentGrant"> | Date | string
+  }
+
+  export type AIProcessingConsentWhereInput = {
+    AND?: AIProcessingConsentWhereInput | AIProcessingConsentWhereInput[]
+    OR?: AIProcessingConsentWhereInput[]
+    NOT?: AIProcessingConsentWhereInput | AIProcessingConsentWhereInput[]
+    id?: StringFilter<"AIProcessingConsent"> | string
+    userId?: StringFilter<"AIProcessingConsent"> | string
+    conversationId?: StringFilter<"AIProcessingConsent"> | string
+    purpose?: StringFilter<"AIProcessingConsent"> | string
+    recipientScope?: StringFilter<"AIProcessingConsent"> | string
+    processingLocation?: StringFilter<"AIProcessingConsent"> | string
+    modelScope?: StringNullableFilter<"AIProcessingConsent"> | string | null
+    status?: StringFilter<"AIProcessingConsent"> | string
+    requestId?: StringNullableFilter<"AIProcessingConsent"> | string | null
+    grantedAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+    expiresAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"AIProcessingConsent"> | Date | string | null
+    createdAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+    updatedAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+  }
+
+  export type AIProcessingConsentOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    purpose?: SortOrder
+    recipientScope?: SortOrder
+    processingLocation?: SortOrder
+    modelScope?: SortOrderInput | SortOrder
+    status?: SortOrder
+    requestId?: SortOrderInput | SortOrder
+    grantedAt?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AIProcessingConsentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AIProcessingConsentWhereInput | AIProcessingConsentWhereInput[]
+    OR?: AIProcessingConsentWhereInput[]
+    NOT?: AIProcessingConsentWhereInput | AIProcessingConsentWhereInput[]
+    userId?: StringFilter<"AIProcessingConsent"> | string
+    conversationId?: StringFilter<"AIProcessingConsent"> | string
+    purpose?: StringFilter<"AIProcessingConsent"> | string
+    recipientScope?: StringFilter<"AIProcessingConsent"> | string
+    processingLocation?: StringFilter<"AIProcessingConsent"> | string
+    modelScope?: StringNullableFilter<"AIProcessingConsent"> | string | null
+    status?: StringFilter<"AIProcessingConsent"> | string
+    requestId?: StringNullableFilter<"AIProcessingConsent"> | string | null
+    grantedAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+    expiresAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+    revokedAt?: DateTimeNullableFilter<"AIProcessingConsent"> | Date | string | null
+    createdAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+    updatedAt?: DateTimeFilter<"AIProcessingConsent"> | Date | string
+  }, "id">
+
+  export type AIProcessingConsentOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    purpose?: SortOrder
+    recipientScope?: SortOrder
+    processingLocation?: SortOrder
+    modelScope?: SortOrderInput | SortOrder
+    status?: SortOrder
+    requestId?: SortOrderInput | SortOrder
+    grantedAt?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AIProcessingConsentCountOrderByAggregateInput
+    _max?: AIProcessingConsentMaxOrderByAggregateInput
+    _min?: AIProcessingConsentMinOrderByAggregateInput
+  }
+
+  export type AIProcessingConsentScalarWhereWithAggregatesInput = {
+    AND?: AIProcessingConsentScalarWhereWithAggregatesInput | AIProcessingConsentScalarWhereWithAggregatesInput[]
+    OR?: AIProcessingConsentScalarWhereWithAggregatesInput[]
+    NOT?: AIProcessingConsentScalarWhereWithAggregatesInput | AIProcessingConsentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AIProcessingConsent"> | string
+    userId?: StringWithAggregatesFilter<"AIProcessingConsent"> | string
+    conversationId?: StringWithAggregatesFilter<"AIProcessingConsent"> | string
+    purpose?: StringWithAggregatesFilter<"AIProcessingConsent"> | string
+    recipientScope?: StringWithAggregatesFilter<"AIProcessingConsent"> | string
+    processingLocation?: StringWithAggregatesFilter<"AIProcessingConsent"> | string
+    modelScope?: StringNullableWithAggregatesFilter<"AIProcessingConsent"> | string | null
+    status?: StringWithAggregatesFilter<"AIProcessingConsent"> | string
+    requestId?: StringNullableWithAggregatesFilter<"AIProcessingConsent"> | string | null
+    grantedAt?: DateTimeWithAggregatesFilter<"AIProcessingConsent"> | Date | string
+    expiresAt?: DateTimeWithAggregatesFilter<"AIProcessingConsent"> | Date | string
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"AIProcessingConsent"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"AIProcessingConsent"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AIProcessingConsent"> | Date | string
   }
 
   export type PowerBoardRuleWhereInput = {
@@ -103552,6 +104875,125 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AIProcessingConsentCreateInput = {
+    id?: string
+    userId: string
+    conversationId: string
+    purpose: string
+    recipientScope: string
+    processingLocation?: string
+    modelScope?: string | null
+    status?: string
+    requestId?: string | null
+    grantedAt?: Date | string
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AIProcessingConsentUncheckedCreateInput = {
+    id?: string
+    userId: string
+    conversationId: string
+    purpose: string
+    recipientScope: string
+    processingLocation?: string
+    modelScope?: string | null
+    status?: string
+    requestId?: string | null
+    grantedAt?: Date | string
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AIProcessingConsentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    recipientScope?: StringFieldUpdateOperationsInput | string
+    processingLocation?: StringFieldUpdateOperationsInput | string
+    modelScope?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIProcessingConsentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    recipientScope?: StringFieldUpdateOperationsInput | string
+    processingLocation?: StringFieldUpdateOperationsInput | string
+    modelScope?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIProcessingConsentCreateManyInput = {
+    id?: string
+    userId: string
+    conversationId: string
+    purpose: string
+    recipientScope: string
+    processingLocation?: string
+    modelScope?: string | null
+    status?: string
+    requestId?: string | null
+    grantedAt?: Date | string
+    expiresAt: Date | string
+    revokedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AIProcessingConsentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    recipientScope?: StringFieldUpdateOperationsInput | string
+    processingLocation?: StringFieldUpdateOperationsInput | string
+    modelScope?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIProcessingConsentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    purpose?: StringFieldUpdateOperationsInput | string
+    recipientScope?: StringFieldUpdateOperationsInput | string
+    processingLocation?: StringFieldUpdateOperationsInput | string
+    modelScope?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type PowerBoardRuleCreateInput = {
     id?: string
     version?: string
@@ -109973,6 +111415,57 @@ export namespace Prisma {
     grantedAt?: SortOrder
     expiresAt?: SortOrder
     isRevoked?: SortOrder
+    revokedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AIProcessingConsentCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    purpose?: SortOrder
+    recipientScope?: SortOrder
+    processingLocation?: SortOrder
+    modelScope?: SortOrder
+    status?: SortOrder
+    requestId?: SortOrder
+    grantedAt?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AIProcessingConsentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    purpose?: SortOrder
+    recipientScope?: SortOrder
+    processingLocation?: SortOrder
+    modelScope?: SortOrder
+    status?: SortOrder
+    requestId?: SortOrder
+    grantedAt?: SortOrder
+    expiresAt?: SortOrder
+    revokedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AIProcessingConsentMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    conversationId?: SortOrder
+    purpose?: SortOrder
+    recipientScope?: SortOrder
+    processingLocation?: SortOrder
+    modelScope?: SortOrder
+    status?: SortOrder
+    requestId?: SortOrder
+    grantedAt?: SortOrder
+    expiresAt?: SortOrder
     revokedAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
