@@ -2,8 +2,8 @@
   "task": "GA-02",
   "release_wave": "S_SECURITY_HOTFIX",
   "verdict": "LOCAL_TESTED_NOT_DEPLOYED",
-  "generatedAt": "2026-11-21T05:40:00+08:00",
-  "authorizationBoundary": "未 push、未部署、未改 Netlify 环境变量、未调用生产 checkout POST、未创建 Provider 会话、未扣款。Owner 精确 SHA 批准前保持 NO_GO。",
+  "generatedAt": "2026-11-21T14:35:00+08:00",
+  "authorizationBoundary": "已 push 独立分支与 rc 别名（未碰 main）、未部署生产、未改 Netlify 环境变量、未调用生产 checkout POST、未创建 Provider 会话、未扣款。Owner 精确 SHA 批准前保持 NO_GO。",
   "productionProbe": {
     "base": "https://app.lokfeel.com",
     "health": {
@@ -42,6 +42,8 @@
   "patch": {
     "baseSha": "b50e53e48a9cc5b91ba2196654ea0ec69aead22b",
     "worktree": "/tmp/lokfeel-hotfix-b50e53e",
+    "approvalSha": "230a21b9c035b89e371024df0697887125128658",
+    "fileCount": 10,
     "files": [
       "src/config/pricing-gate.ts",
       "src/lib/payments/commercial-gate.ts",
@@ -49,7 +51,10 @@
       "src/app/(public)/pricing/page.tsx",
       "tests/billing/commercial-gate.test.ts",
       "tests/api/v22-pricing-json-gate.test.ts",
-      "tests/billing/hotfix-provider-zero.test.ts"
+      "tests/billing/hotfix-provider-zero.test.ts",
+      "tests/billing/p0-02-rc-checkout-gate.test.ts",
+      "tests/e2e-ci/smoke.spec.ts",
+      "docs/v25.6/ga-closure/evidence/GA02_HOTFIX_CANDIDATE.json"
     ],
     "semantics": "PRICING_APPROVED 显式 Owner 开关为 false；commercialApproved 需要开关 + 目录 APPROVED + approvalRef 三重合取；plans API 与定价页 fail-closed；已登录 checkout 在创建 Provider 会话前返回 PRICING_NOT_APPROVED。"
   },
@@ -57,10 +62,29 @@
     {
       "command": "jest tests/billing/commercial-gate.test.ts tests/api/v22-pricing-json-gate.test.ts tests/billing/hotfix-provider-zero.test.ts --runInBand",
       "beforePatch": "RED：@/config/pricing-gate 模块缺失；旧代码无法表达 Owner 开关",
-      "afterPatch": "PASS 3 suites / 10 tests",
+      "afterPatch": "PASS 4 suites / 14 tests",
       "exitCode": 0
+    },
+    {
+      "command": "远程 CI（rc/hotfix-v25.6-checkout-fail-closed @ 230a21b）",
+      "runId": "44875441463",
+      "url": "https://github.com/aoshuang99-netizen/lokfeel.com/actions/runs/44875441463",
+      "conclusion": "Typecheck / Lint / Jest / Build / Migration / E2E浏览器冒烟 / gitleaks / 支付凭据灌注 / 租户作用域 / cron 一致性 全绿；E2E 汇总=全部通过。唯一失败=Dependency audit（存量 CVE 时间漂移，见 dependencyRiskDrift）。"
+    },
+    {
+      "command": "独立复核（独立 Agent，干净 worktree，异于实现者上下文）",
+      "verdict": "PARTIAL — 商业 fail-closed 语义与 Provider 零创建由独立复核确认；证据文件 SHA 落后项已在本提交修正",
+      "note": "独立复核在只读复核阶段发现本证据 exactSha 落后两个提交，已在 HEAD=230a21b 修正。独立复核不替代人类 Reviewer；GitHub Reviewer 因无 API 凭据未分配。"
     }
   ],
+  "dependencyRiskDrift": {
+    "failingGate": "Dependency audit（生产可达 · 棘轮）",
+    "packages": ["prisma", "effect", "@prisma/config"],
+    "severity": "high",
+    "rootCause": "effect ReDoS GHSA-7589-6fvf-x4pw（影响 <=3.22.0，当前锁定 3.20.0）。cad717e（main，2026-11-14 CI 成功）与 b50e53e（生产祖先）的 package-lock.json 为同一 blob 6f151957ca96d29e6f5f9f03bd5691d2167e39b1，版本完全相同；失败系 CVE 库在 11-14 后收录所致的时间漂移，非本 Hotfix 引入。",
+    "realFix": "同大版本 override effect→3.22.5（已修复 3.x）可消除该 CVE；npm audit 建议的 prisma 6.12.0 为 major 降级，不可取。实测本地 npm install --package-lock-only 被环境 exit137 终止，未提交任何依赖改动。",
+    "decision": "不擅自登记豁免、不混入门禁变更；作为独立供应链修复项交 Owner 决策。此项与商业 fail-closed 补丁正交，不阻塞 S 波安全语义验收，但阻塞 CI 全绿与自动发布门禁。"
+  },
   "negativeCases": [
     "目录 APPROVED + approvalRef + 凭据齐备但 Owner 开关 false => enabled=false",
     "plans JSON 返回 pricingPublished=false、plans=[]，无金额/折扣/试用字段",
@@ -68,8 +92,8 @@
   ],
   "notVerified": [
     "生产真实登录态 checkout（无授权，未发送 POST）",
-    "独立 Reviewer 异环境复现",
-    "真实 Preview 部署与 Preview SHA",
+    "人类独立 Reviewer（GitHub Reviewer 未分配：无 gh CLI / 无 API token / 无已绑定 GitHub Connector）",
+    "Cloudflare Preview 运行时（部署 job success，但 workers.dev 从本环境出网超时；缺 preview 绑定/密钥，需独立环境验证）",
     "旧订阅/Webhook/退款回归的运行态验证（仅确认补丁未改这些路由）"
   ],
   "rollback": {
@@ -79,7 +103,9 @@
     "safeRollback": "若后续已部署更新的 P/P1 波，则回滚到本 Hotfix SHA；若 Hotfix 本身失败，先在 Netlify 摘除 DODO_PAYMENTS_API_KEY 保持通道关闭，再修复后重新部署，不得回到 b50e53e。"
   },
   "ownerApprovalRequired": {
-    "exactSha": "7ad2aaad4e03712483fd9f784c3b69c168c957fa",
+    "exactSha": "230a21b9c035b89e371024df0697887125128658",
+    "upstreamSourceSha": "7ad2aaad4e03712483fd9f784c3b69c168c957fa",
+    "upstreamSources": ["hotfix/v25.6-checkout-fail-closed", "rc/hotfix-v25.6-checkout-fail-closed"],
     "migration": "无",
     "configuration": "无；PRICING_APPROVED 为代码常量 false",
     "releaseScope": "仅商业 fail-closed；不含 UI 新版、AI、数据库新表",
