@@ -2,412 +2,273 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-import dynamic from "next/dynamic";
+import { useState } from "react";
 import {
-  Sparkles,
-  ChevronRight,
-  Flame,
   ArrowRight,
-  Search,
+  MessageSquare,
+  Users,
+  Building2,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
-import { toast } from "sonner";
-import { Skeleton, SkeletonCard, SkeletonStatCard, InlineError } from "@/components/ui";
-import { getAvatarKind, getAvatarBackground, parseEmojiAvatar, getRealPhotoAvatarUrl, isUnsplashUrl, generateLocalAvatarDataUri } from "@/lib/avatar-utils";
+import { Skeleton, InlineError } from "@/components/ui";
 import { useProfileContext } from "../dashboard-ui";
+import { useApiGet } from "@/hooks/use-api";
 
-// ══════════════════════════════════════════════════
-// CRITICAL PERFORMANCE: Lazy load AnalyticsReport
-// This 490-line component is NOT needed for first paint.
-// Saves ~30KB+ from the initial JS bundle.
-// ══════════════════════════════════════════════════
-const AnalyticsReport = dynamic(
-  () => import("@/components/dashboard/analytics-report").then((mod) => ({ default: mod.AnalyticsReport })),
-  {
-    loading: () => (
-      <div className="bg-background-secondary rounded-2xl p-6 border border-card-border animate-pulse">
-        <div className="h-6 w-40 bg-foreground-faint rounded mb-4" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-foreground-faint rounded-xl" />
-          ))}
-        </div>
-      </div>
-    ),
-    ssr: false,
-  }
-);
+// ══════════════════════════════════════════════════════════════════
+// 个人首页 · UI-REMEDIATION 2026-11-21（P0）
+//
+// 旧版是 B2C 约会叙事：Today's Picks 滑动卡 + matchScore 百分比 +
+// auto-match 后台任务 + 静态 AnalyticsReport 看板。用户点名指出：
+// 这与"面向真人沟通、个人 AI 与企业协作"的产品定位完全不符。
+//
+// 新版以用户真正要做的四件事为中心——
+//   Chats（真实会话/未读）、People（真实连接）、Spaces（真实组织）、My AI（诚实态）——
+// 每个入口都指向真实页面，每个数字都来自真实 API，没有虚构计数或静态图表。
+// 保留 loading / empty / error 三种诚实状态。
+// ══════════════════════════════════════════════════════════════════
 
-// ════════════════════════════════════
-// TYPES
-// ════════════════════════════════════
-interface DashboardData {
-  profile: any;
-  user: any;
-}
-
-interface DiscoverUser {
+interface ConversationItem {
   id: string;
-  name: string;
-  age: number;
-  avatar: string | null;
-  avatarType?: string;
-  gender?: string;
-  city?: string;
-  bio?: string;
-  matchScore: number;
-  matchReason: string;
-  verified?: boolean;
+  conversationId?: string;
+  otherUser: { id: string; name: string; avatar?: string | null; isOnline?: boolean };
+  lastMessage: { content: string; timestamp: string; isFromMe: boolean } | null;
+  unreadCount: number;
+}
+interface ConversationsPayload {
+  conversations?: ConversationItem[];
+  count?: number;
+}
+interface UnreadPayload { unreadCount?: number; totalChats?: number }
+interface OrgsPayload { organizations?: Array<{ id: string; name: string }> }
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
 }
 
-// ════════════════════════════════════
-// TODAY'S PICK CARD — CSS动画替代framer-motion
-// ════════════════════════════════════
-function TodayPickCard({ user, index }: { user: DiscoverUser; index: number }) {
-  const getMatchScoreColor = (score: number) => {
-    if (score >= 90) return "from-warning to-accent-pink";
-    if (score >= 80) return "from-primary to-accent-pink";
-    return "from-primary/70 to-secondary/70";
-  };
+export default function DashboardPage() {
+  const { data: session } = useSession();
+  const { profile, user: contextUser, loading: profileLoading } = useProfileContext();
+  const user = contextUser || session?.user;
+  const firstName = (user?.name || profile?.displayName || "there").split(" ")[0];
+
+  const chats = useApiGet<ConversationsPayload>("/api/im/conversations");
+  const unread = useApiGet<UnreadPayload>("/api/chats/unread-count");
+  const orgs = useApiGet<OrgsPayload>("/api/v1/organizations");
+
+  const conversationCount = chats.data?.count ?? unread.data?.totalChats ?? 0;
+  const unreadCount = unread.data?.unreadCount ?? 0;
+  const orgCount = orgs.data?.organizations?.length ?? 0;
+  const recent = (chats.data?.conversations || []).slice(0, 4);
+
+  const onboardingStep = profile?.onboardingStep || 0;
+  const isOnboardingComplete = onboardingStep >= 6;
+  const profileMissing = !profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender || !profile?.city;
+  const needsProfile = isOnboardingComplete ? profileMissing : !isOnboardingComplete;
+
+  const entryCards = [
+    {
+      key: "chats",
+      label: "Chats",
+      description: "你的真实对话",
+      href: "/dashboard/chats",
+      icon: MessageSquare,
+      value: conversationCount,
+      valueLabel: "段对话",
+      badge: unreadCount > 0 ? `${unreadCount} 未读` : null,
+      tone: "from-cta/25 to-cta/5 text-cta",
+    },
+    {
+      key: "people",
+      label: "People",
+      description: "你认识与被认识的人",
+      href: "/dashboard/connections",
+      icon: Users,
+      value: null,
+      valueLabel: "查看连接与邀请",
+      badge: null,
+      tone: "from-primary/25 to-primary/5 text-primary",
+    },
+    {
+      key: "spaces",
+      label: "Spaces",
+      description: "你参与的社群与协作空间",
+      href: "/console",
+      icon: Building2,
+      value: orgCount,
+      valueLabel: orgCount === 1 ? "个社群" : "个社群",
+      badge: null,
+      tone: "from-secondary/25 to-secondary/5 text-secondary",
+    },
+  ] as const;
 
   return (
-    <div
-      className="flex-shrink-0 w-[calc(100vw-48px)] sm:w-[280px] snap-start animate-fadeInUp"
-      style={{ animationDelay: `${index * 80}ms` }}
-    >
-      <Link href={`/dashboard/users/${user.id}`}>
-        <div className="relative rounded-2xl overflow-hidden group cursor-pointer bg-background-secondary border border-card-border hover:border-primary/30 transition-all duration-300">
-          {/* Avatar Area — 3:4 portrait ratio for proper face display */}
-          <div className="relative aspect-[3/4] overflow-hidden bg-background-tertiary">
-            {(() => {
-              const kind = getAvatarKind(user.avatar);
-              if (kind === 'emoji') {
-                const parsed = parseEmojiAvatar(user.avatar);
-                return (
-                  <div
-                    className="w-full h-full flex items-center justify-center text-8xl"
-                    style={{ background: getAvatarBackground(kind, user.avatar) }}
-                  >
-                    {parsed?.emoji}
-                  </div>
-                );
-              }
-              const photoUrl = kind === 'photo' && user.avatar
-                ? user.avatar
-                : getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
-              return (
-                <img
-                  src={photoUrl}
-                  alt={user.name}
-                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                  loading={index < 3 ? "eager" : "lazy"}
-                  decoding="async"
-                  onError={(e) => {
-                    const img = e.currentTarget as HTMLImageElement;
-                    const fallbackUrl = getRealPhotoAvatarUrl(user.id || user.name, user.gender, 'preview', user.age);
-                    if (img.src !== fallbackUrl) {
-                      img.src = fallbackUrl;
-                    } else {
-                      img.src = generateLocalAvatarDataUri(user.id || user.name);
-                    }
-                  }}
-                />
-              );
-            })()}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 relative min-h-screen">
+      <section className="animate-fadeIn">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-1 font-display" data-testid="dashboard-h1">
+          {greeting()}, <span className="text-primary-hover">{firstName}</span>
+        </h1>
+        <p className="text-foreground-muted text-xs sm:text-sm">
+          从一段真实的对话开始。这里只有你和你的连接、对话与协作。
+        </p>
+      </section>
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-
-            {/* Match Score Badge */}
-            <div className="absolute top-3 left-3">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-background bg-gradient-to-r ${getMatchScoreColor(user.matchScore)}`}>
-                <Flame className="w-3 h-3" />
-                {Math.round(user.matchScore)}%
-              </span>
-            </div>
-
-            {/* Verified Badge */}
-            {user.verified && (
-              <div className="absolute top-3 right-3">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/80 text-background text-[10px] font-medium">
-                  ✓ Verified
-                </span>
-              </div>
-            )}
-
-            {/* Name & Age Overlay */}
-            <div className="absolute bottom-3 left-3 right-3">
-              <h3 className="text-lg font-bold text-foreground font-display">
-                {user.name}, {user.age}
-              </h3>
-              {user.city && (
-                <p className="text-foreground/70 text-xs mt-0.5">{user.city}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Match Reason */}
-          <div className="p-3">
-            <p className="text-foreground-muted text-xs line-clamp-2 leading-relaxed">
-              {user.matchReason}
-            </p>
-          </div>
+      {profileLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => <SkeletonCard key={i} />)}
         </div>
-      </Link>
+      ) : !profile && !profileLoading ? (
+        <InlineError error="Failed to load profile" onRetry={() => window.location.reload()} />
+      ) : (
+        <>
+          {/* ── 三个真实入口 + 一个诚实态 ── */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="你的核心入口">
+            {entryCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <Link
+                  key={card.key}
+                  href={card.href}
+                  className="group rounded-2xl border border-card-border bg-background-secondary p-5 min-h-[150px] flex flex-col hover:border-primary/40 hover:bg-background-tertiary/60 transition-colors"
+                >
+                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.tone} flex items-center justify-center mb-3`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-foreground font-display">{card.label}</h2>
+                    {card.badge ? (
+                      <span className="ml-auto px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-medium">{card.badge}</span>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-foreground-muted mt-1 flex-1">{card.description}</p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-foreground">
+                      {card.value !== null ? card.value : <span className="text-xs font-normal text-foreground-muted">{card.valueLabel}</span>}
+                      {card.value !== null && <span className="ml-1 text-xs font-normal text-foreground-muted">{card.valueLabel}</span>}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-foreground-subtle group-hover:text-primary transition-colors" />
+                  </div>
+                </Link>
+              );
+            })}
+
+            {/* My AI：真实模型未验收 → 诚实态，不做成可点击的假按钮 */}
+            <div
+              className="rounded-2xl border border-dashed border-card-border bg-background-secondary/50 p-5 min-h-[150px] flex flex-col"
+              data-testid="my-ai-honest-state"
+            >
+              <div className="w-11 h-11 rounded-xl bg-background-tertiary flex items-center justify-center mb-3">
+                <Sparkles className="w-5 h-5 text-foreground-subtle" />
+              </div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-foreground-muted font-display">My AI</h2>
+                <span className="ml-auto px-2 py-0.5 rounded-full bg-background-tertiary text-foreground-subtle text-[10px]">Private testing</span>
+              </div>
+              <p className="text-xs text-foreground-subtle mt-1 flex-1">
+                真实模型写作辅助尚在私人测试，目前不可用。你仍可与真人正常沟通。
+              </p>
+              <p className="mt-3 text-[10px] text-foreground-faint">不可用 · 不是 stub</p>
+            </div>
+          </section>
+
+          {/* ── 最近对话（真实数据） ── */}
+          <section className="space-y-3" aria-label="最近对话">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-foreground font-display">最近对话</h2>
+              <button
+                type="button"
+                onClick={() => { chats.refetch(); unread.refetch(); }}
+                className="inline-flex min-h-9 items-center gap-1.5 px-2 text-xs text-foreground-muted hover:text-foreground"
+                aria-label="刷新对话"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> 刷新
+              </button>
+            </div>
+
+            {chats.isLoading ? (
+              <div className="space-y-2">
+                {[0, 1, 2].map((i) => <SkeletonCard key={i} compact />)}
+              </div>
+            ) : chats.error ? (
+              <InlineError error={chats.error} onRetry={() => chats.refetch()} />
+            ) : recent.length === 0 ? (
+              <div className="rounded-2xl border border-card-border bg-background-secondary p-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <MessageSquare className="w-6 h-6 text-primary/60" />
+                </div>
+                <p className="text-sm font-medium text-foreground mb-1">还没有对话</p>
+                <p className="text-xs text-foreground-muted mb-4">邀请一个你认识的人，开始一段真实对话。</p>
+                <Link href="/dashboard/chats" className="btn-primary text-sm inline-flex min-h-[44px] items-center gap-2">
+                  去 Chats <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {recent.map((c) => {
+                  const roomId = c.conversationId || c.id;
+                  return (
+                    <li key={c.id}>
+                      <Link
+                        href={`/dashboard/chats/${roomId}`}
+                        className="flex items-center gap-3 rounded-xl border border-card-border bg-background-secondary p-3 hover:border-primary/30 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center shrink-0 text-sm font-semibold text-foreground">
+                          {(c.otherUser?.name || "?").slice(0, 1).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground truncate">{c.otherUser?.name || "对话"}</p>
+                          <p className="text-xs text-foreground-muted truncate">
+                            {c.lastMessage ? `${c.lastMessage.isFromMe ? "你: " : ""}${c.lastMessage.content}` : "还没有消息，打个招呼吧"}
+                          </p>
+                        </div>
+                        {c.unreadCount > 0 ? (
+                          <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary text-background text-[10px] font-bold">{c.unreadCount}</span>
+                        ) : null}
+                        <ArrowRight className="w-4 h-4 text-foreground-subtle shrink-0" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
+          {/* ── 资料未完成：真实引导 ── */}
+          {needsProfile && (
+            <div className="rounded-2xl border border-primary/30 bg-background-secondary p-4 sm:p-6">
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                  <Sparkles className="w-6 h-6 text-background" />
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="font-semibold text-foreground">完善你的资料</h3>
+                  <p className="text-sm text-foreground-muted mt-0.5">让别人认识你，也让对话更自然。</p>
+                </div>
+                <Link
+                  href={isOnboardingComplete ? "/dashboard/profile" : "/dashboard/onboarding"}
+                  className="btn-primary whitespace-nowrap min-h-[44px] inline-flex items-center"
+                >
+                  {isOnboardingComplete ? "完善资料" : "开始引导"}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
-// ════════════════════════════════════
-// USE API GET WITH RETRY — 使用全局SWR缓存去重
-// ════════════════════════════════════
-// 模块级请求去重Map — 同一URL同时只发一次请求
-const pendingRequests = new Map<string, Promise<any>>();
-
-function dedupedFetch(url: string): Promise<any> {
-  const existing = pendingRequests.get(url);
-  if (existing) return existing;
-
-  const promise = fetch(url)
-    .then((res) => {
-      if (!res.ok) throw new Error(`Error ${res.status}`);
-      return res.json();
-    })
-    .finally(() => {
-      pendingRequests.delete(url);
-    });
-
-  pendingRequests.set(url, promise);
-  return promise;
-}
-
-function useApiGetWithRetry<T>(url: string | null, retryKey: number): {
-  data: T | null;
-  isLoading: boolean;
-  error: string | null;
-  refetch: () => void;
-} {
-  const { data: session, status: authStatus } = useSession();
-  const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const refetch = () => {
-    setError(null);
-    setIsLoading(true);
-  };
-
-  useEffect(() => {
-    if (!url) return;
-    if (authStatus === "loading") return;
-    if (authStatus === "unauthenticated") {
-      setIsLoading(false);
-      setError("Please sign in");
-      return;
-    }
-
-    let cancelled = false;
-    const fetchData = async () => {
-      try {
-        const json = await dedupedFetch(url);
-        if (!cancelled) setData(json);
-      } catch (err: any) {
-        if (!cancelled) setError(err.message || "Service unavailable");
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-    return () => { cancelled = true; };
-  }, [url, authStatus, retryKey]);
-
-  return { data, isLoading, error, refetch };
-}
-
-// ════════════════════════════════════
-// MAIN DASHBOARD PAGE — 性能优化版
-// ════════════════════════════════════
-export default function DashboardPage() {
-  const { data: session, status: authStatus } = useSession();
-  const router = useRouter();
-  const [retryKey, setRetryKey] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // ═══ 从ProfileContext获取profile数据 — 不再重复请求 /api/profile ═══
-  const { profile, user: contextUser, loading: profileLoading } = useProfileContext();
-  const user = contextUser || session?.user;
-  const userName = user?.name || profile?.displayName || "there";
-  const firstName = (userName || "there").split(" ")[0];
-
-  // discover数据仍然需要单独请求
-  const { data: discoverData, isLoading: discoverLoading } = useApiGetWithRetry<{ users: DiscoverUser[] }>("/api/discover?limit=8", retryKey);
-  const discoverUsers = discoverData?.users || [];
-
-  // Greeting based on time
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
-
-  // Onboarding status
-  const onboardingStep = profile?.onboardingStep || 0;
-  const isOnboardingComplete = onboardingStep >= 6;
-  const profileRequiredMissing = !profile?.avatar || !profile?.displayName || !profile?.age || !profile?.gender || !profile?.city;
-  const isProfileLocked = !isOnboardingComplete || profileRequiredMissing;
-
-  // ═══ AUTO-MATCH — 非阻塞, 不触发重新渲染 ═══
-  const [autoMatchTriggered, setAutoMatchTriggered] = useState(false);
-  useEffect(() => {
-    if (autoMatchTriggered || authStatus === "loading") return;
-    if (profile) {
-      setAutoMatchTriggered(true);
-      // Fire-and-forget: auto-match不阻塞UI，用requestIdleCallback降低优先级
-      const runAutoMatch = () => {
-        fetch("/api/auto-match", { method: "POST" })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.createdCount > 0) {
-              setRetryKey((prev) => prev + 1);
-            }
-          })
-          .catch((err) => console.warn("[Auto-Match] Failed:", err));
-      };
-      // 优先让UI渲染完成，再跑auto-match
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(runAutoMatch);
-      } else {
-        setTimeout(runAutoMatch, 1000);
-      }
-    }
-  }, [profile, authStatus, autoMatchTriggered]);
-
-  // ═══ LOADING STATE ═══
-  if (profileLoading) {
-    return (
-      <div className="space-y-8 max-w-6xl mx-auto px-4 py-8">
-        <Skeleton variant="text" width="50%" height={32} />
-        <div className="flex gap-4 overflow-hidden">
-          {[0, 1, 2].map((i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ═══ ERROR STATE — profileContext加载失败时profile为null ═══
-  if (!profile && !profileLoading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <InlineError error="Failed to load profile" onRetry={() => setRetryKey((prev) => prev + 1)} />
-      </div>
-    );
-  }
-
+function SkeletonCard({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="max-w-6xl mx-auto px-0 sm:px-4 py-4 sm:py-6 space-y-5 sm:space-y-8 relative min-h-screen">
-
-      {/* ════════════════════════════════════
-          SECTION 1: PERSONALIZED GREETING — CSS动画
-          ════════════════════════════════════ */}
-      <section className="animate-fadeIn">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-1 font-display">
-          {getGreeting()}, <span className="text-primary-hover">{firstName}</span>
-        </h1>
-        <p className="text-foreground-muted text-xs sm:text-sm">
-          Discover people who match your relationship blueprint
-        </p>
-      </section>
-
-      {/* ════════════════════════════════════
-          SECTION 2: TODAY'S PICKS — 核心区块
-          ════════════════════════════════════ */}
-      <section className="space-y-3 sm:space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-cta/30 to-cta/10 flex items-center justify-center">
-              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cta" />
-            </div>
-            <h2 className="text-base sm:text-lg font-semibold text-foreground font-display">Today's Picks</h2>
-            <span className="text-xs text-foreground-muted ml-2">
-              {discoverUsers.length} {discoverUsers.length === 1 ? 'person' : 'people'} nearby
-            </span>
-          </div>
-          <Link
-            href="/dashboard/explore"
-            className="text-xs text-foreground-muted hover:text-primary transition-colors flex items-center gap-1"
-          >
-            View All <ChevronRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        {discoverLoading ? (
-          <div className="flex gap-3 sm:gap-4 overflow-hidden px-1">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="w-[calc(100vw-48px)] sm:w-[280px] flex-shrink-0 rounded-2xl bg-foreground-faint animate-pulse aspect-[3/4]" />
-            ))}
-          </div>
-        ) : discoverUsers.length > 0 ? (
-          <div
-            ref={scrollRef}
-            className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 sm:pb-4 snap-x snap-mandatory scrollbar-hide touch-pan-x"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
-          >
-            {discoverUsers.map((user, index) => (
-              <TodayPickCard key={user.id} user={user} index={index} />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-background-secondary rounded-2xl p-6 sm:p-8 text-center border border-card-border animate-fadeIn mx-1">
-            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-7 h-7 text-primary" />
-            </div>
-            <h3 className="text-base font-semibold text-foreground-muted mb-1">Finding your matches...</h3>
-            <p className="text-foreground-muted text-sm mb-4">
-              We're searching for people who match your blueprint.
-            </p>
-            <Link href="/dashboard/explore" className="btn-primary text-sm inline-flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Browse Discover
-            </Link>
-          </div>
-        )}
-      </section>
-
-      {/* ════════════════════════════════════
-          SECTION 4: ANALYTICS REPORT — 懒加载
-          ════════════════════════════════════ */}
-      <section className="animate-fadeIn" style={{ animationDelay: "300ms" }}>
-        <AnalyticsReport />
-      </section>
-
-      {/* Onboarding CTA — 如果没有完成 */}
-      {isProfileLocked && (
-        <div className="bg-background-secondary rounded-2xl p-4 sm:p-6 border border-primary/30 animate-fadeIn">
-          <div className="flex flex-col md:flex-row items-center gap-3 sm:gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-background" />
-            </div>
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="font-semibold text-foreground">Complete your profile</h3>
-              <p className="text-sm text-foreground-muted mt-0.5">
-                Finish onboarding to start matching with real people
-              </p>
-            </div>
-            <Link
-              href={isOnboardingComplete ? "/dashboard/profile" : "/dashboard/onboarding"}
-              className="btn-primary whitespace-nowrap"
-            >
-              {isOnboardingComplete ? "Complete Profile" : "Start Onboarding"}
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Link>
-          </div>
-        </div>
-      )}
+    <div className={`rounded-2xl border border-card-border bg-background-secondary ${compact ? "h-16" : "min-h-[150px]"} animate-pulse p-5`}>
+      <div className="w-10 h-10 rounded-xl bg-foreground-faint mb-3" />
+      <div className="h-4 w-20 bg-foreground-faint rounded mb-2" />
+      <div className="h-3 w-32 bg-foreground-faint rounded" />
     </div>
   );
 }

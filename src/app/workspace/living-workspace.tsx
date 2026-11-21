@@ -35,8 +35,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { AlertCircle, Bell, CheckCircle2, Compass, Loader2, Wand2 } from 'lucide-react'
+import { AlertCircle, Bell, CheckCircle2, Compass, Loader2, Wand2, MessageSquare, Users, Building2, Sparkles } from 'lucide-react'
 import LivingShell, { type LivingNavItem } from '@/components/living/living-shell'
 import StageRail from '@/components/living/adaptive/stage-rail'
 import { buildOsStages } from '@/lib/living/adaptive/stages'
@@ -1033,6 +1034,65 @@ export default function LivingWorkspace() {
     >
       {activeKey === 'now' && (
         <div className="space-y-4">
+          {/*
+            UI-REMEDIATION 2026-11-21：真实沟通入口前置。
+            旧版工作区默认屏把 Goal/Intent/Stage 技术叙事压在最前，用户看不到
+            "我到底能跟谁说话"。这里在输入区之前放三个真实入口，全部指向
+            已实现的页面 —— 不放空按钮、不放静态图表。
+          */}
+          <nav aria-label="你的核心入口" className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+            <Link
+              href="/dashboard/chats"
+              data-testid="home-chats-entry"
+              className="lf-focus-ring flex min-h-14 items-center gap-3 rounded-lf-lg border border-lf-line bg-lf-surface p-3 text-lf-text transition-colors hover:border-lf-signal/50"
+            >
+              <MessageSquare className="h-5 w-5 shrink-0 text-lf-signal" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">Chats</span>
+                <span className="block text-[11px] text-lf-text-muted">
+                  {unreadChats === null ? '你和真人的对话' : unreadChats > 0 ? `${unreadChats} 条未读` : '你和真人的对话'}
+                </span>
+              </span>
+            </Link>
+            <Link
+              href="/dashboard/connections"
+              data-testid="home-people-entry"
+              className="lf-focus-ring flex min-h-14 items-center gap-3 rounded-lf-lg border border-lf-line bg-lf-surface p-3 text-lf-text transition-colors hover:border-lf-signal/50"
+            >
+              <Users className="h-5 w-5 shrink-0 text-lf-signal" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">People</span>
+                <span className="block text-[11px] text-lf-text-muted">邀请与连接</span>
+              </span>
+            </Link>
+            <Link
+              href="/console"
+              data-testid="home-spaces-entry"
+              className="lf-focus-ring flex min-h-14 items-center gap-3 rounded-lf-lg border border-lf-line bg-lf-surface p-3 text-lf-text transition-colors hover:border-lf-signal/50"
+            >
+              <Building2 className="h-5 w-5 shrink-0 text-lf-signal" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">Spaces</span>
+                <span className="block text-[11px] text-lf-text-muted">社群与协作</span>
+              </span>
+            </Link>
+            {/*
+              My AI：真实模型未验收 → 诚实态，不做成可点击的假按钮。
+              用户要"没有真实 AI 时如实标记私人测试/不可用，不用 Stub 冒充"。
+            */}
+            <div
+              data-testid="home-my-ai-honest-state"
+              aria-label="My AI 私人测试"
+              className="flex min-h-14 items-center gap-3 rounded-lf-lg border border-dashed border-lf-line bg-lf-surface/50 p-3"
+            >
+              <Sparkles className="h-5 w-5 shrink-0 text-lf-text-faint" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-lf-text-muted">My AI</span>
+                <span className="block text-[11px] text-lf-text-faint">私人测试 · 暂不可用</span>
+              </span>
+            </div>
+          </nav>
+
           {/*
             Now 屏的范式：**输入在前，状态在后**。
             生成式产品的第一屏不是仪表盘（尤其是仪表盘上全是 0 的时候），

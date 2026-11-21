@@ -38,5 +38,32 @@
     "reason": "同上：批量失败后逐行兜底，row 来自同一组带 organizationId 的对象。",
     "reviewedAt": "2026-10-21",
     "reviewer": "WB17-01"
+  },
+  {
+    "file": "src/lib/billing/inbox-store.ts",
+    "model": "billingInboxEvent",
+    "op": "findUnique",
+    "reason": "Durable Inbox 幂等去重：deliveryId 是支付 provider webhook 的全局唯一投递 ID（签名验证通过后由 webhook 载荷提供）。按它 findUnique 只命中单条自身事件，用于 ACK 与持久化绑定的去重，不放大到其它租户数据；组织归属存在该行 organizationId 上，后续 applyCommands(row.organizationId) 已按租户作用域写账。",
+    "reviewedAt": "2026-11-21",
+    "reviewer": "UI-REMEDIATION-20261121",
+    "reviewWindow": "需独立 Reviewer 复核 deliveryId 不可被跨租户伪造"
+  },
+  {
+    "file": "src/lib/billing/inbox-store.ts",
+    "model": "billingInboxEvent",
+    "op": "update",
+    "reason": "幂等状态推进：where deliveryId 全局唯一，只更新同一条事件的状态/重试计数/审计 note；业务副作用由 applyCommands(row.organizationId) 在租户作用域内执行。按全局投递键更新状态不触达跨租户业务数据。",
+    "reviewedAt": "2026-11-21",
+    "reviewer": "UI-REMEDIATION-20261121",
+    "reviewWindow": "与 findUnique 同一复核项"
+  },
+  {
+    "file": "src/lib/billing/inbox-store.ts",
+    "model": "billingInboxEvent",
+    "op": "findMany",
+    "reason": "listPendingInbox 运维告警入口：按全局状态扫描待处理事件，返回事件元数据供告警/人工复核队列，非面向终端用户的跨租户数据读取。每条结果自带 organizationId，操作入口需 workflow/OWNER 权限。高关注项——建议 Owner 决定告警出口的可见范围后再复核。",
+    "reviewedAt": "2026-11-21",
+    "reviewer": "UI-REMEDIATION-20261121",
+    "reviewWindow": "HIGH_ATTENTION: 需 Owner 确认告警出口权限范围"
   }
 ]

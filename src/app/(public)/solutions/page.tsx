@@ -28,6 +28,8 @@ const stories = [
     result: "An editable list of steps and an in-app record of what you decided and what happened.",
     boundary:
       "Turning those steps into automatic actions across other apps, and independently confirming a result outside LokFeel, are planned and not live today.",
+    href: "/workspace?view=now",
+    cta: "Open your workspace",
   },
   {
     icon: Users2,
@@ -39,6 +41,8 @@ const stories = [
     result: "A task list with an approval trail inside LokFeel, so you can see who agreed to what.",
     boundary:
       "Sending a real calendar invite or a real email to an outside service is planned and not live today. An in-app record is not the same as a delivered message.",
+    href: "/console",
+    cta: "Open your community console",
   },
   {
     icon: Handshake,
@@ -50,6 +54,8 @@ const stories = [
     result: "A consent record and a read-only view of the agreed fields inside LokFeel.",
     boundary:
       "Delivering a real introduction to an outside channel and getting a result receipt are planned and not live today.",
+    href: "/workspace?view=consent",
+    cta: "Review approvals",
   },
 ];
 
@@ -131,6 +137,12 @@ export default function SolutionsPage() {
                     <dd className="text-sm text-foreground-muted leading-relaxed">{story.boundary}</dd>
                   </div>
                 </dl>
+                <Link
+                  href={story.href}
+                  className="mt-6 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                >
+                  {story.cta} <span aria-hidden>→</span>
+                </Link>
               </article>
             ))}
           </div>
