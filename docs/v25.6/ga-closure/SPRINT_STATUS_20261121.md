@@ -2,6 +2,7 @@
 
 > 依据：`LOKFEEL_V25_6_GA_CLOSURE` 16 张 GA 工单 / 19 道门禁、ZIP SHA-256 全校验通过。
 > 状态口径：`CODE_COMPLETE / LOCAL_TESTED / REAL_BROWSER_TESTED / BLOCKED / PREVIEW_VERIFIED / PRODUCTION_VERIFIED` 不自评升级。
+> 审批包（含本状态页与上列证据）本地 HEAD：`9f3b0322f3c09fddacf431571a75a30eef42afab`；源码候选仍为 `5fd54d2`（随后只有文档提交）。
 > **本轮未 push、未部署、未迁移生产、未改密钥、未真实扣款、未对外发消息。**
 
 ## 一、四个问题的直接回答
