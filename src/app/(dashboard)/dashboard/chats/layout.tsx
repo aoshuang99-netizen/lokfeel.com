@@ -33,9 +33,11 @@ import {
   Inbox,
   Heart,
   Eye,
+  UserPlus,
 } from "lucide-react";
 import { useApiGet } from "@/hooks/use-api";
 import { getAvatarKind, getAvatarImgClasses, getAvatarBackground, parseEmojiAvatar, getRealPhotoAvatarUrl } from "@/lib/avatar-utils";
+import { InvitePanel } from "@/components/invite/invite-panel";
 
 // ══════════════════════════════════════
 // DESIGN TOKENS
@@ -160,6 +162,12 @@ export default function ChatLayout({
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<ChatTab>("all");
+  // UX-04 2026-11-21：移动端（<md）右侧 children 被 `hidden md:flex` 隐藏，
+  // 含 Invite 按钮的空态根本不在可见树里 —— 这是 13/14 的真实根因。
+  // 把真实邀请入口放到**所有视口都可见**的左侧列表面板 Header，
+  // 点开同一个 InvitePanel（服务端 /api/invites 生成真实邀请码），
+  // 手机端无需进入被隐藏的 children 即可完成邀请。
+  const [inviteOpen, setInviteOpen] = useState(false);
   // 阶段 4：改用统一 IM 列表接口（服务端与 /api/chat 共用 buildConversationList）
   const { data, isLoading, error } = useApiGet<ChatListData>("/api/im/conversations");
 
@@ -226,6 +234,16 @@ export default function ChatLayout({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-foreground">Messages</h2>
             <div className="flex items-center gap-2">
+              {/* UX-04：所有视口可见的真实邀请入口。手机端右侧 children 被隐藏，
+                  这是移动端唯一能完成的邀请路径。44px 触控目标、无 force。 */}
+              <button
+                type="button"
+                onClick={() => setInviteOpen(true)}
+                aria-label="Invite someone you know"
+                className="p-2 min-w-[44px] min-h-[44px] rounded-full hover:bg-background-tertiary transition-colors"
+              >
+                <UserPlus className="w-5 h-5 text-primary" />
+              </button>
               <button
                 className="p-2 rounded-full hover:bg-background-tertiary transition-colors"
                 aria-label="Filter conversations"
@@ -473,6 +491,9 @@ export default function ChatLayout({
       >
         {children}
       </div>
+
+      {/* UX-04：真实邀请面板。挂在 layout（所有视口可见），不再只存在于被隐藏的 children。 */}
+      <InvitePanel isOpen={inviteOpen} onClose={() => setInviteOpen(false)} />
     </div>
   );
 }

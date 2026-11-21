@@ -79,7 +79,7 @@ try {
   if (!issued.ok) throw new Error('issue failed: ' + issued.reason)
   const ref = issued.consentRef
   // 服务端签发 = 真实落库；查库确认记录存在且主体正确
-  const row = await (db as any).aIProcessingConsent.findUnique({ where: { id: ref } })
+  const row = await db.aIProcessingConsent.findUnique({ where: { id: ref } })
   expect(!!row && row.userId === OWNER && row.status === 'ACTIVE', 'S1 consentRef must be persisted server-side')
   step('S1', '服务端签发 consentRef 并落库', { consentRef: ref, persisted: !!row, userId: row?.userId, status: row?.status })
 

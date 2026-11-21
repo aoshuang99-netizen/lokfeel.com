@@ -152,17 +152,21 @@ function useJsonResource<T>(url: string | null): Resource<T> {
   const [nonce, setNonce] = useState(0)
   const refetch = useCallback(() => setNonce((n) => n + 1), [])
 
-  useEffect(() => {
-    if (!url) {
-      setData(null)
-      setLoading(false)
-      setError(null)
-      return
-    }
-    let active = true
+  // react-hooks/set-state-in-effect：把「依赖变化时重置本地状态」从 effect 同步调用
+  // 移到渲染期（React 官方 "adjusting state when props change" 模式）——
+  // 同一个组件在渲染中 setState 会立即重渲染，不会级联，行为与原 effect reset 等价。
+  const resourceKey = url ? `${url}|${nonce}` : null
+  const [syncedKey, setSyncedKey] = useState<string | null>(resourceKey)
+  if (syncedKey !== resourceKey) {
+    setSyncedKey(resourceKey)
     setData(null)
-    setLoading(true)
+    setLoading(Boolean(url))
     setError(null)
+  }
+
+  useEffect(() => {
+    if (!url) return
+    let active = true
     fetch(url)
       .then(async (res) => {
         const env = asEnvelope(await res.json().catch(() => null))
@@ -372,10 +376,17 @@ export default function ExecutionPanel({
   const [lastSeq, setLastSeq] = useState(0)
 
   const loadStages = useCallback(
-    async (fromSeq: number, append: boolean) => {
+    async (fromSeq: number, append: boolean, setLoading = false) => {
+      // 显式异步边界：下面所有 setState 都在 await 之后，effect 调用本函数时
+      // 不会在同步执行栈里触发级联渲染（react-hooks/set-state-in-effect 合规）。
+      await Promise.resolve()
       if (!runId) return
-      setStagesLoading(true)
-      setStagesError(null)
+      // 初始加载的 loading 由渲染期 stagesForRun 同步块设置；只有用户主动续读
+      // （事件处理器）才在这里设置，避免在 effect 调用链里同步 setState。
+      if (setLoading) {
+        setStagesLoading(true)
+        setStagesError(null)
+      }
       try {
         const headers: Record<string, string> = {}
         if (fromSeq > 0) headers['Last-Event-ID'] = String(fromSeq)
@@ -408,11 +419,29 @@ export default function ExecutionPanel({
     [runId],
   )
 
-  useEffect(() => {
-    if (runId) void loadStages(0, false)
-    else {
+  // set-state-in-effect：runId 消失时清空阶段列表改到渲染期（官方 props 变更模式）。
+  // runId 切换到另一个非空值时，loadStages(0,false) 内部本来就 replace，无需清空。
+  const [stagesForRun, setStagesForRun] = useState(runId)
+  if (stagesForRun !== runId) {
+    setStagesForRun(runId)
+    setStagesLoading(Boolean(runId))
+    setStagesError(null)
+    if (!runId) {
       setStages([])
       setLastSeq(0)
+    }
+  }
+
+  useEffect(() => {
+    if (!runId) return
+    // 通过微任务边界触发：初始化拉取是异步副作用，避免把 loadStages 内的
+    // setState 归入 effect 同步执行栈（react-hooks/set-state-in-effect）。
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled) void loadStages(0, false)
+    })
+    return () => {
+      cancelled = true
     }
   }, [runId, loadStages])
 
@@ -617,7 +646,7 @@ export default function ExecutionPanel({
                 type="button"
                 data-testid="execution-stage-resume"
                 disabled={stagesLoading || !runId}
-                onClick={() => void loadStages(lastSeq, true)}
+                onClick={() => void loadStages(lastSeq, true, true)}
                 className="lf-focus-ring mt-2 inline-flex items-center gap-1.5 rounded-lf border border-lf-line-strong px-2.5 py-1 text-[11px] font-medium text-lf-text transition-colors hover:bg-lf-surface-2 disabled:opacity-50"
               >
                 <RefreshCw className="h-3 w-3" aria-hidden="true" />

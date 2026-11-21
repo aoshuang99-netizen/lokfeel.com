@@ -18,7 +18,7 @@
  * 409 冲突时的「刷新」自己重读 spec 端点，不依赖父级重新传 props。
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw, Save } from 'lucide-react'
 import type { WorkspaceSpec } from '@/lib/workspace-spec/schema'
 import {
@@ -142,7 +142,12 @@ export default function SpecEditor({
   const [savedNotice, setSavedNotice] = useState<string | null>(null)
 
   // 父级重新传入（刷新 / 切换任务）时同步本地草稿。
-  useEffect(() => {
+  // set-state-in-effect：改到渲染期按「spec+version 键」检测变化后重置（官方 props 变更模式），
+  // 避免在 effect 里同步 setState 造成级联渲染；行为与原 effect 完全一致。
+  const sourceKey = `${currentVersion}|${JSON.stringify(spec)}`
+  const [syncedSourceKey, setSyncedSourceKey] = useState(sourceKey)
+  if (syncedSourceKey !== sourceKey) {
+    setSyncedSourceKey(sourceKey)
     setSavedSpec(buildDraft(spec, formFromSpec(spec)).draft)
     setForm(formFromSpec(spec))
     setVersion(currentVersion)
@@ -150,7 +155,7 @@ export default function SpecEditor({
     setSaveError(null)
     setConflict(null)
     setSavedNotice(null)
-  }, [spec, currentVersion])
+  }
 
   const built = useMemo(() => buildDraft(savedSpec, form), [savedSpec, form])
   const diffs = useMemo(() => specDiff(savedSpec, built.draft), [savedSpec, built.draft])

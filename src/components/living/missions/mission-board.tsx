@@ -142,10 +142,17 @@ function useMissionList(url: string): {
   const [nonce, setNonce] = useState(0)
   const refetch = useCallback(() => setNonce((n) => n + 1), [])
 
+  // set-state-in-effect：请求键变化时把 loading 置真移到渲染期（官方 props 变更模式）。
+  const fetchKey = `${url}|${authStatus}|${nonce}`
+  const [syncedFetchKey, setSyncedFetchKey] = useState(fetchKey)
+  if (syncedFetchKey !== fetchKey) {
+    setSyncedFetchKey(fetchKey)
+    setIsLoading(true)
+  }
+
   useEffect(() => {
     if (authStatus === 'loading') return
     let active = true
-    setIsLoading(true)
     fetch(url)
       .then(async (res) => {
         const payload = await res.json().catch(() => null)

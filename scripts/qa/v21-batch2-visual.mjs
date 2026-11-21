@@ -318,7 +318,6 @@ async function zoom200Of(page) {
 async function runAxe(page, state) {
   await page.addScriptTag({ content: axeSource });
   const r = await page.evaluate(async (tags) => {
-    // eslint-disable-next-line no-undef
     const result = await window.axe.run(document, { runOnly: { type: 'tag', values: tags } });
     return {
       total: result.violations.length,

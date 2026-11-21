@@ -29,7 +29,7 @@ import { POST } from '@/app/api/im/ai-assist/route'
 
 const authMock = auth as unknown as jest.Mock
 const convFind = prisma.conversation.findFirst as unknown as jest.Mock
-const consentFind = (prisma as any).aIProcessingConsent.findUnique as jest.Mock
+const consentFind = prisma.aIProcessingConsent.findUnique as unknown as jest.Mock
 const msgCreate = prisma.iMMessage.create as unknown as jest.Mock
 const bodyMock = safeRequestBody as unknown as jest.Mock
 const resolveProvider = resolveRuntimeProvider as unknown as jest.Mock

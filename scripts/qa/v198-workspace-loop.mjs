@@ -50,8 +50,8 @@ if (CLEANUP) {
   }
   const db = createClient({ url: DB_ARG.startsWith('file:') ? DB_ARG : `file:${DB_ARG}` });
   const tables = [
-    ['Intents', `missionId IN (SELECT id FROM Missions WHERE organizationId='${FIXTURE.org}')`],
-    ['Missions', `organizationId='${FIXTURE.org}'`],
+    ['SocialIntent', `missionId IN (SELECT id FROM Mission WHERE organizationId='${FIXTURE.org}')`],
+    ['Mission', `organizationId='${FIXTURE.org}'`],
     ['Membership', `userId='${FIXTURE.user}'`],
     ['User', `id='${FIXTURE.user}'`],
     ['Organization', `id='${FIXTURE.org}'`],
@@ -235,19 +235,21 @@ const composer = page.locator('#lf-composer');
 }
 {
   await composer.fill('太短');
-  const btn = page.getByRole('button', { name: /编译工作区/ });
+  // V25.6 UI 文案已从「编译工作区」改为「开始」；用稳定 testid，避免文案漂移造成假红。
+  const btn = page.locator('[data-testid="intent-submit"]');
   const disabled = await btn.isDisabled().catch(() => false);
   const title = await btn.getAttribute('title').catch(() => '');
   record('W-06', '短文本 → 编译禁用 + title 说明', disabled && /字符/.test(title ?? ''), `title="${title}"`);
 }
 {
   await composer.fill('帮我们在 30 天内促成 20 次高质量渠道合作，双方各自带来至少 5 个有效渠道，并建立长期复购。');
-  await page.getByRole('button', { name: /编译工作区/ }).click();
+  await page.locator('[data-testid="intent-submit"]').click();
   await page.waitForTimeout(800);
-  const h1 = await page.evaluate(() => [...document.querySelectorAll('h1')].map((e) => e.textContent.trim()));
-  const onStudio = h1.some((t) => /Studio/i.test(t));
+  // V25.6 起编译结果**原位**渲染在 LivingCanvas（不再把 h1 切成 "Studio"）。
+  // 断言真实产物：画布出现 + 方案文本落地，而不是过时文案。
+  const canvasVisible = await page.locator('section[aria-label="Living Canvas"]').isVisible().catch(() => false);
   const specText = await page.evaluate(() => (document.querySelector('main')?.textContent ?? '').length);
-  record('W-07', '合法 goal → 编译 → Studio 渲染 WorkspaceSpec', onStudio && specText > 200, `h1=${h1.join('/')} len=${specText}`);
+  record('W-07', '合法 goal → 编译 → 渲染 WorkspaceSpec', canvasVisible && specText > 200, `canvas=${canvasVisible} len=${specText}`);
 }
 let uiMissionId = null;
 {
@@ -266,7 +268,7 @@ let uiMissionId = null;
       await composer.fill(
         '帮我们在 30 天内促成 20 次高质量渠道合作。我们提供项目预算 10 万元、渠道资源与联合品牌支持作为对价。',
       );
-      await page.getByRole('button', { name: /编译工作区/ }).click();
+      await page.locator('[data-testid="intent-submit"]').click();
       await page.waitForTimeout(800);
       disabled = await createBtn.isDisabled().catch(() => true);
       hint = (await createBtn.getAttribute('title').catch(() => '')) ?? '';
@@ -278,9 +280,11 @@ let uiMissionId = null;
       await page.waitForTimeout(2500);
       const main = await page.evaluate(() => document.querySelector('main')?.textContent ?? '');
       const ok = /已创建|创建成功/.test(main);
-      const m = main.match(/cm[A-Za-z0-9]{20,}/);
-      uiMissionId = m ? m[0] : null;
-      record('W-08', 'Studio 创建 → 真实成功态（服务端 id）', ok, uiMissionId ? `id=${uiMissionId}` : '（成功态已渲染，id 未在文本中）');
+      // 必须精确取成功态专属节点：main 里还可能有 sourceRunId 等 cm 开头的 id，
+      // 用宽正则 /cm.../ 会抓错对象（这正是上一轮 W-09 假红的根因）。
+      const idEl = page.locator('[data-testid="created-mission-id"]');
+      uiMissionId = (await idEl.count()) ? (await idEl.first().textContent())?.trim() ?? null : null;
+      record('W-08', 'Studio 创建 → 真实成功态（服务端 id）', ok && !!uiMissionId, uiMissionId ? `id=${uiMissionId}` : '（无真实 id）');
     }
   }
 }

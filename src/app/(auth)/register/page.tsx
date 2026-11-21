@@ -14,7 +14,6 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   Loader2,
   Mail,
   CheckCircle2,
@@ -26,10 +25,8 @@ import { signIn } from "next-auth/react";
 
 // Google OAuth — uses direct redirect to bypass NextAuth PKCE issue
 import GoogleSignInButton from "@/components/auth/google-sign-in-button";
-import { safeJsonParse, getAuthErrorMessage } from "@/lib/safe-json";
+import { safeJsonParse } from "@/lib/safe-json";
 
-// X (Twitter) — Native OAuth 2.0 + PKCE redirect
-import { useSearchParams } from "next/navigation";
 // V22 §F: carry the typed goal through signup onto the Now screen.
 import { restoreGoalDraft, withGoal, writeGoalDraft } from "@/lib/goal-draft";
 
@@ -43,7 +40,6 @@ import {
   buildPersistableRegState,
   parsePersistedRegState,
   type RegPhase,
-  type RegSentInfoLike,
 } from '@/lib/auth/registration-state';
 
 type RegSentInfo = { maskedIdentifier?: string; devMode?: boolean; code?: string };

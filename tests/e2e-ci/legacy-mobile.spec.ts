@@ -267,4 +267,49 @@ test.describe('Legacy B2C · 交互可用性（390×844 · 只读）', () => {
 
     await assertNotOccluded(discover, '聊天空态的「Discover people →」');
   });
+
+  /**
+   * UX-04（2026-11-21 · P0）：移动端 Chats 邀请必须真实可达。
+   *
+   * 13/14 的真实根因：chats/layout.tsx 把右侧 children（含带 Invite 按钮的空态）
+   * 设为 `hidden md:flex`，手机端整棵子树 display:none，按钮不在可见 DOM 里。
+   * 旧录屏脚本用 `click({ force: true })` 强行点隐藏节点，是假绿。
+   *
+   * 修复：在**所有视口可见**的左侧列表面板 Header 放真实 Invite 按钮
+   * （aria-label="Invite someone you know"，44px 触控目标），打开同一个
+   * InvitePanel（服务端 /api/invites 生成真实邀请码）。
+   *
+   * 这条用例禁止 force、禁止只断言 GET 200：必须按钮可见 → 正常点击 →
+   * 面板出现 → 拿到真实 6 位邀请码，四段全通才算过。
+   */
+  for (const vp of [{ id: '320×720', width: 320, height: 720 }, { id: '390×844', width: 390, height: 844 }]) {
+    test(`UX-04 ${vp.id} · Chats Invite 可见可点且生成真实邀请码`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto('/dashboard/chats', { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('input[placeholder="Search or start new chat"]')).toBeVisible({
+        timeout: 20_000,
+      });
+
+      // ① 按钮真实可见（在可见树里，不是 display:none 的隐藏副本）
+      const invite = page.getByRole('button', { name: /Invite someone you know/i }).last();
+      await expect(invite, `${vp.id} 邀请按钮必须在可见树里`).toBeVisible();
+      const box = await invite.boundingBox();
+      expect(box?.height ?? 0, `邀请按钮触控高度 ${box?.height ?? 0}px < 44px`).toBeGreaterThanOrEqual(44);
+
+      // ② 关键接口回执：服务端真实生成邀请码
+      const inviteResp = page.waitForResponse(
+        (r) => r.url().includes('/api/invites') && r.status() === 200,
+        { timeout: 10_000 },
+      );
+      // ③ 不用 force，正常点击
+      await invite.click({ timeout: 8_000 });
+      await inviteResp;
+
+      // ④ 面板出现，且拿到真实 6 位邀请码（不是 stub/空串）
+      await expect(page.getByText('Your Invite Code')).toBeVisible({ timeout: 10_000 });
+      const bodyText = await page.locator('body').innerText();
+      const code = bodyText.match(/\b[A-HJ-NP-Z2-9]{6}\b/);
+      expect(code, `${vp.id} 面板必须显示真实 6 位邀请码`).toBeTruthy();
+    });
+  }
 });

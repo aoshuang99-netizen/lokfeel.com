@@ -102,7 +102,6 @@ for (const vp of VIEWPORTS) {
     await page.waitForSelector('#lf-composer', { timeout: 20000 });
     await page.addScriptTag({ content: axeSource });
     const results = await page.evaluate(async () => {
-      // eslint-disable-next-line no-undef
       const r = await axe.run(document, {
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
       });

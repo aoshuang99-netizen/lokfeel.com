@@ -955,7 +955,7 @@ export default function LivingWorkspace() {
             {createResult.replayed ? '服务端判定为重复提交（幂等重放），已返回同一条任务。' : '连接任务已创建。'}
           </p>
           <p className="mt-1 break-all text-xs text-lf-text-muted">
-            id <span className="text-lf-text">{createResult.missionId}</span>
+            id <span data-testid="created-mission-id" className="text-lf-text">{createResult.missionId}</span>
             {createResult.title ? ` · ${createResult.title}` : ''}
             {createResult.status ? ` · ${createResult.status}` : ''}
           </p>
