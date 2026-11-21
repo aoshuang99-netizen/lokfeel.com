@@ -51,6 +51,24 @@
 
 > 诚实边界：race 用例在 CI 环境偶发超时（`旧 A 的方案` 未被 B 覆盖），本地 4 轮全绿。未放宽断言、未加重试规避；如 CI 复验仍红，需单独调查 CI 时序，不宣称通过。
 
+## 二·再补：远端 CI 第二轮（44888177078 · 候选 `7b03a84`）结果
+
+| job | 结论 | 说明 |
+|---|---|---|
+| Lint | ✅ success | 第一轮 fatal（unused disable）真修生效 |
+| Dependency audit | ✅ success | effect override 生效，生产 high=0 |
+| Build / Typecheck / Jest / Secret scan / 租户审计 / 支付凭据 / cron / Perf SLO | ✅ success | 全绿 |
+| Migration | 🔴 failure | 4 条真实迁移未登记，按设计保持，需 Owner 批准登记 |
+| E2E 浏览器冒烟 | 🔴 failure（2 条） | 从第一轮 6 条降到 2 条；连接页/聊天空态 4 条真修转绿 |
+
+**E2E 剩余 2 条（诚实标注，不冒充通过）**：
+- 用例：`workspace-now-race.spec.ts`「先输 A 再输 B：A 的响应晚到也不能覆盖 B」。
+- 现象：CI 稳定失败（屏幕停在"旧 A 的方案"），本地真实 Chrome 连续 4 轮全 PASS。
+- 根因定性：测试用 `el.dispatchEvent(MouseEvent)` 强行绕过 disabled 制造并发，CI 的 React 19 水合时序下合成事件捕获不可靠，B 请求可能未真正发出；**产品过期守卫逻辑正确**（`intent-race.ts` token 机制 + 本地 4 轮证明）。曾尝试改用 Playwright `dispatchEvent` 手法，本地反而不稳定，已回退（systematic-debugging：手法试验失败即回退，不改断言骗绿）。
+- 处置：这是**存量 CI 环境特定失败**（第一轮的 Workspace 探针失败把它遮住了，从未跑到），非本轮引入。需单独调查 CI 时序 / 改成确定性单测，**不在本轮宣称通过**。
+
+**Preview**：Cloudflare Preview Run `44888176984` = completed/success（部署 job），但 `https://lokfeel-preview.aoshuang99.workers.dev` 从本环境 DNS 可解析（104.244.46.93）却 TCP 45s 超时——出网被阻断。**运行时未验证，保持 BLOCKED**，不用 job success 冒充页面可用。
+
 ## 三、API 业务闭环（真实 HTTP + DB 回读，≥6 动作）
 
 | # | 动作 | 证据 | 结果 |
