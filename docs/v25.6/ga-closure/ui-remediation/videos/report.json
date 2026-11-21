@@ -1,0 +1,77 @@
+{
+  "task": "V25.6 UI 整改 · 真实操作录屏",
+  "generatedAt": "2026-11-21T07:33:59.224Z",
+  "base": "http://127.0.0.1:3104",
+  "evidenceType": "REAL_BROWSER video (local, logged-in fixture, non-production)",
+  "steps": [
+    {
+      "view": "pc",
+      "step": "登录",
+      "ok": true
+    },
+    {
+      "view": "pc",
+      "step": "首页(/dashboard→/workspace) + My AI 诚实态",
+      "ok": true
+    },
+    {
+      "view": "pc",
+      "step": "点击 Chats 入口跳转",
+      "ok": true
+    },
+    {
+      "view": "pc",
+      "step": "Chats 邀请按钮打开真实邀请面板",
+      "ok": true
+    },
+    {
+      "view": "pc",
+      "step": "Connections 页面 + 邀请 CTA",
+      "ok": true
+    },
+    {
+      "view": "pc",
+      "step": "Console 价值入口",
+      "ok": true
+    },
+    {
+      "view": "pc",
+      "video": "docs/v25.6/ga-closure/ui-remediation/videos/ui-remediation-pc.webm"
+    },
+    {
+      "view": "mobile",
+      "step": "登录",
+      "ok": true
+    },
+    {
+      "view": "mobile",
+      "step": "首页(/dashboard→/workspace) + My AI 诚实态",
+      "ok": true
+    },
+    {
+      "view": "mobile",
+      "step": "点击 Chats 入口跳转",
+      "ok": true
+    },
+    {
+      "view": "mobile",
+      "step": "Chats 邀请按钮打开真实邀请面板",
+      "ok": false,
+      "error": "TimeoutError: locator.click: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Invite"
+    },
+    {
+      "view": "mobile",
+      "step": "Connections 页面 + 邀请 CTA",
+      "ok": true
+    },
+    {
+      "view": "mobile",
+      "step": "Console 价值入口",
+      "ok": true
+    },
+    {
+      "view": "mobile",
+      "video": "docs/v25.6/ga-closure/ui-remediation/videos/ui-remediation-mobile.webm"
+    }
+  ]
+}

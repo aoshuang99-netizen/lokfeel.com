@@ -1,0 +1,1054 @@
+{
+  "task": "V25.6 UI 整改 · 前后对照抓图",
+  "phase": "before",
+  "generatedAt": "2026-11-21T07:05:49.191Z",
+  "base": "http://127.0.0.1:3104",
+  "evidenceType": "REAL_BROWSER (local HTTP, logged-in fixture account, non-production)",
+  "honestBoundary": "截图=布局/DOM 证据，不是生产、不是真人盲测；CTA href 只证明落点存在，业务结果另由 API 回执证明。",
+  "pages": [
+    {
+      "page": "landing",
+      "viewport": "pc",
+      "url": "/",
+      "h1": "Conversations belong to people. You decide what you share.",
+      "links": [
+        {
+          "text": "L LOKFEEL",
+          "href": "/"
+        },
+        {
+          "text": "How it works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "What works today",
+          "href": "/product"
+        },
+        {
+          "text": "For communities",
+          "href": "/solutions"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Start",
+          "href": "/register"
+        },
+        {
+          "text": "How private AI works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "Full capability list",
+          "href": "/product"
+        },
+        {
+          "text": "How private AI works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "How it works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "What works today",
+          "href": "/product"
+        },
+        {
+          "text": "For communities",
+          "href": "/solutions"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Help",
+          "href": "/help"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "L LOKFEEL How it works What works today For communities Pricing Log in Start Conversations belong to people. You decide what you share. Talk to real people and stay in control of what you share. AI writing assistance — translation, clearer tone, intent help — is being tested privately and is not yet a published capability. You can have a real conversation here today, with no setup. WHAT WOULD YOU ",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/landing-pc.png"
+    },
+    {
+      "page": "dashboard",
+      "viewport": "pc",
+      "url": "/dashboard",
+      "h1": "今天想推进什么？",
+      "links": [],
+      "overflow": 0,
+      "bodyStart": "LOKFEEL / 我的工作区 — 退出登录 发现适合的人 我的介绍 等待双方确认 关系进展 更多 开始 · 你的工作区 今天想推进什么？ 一句话说清结果、期限，和你愿意拿出的东西。它会摊成一张能跑的工作区： 谁提案、谁点头、由谁执行、什么算成交。 描述你的目标 理解先走服务端（AI 或规则，来源会标注）；只有创建任务才写入。 开始 没想好？从这里开始 30 天谈下 20 个渠道 两周做完 10 场访谈 一个月办 40 人工作坊 20 条 未读消息 还没读 — 未读通知 暂时读不到 — 待你介绍 需要社群数据，当前读不到 待处理 只列真实通知 正在读取…",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/dashboard-pc.png"
+    },
+    {
+      "page": "chats",
+      "viewport": "pc",
+      "url": "/dashboard/chats",
+      "h1": "Messages",
+      "links": [
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        },
+        {
+          "text": "社群控制台",
+          "href": "/console"
+        },
+        {
+          "text": "Settings",
+          "href": "/dashboard/settings"
+        },
+        {
+          "text": "Premium Unlock all features",
+          "href": "/dashboard/subscription"
+        },
+        {
+          "text": "林晓 15:48 V256 full msg 20/20 from B t1795160881284 10 Offlin",
+          "href": "/dashboard/chats/conv_v256_chat_e2e"
+        },
+        {
+          "text": "Invite someone you know",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookies",
+          "href": "/cookies"
+        },
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats20",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "LokFeel Profile Explore Connections Chats Notifications 社群控制台 Settings Invite Friends Premium Unlock all features Messages Messages All 1 Matches Vault Unread 1 林晓 15:48 V256 full msg 20/20 from B t1795160881284 10 Offline No conversations yet Invite someone you know to start a real conversation, or pick a recent chat from the list. Invite someone you know AI writing help is in private testing. Yo",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/chats-pc.png"
+    },
+    {
+      "page": "connections",
+      "viewport": "pc",
+      "url": "/dashboard/connections",
+      "h1": "Connections",
+      "links": [
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        },
+        {
+          "text": "社群控制台",
+          "href": "/console"
+        },
+        {
+          "text": "Settings",
+          "href": "/dashboard/settings"
+        },
+        {
+          "text": "Premium Unlock all features",
+          "href": "/dashboard/subscription"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookies",
+          "href": "/cookies"
+        },
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats20",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "LokFeel Profile Explore Connections Chats Notifications 社群控制台 Settings Invite Friends Premium Unlock all features Connections See who likes you, your matches, and pending requests Likes You Matches Pending No likes yet Keep exploring! When someone likes you, they'll appear here. © 2026 LokFeel · Meet people worth knowing. Privacy Terms Cookies Support",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/connections-pc.png"
+    },
+    {
+      "page": "console",
+      "viewport": "pc",
+      "url": "/console",
+      "h1": "社群总览",
+      "links": [
+        {
+          "text": "个人模式",
+          "href": "/dashboard"
+        },
+        {
+          "text": "总览",
+          "href": "/console"
+        },
+        {
+          "text": "任务",
+          "href": "/console/missions"
+        },
+        {
+          "text": "成员",
+          "href": "/console/members"
+        },
+        {
+          "text": "连接",
+          "href": "/console/connections"
+        },
+        {
+          "text": "智能体",
+          "href": "/console/agents"
+        },
+        {
+          "text": "成果",
+          "href": "/console/outcomes"
+        },
+        {
+          "text": "设置",
+          "href": "/console/settings"
+        },
+        {
+          "text": "查看全部 →",
+          "href": "/console/missions"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "E2E 跨境社群 社群模式 社群经营工作台 · 你所属的社群 1 个 纸面 个人模式 退出登录 总览 任务 成员 连接 智能体 成果 设置 社群总览 连接从提案到介绍的全过程是否顺畅 —— 数据每秒都在变，这里读的是此刻。 在飞任务 0 PENDING + RUNNING，队列里还没做完的 需人处置 0 死信 / 已接管 / 永久失败 停滞连接 0 阶段超时未推进（默认 7 天） 死信 0 自动重试已用尽，等人接管 需人处置 0 当前没有需要人工处置的任务。任务的自动重试与死信晋升都在正常工作。 停滞的连接 0 没有卡住的连接。所有进行中的连接都在预期时间内推进。 消息投递 0 还没有任何投递记录。 连接任务 查看全部 → 本社群共有 2 条任务。 筛选、发布与状态迁移都在「任务」屏。",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/console-pc.png"
+    },
+    {
+      "page": "workspace",
+      "viewport": "pc",
+      "url": "/workspace",
+      "h1": "今天想推进什么？",
+      "links": [],
+      "overflow": 0,
+      "bodyStart": "LOKFEEL / 我的工作区 0 退出登录 发现适合的人 我的介绍 等待双方确认 关系进展 更多 开始 · 你的工作区 今天想推进什么？ 一句话说清结果、期限，和你愿意拿出的东西。它会摊成一张能跑的工作区： 谁提案、谁点头、由谁执行、什么算成交。 描述你的目标 理解先走服务端（AI 或规则，来源会标注）；只有创建任务才写入。 开始 没想好？从这里开始 30 天谈下 20 个渠道 两周做完 10 场访谈 一个月办 40 人工作坊 20 条 未读消息 还没读 0 条 未读通知 没有新动静 0 位 待你介绍 没有等你牵线的 待处理 只列真实通知 没有需要你处理的事。新的批准、提案和提醒会先出现在这里。",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/workspace-pc.png"
+    },
+    {
+      "page": "product",
+      "viewport": "pc",
+      "url": "/product",
+      "h1": "Know what you can do, and what needs your OK",
+      "links": [
+        {
+          "text": "L LOKFEEL",
+          "href": "/"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms of Service",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookie Policy",
+          "href": "/cookies"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Open the goal input →",
+          "href": "/workspace?view=now"
+        },
+        {
+          "text": "Open my tasks →",
+          "href": "/workspace?view=missions"
+        },
+        {
+          "text": "Review what needs approval →",
+          "href": "/workspace?view=consent"
+        },
+        {
+          "text": "Open my tasks →",
+          "href": "/workspace?view=missions"
+        },
+        {
+          "text": "Open the activity log →",
+          "href": "/workspace?view=agents"
+        },
+        {
+          "text": "Open results →",
+          "href": "/workspace?view=outcomes"
+        },
+        {
+          "text": "Open approvals →",
+          "href": "/workspace?view=consent"
+        },
+        {
+          "text": "Open approvals →",
+          "href": "/workspace?view=consent"
+        },
+        {
+          "text": "Contact us →",
+          "href": "/contact"
+        },
+        {
+          "text": "Try with a goal",
+          "href": "/register"
+        },
+        {
+          "text": "See how it works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "About Us",
+          "href": "/about"
+        },
+        {
+          "text": "Careers",
+          "href": "/careers"
+        },
+        {
+          "text": "Press",
+          "href": "/press"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "L LOKFEEL Pricing Log in Get Started PRODUCT Know what you can do, and what needs your OK Three plain questions, one honest answer each. Every capability is labelled Available, Gated, or Planned, straight from the capability register. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in-app record",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/product-pc.png"
+    },
+    {
+      "page": "solutions",
+      "viewport": "pc",
+      "url": "/solutions",
+      "h1": "Three situations, one honest boundary",
+      "links": [
+        {
+          "text": "L LOKFEEL",
+          "href": "/"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms of Service",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookie Policy",
+          "href": "/cookies"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Try with a goal",
+          "href": "/register"
+        },
+        {
+          "text": "Read the product page",
+          "href": "/product"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "About Us",
+          "href": "/about"
+        },
+        {
+          "text": "Careers",
+          "href": "/careers"
+        },
+        {
+          "text": "Press",
+          "href": "/press"
+        },
+        {
+          "text": "Contact",
+          "href": "/contact"
+        },
+        {
+          "text": "FAQ",
+          "href": "/faq"
+        },
+        {
+          "text": "Safety Tips",
+          "href": "/safety-tips"
+        },
+        {
+          "text": "Community Guidelines",
+          "href": "/community-guidelines"
+        },
+        {
+          "text": "Support",
+          "href": "/support"
+        },
+        {
+          "text": "Refunds",
+          "href": "/refunds"
+        },
+        {
+          "text": "Cancellations Policy",
+          "href": "/cancellations-policy"
+        },
+        {
+          "text": "Terms of Service",
+          "href": "/terms"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "/privacy"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "L LOKFEEL Pricing Log in Get Started SOLUTIONS Three situations, one honest boundary An individual, a team, and two parties coordinating an introduction. For each one: what you put in, what needs approval, what you get, and what is not live yet. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review the steps, decide what needs your approval, and keep an in",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/solutions-pc.png"
+    },
+    {
+      "page": "landing",
+      "viewport": "mobile",
+      "url": "/",
+      "h1": "Conversations belong to people. You decide what you share.",
+      "links": [
+        {
+          "text": "L LOKFEEL",
+          "href": "/"
+        },
+        {
+          "text": "How it works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "What works today",
+          "href": "/product"
+        },
+        {
+          "text": "For communities",
+          "href": "/solutions"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Start",
+          "href": "/register"
+        },
+        {
+          "text": "How private AI works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "Full capability list",
+          "href": "/product"
+        },
+        {
+          "text": "How private AI works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "How it works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "What works today",
+          "href": "/product"
+        },
+        {
+          "text": "For communities",
+          "href": "/solutions"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Help",
+          "href": "/help"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "L LOKFEEL Log in Start Conversations belong to people. You decide what you share. Talk to real people and stay in control of what you share. AI writing assistance — translation, clearer tone, intent help — is being tested privately and is not yet a published capability. You can have a real conversation here today, with no setup. WHAT WOULD YOU LIKE TO SAY TO SOMEONE? Start a real conversation How ",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/landing-mobile.png"
+    },
+    {
+      "page": "dashboard",
+      "viewport": "mobile",
+      "url": "/dashboard",
+      "h1": "今天想推进什么？",
+      "links": [],
+      "overflow": 0,
+      "bodyStart": "LOKFEEL 证据 发现适合的人 我的介绍 等待双方确认 关系进展 更多 开始 · 你的工作区 今天想推进什么？ 一句话说清结果、期限，和你愿意拿出的东西。它会摊成一张能跑的工作区： 谁提案、谁点头、由谁执行、什么算成交。 描述你的目标 理解先走服务端（AI 或规则，来源会标注）；只有创建任务才写入。 开始 没想好？从这里开始 30 天谈下 20 个渠道 两周做完 10 场访谈 一个月办 40 人工作坊 20 条 未读消息 还没读 0 条 未读通知 没有新动静 0 位 待你介绍 没有等你牵线的 待处理 只列真实通知 没有需要你处理的事。新的批准、提案和提醒会先出现在这里。",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/dashboard-mobile.png"
+    },
+    {
+      "page": "chats",
+      "viewport": "mobile",
+      "url": "/dashboard/chats",
+      "h1": "Messages",
+      "links": [
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        },
+        {
+          "text": "社群控制台",
+          "href": "/console"
+        },
+        {
+          "text": "Settings",
+          "href": "/dashboard/settings"
+        },
+        {
+          "text": "PremiumUnlock all features",
+          "href": "/dashboard/subscription"
+        },
+        {
+          "text": "林晓 15:48 V256 full msg 20/20 from B t1795160881284 10 Offlin",
+          "href": "/dashboard/chats/conv_v256_chat_e2e"
+        },
+        {
+          "text": "Invite someone you know",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookies",
+          "href": "/cookies"
+        },
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats 20",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "Messages Messages All 1 Matches Vault Unread 1 林晓 15:48 V256 full msg 20/20 from B t1795160881284 10 Offline Profile Explore Connections Chats 20 Notifications",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/chats-mobile.png"
+    },
+    {
+      "page": "connections",
+      "viewport": "mobile",
+      "url": "/dashboard/connections",
+      "h1": "Connections",
+      "links": [
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        },
+        {
+          "text": "社群控制台",
+          "href": "/console"
+        },
+        {
+          "text": "Settings",
+          "href": "/dashboard/settings"
+        },
+        {
+          "text": "PremiumUnlock all features",
+          "href": "/dashboard/subscription"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookies",
+          "href": "/cookies"
+        },
+        {
+          "text": "Profile",
+          "href": "/dashboard/profile"
+        },
+        {
+          "text": "Explore",
+          "href": "/dashboard/explore"
+        },
+        {
+          "text": "Connections",
+          "href": "/dashboard/connections"
+        },
+        {
+          "text": "Chats 20",
+          "href": "/dashboard/chats"
+        },
+        {
+          "text": "Notifications",
+          "href": "/dashboard/notifications"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "Connections See who likes you, your matches, and pending requests Likes You Matches Pending No likes yet Keep exploring! When someone likes you, they'll appear here. Profile Explore Connections Chats 20 Notifications",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/connections-mobile.png"
+    },
+    {
+      "page": "console",
+      "viewport": "mobile",
+      "url": "/console",
+      "h1": "社群总览",
+      "links": [
+        {
+          "text": "个人模式",
+          "href": "/dashboard"
+        },
+        {
+          "text": "总览",
+          "href": "/console"
+        },
+        {
+          "text": "任务",
+          "href": "/console/missions"
+        },
+        {
+          "text": "成员",
+          "href": "/console/members"
+        },
+        {
+          "text": "连接",
+          "href": "/console/connections"
+        },
+        {
+          "text": "智能体",
+          "href": "/console/agents"
+        },
+        {
+          "text": "成果",
+          "href": "/console/outcomes"
+        },
+        {
+          "text": "设置",
+          "href": "/console/settings"
+        },
+        {
+          "text": "查看全部 →",
+          "href": "/console/missions"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "E2E 跨境社群 社群模式 社群经营工作台 · 你所属的社群 1 个 个人模式 总览 任务 成员 连接 智能体 成果 设置 社群总览 连接从提案到介绍的全过程是否顺畅 —— 数据每秒都在变，这里读的是此刻。 在飞任务 0 PENDING + RUNNING，队列里还没做完的 需人处置 0 死信 / 已接管 / 永久失败 停滞连接 0 阶段超时未推进（默认 7 天） 死信 0 自动重试已用尽，等人接管 需人处置 0 当前没有需要人工处置的任务。任务的自动重试与死信晋升都在正常工作。 停滞的连接 0 没有卡住的连接。所有进行中的连接都在预期时间内推进。 消息投递 0 还没有任何投递记录。 连接任务 查看全部 → 本社群共有 2 条任务。 筛选、发布与状态迁移都在「任务」屏。",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/console-mobile.png"
+    },
+    {
+      "page": "workspace",
+      "viewport": "mobile",
+      "url": "/workspace",
+      "h1": "今天想推进什么？",
+      "links": [],
+      "overflow": 0,
+      "bodyStart": "LOKFEEL 证据 发现适合的人 我的介绍 等待双方确认 关系进展 更多 开始 · 你的工作区 今天想推进什么？ 一句话说清结果、期限，和你愿意拿出的东西。它会摊成一张能跑的工作区： 谁提案、谁点头、由谁执行、什么算成交。 描述你的目标 理解先走服务端（AI 或规则，来源会标注）；只有创建任务才写入。 开始 没想好？从这里开始 30 天谈下 20 个渠道 两周做完 10 场访谈 一个月办 40 人工作坊 20 条 未读消息 还没读 0 条 未读通知 没有新动静 0 位 待你介绍 没有等你牵线的 待处理 只列真实通知 没有需要你处理的事。新的批准、提案和提醒会先出现在这里。",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/workspace-mobile.png"
+    },
+    {
+      "page": "product",
+      "viewport": "mobile",
+      "url": "/product",
+      "h1": "Know what you can do, and what needs your OK",
+      "links": [
+        {
+          "text": "L LOKFEEL",
+          "href": "/"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms of Service",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookie Policy",
+          "href": "/cookies"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Open the goal input →",
+          "href": "/workspace?view=now"
+        },
+        {
+          "text": "Open my tasks →",
+          "href": "/workspace?view=missions"
+        },
+        {
+          "text": "Review what needs approval →",
+          "href": "/workspace?view=consent"
+        },
+        {
+          "text": "Open my tasks →",
+          "href": "/workspace?view=missions"
+        },
+        {
+          "text": "Open the activity log →",
+          "href": "/workspace?view=agents"
+        },
+        {
+          "text": "Open results →",
+          "href": "/workspace?view=outcomes"
+        },
+        {
+          "text": "Open approvals →",
+          "href": "/workspace?view=consent"
+        },
+        {
+          "text": "Open approvals →",
+          "href": "/workspace?view=consent"
+        },
+        {
+          "text": "Contact us →",
+          "href": "/contact"
+        },
+        {
+          "text": "Try with a goal",
+          "href": "/register"
+        },
+        {
+          "text": "See how it works",
+          "href": "/how-it-works"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "About Us",
+          "href": "/about"
+        },
+        {
+          "text": "Careers",
+          "href": "/careers"
+        },
+        {
+          "text": "Press",
+          "href": "/press"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "L LOKFEEL Pricing Privacy Policy Terms of Service Cookie Policy Contact Us Log in Get Started PRODUCT Know what you can do, and what needs your OK Three plain questions, one honest answer each. Every capability is labelled Available, Gated, or Planned, straight from the capability register. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review the steps, d",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/product-mobile.png"
+    },
+    {
+      "page": "solutions",
+      "viewport": "mobile",
+      "url": "/solutions",
+      "h1": "Three situations, one honest boundary",
+      "links": [
+        {
+          "text": "L LOKFEEL",
+          "href": "/"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "/privacy"
+        },
+        {
+          "text": "Terms of Service",
+          "href": "/terms"
+        },
+        {
+          "text": "Cookie Policy",
+          "href": "/cookies"
+        },
+        {
+          "text": "Log in",
+          "href": "/login"
+        },
+        {
+          "text": "Get Started",
+          "href": "/register"
+        },
+        {
+          "text": "Try with a goal",
+          "href": "/register"
+        },
+        {
+          "text": "Read the product page",
+          "href": "/product"
+        },
+        {
+          "text": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "text": "About Us",
+          "href": "/about"
+        },
+        {
+          "text": "Careers",
+          "href": "/careers"
+        },
+        {
+          "text": "Press",
+          "href": "/press"
+        },
+        {
+          "text": "Contact",
+          "href": "/contact"
+        },
+        {
+          "text": "FAQ",
+          "href": "/faq"
+        },
+        {
+          "text": "Safety Tips",
+          "href": "/safety-tips"
+        },
+        {
+          "text": "Community Guidelines",
+          "href": "/community-guidelines"
+        },
+        {
+          "text": "Support",
+          "href": "/support"
+        },
+        {
+          "text": "Refunds",
+          "href": "/refunds"
+        },
+        {
+          "text": "Cancellations Policy",
+          "href": "/cancellations-policy"
+        },
+        {
+          "text": "Terms of Service",
+          "href": "/terms"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "/privacy"
+        }
+      ],
+      "overflow": 0,
+      "bodyStart": "L LOKFEEL Pricing Privacy Policy Terms of Service Cookie Policy Contact Us Log in Get Started SOLUTIONS Three situations, one honest boundary An individual, a team, and two parties coordinating an introduction. For each one: what you put in, what needs approval, what you get, and what is not live yet. Where things stand today LokFeel is in a controlled rollout. Today you can state a goal, review t",
+      "screenshot": "docs/v25.6/ga-closure/ui-remediation/before/solutions-mobile.png"
+    }
+  ]
+}

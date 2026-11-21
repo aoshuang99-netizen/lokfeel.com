@@ -1,0 +1,152 @@
+{
+  "task": "V25.6 UI 整改 · 真实 API 回执",
+  "generatedAt": "2026-11-21T07:18:51.169Z",
+  "base": "http://127.0.0.1:3104",
+  "evidenceType": "REAL_HTTP (local service, logged-in fixture, non-production)",
+  "honestBoundary": "本地隔离库回执，不是生产数据；证明端点真实可调用与数据量，不证明生产发布。",
+  "proofs": [
+    {
+      "capability": "登录（个人/企业/聊天页的会话前置）",
+      "endpoint": "POST /api/auth/login",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "success": true
+      }
+    },
+    {
+      "capability": "Dashboard · Chats 数字源（会话列表）",
+      "endpoint": "GET /api/im/conversations",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "conversations",
+          "chats",
+          "count"
+        ],
+        "count": 1,
+        "conversationsLength": 1
+      }
+    },
+    {
+      "capability": "Dashboard · Chats 未读数字源",
+      "endpoint": "GET /api/chats/unread-count",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "unreadCount",
+          "totalChats"
+        ],
+        "unreadCount": 20,
+        "totalChats": 1
+      }
+    },
+    {
+      "capability": "Dashboard · Spaces 数字源（组织列表）",
+      "endpoint": "GET /api/v1/organizations",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "success",
+          "data"
+        ],
+        "success": true,
+        "dataKeys": [
+          "organizations"
+        ]
+      }
+    },
+    {
+      "capability": "Chats/Connections · 邀请码真实来源",
+      "endpoint": "GET /api/invites",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "inviteCode",
+          "inviteCount",
+          "inviteRewards",
+          "invites",
+          "rewards"
+        ],
+        "invitesLength": 0
+      }
+    },
+    {
+      "capability": "Connections · 真实连接数据",
+      "endpoint": "GET /api/matches?limit=50",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "matches",
+          "pagination"
+        ],
+        "matchesLength": 0
+      }
+    },
+    {
+      "capability": "Console · 待我确认/队列数据源",
+      "endpoint": "GET /api/v1/workflow/overview",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "success",
+          "data"
+        ],
+        "success": true,
+        "dataKeys": [
+          "counts",
+          "needsAttention",
+          "stalled",
+          "deliveries"
+        ]
+      }
+    },
+    {
+      "capability": "Console · 任务数据源",
+      "endpoint": "GET /api/v1/missions?page=1&pageSize=1",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "success",
+          "data",
+          "meta"
+        ],
+        "success": true,
+        "dataKeys": [
+          "0"
+        ]
+      }
+    },
+    {
+      "capability": "Workspace · 通知数据源",
+      "endpoint": "GET /api/notifications",
+      "status": 200,
+      "ok": true,
+      "evidence": {
+        "topLevelKeys": [
+          "notifications",
+          "unreadCount"
+        ],
+        "unreadCount": 0,
+        "notificationsLength": 0
+      }
+    },
+    {
+      "capability": "权限负例 · 匿名读会话必须被拒",
+      "endpoint": "GET /api/im/conversations (no cookie)",
+      "status": 401,
+      "ok": true,
+      "evidence": {
+        "error": "Unauthorized"
+      }
+    }
+  ],
+  "verdict": "PASS"
+}
