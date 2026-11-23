@@ -1,0 +1,73 @@
+name: Preview Runtime Audit (P0-3/P0-4)
+
+# 独立 GitHub-hosted Runner 上打开真实 Preview，不依赖本机网络。
+# 本 workflow 只做验收与产物上传，不部署、不迁移、不改生产。
+
+on:
+  push:
+    branches: ['rc/p03-preview-runtime-audit-20261123']
+    paths:
+      - '.github/workflows/preview-runtime-audit.yml'
+      - 'scripts/qa/p03-preview-runtime-audit.mjs'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: '待验收的真实 URL'
+        required: false
+        default: 'https://lokfeel-preview.aoshuang99.workers.dev'
+      expected_sha:
+        description: '期望的运行时提交 SHA'
+        required: false
+        default: '9bc4fbb7cdc999d5e61814d2bd22967859b964cd'
+      allow_writes:
+        description: '是否允许写入测试（仅确认隔离库时使用）'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-runtime-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Verify preview runtime from independent runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://lokfeel-preview.aoshuang99.workers.dev' }}
+      EXPECTED_SHA: ${{ github.event.inputs.expected_sha || '9bc4fbb7cdc999d5e61814d2bd22967859b964cd' }}
+      ALLOW_WRITES: ${{ github.event.inputs.allow_writes || 'false' }}
+      AUDIT_EMAIL: ${{ secrets.QA_EMAIL || 'qa.male@lokfeel.com' }}
+      AUDIT_PASSWORD: ${{ secrets.QA_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Audit real deployment
+        run: |
+          set -o pipefail
+          args="--base=$BASE_URL --expected-sha=$EXPECTED_SHA --label=preview --compare-base=https://app.lokfeel.com --out=docs/p03-preview-runtime-audit/evidence/preview"
+          if [ "$ALLOW_WRITES" = "true" ]; then args="$args --writes"; fi
+          node scripts/qa/p03-preview-runtime-audit.mjs $args 2>&1 | tee p03-audit.log
+
+      - name: Upload runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: p03-preview-runtime-audit
+          path: |
+            docs/p03-preview-runtime-audit/evidence/preview
+            p03-audit.log
+          if-no-files-found: warn
+          retention-days: 30

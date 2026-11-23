@@ -12,6 +12,11 @@ on:
     branches: [main]
   push:
     branches: ['rc/**']
+    # 验收脚本/文档/工作流变更不改变应用产物；避免把同一候选的 Preview 重新部署成新 SHA。
+    paths-ignore:
+      - '.github/**'
+      - 'docs/**'
+      - 'scripts/qa/p03-preview-runtime-audit.mjs'
   workflow_dispatch:
 
 concurrency:
