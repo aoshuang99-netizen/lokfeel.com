@@ -1,0 +1,26 @@
+diff --git a/node_modules/@sentry/nextjs/build/cjs/config/util.js b/node_modules/@sentry/nextjs/build/cjs/config/util.js
+index 6aa9939..01fc79e 100644
+--- a/node_modules/@sentry/nextjs/build/cjs/config/util.js
++++ b/node_modules/@sentry/nextjs/build/cjs/config/util.js
+@@ -19,7 +19,7 @@ function getNextjsVersion() {
+   return void 0;
+ }
+ let sdkRequire;
+-sdkRequire = module$1.createRequire(__filename);
++try { sdkRequire = module$1.createRequire(__filename); } catch { sdkRequire = undefined; }
+ function resolveNextjsPackageJson() {
+   for (const nodeRequire of [module$1.createRequire(`${process.cwd()}/`), sdkRequire]) {
+     try {
+diff --git a/node_modules/@sentry/nextjs/build/esm/config/util.js b/node_modules/@sentry/nextjs/build/esm/config/util.js
+index 36e3205..8fe3da9 100644
+--- a/node_modules/@sentry/nextjs/build/esm/config/util.js
++++ b/node_modules/@sentry/nextjs/build/esm/config/util.js
+@@ -17,7 +17,7 @@ function getNextjsVersion() {
+   return void 0;
+ }
+ let sdkRequire;
+-sdkRequire = createRequire(import.meta.url);
++try { sdkRequire = createRequire(import.meta.url); } catch { sdkRequire = undefined; }
+ function resolveNextjsPackageJson() {
+   for (const nodeRequire of [createRequire(`${process.cwd()}/`), sdkRequire]) {
+     try {
