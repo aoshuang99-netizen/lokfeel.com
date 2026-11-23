@@ -32,8 +32,8 @@ const VIEWPORTS = [
 ]
 
 const PAGES = [
-  { slug: 'home', path: '/', cta: /开始|免费|使用|注册|Get started|sign up/i },
-  { slug: 'register', path: '/register', cta: /创建账号|注册|Sign up|开始/i },
+  { slug: 'home', path: '/', cta: /Start a real conversation|开始|免费|使用|注册|Get started|sign up/i },
+  { slug: 'register', path: '/register', cta: /Verify & Create Account|创建账号|注册|Sign up|开始/i },
   { slug: 'workspace', path: '/workspace', auth: true, cta: /编译工作区|创建|开始|目标/i },
   { slug: 'chats', path: '/dashboard/chats', auth: true, cta: /发起|新建|发送|会话/i },
   { slug: 'connections', path: '/dashboard/connections', auth: true, cta: /邀请|连接|添加/i },
@@ -64,13 +64,15 @@ async function ensureDir(p) {
 }
 
 function credentialFromLocal(key) {
-  try {
-    const file = path.resolve('nexus-app/.qa-credentials.local.json')
-    const raw = JSON.parse(awaitSafeRead(file))
-    return typeof raw?.[key] === 'string' && raw[key] ? raw[key] : ''
-  } catch {
-    return ''
+  for (const rel of ['.qa-credentials.local.json', 'nexus-app/.qa-credentials.local.json']) {
+    try {
+      const raw = JSON.parse(awaitSafeRead(path.resolve(rel)))
+      if (typeof raw?.[key] === 'string' && raw[key]) return raw[key]
+    } catch {
+      // 继续找下一个候选位置
+    }
   }
+  return ''
 }
 
 function awaitSafeRead(file) {
@@ -142,7 +144,7 @@ async function visibleCtas(page, pattern) {
   }, pattern.source)
 }
 
-async function capturePass(context, base, passLabel, authenticated) {
+async function capturePass(context, base, passLabel, authenticated, viewportName) {
   const shotsDir = path.join(OUT, passLabel, 'shots')
   await ensureDir(shotsDir)
 
@@ -188,15 +190,10 @@ async function capturePass(context, base, passLabel, authenticated) {
       title = await page.title()
       h1 = await page.locator('h1').first().innerText().catch(() => '')
       ctas = await visibleCtas(page, item.cta)
-      for (const vp of VIEWPORTS) {
-        // 双视口截图：同一个 context 只有一个 viewport，切换在 captureAll 中完成。
-        if (vp.name === (context.viewportSize()?.width === 390 ? 'mobile' : 'desktop')) {
-          await page.screenshot({
-            path: path.join(shotsDir, `${item.slug}-${vp.name}.png`),
-            fullPage: false,
-          })
-        }
-      }
+      await page.screenshot({
+        path: path.join(shotsDir, `${item.slug}-${viewportName}.png`),
+        fullPage: false,
+      })
     } catch (error) {
       errors.push(`goto failed: ${String(error).slice(0, 250)}`)
     }
@@ -348,9 +345,14 @@ async function ctaVideo(context, base, passLabel) {
     await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout: 45000 })
     await waitForUi(page)
     const before = page.url()
+    await page
+      .locator('textarea')
+      .first()
+      .fill('I would like to understand how a real conversation starts here')
+      .catch(() => {})
     const target = page
-      .locator('a,button,[role="button"]')
-      .filter({ hasText: /开始|免费|使用|注册|Get started|sign up/i })
+      .locator('[data-testid="intent-submit"],a,button,[role="button"]')
+      .filter({ hasText: /Start a real conversation|开始|免费|使用|注册|Get started|sign up/i })
       .first()
     await target.waitFor({ state: 'visible', timeout: 8000 })
     await target.click({ timeout: 8000 })
@@ -445,7 +447,7 @@ async function runPass(base, passLabel) {
       await writeChecks(context, base, authenticated, passLabel)
       await ctaVideo(context, base, passLabel)
     }
-    await capturePass(context, base, passLabel, authenticated)
+    await capturePass(context, base, passLabel, authenticated, vp.name)
     await context.close()
   }
   await browser.close()
