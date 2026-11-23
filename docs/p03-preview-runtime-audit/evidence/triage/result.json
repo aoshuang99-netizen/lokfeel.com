@@ -1,0 +1,262 @@
+{
+  "generatedAt": "2026-11-23T08:41:01.371Z",
+  "base": "https://lokfeel-preview.aoshuang99.workers.dev",
+  "worker": "lokfeel-preview",
+  "expectedSha": "9bc4fbb7cdc999d5e61814d2bd22967859b964cd",
+  "wranglerVersion": "4.151.0",
+  "deployments": {
+    "command": "wrangler deployments list --json",
+    "parsed": [
+      {
+        "id": "93ac84f7-f341-4dd3-9d47-27144b7407f0",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "c4a59d1f-8761-4b20-b148-2b18ee830342",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-21T06:48:11.050148Z"
+      },
+      {
+        "id": "09d5b3ff-a447-4a77-8492-44b1956feb01",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "641e40ee-1c2a-4a1e-8102-bad0ff6af87e",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-21T07:39:10.114203Z"
+      },
+      {
+        "id": "66eed9f5-1a0f-4108-8a0b-c0e82c41e67a",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "7cd5d840-1ba7-449e-9df2-7484d57905ea",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-21T07:45:48.564491Z"
+      },
+      {
+        "id": "9679f7b2-50ba-4e2d-a868-8316987cb5e5",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "d95044f0-c83d-4c45-8be9-d47190e9d8ef",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-21T08:56:38.071757Z"
+      },
+      {
+        "id": "9a9f47af-2734-4ae1-9b3b-7af784f0b31a",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "0b4346a5-787d-4ae2-a870-daa896a50d27",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-21T09:11:42.493637Z"
+      },
+      {
+        "id": "84f596d6-b746-45c5-ad01-36343e155f94",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "b78b6287-8c48-4cb9-a56e-66b2177d0d81",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:13:46.226672Z"
+      },
+      {
+        "id": "1664e212-e9db-4153-a323-918fa41d8f32",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "5e3f2d82-f633-4e9b-8f66-63e65e0b6e80",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:26:59.051881Z"
+      },
+      {
+        "id": "7330e49b-e0dd-444e-b0b1-6fe9419b5fed",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "e6037fe1-7abe-4bee-9432-3f257fdbe29d",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:39:34.011721Z"
+      },
+      {
+        "id": "019e503e-ab6d-4469-9bc7-6d14c87eeed2",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "5e09f501-7d5e-4fc3-8507-76afb55766e4",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:52:58.728745Z"
+      },
+      {
+        "id": "87aa6a2f-94f5-4716-a1b1-09e63b1b5078",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "fcb95e47-8a96-4046-9aed-b80be48ddae4",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:29:35.692912Z"
+      }
+    ]
+  },
+  "endpoints": [
+    {
+      "name": "home",
+      "path": "/",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5eedf05c9ea8bee-PDX",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 827,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "register",
+      "path": "/register",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5eedf0a9f008636-PDX",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 73,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "product",
+      "path": "/product",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5eedf0afba68bee-PDX",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 23,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "solutions",
+      "path": "/solutions",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5eedf0b18138636-PDX",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 51,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "health",
+      "path": "/api/health",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5eedf0b6c9f8bee-PDX",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 48,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "invite-lookup-invalid",
+      "path": "/api/invites/lookup?code=INV-0000000000000000",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5eedf0bb9708636-PDX",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 47,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "plans-read",
+      "path": "/api/payments/dodo/plans",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5eedf0c0de88bee-PDX",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 45,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    }
+  ],
+  "tail": {
+    "exitCode": null,
+    "signal": "SIGTERM",
+    "lines": 0,
+    "events": [],
+    "exceptionEvents": [],
+    "firstException": null,
+    "stderrSnippet": "",
+    "elapsedMs": 12043
+  },
+  "verdict": "FAIL"
+}
