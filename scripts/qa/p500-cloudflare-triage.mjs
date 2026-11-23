@@ -205,7 +205,7 @@ function summarizeTailLine(line) {
 async function captureTail(base, worker, endpoints) {
   return new Promise((resolve) => {
     let settled = false
-    const child = spawn('npx', ['wrangler', 'tail', worker, '--format', 'json', '--sampling-rate', '1'], {
+    const child = spawn('npx', ['wrangler', 'tail', worker, '--format', 'json', '--sampling-rate', '0.25'], {
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
