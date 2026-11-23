@@ -2,15 +2,16 @@
 
 ## 范围与边界
 
-- 应用候选：`9bc4fbb7cdc999d5e61814d2bd22967859b964cd`（`rc/p01-invite-loop-20261123`），Preview 运行时 SHA 待独立 Runner 复核。
-- 验收基础设施分支：`rc/p03-preview-runtime-audit-20261123`，当前头 `45796e2`（仅 QA 脚本/workflow/文档，不改应用代码）。
+- 应用候选：`9bc4fbb7cdc999d5e61814d2bd22967859b964cd`（`rc/p01-invite-loop-20261123`）。本轮**不改应用代码**。
+- 验收基础设施分支：`rc/p03-preview-runtime-audit-20261123`，远端头 **`bb345f936834d61b5b0617ee28f0ad7ed12dc674`**（仅 QA 脚本/workflow/文档）。
+- Preview URL：`https://lokfeel-preview.aoshuang99.workers.dev`。
 - 未执行：生产部署、生产迁移、真实扣款、外部消息、生产数据写入。
-- 本机 `workers.dev` 曾超时；按指令不重复相同请求，改用 GitHub-hosted Runner 做独立网络验收。
 
 ## 1. 用户成果
 
 - P0-1 的 A/B 两账号邀请、接受、双向聊天证据仍有效：`18/18` HTTP + DB，`3/3` 浏览器截图。
-- 本轮新增首页主 CTA 真实浏览器操作：填写真实意图 → 点击 `Start a real conversation` → 跳转 `/register`，录像与截图见 `evidence/local-candidate-final/local-candidate-final/video/`。
+- 本机首页主 CTA 真实浏览器操作：填写真实意图 → 点击 `Start a real conversation` → 跳转 `/register`，录像见 `evidence/local-candidate-final/local-candidate-final/video/`。
+- **Preview 用户成果：FAIL** —— 独立 Runner 打开 Preview 时首页/注册/产品/方案与关键 API 全部 HTTP 500，用户无法完成任何真实操作。
 - 10 名目标用户真人完成率：**BLOCKED（未测）**，不填虚构百分比。
 
 ## 2. 工程成果
@@ -23,29 +24,42 @@
 - 新增 GitHub-hosted Runner workflow：`.github/workflows/preview-runtime-audit.yml`。
 - `cloudflare-preview.yml` 加 `paths-ignore`：验收脚本/文档/workflow 变更不重新部署 Preview，避免同一候选被刷成新 SHA。
 - 本地候选（生产构建 `127.0.0.1:3215`，隔离库 `/tmp/p01-exp.db`）最终审计：**PASS**。
-  - 页面：`16/16 PASS`；
-  - 登录：`PASS`；
-  - Health/SHA：`PASS`（`9bc4fbb`）；
+  - 页面：`16/16 PASS`；登录：`PASS`；Health/SHA：`PASS`（`9bc4fbb`）；
   - 只读 API：`invite-lookup-invalid PASS`、`plans-read PASS`；
-  - 写入 API：`BLOCKED`（未授权向可能共享的 Preview 库写入）；
-  - 主 CTA：`PASS`。
-- 本地生产旧版对照（`https://app.lokfeel.com`）已抓取同视口截图，见 `evidence/local-run2/before/shots/`。
+  - 写入 API：`BLOCKED`（未授权向可能共享的 Preview 库写入）；主 CTA：`PASS`。
+- 审计分支完整 CI：`45125703299` = completed/**success**（SHA `45796e2`）；后续 workflow-only 提交见 `bb345f9`。
+- **Preview 独立 Runner 审计：`45128348904` = FAIL**。
+  - 结果分支：`audit-results/p03-45128348904`（`b012f6149746bb8493a6bb979937c8667c51525f`）。
+  - `/api/health`：`500`，无 `status` / `commit` / `commitSource` ⇒ **SHA 无法对齐**。
+  - 公开页：8 个 FAIL（桌面/移动各 4 页：`/`、`/register`、`/product`、`/solutions`），全部 HTTP 500。
+  - 认证页：8 个 BLOCKED（登录凭据未提供）。
+  - 只读 API：`invite-lookup-invalid` 500、`plans-read` 500。
+  - 登录：`BLOCKED` —— `QA_PASSWORD` secret 未配置；没有用默认口令代替。
+  - 主 CTA：`FAIL`（页面 500，无法点击）。
+  - 写 API：`BLOCKED`（未授权向可能共享的 Preview 库写入）。
+- 初步根因：Preview Worker 运行时返回全站 500，`wrangler.preview.jsonc` 只声明 assets/self-reference，没有任何 DB/Auth 变量绑定；生产 Worker 的环境在平台侧。最终根因仍需 Cloudflare Worker 日志确认。
 
 ## 3. 产品成果
 
-- 首页候选版相较生产旧版有真实可见差异：生产旧版主标题 `Your goal, compiled.`；候选版 `Conversations belong to people. You decide what you share.`，并明确标注 AI 仅私下测试、未作为已发布能力。
-- 候选版 390px 八页截图已生成，主 CTA 在移动端可见；详见 `evidence/local-candidate-final/local-candidate-final/shots/`。
-- 待独立 Runner 产出 Preview 同视口截图后，才把 P0-4 标为部署环境 PASS。
+- 生产旧版同视口截图已抓取：`evidence/local-run2/before/shots/`。
+- 候选版本地双视口截图已生成，首页移动主 CTA 可见：`evidence/local-candidate-final/local-candidate-final/shots/`。
+- 首页文案有真实可见差异：旧版 `Your goal, compiled.` → 候选版 `Conversations belong to people. You decide what you share.`，并明确 AI 仍为私下测试、未发布能力。
+- **部署态产品成果：FAIL** —— Preview 页面 500，不能把本地 PASS 当成部署通过。
+- Console 本地候选移动端可见真实待办入口与 `0` 状态（来自本地测试库），不是无来源图表；但部署态仍待 Preview 修好后复验。
 
 ## 4. 发布成果
 
 - 独立 Reviewer：**BLOCKED**。
 - Owner 对精确 SHA / 环境 / 迁移 / 回滚的批准：**BLOCKED**。
 - 生产部署、生产验收、回滚演练：**BLOCKED（未授权）**。
-- Preview 运行时验收：独立 Runner 运行中；最终 Run ID 与结论待写入。
+- Preview 运行时验收：**FAIL**（Run `45128348904`），不是 BLOCKED —— 已有独立网络环境的确定证据。
+- 直接修复动作：
+  1. 责任人 CI/Cloudflare Owner：为 `lokfeel-preview` Worker 绑定运行所需 DB/Auth 环境与 QA 账号 secret，确认日志后重跑 `preview-runtime-audit.yml`；
+  2. 责任人 WorkBuddy：审计脚本已就位，Runner 结果会自动落入 `audit-results/p03-<run_id>`；
+  3. 在 Preview 八页/登录/API/SHA 全绿前，不得把 P0-4 标为 PASS，也不得进入生产发布。
 
 ## 证据目录
 
 - `evidence/local-candidate-final/` — 本地候选最终审计（PASS）。
 - `evidence/local-run2/before/` — 生产旧版同视口对照截图。
-- `evidence/preview/` — GitHub-hosted Runner 的 Preview 审计产物（待 workflow 完成）。
+- 独立 Runner 结果：`git show origin/audit-results/p03-45128348904:docs/p03-preview-runtime-audit/evidence/preview/result.json`。

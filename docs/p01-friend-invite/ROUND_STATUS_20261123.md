@@ -69,9 +69,10 @@
 - InvitePanel：分享链接从断链的 `/register?ref=` 改为 `/connect/invite?code=`；
   旧品牌 `LokFee!` 改为 `LokFeel`；无邀请时提供生成入口。
 - 注册页：`?ref=` 现被消费，注册后回落到接受页（不丢链接），仍不自动建联。
-- 🟡 **八页前后台新旧对照 / 主 CTA 录像：本地候选 PASS，Preview 运行时待独立 Runner 复核**。
-  本地生产构建双视口 `16/16 PASS`、登录 PASS、主 CTA 点击录像 PASS；生产旧版同视口截图已抓取。
-  证据见 `docs/p03-preview-runtime-audit/`。责任人：WorkBuddy（绝对结论以独立 Runner 为准）。
+- ❌ **八页部署态产品成果：FAIL** —— Preview 独立 Runner `45128348904` 显示公开页/API 全 500；
+  本地候选双视口 `16/16 PASS`、登录 PASS、主 CTA 点击录像 PASS，但不能替代部署态验收。
+  生产旧版同视口截图已抓取。证据见 `docs/p03-preview-runtime-audit/`。
+  责任人：CI/Cloudflare Owner（补 Preview Worker 环境与 QA secret 后重跑审计）。
 
 ---
 
@@ -79,8 +80,9 @@
 
 - 独立 Reviewer 签署：❌ **BLOCKED**（需独立 reviewer，非内部自评）。
 - 生产审批：❌ **BLOCKED** —— 需 Owner 对精确 SHA、环境、迁移、回滚方案批准。
-- Preview 运行时验收：🟡 **独立 Runner 执行中** —— 本机 workers.dev 超时，不重复请求；
-  已新增 GitHub-hosted Runner workflow 对真实 Preview 做八页/登录/API/SHA 验收。
+- Preview 运行时验收：❌ **FAIL** —— 独立 Runner `45128348904`：8 页 500、只读 API 500、
+  `/api/health` 500（无运行时 SHA），登录因缺 `QA_PASSWORD` secret 为 BLOCKED。
+  结果见 `audit-results/p03-45128348904`。
 - 生产 URL / 生产验收：❌ **BLOCKED** —— 未部署（遵守"未经精确批准不部署"）。
 - 回滚演练：❌ **BLOCKED**（需生产审批后执行）。
 
@@ -88,7 +90,7 @@
 
 ## 最终裁决（诚实）
 按用户三优先级：① 邀请断链 **已真修并有端到端证据**；② 两项 CI 红灯 **远端 CI `45120216414` 全绿**；
-③ 发布 **BLOCKED 于 Owner 精确批准**。P0-3/P0-4 正由独立 Runner 对真实 Preview 做最终复核。
+③ 发布 **BLOCKED 于 Owner 精确批准**；P0-3/P0-4 **FAIL 于 Preview Worker 运行时 500**，须先补 Preview 环境再复验。
 
 未经 Owner 精确批准，不推送生产部署相关动作、不迁移生产、不扣款、不发外部消息。
 推送候选分支以触发 CI/Preview 属前几轮已授权范围，待本地 20 轮与全量验证收口后执行。
