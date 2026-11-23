@@ -267,7 +267,7 @@ async function apiChecks(context, base, passLabel) {
       path: '/api/invites/lookup?code=INV-0000000000000000',
       expect: [200, 404],
     },
-    { name: 'plans-read', path: '/api/plans', expect: [200] },
+    { name: 'plans-read', path: '/api/payments/dodo/plans', expect: [200] },
   ]
   for (const check of checks) {
     try {
