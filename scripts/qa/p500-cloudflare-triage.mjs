@@ -176,30 +176,42 @@ function listVersions(worker) {
   }
 }
 
-function summarizeTailLine(line) {
-  const raw = line.trim()
-  if (!raw.startsWith('{')) return { parse: 'not-json', raw: truncate(redact(raw), 800) }
-  try {
-    const obj = JSON.parse(raw)
-    const eventRequest = obj?.event?.request || {}
-    return {
-      outcome: obj?.outcome || '',
-      scriptName: obj?.scriptName || '',
-      eventTime: obj?.eventTimestamp || obj?.event?.request?.timestamp || '',
-      requestId: obj?.id || obj?.event?.request?.id || eventRequest?.id || '',
-      url: redact(eventRequest?.url || ''),
-      method: eventRequest?.method || '',
-      statusCode: obj?.response?.status ?? eventRequest?.response?.status ?? '',
-      exceptions: (obj?.exceptions || []).map((exc) => ({
-        name: exc?.name || '',
-        message: truncate(redact(exc?.message || ''), 1200),
-        timestamp: exc?.timestamp || '',
-      })),
-      logs: (obj?.logs || []).slice(0, 10).map((log) => truncate(redact(log?.message || ''), 600)),
-    }
-  } catch {
-    return { parse: 'json-error', raw: truncate(redact(raw), 800) }
+function summarizeTailObject(obj) {
+  const eventRequest = obj?.event?.request || {}
+  return {
+    outcome: obj?.outcome || '',
+    scriptName: obj?.scriptName || '',
+    eventTime: obj?.eventTimestamp || obj?.event?.request?.timestamp || '',
+    requestId: obj?.id || obj?.event?.request?.id || eventRequest?.id || '',
+    url: redact(eventRequest?.url || ''),
+    method: eventRequest?.method || '',
+    statusCode: obj?.response?.status ?? eventRequest?.response?.status ?? '',
+    exceptions: (obj?.exceptions || []).map((exc) => ({
+      name: exc?.name || '',
+      message: truncate(redact(exc?.message || ''), 1200),
+      timestamp: exc?.timestamp || '',
+    })),
+    logs: (obj?.logs || []).slice(0, 10).map((log) => truncate(redact(log?.message || ''), 600)),
   }
+}
+
+function summarizeTailRaw(rawText) {
+  const text = String(rawText ?? '').trim()
+  if (!text) return []
+  const attempts = [
+    () => JSON.parse(text),
+    () => JSON.parse(`[${text.replace(/}\s*\{/g, '},{')}]`),
+  ]
+  for (const attempt of attempts) {
+    try {
+      const parsed = attempt()
+      const items = Array.isArray(parsed) ? parsed : [parsed]
+      return items.map(summarizeTailObject)
+    } catch {
+      // 尝试下一种解析方式
+    }
+  }
+  return [{ parse: 'raw-error', raw: truncate(redact(text), 1200) }]
 }
 
 async function captureTail(base, worker, endpoints) {
@@ -231,14 +243,12 @@ async function captureTail(base, worker, endpoints) {
   })
   const raw = fs.existsSync(tailPath) ? fs.readFileSync(tailPath, 'utf8') : ''
   const stderr = fs.existsSync(tailErrPath) ? fs.readFileSync(tailErrPath, 'utf8') : ''
-  const lines = raw.split('\n').filter((line) => line.trim().length > 0)
-  const events = lines.map(summarizeTailLine)
+  const events = summarizeTailRaw(raw)
   const withExceptions = events.filter(
     (event) => (event.exceptions?.length || 0) > 0 || event.outcome === 'exception',
   )
   return {
     exitCode,
-    lines: lines.length,
     events,
     exceptionEvents: withExceptions,
     firstException: withExceptions[0] || null,
@@ -283,7 +293,7 @@ async function main() {
     `- Verdict: **${result.verdict}**`,
     `- Wrangler: ${version}`,
     `- Endpoints: ${endpoints.map((endpoint) => `${endpoint.name}=${endpoint.status}`).join(', ')}`,
-    `- Tail lines: ${tail.lines}; exception events: ${tail.exceptionEvents.length}`,
+    `- Tail events: ${tail.events.length}; exception events: ${tail.exceptionEvents.length}`,
     `- First exception: ${
       first
         ? `${first.outcome} ${first.url} :: ${(first.exceptions || []).map((exc) => `${exc.name}: ${exc.message}`).join(' | ')}`
@@ -297,7 +307,7 @@ async function main() {
   console.log(`P500_TRIAGE_VERDICT=${result.verdict}`)
   console.log(JSON.stringify({
     endpoints: endpoints.map((endpoint) => `${endpoint.name}=${endpoint.status}`),
-    tailLines: tail.lines,
+    tailEvents: tail.events.length,
     exceptionEvents: tail.exceptionEvents.length,
     firstException: tail.firstException || null,
     deploymentSummary: deployments?.parsed?.[0] || deployments?.parsed || null,
