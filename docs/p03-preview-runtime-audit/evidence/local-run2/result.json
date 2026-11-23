@@ -1,0 +1,590 @@
+{
+  "generatedAt": "2026-11-23T06:33:26.920Z",
+  "base": "http://127.0.0.1:3215",
+  "compareBase": "https://app.lokfeel.com",
+  "expectedSha": "9bc4fbb7cdc999d5e61814d2bd22967859b964cd",
+  "label": "local-candidate",
+  "allowWrites": false,
+  "login": {
+    "status": "FAIL",
+    "pass": "local-candidate",
+    "http": 401,
+    "email": "qa.male@lokfeel.com",
+    "cookie": false,
+    "successFlag": false
+  },
+  "health": {
+    "status": "PASS",
+    "pass": "local-candidate",
+    "http": 200,
+    "health": "healthy",
+    "commit": "9bc4fbb",
+    "expected": "9bc4fbb",
+    "commitSource": "git",
+    "builtAt": "2026-11-23T05:50:11.058Z"
+  },
+  "api": [
+    {
+      "pass": "before",
+      "name": "invite-lookup-invalid",
+      "status": "PASS",
+      "http": 404,
+      "method": "GET"
+    },
+    {
+      "pass": "before",
+      "name": "plans-read",
+      "status": "PASS",
+      "http": 200,
+      "method": "GET"
+    },
+    {
+      "pass": "before",
+      "name": "invite-write",
+      "status": "BLOCKED",
+      "reason": "未显式授权 --writes；不向可能的共享库写入测试数据"
+    },
+    {
+      "pass": "local-candidate",
+      "name": "invite-lookup-invalid",
+      "status": "PASS",
+      "http": 404,
+      "method": "GET"
+    },
+    {
+      "pass": "local-candidate",
+      "name": "plans-read",
+      "status": "PASS",
+      "http": 200,
+      "method": "GET"
+    },
+    {
+      "pass": "local-candidate",
+      "name": "invite-write",
+      "status": "BLOCKED",
+      "reason": "未显式授权 --writes；不向可能的共享库写入测试数据"
+    }
+  ],
+  "pages": [
+    {
+      "pass": "before",
+      "slug": "home",
+      "path": "/",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Your goal,\ncompiled.",
+      "finalUrl": "https://app.lokfeel.com/",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "register",
+      "path": "/register",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Join LokFeel!",
+      "finalUrl": "https://app.lokfeel.com/register",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "workspace",
+      "path": "/workspace",
+      "status": "PASS",
+      "http": 200,
+      "title": "Living Workspace | LokFeel",
+      "h1": "今天想推进什么？",
+      "finalUrl": "https://app.lokfeel.com/workspace",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "编译工作区",
+          "href": "",
+          "disabled": true,
+          "width": 110
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Failed to load resource: the server responded with a status of 403 ()"
+      ],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "chats",
+      "path": "/dashboard/chats",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Messages",
+      "finalUrl": "https://app.lokfeel.com/dashboard/chats",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "connections",
+      "path": "/dashboard/connections",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Connections",
+      "finalUrl": "https://app.lokfeel.com/dashboard/connections",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "console",
+      "path": "/console",
+      "status": "PASS",
+      "http": 200,
+      "title": "社群控制台 | LokFeel",
+      "h1": "你还没有加入任何社群",
+      "finalUrl": "https://app.lokfeel.com/console",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "product",
+      "path": "/product",
+      "status": "FAIL",
+      "http": 200,
+      "title": "Product | LokFeel",
+      "h1": "该页面正在最终审核",
+      "finalUrl": "https://app.lokfeel.com/product",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "solutions",
+      "path": "/solutions",
+      "status": "PASS",
+      "http": 200,
+      "title": "Solutions | LokFeel",
+      "h1": "该页面正在最终审核",
+      "finalUrl": "https://app.lokfeel.com/solutions",
+      "ctaVisible": [
+        {
+          "tag": "a",
+          "text": "联系我们",
+          "href": "/contact",
+          "disabled": false,
+          "width": 56
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "home",
+      "path": "/",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Your goal,\ncompiled.",
+      "finalUrl": "https://app.lokfeel.com/",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "register",
+      "path": "/register",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Join LokFeel!",
+      "finalUrl": "https://app.lokfeel.com/register",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "workspace",
+      "path": "/workspace",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fworkspace",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "chats",
+      "path": "/dashboard/chats",
+      "status": "FAIL",
+      "http": 0,
+      "title": "",
+      "h1": "",
+      "finalUrl": "",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [
+        "goto failed: Error: page.goto: net::ERR_FAILED at https://app.lokfeel.com/dashboard/chats\nCall log:\n\u001b[2m  - navigating to \"https://app.lokfeel.com/dashboard/chats\", waiting until \"domcontentloaded\"\u001b[22m\n"
+      ],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "connections",
+      "path": "/dashboard/connections",
+      "status": "FAIL",
+      "http": 0,
+      "title": "",
+      "h1": "",
+      "finalUrl": "",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [
+        "goto failed: Error: page.goto: net::ERR_FAILED at https://app.lokfeel.com/dashboard/connections\nCall log:\n\u001b[2m  - navigating to \"https://app.lokfeel.com/dashboard/connections\", waiting until \"domcontentloaded\"\u001b[22m\n"
+      ],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "console",
+      "path": "/console",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Connection OS for AI-native teams",
+      "h1": "Welcome Back",
+      "finalUrl": "https://app.lokfeel.com/login?callbackUrl=%2Fconsole",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "product",
+      "path": "/product",
+      "status": "FAIL",
+      "http": 200,
+      "title": "Product | LokFeel",
+      "h1": "该页面正在最终审核",
+      "finalUrl": "https://app.lokfeel.com/product",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "before",
+      "slug": "solutions",
+      "path": "/solutions",
+      "status": "PASS",
+      "http": 200,
+      "title": "Solutions | LokFeel",
+      "h1": "该页面正在最终审核",
+      "finalUrl": "https://app.lokfeel.com/solutions",
+      "ctaVisible": [
+        {
+          "tag": "a",
+          "text": "联系我们",
+          "href": "/contact",
+          "disabled": false,
+          "width": 56
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/before/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "home",
+      "path": "/",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people.\nYou decide what you share.",
+      "finalUrl": "http://127.0.0.1:3215/",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        },
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "register",
+      "path": "/register",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
+      "finalUrl": "http://127.0.0.1:3215/register",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "workspace",
+      "path": "/workspace",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "chats",
+      "path": "/dashboard/chats",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "connections",
+      "path": "/dashboard/connections",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "console",
+      "path": "/console",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "product",
+      "path": "/product",
+      "status": "FAIL",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
+      "finalUrl": "http://127.0.0.1:3215/product",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "solutions",
+      "path": "/solutions",
+      "status": "FAIL",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
+      "finalUrl": "http://127.0.0.1:3215/solutions",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "home",
+      "path": "/",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people. You decide what you share.",
+      "finalUrl": "http://127.0.0.1:3215/",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        },
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "register",
+      "path": "/register",
+      "status": "FAIL",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
+      "finalUrl": "http://127.0.0.1:3215/register",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "workspace",
+      "path": "/workspace",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "chats",
+      "path": "/dashboard/chats",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "connections",
+      "path": "/dashboard/connections",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "console",
+      "path": "/console",
+      "status": "BLOCKED",
+      "reason": "登录态不可用，未把未登录跳转冒充页面通过"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "product",
+      "path": "/product",
+      "status": "FAIL",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
+      "finalUrl": "http://127.0.0.1:3215/product",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    },
+    {
+      "pass": "local-candidate",
+      "slug": "solutions",
+      "path": "/solutions",
+      "status": "FAIL",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
+      "finalUrl": "http://127.0.0.1:3215/solutions",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate/shots"
+    }
+  ],
+  "cta": [
+    {
+      "pass": "before",
+      "name": "home-primary-cta",
+      "status": "FAIL",
+      "reason": "TimeoutError: locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"intent-submit\"],a,button,[role=\"button\"]').filter({ hasText: /Start a real conversation|开始|免费|使用|注册|Get started|sign up/i }).first() to be visible\u001b[22m\n"
+    },
+    {
+      "pass": "local-candidate",
+      "name": "home-primary-cta",
+      "status": "PASS",
+      "before": "http://127.0.0.1:3215/",
+      "after": "http://127.0.0.1:3215/register",
+      "screenshot": "evidence/local-candidate/video"
+    }
+  ],
+  "verdict": "FAIL",
+  "summary": {
+    "pageStats": {
+      "FAIL": 16,
+      "PASS": 8,
+      "BLOCKED": 8
+    },
+    "login": "FAIL",
+    "health": "PASS",
+    "api": [
+      "invite-lookup-invalid:PASS",
+      "plans-read:PASS",
+      "invite-write:BLOCKED",
+      "invite-lookup-invalid:PASS",
+      "plans-read:PASS",
+      "invite-write:BLOCKED"
+    ],
+    "cta": [
+      "home-primary-cta:FAIL",
+      "home-primary-cta:PASS"
+    ]
+  }
+}

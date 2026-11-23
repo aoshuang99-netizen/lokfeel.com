@@ -1,0 +1,472 @@
+{
+  "generatedAt": "2026-11-23T06:40:41.571Z",
+  "base": "http://127.0.0.1:3215",
+  "compareBase": null,
+  "expectedSha": "9bc4fbb7cdc999d5e61814d2bd22967859b964cd",
+  "label": "local-candidate-final",
+  "allowWrites": false,
+  "login": {
+    "status": "PASS",
+    "pass": "local-candidate-final",
+    "http": 200,
+    "email": "e2e.authed@example.invalid",
+    "cookie": true,
+    "successFlag": true
+  },
+  "health": {
+    "status": "PASS",
+    "pass": "local-candidate-final",
+    "http": 200,
+    "health": "healthy",
+    "commit": "9bc4fbb",
+    "expected": "9bc4fbb",
+    "commitSource": "git",
+    "builtAt": "2026-11-23T05:50:11.058Z"
+  },
+  "api": [
+    {
+      "pass": "local-candidate-final",
+      "name": "invite-lookup-invalid",
+      "status": "PASS",
+      "http": 404,
+      "method": "GET"
+    },
+    {
+      "pass": "local-candidate-final",
+      "name": "plans-read",
+      "status": "PASS",
+      "http": 200,
+      "method": "GET"
+    },
+    {
+      "pass": "local-candidate-final",
+      "name": "invite-write",
+      "status": "BLOCKED",
+      "reason": "未显式授权 --writes；不向可能的共享库写入测试数据"
+    }
+  ],
+  "pages": [
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "VISIBLE",
+      "slug": "home",
+      "path": "/",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people.\nYou decide what you share.",
+      "finalUrl": "http://127.0.0.1:3215/",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        },
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "register",
+      "path": "/register",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
+      "finalUrl": "http://127.0.0.1:3215/register",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "VISIBLE",
+      "slug": "workspace",
+      "path": "/workspace",
+      "status": "PASS",
+      "http": 200,
+      "title": "Living Workspace | LokFeel",
+      "h1": "今天想推进什么？",
+      "finalUrl": "http://127.0.0.1:3215/workspace",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "开始",
+          "href": "",
+          "disabled": true,
+          "width": 74
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "chats",
+      "path": "/dashboard/chats",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Messages",
+      "finalUrl": "http://127.0.0.1:3215/dashboard/chats",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "VISIBLE",
+      "slug": "connections",
+      "path": "/dashboard/connections",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Connections",
+      "finalUrl": "http://127.0.0.1:3215/dashboard/connections",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "邀请你认识的人\n\n生成你的专属邀请链接，发给真实的朋友。\n\n生成邀请链接 →",
+          "href": "",
+          "disabled": false,
+          "width": 363
+        },
+        {
+          "tag": "a",
+          "text": "继续对话\n\n回到你已建立的连接，接着聊。\n\n打开 Chats →",
+          "href": "/dashboard/chats",
+          "disabled": false,
+          "width": 363
+        },
+        {
+          "tag": "button",
+          "text": "匹配与邀请（早期功能） · 0 条\n展开 ▼",
+          "href": "",
+          "disabled": false,
+          "width": 1118
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "VISIBLE",
+      "slug": "console",
+      "path": "/console",
+      "status": "PASS",
+      "http": 200,
+      "title": "社群控制台 | LokFeel",
+      "h1": "社群总览",
+      "finalUrl": "http://127.0.0.1:3215/console",
+      "ctaVisible": [
+        {
+          "tag": "a",
+          "text": "待我确认\n\n需要人处理的连接与任务",
+          "href": "#needs-attention",
+          "disabled": false,
+          "width": 168
+        },
+        {
+          "tag": "a",
+          "text": "AI 辅助协作\n\n智能体运行与审批",
+          "href": "/console/agents",
+          "disabled": false,
+          "width": 168
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "product",
+      "path": "/product",
+      "status": "PASS",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
+      "finalUrl": "http://127.0.0.1:3215/product",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "desktop",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "solutions",
+      "path": "/solutions",
+      "status": "PASS",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
+      "finalUrl": "http://127.0.0.1:3215/solutions",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "VISIBLE",
+      "slug": "home",
+      "path": "/",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people. You decide what you share.",
+      "finalUrl": "http://127.0.0.1:3215/",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        },
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 230
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "register",
+      "path": "/register",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
+      "finalUrl": "http://127.0.0.1:3215/register",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "VISIBLE",
+      "slug": "workspace",
+      "path": "/workspace",
+      "status": "PASS",
+      "http": 200,
+      "title": "Living Workspace | LokFeel",
+      "h1": "今天想推进什么？",
+      "finalUrl": "http://127.0.0.1:3215/workspace",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "开始",
+          "href": "",
+          "disabled": true,
+          "width": 298
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "chats",
+      "path": "/dashboard/chats",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Messages",
+      "finalUrl": "http://127.0.0.1:3215/dashboard/chats",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "VISIBLE",
+      "slug": "connections",
+      "path": "/dashboard/connections",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Connections",
+      "finalUrl": "http://127.0.0.1:3215/dashboard/connections",
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "邀请你认识的人\n\n生成你的专属邀请链接，发给真实的朋友。\n\n生成邀请链接 →",
+          "href": "",
+          "disabled": false,
+          "width": 358
+        },
+        {
+          "tag": "a",
+          "text": "继续对话\n\n回到你已建立的连接，接着聊。\n\n打开 Chats →",
+          "href": "/dashboard/chats",
+          "disabled": false,
+          "width": 358
+        },
+        {
+          "tag": "button",
+          "text": "匹配与邀请（早期功能） · 0 条\n展开 ▼",
+          "href": "",
+          "disabled": false,
+          "width": 356
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "VISIBLE",
+      "slug": "console",
+      "path": "/console",
+      "status": "PASS",
+      "http": 200,
+      "title": "社群控制台 | LokFeel",
+      "h1": "社群总览",
+      "finalUrl": "http://127.0.0.1:3215/console",
+      "ctaVisible": [
+        {
+          "tag": "a",
+          "text": "待我确认\n\n需要人处理的连接与任务",
+          "href": "#needs-attention",
+          "disabled": false,
+          "width": 173
+        },
+        {
+          "tag": "a",
+          "text": "AI 辅助协作\n\n智能体运行与审批",
+          "href": "/console/agents",
+          "disabled": false,
+          "width": 173
+        }
+      ],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "product",
+      "path": "/product",
+      "status": "PASS",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
+      "finalUrl": "http://127.0.0.1:3215/product",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    },
+    {
+      "pass": "local-candidate-final",
+      "viewport": "mobile",
+      "ctaStatus": "NOT_MATCHED",
+      "slug": "solutions",
+      "path": "/solutions",
+      "status": "PASS",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
+      "finalUrl": "http://127.0.0.1:3215/solutions",
+      "ctaVisible": [],
+      "serverErrors": [],
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshotDir": "evidence/local-candidate-final/shots"
+    }
+  ],
+  "cta": [
+    {
+      "pass": "local-candidate-final",
+      "name": "home-primary-cta",
+      "status": "PASS",
+      "before": "http://127.0.0.1:3215/",
+      "after": "http://127.0.0.1:3215/register",
+      "screenshot": "evidence/local-candidate-final/video"
+    }
+  ],
+  "verdict": "PASS",
+  "summary": {
+    "pageStats": {
+      "PASS": 16
+    },
+    "login": "PASS",
+    "health": "PASS",
+    "api": [
+      "invite-lookup-invalid:PASS",
+      "plans-read:PASS",
+      "invite-write:BLOCKED"
+    ],
+    "cta": [
+      "home-primary-cta:PASS"
+    ]
+  }
+}
