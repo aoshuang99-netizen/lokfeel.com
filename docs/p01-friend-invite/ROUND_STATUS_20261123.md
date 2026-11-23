@@ -23,7 +23,15 @@
 
 ## 2. 工程成果
 
-- 新候选 SHA：**尚未产生**（本地工作树改动未提交）。
+- 新候选 SHA：**`23f4905ff1f2b70f1023ca5d9a06f1ed3ea5f1f2`**，分支
+  `rc/p01-invite-loop-20261123`（`git ls-remote` 复核远端一致）。已推送触发 CI。
+  远端 CI Run：`45116158122` / `45116158062`。
+  **首轮 CI 结果**：Migration ✅ success（本地修复经真实 CI 验证）、Typecheck/Build/Jest/
+  Dependency/Secret ✅ success；E2E ❌ + Lint ❌。根因已定位并修复：
+  - Lint 新增债 = 新脚本 3 个未使用变量 → 已删除；
+  - E2E 4 条失败 = `getByText('Your Invite Code')` 找不到（我的 GET 空态不返回邀请码，
+    回归了旧 UX）→ GET 在无邀请时惰性创建一张，恢复契约。
+  修复提交推送后以新 CI Run 为准。
 - Migration 红灯：**本地已真修并独立复核** —— `scripts/connection/migrate.mjs` 补齐
   `Mission.sourceRunId` / `IdempotencyRecord.actorId` 两列（V21 新增列只改了 schema 未改迁移 SQL
   导致 db push→rollback→apply 后缺列）。干净隔离库复跑完整链：`RATCHET_EXIT=0`，当前漂移 11=冻结 11，

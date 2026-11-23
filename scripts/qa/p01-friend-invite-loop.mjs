@@ -24,11 +24,8 @@
 import { createRequire } from 'node:module'
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 const require = createRequire(import.meta.url)
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = path.resolve(__dirname, '../..')
 
 const argv = process.argv.slice(2)
 const argOf = (k, d) => {
@@ -60,8 +57,6 @@ function record(step, ok, detail = {}) {
   results.push({ step, ok, ...detail })
   console.log(`  [${ok ? 'PASS' : 'FAIL'}] ${step}${detail.note ? ' — ' + detail.note : ''}`)
 }
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-
 function dbClient() {
   const { createClient } = require('@libsql/client')
   return createClient({ url: `file:${DB_FILE}` })
@@ -123,8 +118,7 @@ async function api(method, p, cookie, body) {
 
 async function seedAccounts() {
   const { createClient } = require('@libsql/client')
-  const { hashPassword } = await import('../../src/lib/auth.ts').catch(() => ({}))
-  // 不依赖 import TS：直接用 bcryptjs 生成一致哈希（与 hashPassword 同算法）。
+  // 直接用 bcryptjs 生成与服务端 hashPassword 同算法的哈希（避免 import TS 源码）。
   const bcrypt = require('bcryptjs')
   const hash = bcrypt.hashSync(PASSWORD, 10)
   const db = createClient({ url: `file:${DB_FILE}` })

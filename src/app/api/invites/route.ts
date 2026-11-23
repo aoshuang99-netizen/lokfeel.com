@@ -42,11 +42,24 @@ export async function GET() {
         }
       })
     )
-    const pending = invites.filter((i) => i.status === 'PENDING')
-    const connected = invites.filter((i) => i.status === 'ACCEPTED')
+    // 兼容旧 UX：用户第一次打开邀请面板就应有一张可用邀请码（旧实现 GET 即生成）。
+    // 若一张都没有，惰性创建一张持久化的，避免空态把「Your Invite Code」整块藏掉。
+    let current = invites
+    if (invites.length === 0) {
+      const created = await createFriendInvite(dbDomain, user.id)
+      current = [
+        {
+          code: created.code,
+          status: 'PENDING',
+          expiresAt: created.expiresAt.toISOString(),
+        },
+      ]
+    }
+    const pending = current.filter((i) => i.status === 'PENDING')
+    const connected = current.filter((i) => i.status === 'ACCEPTED')
     return success({
-      inviteCode: pending[0]?.code ?? invites[0]?.code ?? null,
-      invites,
+      inviteCode: pending[0]?.code ?? current[0]?.code ?? null,
+      invites: current,
       // 兼容旧 UI 字段：accepted 张数即"好友已加入数"
       inviteCount: connected.length,
       inviteRewards: connected.length * 50,
