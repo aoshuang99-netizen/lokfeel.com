@@ -203,90 +203,48 @@ function summarizeTailLine(line) {
 }
 
 async function captureTail(base, worker, endpoints) {
-  return new Promise((resolve) => {
-    let settled = false
-    const child = spawn('npx', ['wrangler', 'tail', worker, '--format', 'json', '--sampling-rate', '0.25'], {
-      env: process.env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-    const stdoutChunks = []
-    const stderrChunks = []
-    child.stdout.on('data', (chunk) => stdoutChunks.push(String(chunk)))
-    child.stderr.on('data', (chunk) => stderrChunks.push(String(chunk)))
+  const startedAt = Date.now()
+  // 先启动后台 tail（有硬超时），再触发真实请求；避免 Node 子进程挂起 job。
+  const tailPath = path.join(OUT, 'tail.raw.jsonl')
+  const tailErrPath = path.join(OUT, 'tail.stderr.txt')
+  const tailChild = spawn('npx', ['wrangler', 'tail', worker, '--format', 'json', '--sampling-rate', '0.25'], {
+    env: process.env,
+    stdio: ['ignore', fs.openSync(tailPath, 'w'), fs.openSync(tailErrPath, 'w')],
+    detached: false,
+  })
+  const delay = (ms) => new Promise((r) => setTimeout(r, ms))
+  await delay(4000)
+  for (const endpoint of endpoints) {
+    await fetchEndpoint(base, endpoint)
+    await delay(250)
+  }
+  await delay(6000)
+  tailChild.kill('SIGTERM')
 
-    const startedAt = Date.now()
-    const delay = (ms) => new Promise((r) => setTimeout(r, ms))
-    const stop = () => {
-      if (child.exitCode === null && child.signalCode === null) {
-        child.kill('SIGTERM')
-        setTimeout(() => {
-          if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')
-        }, 3000)
-      }
-    }
-
-    async function run() {
-      // 给 tail 一点连接时间，再触发真实请求。
-      await delay(4000)
-      for (const endpoint of endpoints) {
-        await fetchEndpoint(base, endpoint)
-        await delay(250)
-      }
-      // 再等 tail 回传最后一条异常。
-      await delay(6000)
-      stop()
-    }
-
-    run().catch(stop)
-
-    // 绝不让 tail 挂起整个 job；5 秒兜底后按已有数据出结果。
-    setTimeout(() => {
-      if (!settled) stop()
-      setTimeout(() => {
-        if (!settled) {
-          settled = true
-          const raw = stdoutChunks.join('')
-          const lines = raw.split('\n').filter((line) => line.trim().length > 0)
-          const events = lines.map(summarizeTailLine)
-          const withExceptions = events.filter(
-            (event) => (event.exceptions?.length || 0) > 0 || event.outcome === 'exception',
-          )
-          resolve({
-            exitCode: null,
-            signal: 'FORCE_RESOLVE',
-            lines: lines.length,
-            events,
-            exceptionEvents: withExceptions,
-            firstException: withExceptions[0] || null,
-            stderrSnippet: truncate(redact(stderrChunks.join('')), 1200),
-            elapsedMs: Date.now() - startedAt,
-          })
-        }
-      }, 5000)
-    }, 25000)
-
-    child.on('exit', (code, signal) => {
-      if (settled) return
-      settled = true
-      const raw = stdoutChunks.join('')
-      const stderr = stderrChunks.join('')
-      const lines = raw.split('\n').filter((line) => line.trim().length > 0)
-      const events = lines.map(summarizeTailLine)
-      const withExceptions = events.filter(
-        (event) => (event.exceptions?.length || 0) > 0 || event.outcome === 'exception',
-      )
-      resolve({
-        exitCode: code,
-        signal,
-        lines: lines.length,
-        events,
-        exceptionEvents: withExceptions,
-        firstException: withExceptions[0] || null,
-        stderrSnippet: truncate(redact(stderr), 1200),
-        elapsedMs: Date.now() - startedAt,
-      })
+  // 即使 wrangler 不立刻退出，也在 8 秒后按已有数据出结果；job 不被挂起。
+  const exitCode = await new Promise((resolve) => {
+    const timer = setTimeout(() => resolve('FORCE_TIMEOUT'), 8000)
+    tailChild.on('exit', (code, signal) => {
+      clearTimeout(timer)
+      resolve(code ?? signal ?? 'unknown')
     })
   })
+  const raw = fs.existsSync(tailPath) ? fs.readFileSync(tailPath, 'utf8') : ''
+  const stderr = fs.existsSync(tailErrPath) ? fs.readFileSync(tailErrPath, 'utf8') : ''
+  const lines = raw.split('\n').filter((line) => line.trim().length > 0)
+  const events = lines.map(summarizeTailLine)
+  const withExceptions = events.filter(
+    (event) => (event.exceptions?.length || 0) > 0 || event.outcome === 'exception',
+  )
+  return {
+    exitCode,
+    lines: lines.length,
+    events,
+    exceptionEvents: withExceptions,
+    firstException: withExceptions[0] || null,
+    stderrSnippet: truncate(redact(stderr), 1200),
+    elapsedMs: Date.now() - startedAt,
+  }
 }
 
 async function main() {
