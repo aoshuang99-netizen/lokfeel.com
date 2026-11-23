@@ -1,0 +1,458 @@
+{
+  "generatedAt": "2026-11-23T09:21:17.655Z",
+  "base": "https://lokfeel-preview.aoshuang99.workers.dev",
+  "worker": "lokfeel-preview",
+  "expectedSha": "9bc4fbb7cdc999d5e61814d2bd22967859b964cd",
+  "wranglerVersion": "4.151.0",
+  "deployments": {
+    "command": "wrangler deployments list --json",
+    "parsed": [
+      {
+        "id": "84f596d6-b746-45c5-ad01-36343e155f94",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "b78b6287-8c48-4cb9-a56e-66b2177d0d81",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:13:46.226672Z"
+      },
+      {
+        "id": "1664e212-e9db-4153-a323-918fa41d8f32",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "5e3f2d82-f633-4e9b-8f66-63e65e0b6e80",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:26:59.051881Z"
+      },
+      {
+        "id": "7330e49b-e0dd-444e-b0b1-6fe9419b5fed",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "e6037fe1-7abe-4bee-9432-3f257fdbe29d",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:39:34.011721Z"
+      },
+      {
+        "id": "019e503e-ab6d-4469-9bc7-6d14c87eeed2",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "5e09f501-7d5e-4fc3-8507-76afb55766e4",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:52:58.728745Z"
+      },
+      {
+        "id": "87aa6a2f-94f5-4716-a1b1-09e63b1b5078",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "fcb95e47-8a96-4046-9aed-b80be48ddae4",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:29:35.692912Z"
+      },
+      {
+        "id": "ed17ceb4-ab85-4249-bc69-22db8671d523",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "a68a566d-11be-4280-ba87-670e1245f40e",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:42:45.228474Z"
+      },
+      {
+        "id": "22ebf769-bddc-44e7-a854-2e4d771de5db",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "a4b636ef-cd3e-4861-b8f8-d8e08c84ad29",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:54:17.430591Z"
+      },
+      {
+        "id": "db770355-a514-4c55-bf37-c32652a4694a",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "59449f41-4800-42b5-a04d-17a9b953cf2b",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:58:51.902804Z"
+      },
+      {
+        "id": "88fd5eef-12ae-4f13-a65a-74144ed6d227",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "3d455b03-a305-4c3a-9b78-f901b4ff068a",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T09:02:42.969565Z"
+      },
+      {
+        "id": "e7b76bb1-4cee-4426-8f82-356993c7da47",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "e224aad6-03ea-4830-ae30-0b6c01493971",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T09:17:41.662453Z"
+      }
+    ]
+  },
+  "secrets": {
+    "command": "wrangler secret list --json",
+    "names": []
+  },
+  "versions": {
+    "command": "wrangler versions list --json",
+    "parsed": [
+      {
+        "id": "b78b6287-8c48-4cb9-a56e-66b2177d0d81",
+        "number": 36,
+        "metadata": {
+          "created_on": "2026-11-23T05:13:41.972302Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "5e3f2d82-f633-4e9b-8f66-63e65e0b6e80",
+        "number": 37,
+        "metadata": {
+          "created_on": "2026-11-23T05:26:55.132892Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "e6037fe1-7abe-4bee-9432-3f257fdbe29d",
+        "number": 38,
+        "metadata": {
+          "created_on": "2026-11-23T05:39:30.170613Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "5e09f501-7d5e-4fc3-8507-76afb55766e4",
+        "number": 39,
+        "metadata": {
+          "created_on": "2026-11-23T05:52:54.124854Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "fcb95e47-8a96-4046-9aed-b80be48ddae4",
+        "number": 40,
+        "metadata": {
+          "created_on": "2026-11-23T08:29:31.279331Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "a68a566d-11be-4280-ba87-670e1245f40e",
+        "number": 41,
+        "metadata": {
+          "created_on": "2026-11-23T08:42:41.055487Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "a4b636ef-cd3e-4861-b8f8-d8e08c84ad29",
+        "number": 42,
+        "metadata": {
+          "created_on": "2026-11-23T08:54:13.322805Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "59449f41-4800-42b5-a04d-17a9b953cf2b",
+        "number": 43,
+        "metadata": {
+          "created_on": "2026-11-23T08:58:47.426771Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "3d455b03-a305-4c3a-9b78-f901b4ff068a",
+        "number": 44,
+        "metadata": {
+          "created_on": "2026-11-23T09:02:38.412496Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "e224aad6-03ea-4830-ae30-0b6c01493971",
+        "number": 45,
+        "metadata": {
+          "created_on": "2026-11-23T09:17:36.971318Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      }
+    ]
+  },
+  "endpoints": [
+    {
+      "name": "home",
+      "path": "/",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef19fe6f12ddff-SJC",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 865,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "register",
+      "path": "/register",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef1a037e79a724-SJC",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 809,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "product",
+      "path": "/product",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef1a087d37ddff-SJC",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 20,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "solutions",
+      "path": "/solutions",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef1a08989ba724-SJC",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 22,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "health",
+      "path": "/api/health",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef1a08bda2ddff-SJC",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 49,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "invite-lookup-invalid",
+      "path": "/api/invites/lookup?code=INV-0000000000000000",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef1a0909b9a724-SJC",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 51,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    },
+    {
+      "name": "plans-read",
+      "path": "/api/payments/dodo/plans",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef1a095efcddff-SJC",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 19,
+      "bodySnippet": "{\n  \"message\": \"Server failed to respond.\",\n  \"details\": {}\n}"
+    }
+  ],
+  "tail": {
+    "exitCode": "SIGTERM",
+    "events": [
+      {
+        "outcome": "ok",
+        "scriptName": "lokfeel-preview",
+        "eventTime": 1795425670212,
+        "requestId": "",
+        "url": "https://lokfeel-preview.aoshuang99.workers.dev/product",
+        "method": "GET",
+        "statusCode": "",
+        "exceptions": [],
+        "logs": [
+          "Failed to prepare server,Error: An error occurred while loading the instrumentation hook",
+          "NextJS request failed.,Error: An error occurred while loading the instrumentation hook",
+          "Failed to prepare server,Error: An error occurred while loading the instrumentation hook",
+          "NextJS request failed.,Error: An error occurred while loading the instrumentation hook"
+        ]
+      },
+      {
+        "outcome": "ok",
+        "scriptName": "lokfeel-preview",
+        "eventTime": 1795425670780,
+        "requestId": "",
+        "url": "https://lokfeel-preview.aoshuang99.workers.dev/api/health",
+        "method": "GET",
+        "statusCode": "",
+        "exceptions": [],
+        "logs": [
+          "Failed to prepare server,Error: An error occurred while loading the instrumentation hook",
+          "NextJS request failed.,Error: An error occurred while loading the instrumentation hook",
+          "Failed to prepare server,Error: An error occurred while loading the instrumentation hook",
+          "NextJS request failed.,Error: An error occurred while loading the instrumentation hook"
+        ]
+      },
+      {
+        "outcome": "ok",
+        "scriptName": "lokfeel-preview",
+        "eventTime": 1795425671087,
+        "requestId": "",
+        "url": "https://lokfeel-preview.aoshuang99.workers.dev/api/invites/lookup?code=INV-0000000000000000",
+        "method": "GET",
+        "statusCode": "",
+        "exceptions": [],
+        "logs": [
+          "Failed to prepare server,Error: An error occurred while loading the instrumentation hook",
+          "NextJS request failed.,Error: An error occurred while loading the instrumentation hook",
+          "Failed to prepare server,Error: An error occurred while loading the instrumentation hook",
+          "NextJS request failed.,Error: An error occurred while loading the instrumentation hook"
+        ]
+      }
+    ],
+    "exceptionEvents": [],
+    "firstException": null,
+    "stderrSnippet": "",
+    "elapsedMs": 12141
+  },
+  "verdict": "FAIL"
+}
