@@ -41,7 +41,9 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
     try {
       const res = await fetch("/api/invites");
       if (!res.ok) throw new Error("Failed to load");
-      const inviteData = await res.json();
+      const json = await res.json();
+      // API 走统一 success() 信封（{success,data}）；兼容旧直接对象的形状。
+      const inviteData: InviteData = json?.data ?? json;
       setData(inviteData);
     } catch (error) {
       toast.error("Failed to load invite data");

@@ -32,6 +32,11 @@
   - E2E 4 条失败 = `getByText('Your Invite Code')` 找不到（我的 GET 空态不返回邀请码，
     回归了旧 UX）→ GET 在无邀请时惰性创建一张，恢复契约。
   修复提交推送后以新 CI Run 为准。
+  **第二轮 CI**（`45117512515`）：Lint ✅ success（债已清）、其余 13 job ✅ success、
+  E2E ❌ 仍 4 条 `getByText('Your Invite Code')` 失败。根因再定位：我把 GET 改成
+  `success()` 信封（`{success,data}`），但 InvitePanel 仍把顶层对象当数据用 →
+  `inviteCode` undefined → 邀请码区块不渲染。**这是真实 UI bug，已修**：
+  `InvitePanel` 解包 `json.data ?? json`。第三轮 CI 待验。
 - Migration 红灯：**本地已真修并独立复核** —— `scripts/connection/migrate.mjs` 补齐
   `Mission.sourceRunId` / `IdempotencyRecord.actorId` 两列（V21 新增列只改了 schema 未改迁移 SQL
   导致 db push→rollback→apply 后缺列）。干净隔离库复跑完整链：`RATCHET_EXIT=0`，当前漂移 11=冻结 11，
