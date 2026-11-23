@@ -18,6 +18,18 @@
  * versions): copy the real `server/*.js` from the Next build dir into the
  * standalone dir when it is missing.
  *
+ * Second incompatibility (Preview 500, 2026-11-23):
+ *   Next 16 Turbopack's `standalone` output omits some runtime chunks
+ *   (`server/chunks/[root-of-the-server]__*.js`) even though they ARE listed in
+ *   the corresponding `.nft.json`. OpenNext's `processNftFile()` copies traced
+ *   files *from the standalone dir* and silently skips missing sources, so the
+ *   worker bundle is built without those chunks. At runtime the Turbopack
+ *   runtime then throws `ChunkLoadError: Failed to load chunk ... from runtime
+ *   for chunk server/instrumentation.js`, which fails `NextNodeServer.prepare()`
+ *   and makes EVERY SSR/API route return 500 (static assets still 200).
+ *   Fix: restore traced-but-missing files from the build dir before recording
+ *   the copy, so the chunk is present in the bundle's `requireChunk` switch.
+ *
  * Idempotent and safe to run on every `cf:build` (local + CI). Behaviour:
  *   - Skips silently if a fix is already present (detected by a unique marker).
  *   - Skips (non-fatal) if the target file is absent (e.g. OpenNext removed),
@@ -103,6 +115,45 @@ ensureCopyFix({
   anchor: 'computeCopyFilesForPage("middleware");',
   varName: "middlewareServerFile",
 });
+
+/**
+ * Restore files that are traced in a `.nft.json` but missing from the Next 16
+ * Turbopack standalone dir. Without this, `server/instrumentation.js` cannot
+ * load its runtime chunks and every request fails with ChunkLoadError -> 500.
+ */
+function ensureTraceRestoreFix() {
+  const marker = "[patch-opennext] restore missing traced files from build dir";
+  if (content.includes(marker)) return; // already applied
+  const anchor =
+    "            const dst = path.join(outputNextDir, subDir, tracedPath);\n" +
+    "            filesToCopy.set(src, dst);";
+  if (!content.includes(anchor)) {
+    console.error(
+      `[patch-opennext] FATAL: processNftFile anchor not found in ${target}. ` +
+        `OpenNext changed upstream — inspect manually.`
+    );
+    process.exit(1);
+  }
+  const insert =
+    "            const dst = path.join(outputNextDir, subDir, tracedPath);\n" +
+    `            // ${marker}\n` +
+    "            // Next 16 Turbopack standalone omits some runtime chunks that are\n" +
+    "            // still traced in .nft.json. Restore them from the build dir so they\n" +
+    "            // ship in the worker bundle (otherwise: ChunkLoadError -> all 500).\n" +
+    "            if (!existsSync(src)) {\n" +
+    "                const buildSrc = path.join(dotNextDir, subDir, tracedPath);\n" +
+    "                if (existsSync(buildSrc)) {\n" +
+    "                    mkdirSync(path.dirname(src), { recursive: true });\n" +
+    "                    copyFileAndMakeOwnerWritable(buildSrc, src);\n" +
+    "                }\n" +
+    "            }\n" +
+    "            filesToCopy.set(src, dst);";
+  content = content.replace(anchor, insert);
+  patched = true;
+  console.log("[patch-opennext] queued nft trace restore fix");
+}
+
+ensureTraceRestoreFix();
 
 if (patched) {
   writeFileSync(target, content, "utf8");

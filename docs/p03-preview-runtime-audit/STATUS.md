@@ -63,3 +63,19 @@
 - `evidence/local-candidate-final/` — 本地候选最终审计（PASS）。
 - `evidence/local-run2/before/` — 生产旧版同视口对照截图。
 - 独立 Runner 结果：`git show origin/audit-results/p03-45128348904:docs/p03-preview-runtime-audit/evidence/preview/result.json`。
+
+## 5. 2026-11-23 续 · 全站 500 根因取证与修复
+
+> 唯一根因证据页：`docs/p500-cloudflare-runtime/ROOT_CAUSE.md`。本节只记状态结论。
+
+- **P0-01 根因：已定位（有原始堆栈，不再是"疑似缺环境变量"）**
+  - `ChunkLoadError: Failed to load chunk server/chunks/[root-of-the-server]__1tt-pf6z9r63u._.js from runtime for chunk server/instrumentation.js`
+  - 包装异常：`Error: An error occurred while loading the instrumentation hook`
+  - 失败点：`NextNodeServer.prepare() → loadInstrumentationModule() → requireChunk()`；发生在 DB 查询之前，故 health 是 500 而非 503。
+  - 取得方式：本地 `opennextjs-cloudflare preview` 复现 + 构建产物临时注入 `cause` 序列化（调试注入已随重新构建清除，未提交）。
+- **已证伪**：`@sentry/nextjs` 顶层 `createRequire`（补丁已应用但运行时仍 500，错误发生在 chunk 加载前）；「缺 DB/Auth 变量」只解释 secrets 为空，不解释公开页 500。
+- **因果链**：Next 16.4.5 Turbopack 源 `.next` 有 514 个 root-of-server chunk → `standalone` 只带 254 个（instrumentation nft 明确列出的两个缺失）→ OpenNext `copyTracedFiles` 从 standalone 复制并静默跳过缺失 src → worker bundle 的 `requireChunk` switch 无 case → ChunkLoadError → 全站 500。
+- **最小修复**：`scripts/ci/patch-opennext-build.mjs` 新增 `ensureTraceRestoreFix()`，把 nft 已追踪但 standalone 漏掉的文件从构建目录补回；不改业务代码、不改 `next.config.ts`、不动生产凭据。幂等、带锚点校验。
+- **本地复现实测（补丁后）**：`/`、`/register`、`/product`、`/solutions` **500 → 200**；`/api/payments/dodo/plans` **500 → 200**；`/favicon.ico` 200；`/api/health` **500 → 503**（设计分支，返回 `commit=2192e22` / `commitSource=git`）⇒ 500 根因已消除。
+- **仍未闭合（P0-02 / P0-03 保持 BLOCKED）**：`/api/health` 503、非法邀请码 500。原因是 Preview Worker 无隔离 DB 配置（secrets `names: []`）且 Prisma 的 libSQL adapter 在 Workers 上有 native binding / 动态 WASM 限制。按用户硬约束不复制生产 DB/密钥，需 Owner 提供独立 QA 库与 Prisma-on-Workers 方案。已尝试 web adapter 但错误转为 `Wasm code generation disallowed by embedder`，**已回退，不进入提交**。
+- **本轮未执行**：生产部署、生产迁移、真实扣款、外部消息、生产数据写入；Preview 部署与独立 Runner 复验仍待执行。
