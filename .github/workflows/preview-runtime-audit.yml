@@ -25,7 +25,7 @@ on:
         default: 'false'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: preview-runtime-audit
@@ -57,7 +57,7 @@ jobs:
       - name: Audit real deployment
         run: |
           set -o pipefail
-          args="--base=$BASE_URL --expected-sha=$EXPECTED_SHA --label=preview --compare-base=https://app.lokfeel.com --out=docs/p03-preview-runtime-audit/evidence/preview"
+          args="--base=$BASE_URL --expected-sha=$EXPECTED_SHA --label=preview --page-timeout=12000 --out=docs/p03-preview-runtime-audit/evidence/preview"
           if [ "$ALLOW_WRITES" = "true" ]; then args="$args --writes"; fi
           node scripts/qa/p03-preview-runtime-audit.mjs $args 2>&1 | tee p03-audit.log
 
@@ -93,6 +93,23 @@ jobs:
           ]
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'))
           NODE
+
+      - name: Persist audit result to reviewable branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          result="docs/p03-preview-runtime-audit/evidence/preview/result.json"
+          report="docs/p03-preview-runtime-audit/evidence/preview/report.md"
+          if [ ! -f "$result" ]; then echo "没有 result.json，跳过结果分支写入"; exit 0; fi
+          branch="audit-results/p03-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add -f "$result" "$report"
+          if git diff --cached --quiet; then echo "结果无变化"; exit 0; fi
+          git commit -m "chore(qa): persist p03 audit result ${{ github.run_id }}"
+          git push origin HEAD:"$branch"
 
       - name: Upload runtime evidence
         if: always()
