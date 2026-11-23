@@ -103,18 +103,31 @@ test.describe('Workspace · Now · 异步竞态', () => {
     // 🔴 必须等 React **state** 真的变成 B：DOM value 会先于 setState 落地。
     //    否则第二次点击的 runIntent 闭包里 draft 还是 A，会被「同目标在途忽略」
     //    正确挡下，根本造不出并发 —— 那不是产品缺陷，是测试时序。
-    // 反复推进 React state 并派发 click，直到 B 的请求**确实发出**为止：
-    // 目标是制造两个在途请求，而不是赌某一次事件恰好落在 state 提交之后。
-    // 产品会把「同目标在途」的重复点击正确忽略，所以这里不会刷出一串 B。
-    for (let i = 0; i < 4 && !seen.some((g) => g.includes('B 标记')); i += 1) {
-      await page.locator('#lf-composer').fill(GOAL_B);
-      await page.waitForTimeout(120);
-      await submit.evaluate((el) => {
-        (el as HTMLButtonElement).removeAttribute('disabled');
-        el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      });
-      await page.waitForTimeout(180);
-    }
+    // 确定性推进（取代固定 waitForTimeout —— 那是 CI 慢机器上的 flake 根源）：
+    // 每次都重新 fill(B)，用双 requestAnimationFrame 等 React 用 draft=B 完成
+    // onChange→setState→re-render，再派发点击。这样 runIntent 闭包捕获的才是 B，
+    // 不会被「同目标在途忽略」正确挡下。用 expect.poll 等到 B 请求**确实发出**，
+    // 而不是赌某一次固定 sleep 之后 state 恰好提交完。
+    // 判据不变：下面仍断言 seen 同时含 A 与 B，且屏幕最终是 B。
+    await expect
+      .poll(
+        async () => {
+          await page.locator('#lf-composer').fill(GOAL_B);
+          await page.evaluate(
+            () =>
+              new Promise<void>((resolve) =>
+                requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+              )
+          );
+          await submit.evaluate((el) => {
+            (el as HTMLButtonElement).removeAttribute('disabled');
+            el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+          });
+          return seen.some((g) => g.includes('B 标记'));
+        },
+        { timeout: 10_000, intervals: [200, 200, 200, 400] }
+      )
+      .toBe(true);
 
     // ③ B 先到：结果必须是 B
     const result = page.locator('[data-testid="intent-result"]');
@@ -163,7 +176,12 @@ test.describe('Workspace · Now · 异步竞态', () => {
     await submit.click();
     await expect(submit).toBeDisabled();
     // 再点一次：disabled 期间浏览器不会派发 click，请求数应保持 1。
-    await submit.click({ force: true }).catch(() => {});
+    // 不用 force:true（那会绕过真实用户约束）—— 直接在按钮坐标发一次真实鼠标点击，
+    // disabled 的 <button> 收到原生 click 也不会触发 React 的 onClick。
+    const box = await submit.boundingBox();
+    if (box) {
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    }
     release();
     await expect(page.locator('[data-testid="intent-result"]')).toBeVisible({ timeout: 15_000 });
     console.log('[race2-diag] calls=', calls, 'requestfailed=', JSON.stringify(failed));

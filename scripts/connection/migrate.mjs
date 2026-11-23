@@ -220,6 +220,7 @@ function sqlC0() {
   "id" TEXT NOT NULL PRIMARY KEY,
   "organizationId" TEXT NOT NULL,
   "ownerId" TEXT NOT NULL,
+  "sourceRunId" TEXT,
   "title" TEXT NOT NULL,
   "goal" TEXT NOT NULL,
   "offer" TEXT NOT NULL,
@@ -267,6 +268,7 @@ function sqlC0() {
   "requestHash" TEXT NOT NULL,
   "resourceType" TEXT NOT NULL,
   "resourceId" TEXT,
+  "actorId" TEXT,
   "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "IdempotencyRecord_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 )`,
@@ -1071,8 +1073,29 @@ async function cmdVerify(client) {
     ok('Mission 关键列均为 NOT NULL', allNotNull)
     const constraintsNullable = /"constraints"\s+TEXT\b(?!\s+NOT)/.test(sql || '')
     ok('Mission.constraints 可为空（JSON 文本，非必填）', constraintsNullable)
+    // V21 · sourceRunId 是软引用（不建 FK）的纯新增可选列。缺列或被建成 NOT NULL，
+    // 都会被 prisma migrate diff 报 Added column 并让 ratchet 判红 —— 在此提前兜住。
+    ok(
+      'Mission.sourceRunId 列存在且可为空（软引用，无 FK）',
+      missionCols.includes('sourceRunId') &&
+        /"sourceRunId"\s+TEXT\b(?!\s+NOT)/.test(sql || '') &&
+        !/FOREIGN KEY\s+\("sourceRunId"\)/.test(sql || '')
+    )
   } else {
     ok('Mission 关键列均为 NOT NULL', false, '表不存在')
+  }
+
+  // 4a) C0 · IdempotencyRecord 的 V21/R3 新增可选列
+  const idemCols = await tableColumns(client, 'IdempotencyRecord')
+  if (idemCols) {
+    const sql = (await tableCreateSql(client, 'IdempotencyRecord')) || ''
+    // actorId 纯新增可选列；不改 @@unique([organizationId, scope, key])，也不建 FK。
+    ok(
+      'IdempotencyRecord.actorId 列存在且可为空（纯新增可选列，无 FK）',
+      idemCols.includes('actorId') &&
+        /"actorId"\s+TEXT\b(?!\s+NOT)/.test(sql) &&
+        !/FOREIGN KEY\s+\("actorId"\)/.test(sql)
+    )
   }
 
   // 4b) T03 · SocialIntent 的列约束与默认值

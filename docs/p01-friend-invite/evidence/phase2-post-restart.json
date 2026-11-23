@@ -1,0 +1,93 @@
+{
+  "phase": "post-restart",
+  "base": "http://127.0.0.1:3215",
+  "db": "/tmp/p01-exp.db",
+  "at": "2026-11-23T05:07:13.352Z",
+  "passed": 10,
+  "failed": 0,
+  "results": [
+    {
+      "step": "重启后邀请码仍可查（持久化）",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "state": "PENDING"
+      }
+    },
+    {
+      "step": "B 显式接受返回 conversationId",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "conversationId": "cmwst0jxk0001mik8gfao99at"
+      }
+    },
+    {
+      "step": "DB 写入 Match(ACCEPTED)",
+      "ok": true,
+      "detail": {
+        "matches": [
+          {
+            "id": "cmwst0jw60000mik8kbc4slsk",
+            "status": "ACCEPTED"
+          }
+        ]
+      }
+    },
+    {
+      "step": "DB 写入 Conversation + 双方 participant",
+      "ok": true,
+      "detail": {
+        "conversations": 1,
+        "participants": [
+          "e2e_p01_user_a",
+          "e2e_p01_user_b"
+        ]
+      }
+    },
+    {
+      "step": "token 被一次性消费",
+      "ok": true,
+      "detail": {
+        "useCount": 1,
+        "used": 1
+      }
+    },
+    {
+      "step": "重复接受被拒 409 ALREADY_ACCEPTED",
+      "ok": true,
+      "detail": {
+        "status": 409
+      }
+    },
+    {
+      "step": "重复接受未新增关系/会话（幂等）",
+      "ok": true,
+      "detail": {
+        "matches": 1,
+        "conversations": 1
+      }
+    },
+    {
+      "step": "A→B 发消息成功",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "step": "B→A 发消息成功",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "step": "DB 读回双向消息各一条",
+      "ok": true,
+      "detail": {
+        "count": 2
+      }
+    }
+  ]
+}

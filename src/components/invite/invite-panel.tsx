@@ -6,14 +6,13 @@ import { Gift, Copy, Check, Share2, Users, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface InviteData {
-  inviteCode: string;
+  inviteCode: string | null;
   inviteCount: number;
   inviteRewards: number;
   invites: Array<{
-    id: string;
+    code: string;
     status: string;
-    createdAt: string;
-    inviteeName: string | null;
+    expiresAt: string;
   }>;
   rewards: {
     perInvite: number;
@@ -51,10 +50,23 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
     }
   };
 
+  // P0-1: 生成一张持久化邀请（重启有效，7 天，一次性）
+  const handleGenerate = async () => {
+    try {
+      const res = await fetch("/api/invites", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to generate");
+      toast.success("New invite ready to share");
+      await loadInviteData();
+    } catch {
+      toast.error("Failed to generate invite");
+    }
+  };
+
   const handleCopy = () => {
     if (!data?.inviteCode) return;
-    
-    const inviteUrl = `${window.location.origin}/register?ref=${data.inviteCode}`;
+
+    // P0-1: 邀请落到接受页（不是 register?ref——那曾是有码无连接的断链）。
+    const inviteUrl = `${window.location.origin}/connect/invite?code=${encodeURIComponent(data.inviteCode)}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     toast.success("Invite link copied!");
@@ -63,14 +75,14 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
 
   const handleShare = async () => {
     if (!data?.inviteCode) return;
-    
-    const inviteUrl = `${window.location.origin}/register?ref=${data.inviteCode}`;
-    const shareText = `Join me on LokFee! - a relationship-first dating app! Use my code: ${data.inviteCode}`;
+
+    const inviteUrl = `${window.location.origin}/connect/invite?code=${encodeURIComponent(data.inviteCode)}`;
+    const shareText = `Join me on LokFeel — let's connect! Use my invite: ${data.inviteCode}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join LokFee!",
+          title: "Join LokFeel",
           text: shareText,
           url: inviteUrl,
         });
@@ -99,7 +111,7 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
     );
   }
 
-  const inviteUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/register?ref=${data.inviteCode}`;
+  const inviteUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/connect/invite?code=${encodeURIComponent(data.inviteCode ?? "")}`;
   const progressPercent = Math.min(100, (data.inviteCount / data.rewards.maxInvites) * 100);
 
   return (
@@ -159,25 +171,36 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
               {/* Invite Code */}
               <div className="mb-6">
                 <label className="text-sm text-foreground-muted mb-2 block">Your Invite Code</label>
-                <div className="flex gap-2">
-                  <div className="flex-1 px-4 py-3 rounded-xl bg-background-tertiary border border-card-border text-center">
-                    <span className="text-2xl font-bold text-foreground tracking-wider">
-                      {data.inviteCode}
-                    </span>
+                {data.inviteCode ? (
+                  <div className="flex gap-2">
+                    <div className="flex-1 px-4 py-3 rounded-xl bg-background-tertiary border border-card-border text-center">
+                      <span className="text-lg font-bold text-foreground tracking-wider break-all">
+                        {data.inviteCode}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleCopy}
+                      aria-label="Copy invite code"
+                      className="px-4 py-3 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
+                    >
+                      {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </button>
                   </div>
+                ) : (
                   <button
-                    onClick={handleCopy}
-                    className="px-4 py-3 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
+                    onClick={() => void handleGenerate()}
+                    className="w-full py-3 rounded-xl bg-primary/20 text-primary text-sm font-semibold hover:bg-primary/30 transition-colors"
                   >
-                    {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    Generate an invite link
                   </button>
-                </div>
+                )}
               </div>
 
               {/* Share Button */}
               <button
                 onClick={handleShare}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity mb-6"
+                disabled={!data.inviteCode}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity mb-6 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Share2 className="w-5 h-5" />
                 Share Invite Link
@@ -209,7 +232,7 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
                   <div className="space-y-2">
                     {data.invites.map((invite) => (
                       <div
-                        key={invite.id}
+                        key={invite.code}
                         className="flex items-center justify-between p-3 rounded-xl bg-background-tertiary"
                       >
                         <div className="flex items-center gap-3">
@@ -217,17 +240,15 @@ export function InvitePanel({ isOpen, onClose }: InvitePanelProps) {
                             <Users className="w-4 h-4 text-primary" />
                           </div>
                           <div>
-                            <p className="text-sm text-foreground">
-                              {invite.inviteeName || "Anonymous"}
-                            </p>
+                            <p className="text-sm text-foreground font-mono">{invite.code}</p>
                             <p className="text-xs text-foreground-subtle">
-                              {new Date(invite.createdAt).toLocaleDateString()}
+                              有效至 {new Date(invite.expiresAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
-                            invite.status === "COMPLETED"
+                            invite.status === "ACCEPTED"
                               ? "bg-green-500/20 text-green-400"
                               : invite.status === "PENDING"
                               ? "bg-yellow-500/20 text-yellow-400"

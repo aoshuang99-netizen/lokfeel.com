@@ -132,10 +132,18 @@ export default function RegisterPage() {
   const [dobDay, setDobDay] = useState("");
   /** V22 §F: the original goal carried from the landing page (read-only display). */
   const [goalDraft, setGoalDraft] = useState("");
+  /** P0-1: 个人好友邀请码（?ref=）。注册成功后回落到接受页，绝不自动建联。 */
+  const [inviteRef, setInviteRef] = useState("");
+  const [inviteCallback, setInviteCallback] = useState("");
 
   // ─── Restore state on mount ───
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    // P0-1: 消费邀请链接带过来的 ref / callbackUrl（只读字符串，不写 DOM/HTML）。
+    const ref = (urlParams.get("ref") || "").slice(0, 64);
+    const cb = (urlParams.get("callbackUrl") || "").slice(0, 256);
+    if (/^\/[^\/]/.test(cb) && !cb.startsWith("//")) setInviteCallback(cb);
+    if (ref) setInviteRef(ref);
     if (urlParams.has('reset')) {
       clearRegState();
       return;
@@ -412,6 +420,12 @@ export default function RegisterPage() {
               // prefilled so the user can create a plan right away. Without a
               // draft, keep the existing login/onboarding target untouched.
               const carriedGoal = restoreGoalDraft();
+              // P0-1: 带着邀请码注册 → 回落到接受页，由对方显式点"接受"才建联。
+              if (inviteRef) {
+                const target = inviteCallback || `/connect/invite?code=${encodeURIComponent(inviteRef)}`;
+                window.location.assign(target);
+                return;
+              }
               // GA-06：注册后直达真实 Chats（作战包 AUTH-01/USER-01），
               // 不再落进 onboarding / 空 Studio。有 goal 草稿时保留原兼容路径。
               window.location.assign(carriedGoal
@@ -426,6 +440,12 @@ export default function RegisterPage() {
       }
 
       clearRegState();
+      // P0-1: 无 auto-login 时把邀请回落目标带进登录页，链接不丢。
+      if (inviteRef) {
+        const target = inviteCallback || `/connect/invite?code=${encodeURIComponent(inviteRef)}`;
+        router.push(`/login?registered=true&callbackUrl=${encodeURIComponent(target)}`);
+        return;
+      }
       // Keep the original login target, but carry the goal onto it so the relay
       // is not lost when auto-login is unavailable.
       // GA-06：无 auto-login 时回登录页也要带真实聊天回跳，避免落到 /dashboard→workspace。

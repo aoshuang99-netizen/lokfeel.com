@@ -1,0 +1,70 @@
+{
+  "phase": "pre-restart",
+  "base": "http://127.0.0.1:3215",
+  "db": "/tmp/p01-exp.db",
+  "at": "2026-11-23T05:06:48.513Z",
+  "passed": 8,
+  "failed": 0,
+  "results": [
+    {
+      "step": "A 创建邀请返回 201 + code",
+      "ok": true,
+      "detail": {
+        "status": 201,
+        "code": "INV-F8TMBF"
+      }
+    },
+    {
+      "step": "公开查询邀请为 PENDING（未建联）",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "state": "PENDING"
+      }
+    },
+    {
+      "step": "未同意不建联：Match/Conversation 均为 0",
+      "ok": true,
+      "detail": {
+        "matches": 0,
+        "conversations": 0
+      }
+    },
+    {
+      "step": "伪造 token 被拒 400 INVALID_CODE",
+      "ok": true,
+      "detail": {
+        "status": 400
+      }
+    },
+    {
+      "step": "越权(自建)被拒 400 SELF_INVITE",
+      "ok": true,
+      "detail": {
+        "status": 400
+      }
+    },
+    {
+      "step": "越权撤回(非邀请人)被拒",
+      "ok": true,
+      "detail": {
+        "status": 400
+      }
+    },
+    {
+      "step": "过期邀请被拒 409 EXPIRED",
+      "ok": true,
+      "detail": {
+        "status": 409,
+        "code": "EXPIRED"
+      }
+    },
+    {
+      "step": "过期邀请未建联",
+      "ok": true,
+      "detail": {
+        "matches": 0
+      }
+    }
+  ]
+}
