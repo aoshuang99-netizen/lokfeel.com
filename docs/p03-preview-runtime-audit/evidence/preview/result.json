@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-23T07:04:11.768Z",
+  "generatedAt": "2026-11-23T10:34:32.611Z",
   "base": "https://lokfeel-preview.aoshuang99.workers.dev",
   "compareBase": null,
-  "expectedSha": "9bc4fbb7cdc999d5e61814d2bd22967859b964cd",
+  "expectedSha": "9c6b7415b64b865de9db129b0b60735d15d089f1",
   "label": "preview",
   "allowWrites": false,
   "login": {
@@ -13,12 +13,12 @@
   "health": {
     "status": "FAIL",
     "pass": "preview",
-    "http": 500,
-    "health": "",
-    "commit": "",
-    "expected": "9bc4fbb",
-    "commitSource": "",
-    "builtAt": ""
+    "http": 503,
+    "health": "unhealthy",
+    "commit": "9c6b741",
+    "expected": "9c6b741",
+    "commitSource": "env",
+    "builtAt": "2026-11-23T10:24:23.627Z"
   },
   "api": [
     {
@@ -31,8 +31,8 @@
     {
       "pass": "preview",
       "name": "plans-read",
-      "status": "FAIL",
-      "http": 500,
+      "status": "PASS",
+      "http": 200,
       "method": "GET"
     },
     {
@@ -46,22 +46,33 @@
     {
       "pass": "preview",
       "viewport": "desktop",
-      "ctaStatus": "NOT_MATCHED",
+      "ctaStatus": "VISIBLE",
       "slug": "home",
       "path": "/",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people.\nYou decide what you share.",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/",
-      "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/"
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 242
+        },
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 242
+        }
       ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     },
     {
@@ -70,19 +81,15 @@
       "ctaStatus": "NOT_MATCHED",
       "slug": "register",
       "path": "/register",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/register",
       "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/register"
-      ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     },
     {
@@ -119,19 +126,15 @@
       "ctaStatus": "NOT_MATCHED",
       "slug": "product",
       "path": "/product",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/product",
       "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/product"
-      ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     },
     {
@@ -140,40 +143,47 @@
       "ctaStatus": "NOT_MATCHED",
       "slug": "solutions",
       "path": "/solutions",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/solutions",
       "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/solutions"
-      ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     },
     {
       "pass": "preview",
       "viewport": "mobile",
-      "ctaStatus": "NOT_MATCHED",
+      "ctaStatus": "VISIBLE",
       "slug": "home",
       "path": "/",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Conversations belong to people. You decide what you share.",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/",
-      "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/"
+      "ctaVisible": [
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 242
+        },
+        {
+          "tag": "button",
+          "text": "Start a real conversation",
+          "href": "",
+          "disabled": true,
+          "width": 242
+        }
       ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     },
     {
@@ -182,19 +192,15 @@
       "ctaStatus": "NOT_MATCHED",
       "slug": "register",
       "path": "/register",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "LokFeel — Conversations belong to people",
+      "h1": "Join LokFeel!",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/register",
       "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/register"
-      ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     },
     {
@@ -231,19 +237,15 @@
       "ctaStatus": "NOT_MATCHED",
       "slug": "product",
       "path": "/product",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "Product — LokFeel | LokFeel",
+      "h1": "Know what you can do, and what needs your OK",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/product",
       "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/product"
-      ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     },
     {
@@ -252,19 +254,15 @@
       "ctaStatus": "NOT_MATCHED",
       "slug": "solutions",
       "path": "/solutions",
-      "status": "FAIL",
-      "http": 500,
-      "title": "",
-      "h1": "",
+      "status": "PASS",
+      "http": 200,
+      "title": "Solutions — LokFeel | LokFeel",
+      "h1": "Three situations, one honest boundary",
       "finalUrl": "https://lokfeel-preview.aoshuang99.workers.dev/solutions",
       "ctaVisible": [],
-      "serverErrors": [
-        "500 https://lokfeel-preview.aoshuang99.workers.dev/solutions"
-      ],
+      "serverErrors": [],
       "pageErrors": [],
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 500 ()"
-      ],
+      "consoleErrors": [],
       "screenshotDir": "evidence/preview/shots"
     }
   ],
@@ -272,25 +270,27 @@
     {
       "pass": "preview",
       "name": "home-primary-cta",
-      "status": "FAIL",
-      "reason": "TimeoutError: locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n  - waiting for locator('[data-testid=\"intent-submit\"],a,button,[role=\"button\"]').filter({ hasText: /Start a real conversation|开始|免费|使用|注册|Get started|sign up/i }).first() to be visible\n"
+      "status": "PASS",
+      "before": "https://lokfeel-preview.aoshuang99.workers.dev/",
+      "after": "https://lokfeel-preview.aoshuang99.workers.dev/register",
+      "screenshot": "evidence/preview/video"
     }
   ],
   "verdict": "FAIL",
   "summary": {
     "pageStats": {
-      "FAIL": 8,
+      "PASS": 8,
       "BLOCKED": 8
     },
     "login": "BLOCKED",
     "health": "FAIL",
     "api": [
       "invite-lookup-invalid:FAIL",
-      "plans-read:FAIL",
+      "plans-read:PASS",
       "invite-write:BLOCKED"
     ],
     "cta": [
-      "home-primary-cta:FAIL"
+      "home-primary-cta:PASS"
     ]
   }
 }
