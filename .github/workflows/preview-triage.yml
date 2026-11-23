@@ -1,0 +1,81 @@
+name: Preview 500 Triage (Cloudflare)
+
+# 只读取证：抓 lokfeel-preview 的 deployment 与真实异常，并请求公开路由/health/只读 API。
+# 不写任何业务接口；原始 tail 只保存在 artifact，仓库只落脱敏后的 result.json。
+
+on:
+  push:
+    branches: ['rc/p03-preview-runtime-audit-20261123']
+    paths:
+      - '.github/workflows/preview-triage.yml'
+      - 'scripts/qa/p500-cloudflare-triage.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: preview-500-triage
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    name: Capture first Cloudflare exception
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_URL: 'https://lokfeel-preview.aoshuang99.workers.dev'
+      WORKER_NAME: 'lokfeel-preview'
+      EXPECTED_SHA: '9bc4fbb7cdc999d5e61814d2bd22967859b964cd'
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Wrangler identity check
+        run: |
+          npx wrangler --version
+          npx wrangler whoami
+
+      - name: Capture first exception and endpoint snapshots
+        run: |
+          set -o pipefail
+          node scripts/qa/p500-cloudflare-triage.mjs \
+            --base="$BASE_URL" \
+            --worker="$WORKER_NAME" \
+            --expected-sha="$EXPECTED_SHA" \
+            --out=docs/p03-preview-runtime-audit/evidence/triage 2>&1 | tee p500-triage.log
+
+      - name: Persist triage result to reviewable branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          result="docs/p03-preview-runtime-audit/evidence/triage/result.json"
+          report="docs/p03-preview-runtime-audit/evidence/triage/report.md"
+          if [ ! -f "$result" ]; then echo "没有 triage result.json，跳过结果分支写入"; exit 0; fi
+          branch="audit-results/p500-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add -f "$result" "$report"
+          if git diff --cached --quiet; then echo "结果无变化"; exit 0; fi
+          git commit -m "chore(qa): persist cloudflare triage ${{ github.run_id }}"
+          git push origin HEAD:"$branch"
+
+      - name: Upload raw triage evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: p500-cloudflare-triage
+          path: |
+            docs/p03-preview-runtime-audit/evidence/triage
+            p500-triage.log
+          if-no-files-found: warn
+          retention-days: 30
