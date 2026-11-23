@@ -61,6 +61,39 @@ jobs:
           if [ "$ALLOW_WRITES" = "true" ]; then args="$args --writes"; fi
           node scripts/qa/p03-preview-runtime-audit.mjs $args 2>&1 | tee p03-audit.log
 
+      - name: Publish audit summary
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+          const p = 'docs/p03-preview-runtime-audit/evidence/preview/result.json'
+          if (!fs.existsSync(p)) {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n### P0-3 audit\n\n没有生成 result.json；见 p03-audit.log。\n')
+            process.exit(0)
+          }
+          const j = JSON.parse(fs.readFileSync(p, 'utf8'))
+          const failPages = j.pages.filter((x) => x.pass === 'preview' && x.status === 'FAIL')
+            .map((x) => `${x.slug}/${x.viewport} http=${x.http} ${(x.pageErrors || []).join('; ')}`)
+          const failApi = j.api.filter((x) => x.pass === 'preview' && x.status === 'FAIL')
+            .map((x) => `${x.name} http=${x.http || '-'} ${x.reason || ''}`)
+          const lines = [
+            '',
+            '### P0-3 runtime audit summary',
+            '',
+            `- Verdict: **${j.verdict}**`,
+            `- Base: ${j.base}`,
+            `- Health/SHA: ${j.health.status} ${j.health.commit || ''} (expected ${j.expectedSha.slice(0, 7)})`,
+            `- Login: ${j.login.status} ${j.login.http || ''}`,
+            `- Pages: ${JSON.stringify(j.pages.reduce((a, x) => { if (x.pass === 'preview') a[x.status] = (a[x.status] || 0) + 1; return a }, {}))}`,
+            `- API: ${j.api.filter((x) => x.pass === 'preview').map((x) => `${x.name}=${x.status}`).join(', ')}`,
+            `- CTA: ${j.cta.filter((x) => x.pass === 'preview').map((x) => `${x.name}=${x.status} ${x.reason || ''}`).join(', ')}`,
+            `- Failed pages: ${failPages.join(' | ') || 'none'}`,
+            `- Failed API: ${failApi.join(' | ') || 'none'}`,
+            '',
+          ]
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n'))
+          NODE
+
       - name: Upload runtime evidence
         if: always()
         uses: actions/upload-artifact@v7

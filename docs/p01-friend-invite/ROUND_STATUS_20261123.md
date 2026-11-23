@@ -1,7 +1,13 @@
 # LokFeel · 下一轮上线攻坚 · 执行状态（2026-11-23）
 
-基线候选 `7b03a84`。本轮**未提交、未推送、未部署、未迁移生产、未改密钥、未扣款、未发外部消息**。
-所有验证在本地隔离库 `file:/tmp/p01-invite.db` / `file:/tmp/lf-ratchet-verify.db` 完成。
+基线候选 `7b03a84`。最终候选 **`9bc4fbb7cdc999d5e61814d2bd22967859b964cd`**
+（分支 `rc/p01-invite-loop-20261123`）。**未部署、未迁移生产、未改密钥、未扣款、未发外部消息**。
+本地验证用隔离库 `file:/tmp/p01-invite.db` / `file:/tmp/p01-exp.db` / `file:/tmp/lf-ratchet-verify.db`。
+
+> 🟢 **最终 CI（权威）**：`45120216414` = completed/**success**（SHA `9bc4fbb`），
+> 14 个 job 全绿（含 E2E/axe 棘轮、Migration、Lint 棘轮、race、Jest/tsc/build/依赖/凭据审计）。
+> Cloudflare Preview `45120216433` = success（同 SHA）。四轮收敛：① 脚本 lint 债 → ② GET 信封回归 →
+> ③ 首页 landmark-unique a11y 债 → 全部真修（不刷基线/不改断言），第四轮全绿。
 
 ---
 
@@ -23,8 +29,9 @@
 
 ## 2. 工程成果
 
-- 新候选 SHA：**`23f4905ff1f2b70f1023ca5d9a06f1ed3ea5f1f2`**，分支
+- 最终候选 SHA：**`9bc4fbb7cdc999d5e61814d2bd22967859b964cd`**，分支
   `rc/p01-invite-loop-20261123`（`git ls-remote` 复核远端一致）。已推送触发 CI。
+  （下列 `23f4905` / 四轮 Run ID 为收敛过程记录，非最终候选。）
   远端 CI Run：`45116158122` / `45116158062`。
   **首轮 CI 结果**：Migration ✅ success（本地修复经真实 CI 验证）、Typecheck/Build/Jest/
   Dependency/Secret ✅ success；E2E ❌ + Lint ❌。根因已定位并修复：
@@ -62,8 +69,9 @@
 - InvitePanel：分享链接从断链的 `/register?ref=` 改为 `/connect/invite?code=`；
   旧品牌 `LokFee!` 改为 `LokFeel`；无邀请时提供生成入口。
 - 注册页：`?ref=` 现被消费，注册后回落到接受页（不丢链接），仍不自动建联。
-- ❌ **八页前后台新旧对照 / 主 CTA 录像 / 可访问性审计：BLOCKED** —— 本轮聚焦 P0-1 断链，
-  未做全站八页 frontend-design/web-design-guidelines 审计。责任人：Owner 排期（P0-4）。
+- 🟡 **八页前后台新旧对照 / 主 CTA 录像：本地候选 PASS，Preview 运行时待独立 Runner 复核**。
+  本地生产构建双视口 `16/16 PASS`、登录 PASS、主 CTA 点击录像 PASS；生产旧版同视口截图已抓取。
+  证据见 `docs/p03-preview-runtime-audit/`。责任人：WorkBuddy（绝对结论以独立 Runner 为准）。
 
 ---
 
@@ -71,16 +79,16 @@
 
 - 独立 Reviewer 签署：❌ **BLOCKED**（需独立 reviewer，非内部自评）。
 - 生产审批：❌ **BLOCKED** —— 需 Owner 对精确 SHA、环境、迁移、回滚方案批准。
-- Preview 运行时验收：❌ **BLOCKED** —— 本轮无新候选推送，未产生新 Preview URL。
+- Preview 运行时验收：🟡 **独立 Runner 执行中** —— 本机 workers.dev 超时，不重复请求；
+  已新增 GitHub-hosted Runner workflow 对真实 Preview 做八页/登录/API/SHA 验收。
 - 生产 URL / 生产验收：❌ **BLOCKED** —— 未部署（遵守"未经精确批准不部署"）。
 - 回滚演练：❌ **BLOCKED**（需生产审批后执行）。
 
 ---
 
 ## 最终裁决（诚实）
-按用户三优先级：① 邀请断链 **已真修并有端到端证据**；② 两项 CI 红灯 **本地均已真修**
-（migration 独立复核 RATCHET_EXIT=0；race 20 轮验证中）——但**权威结论必须来自新 CI Run**，
-需推送候选；③ 发布 **BLOCKED 于 Owner 精确批准**。
+按用户三优先级：① 邀请断链 **已真修并有端到端证据**；② 两项 CI 红灯 **远端 CI `45120216414` 全绿**；
+③ 发布 **BLOCKED 于 Owner 精确批准**。P0-3/P0-4 正由独立 Runner 对真实 Preview 做最终复核。
 
 未经 Owner 精确批准，不推送生产部署相关动作、不迁移生产、不扣款、不发外部消息。
 推送候选分支以触发 CI/Preview 属前几轮已授权范围，待本地 20 轮与全量验证收口后执行。

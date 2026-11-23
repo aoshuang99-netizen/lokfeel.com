@@ -25,6 +25,7 @@ const OUT = path.resolve(argOf('out', 'docs/p03-preview-runtime-audit/evidence/l
 const EXPECTED_SHA = argOf('expected-sha', '9bc4fbb7cdc999d5e61814d2bd22967859b964cd')
 const LABEL = argOf('label', new URL(BASE).hostname)
 const ALLOW_WRITES = has('--writes')
+const PAGE_TIMEOUT = Number(argOf('page-timeout', '20000'))
 
 const VIEWPORTS = [
   { name: 'desktop', width: 1440, height: 900 },
@@ -108,7 +109,7 @@ async function waitForUi(page) {
         }),
     )
     .catch(() => {})
-  await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {})
+  await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
   await page
     .waitForFunction(() => !/Loading\.\.\.|正在加载/i.test(document.body?.innerText || ''), {
       timeout: 4000,
@@ -185,7 +186,7 @@ async function capturePass(context, base, passLabel, authenticated, viewportName
         try {
           resp = await page.goto(`${base}${item.path}`, {
             waitUntil: 'domcontentloaded',
-            timeout: 45000,
+            timeout: PAGE_TIMEOUT,
           })
         } catch (error) {
           if (attempt === 1) throw error
@@ -351,7 +352,7 @@ async function ctaVideo(context, base, passLabel) {
   const page = await videoContext.newPage()
   const record = { pass: passLabel, name: 'home-primary-cta', status: 'FAIL' }
   try {
-    await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout: 45000 })
+    await page.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT })
     await waitForUi(page)
     const before = page.url()
     await page
