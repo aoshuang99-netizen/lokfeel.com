@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: preview-500-triage
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   triage:

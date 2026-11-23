@@ -147,6 +147,7 @@ function summarizeTailLine(line) {
 
 async function captureTail(base, worker, endpoints) {
   return new Promise((resolve) => {
+    let settled = false
     const child = spawn('npx', ['wrangler', 'tail', worker, '--format', 'json', '--status', 'error'], {
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -158,6 +159,14 @@ async function captureTail(base, worker, endpoints) {
 
     const startedAt = Date.now()
     const delay = (ms) => new Promise((r) => setTimeout(r, ms))
+    const stop = () => {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill('SIGTERM')
+        setTimeout(() => {
+          if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')
+        }, 3000)
+      }
+    }
 
     async function run() {
       // 给 tail 一点连接时间，再触发真实请求。
@@ -168,12 +177,40 @@ async function captureTail(base, worker, endpoints) {
       }
       // 再等 tail 回传最后一条异常。
       await delay(6000)
-      child.kill('SIGINT')
+      stop()
     }
 
-    run().catch(() => child.kill('SIGINT'))
+    run().catch(stop)
+
+    // 绝不让 tail 挂起整个 job；5 秒兜底后按已有数据出结果。
+    setTimeout(() => {
+      if (!settled) stop()
+      setTimeout(() => {
+        if (!settled) {
+          settled = true
+          const raw = stdoutChunks.join('')
+          const lines = raw.split('\n').filter((line) => line.trim().length > 0)
+          const events = lines.map(summarizeTailLine)
+          const withExceptions = events.filter(
+            (event) => (event.exceptions?.length || 0) > 0 || event.outcome === 'exception',
+          )
+          resolve({
+            exitCode: null,
+            signal: 'FORCE_RESOLVE',
+            lines: lines.length,
+            events,
+            exceptionEvents: withExceptions,
+            firstException: withExceptions[0] || null,
+            stderrSnippet: truncate(redact(stderrChunks.join('')), 1200),
+            elapsedMs: Date.now() - startedAt,
+          })
+        }
+      }, 5000)
+    }, 25000)
 
     child.on('exit', (code, signal) => {
+      if (settled) return
+      settled = true
       const raw = stdoutChunks.join('')
       const stderr = stderrChunks.join('')
       const lines = raw.split('\n').filter((line) => line.trim().length > 0)
