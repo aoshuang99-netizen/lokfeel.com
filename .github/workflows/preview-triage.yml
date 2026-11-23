@@ -2,6 +2,7 @@ name: Preview 500 Triage (Cloudflare)
 
 # 只读取证：抓 lokfeel-preview 的 deployment 与真实异常，并请求公开路由/health/只读 API。
 # 不写任何业务接口；原始 tail 只保存在 artifact，仓库只落脱敏后的 result.json。
+# 2026-11-23：重跑以采集修复候选 9c6b741 部署后的 Worker 版本身份与运行时异常。
 
 on:
   push:
