@@ -53,6 +53,7 @@ async function fetchEndpoint(base, item) {
       method: 'GET',
       redirect: 'manual',
       headers: { 'User-Agent': 'lokfeel-p500-triage/1.0' },
+      signal: AbortSignal.timeout(20000),
     })
     const headers = {}
     for (const key of ['cf-ray', 'content-type', 'location', 'server']) {
@@ -91,6 +92,8 @@ function wranglerVersion() {
     return execFileSync('npx', ['wrangler', '--version'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 30000,
+      killSignal: 'SIGKILL',
     }).trim()
   } catch (error) {
     return `unknown (${String(error?.message || error).slice(0, 120)})`
@@ -103,6 +106,8 @@ function listDeployments(worker) {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       maxBuffer: 8 * 1024 * 1024,
+      timeout: 30000,
+      killSignal: 'SIGKILL',
     })
     let parsed = null
     try {
