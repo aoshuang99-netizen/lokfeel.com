@@ -78,4 +78,32 @@
 - **最小修复**：`scripts/ci/patch-opennext-build.mjs` 新增 `ensureTraceRestoreFix()`，把 nft 已追踪但 standalone 漏掉的文件从构建目录补回；不改业务代码、不改 `next.config.ts`、不动生产凭据。幂等、带锚点校验。
 - **本地复现实测（补丁后）**：`/`、`/register`、`/product`、`/solutions` **500 → 200**；`/api/payments/dodo/plans` **500 → 200**；`/favicon.ico` 200；`/api/health` **500 → 503**（设计分支，返回 `commit=2192e22` / `commitSource=git`）⇒ 500 根因已消除。
 - **仍未闭合（P0-02 / P0-03 保持 BLOCKED）**：`/api/health` 503、非法邀请码 500。原因是 Preview Worker 无隔离 DB 配置（secrets `names: []`）且 Prisma 的 libSQL adapter 在 Workers 上有 native binding / 动态 WASM 限制。按用户硬约束不复制生产 DB/密钥，需 Owner 提供独立 QA 库与 Prisma-on-Workers 方案。已尝试 web adapter 但错误转为 `Wasm code generation disallowed by embedder`，**已回退，不进入提交**。
-- **本轮未执行**：生产部署、生产迁移、真实扣款、外部消息、生产数据写入；Preview 部署与独立 Runner 复验仍待执行。
+- **本轮未执行**：生产部署、生产迁移、真实扣款、外部消息、生产数据写入。
+
+## 6. 2026-11-23 部署态与独立验收结论（最终状态）
+
+- 修复候选 `9c6b7415b64b865de9db129b0b60735d15d089f1` 已推送并部署到
+  `lokfeel-preview`；Cloudflare Preview #71 (`45155686683`) completed success，
+  CI #430 (`45155686794`) / #431 (`45157012131`) 全绿。
+- **真实 Preview 运行时（不是 Deploy Job success）**：
+  - 四公开页桌面/移动 **8/8 = 200**（独立 Runner `45157012028` 的
+    `pageStats: PASS 8`；本地 SOCKS5 另做 3 轮采样一致）；
+  - 首页主 CTA `home-primary-cta: PASS`；`plans-read: PASS`（`pricingPublished=false`）；
+  - `/api/health` **503 unhealthy**，`commit=9c6b741`、`commitSource=env`
+    ⇒ SHA 与候选一致，但**不是 200 healthy**；
+  - 非法邀请码 **500**（契约要求 4xx）；登录 **BLOCKED**（`QA_PASSWORD` 未配置）；
+  - 写 API **BLOCKED**；八页中的四个认证页 **BLOCKED**（登录态不可用，
+    未把未登录跳转冒充页面通过）。
+- **独立 Runner 审计 verdict = FAIL**，但 FAIL 来源已从「全站 500」收敛为
+  「health 503 + 非法邀请码 500 + 登录 BLOCKED」三项；
+  Triage `tail.exceptionEvents: []` / `firstException: null` 证明
+  instrumentation 异常已从线上消失。
+- **P0-01 交付齐备**：error class `ChunkLoadError` + 脱敏 stack + 失败环节
+  `NextNodeServer.prepare()` + CF-Ray（`a5ef7b63ea31ad44-SJC` /
+  `a5ef83cec927dc9f-SEA` 等）+ Worker version 48 / deployment ID
+  `757b4f6b-80a7-482a-97ec-b13ea9d159e3` + 运行时 SHA `9c6b741` + 根因因果链。
+- **P0-02 部分达成、P0-03 / P0-04 / P0-05 仍 BLOCKED**：唯一阻断是
+  Preview 无隔离 QA 数据库 + Prisma libSQL adapter 不兼容 Workers；
+  详见 `docs/p500-cloudflare-runtime/OWNER_DECISION_REQUIRED.md`。
+- 证据分支：`audit-results/p03-45157012028`（审计）、
+  `audit-results/p500-45157012025`（Cloudflare 取证）。

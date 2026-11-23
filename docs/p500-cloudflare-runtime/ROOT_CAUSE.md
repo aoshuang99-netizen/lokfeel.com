@@ -54,8 +54,45 @@ runtime `loadRuntimeChunkPath()` → `requireChunk(chunkPath)` 查不到 chunk�
   ⇒ 当时线上 Worker **并非最新候选 SHA**，且 `wrangler secret list` 返回 `names: []`。
 - 后续部署 Run `45148478238` = completed success，但仍全站 500 ⇒
   **部署 Job success ≠ 运行时 PASS**（用户硬约束）。
-- 真实 Preview 请求的 CF-Ray / request ID 需在部署修复候选后由独立 Runner 重新采集，
-  不以本地 workerd 请求冒充线上 request ID。
+
+**修复候选部署后的线上身份（2026-11-23 实测）**
+- 修复提交：`9c6b7415b64b865de9db129b0b60735d15d089f1`；
+  部署 Run `45155686683`（Cloudflare Preview #71），CI Run `45155686794`。
+- 真实 Preview `/api/health` 响应头：`server: cloudflare`、
+  `cf-ray: a5ef7b63ea31ad44-SJC`（503 请求）；首页 200 请求
+  `cf-ray: a5ef7b706df7eb2d-SJC`。
+- 运行时构建身份：`commit=9c6b741`、`commitSource=env`、
+  `builtAt=2026-11-23T10:24:23.627Z` ⇒ **Git SHA、构建制品、运行时可查证三者对齐**。
+- 四公开页连续 3 轮采样：`/`、`/register`、`/product`、`/solutions` 全部 200
+  （部署传播期曾短暂出现新旧版本混合，稳定后全 200，不以单次结果下结论）。
+
+**独立 GitHub-hosted Runner 复验（已执行，非本地代理代替）**
+- `Preview Runtime Audit` Run `45157012028`，结果分支
+  `audit-results/p03-45157012028` → `evidence/preview/result.json`：
+  - `pageStats: PASS 8 / BLOCKED 8` ⇒ **四公开页 × 桌面/移动 8/8 全部 200**；
+  - `health: FAIL, http 503, unhealthy, commit=9c6b741, commitSource=env`
+    ⇒ **运行时 SHA 与 `expectedSha=9c6b7415...` 对齐**；
+  - `api: plans-read PASS`（`pricingPublished=false`）、
+    `invite-lookup-invalid FAIL`（500）、`invite-write BLOCKED`；
+  - `cta: home-primary-cta PASS`（真实点击可达）；
+  - `login: BLOCKED`（`QA_PASSWORD` 未提供，未用默认口令代替）；
+  - `verdict: FAIL` —— 只由 health 503 / 非法邀请码 500 / 登录 BLOCKED 造成，
+    **不是**全站 500 复发。
+- `Preview 500 Triage` Run `45157012025`，结果分支
+  `audit-results/p500-45157012025` → `evidence/triage/result.json`：
+  - 最新 Worker **version 48**，version ID
+    `239cec24-c364-4dde-be6a-5e1961669997`（`2026-11-23T10:25:56Z`）；
+  - 最新 **deployment ID** `757b4f6b-80a7-482a-97ec-b13ea9d159e3`
+    （`2026-11-23T10:26:00Z`，100% 流量）；
+  - `tail.exceptionEvents: []`、`firstException: null`
+    ⇒ **`An error occurred while loading the instrumentation hook` 已从线上日志消失**；
+  - 四个公开路由 200（CF-Ray `a5ef83cec927dc9f-SEA` 等），
+    health 503 / invalid-invite 500；
+  - `wrangler secret list` → `names: []`（隔离 DB 凭据仍未配置）；
+  - `verdict: FAIL`（判定条件 `any500 || health.status !== 200`）。
+- CI：`45155686794`（候选 `9c6b741`，#430）与 `45157012131`（QA-only `afa8343`，#431）
+  均 **completed success**；Cloudflare Preview 部署 `45155686683`（#71）
+  completed success，但运行时 PASS 由上面的真实 URL 证据独立确认。
 
 ## 2. 完整因果链（五步，逐步可验证）
 
