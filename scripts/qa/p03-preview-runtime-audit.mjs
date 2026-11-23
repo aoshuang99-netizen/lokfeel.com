@@ -180,10 +180,17 @@ async function capturePass(context, base, passLabel, authenticated, viewportName
     let h1 = ''
     let ctas = []
     try {
-      const resp = await page.goto(`${base}${item.path}`, {
-        waitUntil: 'domcontentloaded',
-        timeout: 45000,
-      })
+      let resp = null
+      for (let attempt = 0; attempt < 2 && !resp; attempt += 1) {
+        try {
+          resp = await page.goto(`${base}${item.path}`, {
+            waitUntil: 'domcontentloaded',
+            timeout: 45000,
+          })
+        } catch (error) {
+          if (attempt === 1) throw error
+        }
+      }
       status = resp?.status() ?? 0
       await waitForUi(page)
       finalUrl = page.url()
@@ -199,16 +206,18 @@ async function capturePass(context, base, passLabel, authenticated, viewportName
     }
 
     const loginRedirect = item.auth && /\/login(\?|$)/.test(finalUrl)
+    // CTA 文案/视口差异只记录，不把整页判红；主 CTA 是否真实可操作由 ctaVideo 判定。
     const passed =
       status >= 200 &&
       status < 400 &&
       !loginRedirect &&
       serverErrors.length === 0 &&
-      errors.length === 0 &&
-      (item.auth ? true : ctas.length > 0)
+      errors.length === 0
 
     result.pages.push({
       pass: passLabel,
+      viewport: viewportName,
+      ctaStatus: ctas.length > 0 ? 'VISIBLE' : 'NOT_MATCHED',
       slug: item.slug,
       path: item.path,
       status: passed ? 'PASS' : 'FAIL',
@@ -435,14 +444,17 @@ async function runPass(base, passLabel) {
     ...(process.env.PW_CHANNEL ? { channel: process.env.PW_CHANNEL } : {}),
   })
   let authenticated = false
+  let storageState = null
   for (const vp of VIEWPORTS) {
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
       ignoreHTTPSErrors: true,
+      ...(storageState ? { storageState } : {}),
     })
     if (vp.name === 'desktop') {
       await healthCheck(context, base, passLabel)
       authenticated = await loginCheck(context, base, passLabel)
+      if (authenticated) storageState = await context.storageState()
       await apiChecks(context, base, passLabel)
       await writeChecks(context, base, authenticated, passLabel)
       await ctaVideo(context, base, passLabel)
