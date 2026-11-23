@@ -222,7 +222,7 @@ export default function LandingPage() {
           borderBottom: `1px solid ${scrolled ? LINE : "transparent"}`,
         }}
       >
-        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6">
+        <nav aria-label="主导航" className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5" aria-label="LokFeel home">
             <span
               className="grid h-8 w-8 place-items-center rounded-md font-display text-[13px] font-bold text-white"
@@ -435,7 +435,7 @@ export default function LandingPage() {
             </span>
             <span className="font-display text-[13px] font-bold tracking-[-0.01em]">LOKFEEL</span>
           </div>
-          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px]" style={{ color: MUTED }}>
+          <nav aria-label="页脚导航" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px]" style={{ color: MUTED }}>
             {[
               ["How it works", "/how-it-works"],
               ["What works today", "/product"],

@@ -36,7 +36,11 @@
   E2E ❌ 仍 4 条 `getByText('Your Invite Code')` 失败。根因再定位：我把 GET 改成
   `success()` 信封（`{success,data}`），但 InvitePanel 仍把顶层对象当数据用 →
   `inviteCode` undefined → 邀请码区块不渲染。**这是真实 UI bug，已修**：
-  `InvitePanel` 解包 `json.data ?? json`。第三轮 CI 待验。
+  `InvitePanel` 解包 `json.data ?? json`。本地 UX-04 2/2 PASS 确认。
+  **第三轮 CI**（`45118896373`）：13 job ✅ success（Lint/Migration 均过）、E2E ❌
+  失败 step = `axe 四视口棘轮门禁`：首页 `/` 的 `landmark-unique`（两个无 label 的 nav，
+  历史遗留债 0→1×4 视口）。**真修**：给顶部/页脚 nav 各加唯一 `aria-label`
+  （`src/app/(landing)/page.tsx`），不刷基线。第四轮 CI 待验。
 - Migration 红灯：**本地已真修并独立复核** —— `scripts/connection/migrate.mjs` 补齐
   `Mission.sourceRunId` / `IdempotencyRecord.actorId` 两列（V21 新增列只改了 schema 未改迁移 SQL
   导致 db push→rollback→apply 后缺列）。干净隔离库复跑完整链：`RATCHET_EXIT=0`，当前漂移 11=冻结 11，
