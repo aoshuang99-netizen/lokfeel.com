@@ -1,0 +1,443 @@
+{
+  "generatedAt": "2026-11-23T10:33:33.257Z",
+  "base": "https://lokfeel-preview.aoshuang99.workers.dev",
+  "worker": "lokfeel-preview",
+  "expectedSha": "9bc4fbb7cdc999d5e61814d2bd22967859b964cd",
+  "wranglerVersion": "4.151.0",
+  "deployments": {
+    "command": "wrangler deployments list --json",
+    "parsed": [
+      {
+        "id": "019e503e-ab6d-4469-9bc7-6d14c87eeed2",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "5e09f501-7d5e-4fc3-8507-76afb55766e4",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T05:52:58.728745Z"
+      },
+      {
+        "id": "87aa6a2f-94f5-4716-a1b1-09e63b1b5078",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "fcb95e47-8a96-4046-9aed-b80be48ddae4",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:29:35.692912Z"
+      },
+      {
+        "id": "ed17ceb4-ab85-4249-bc69-22db8671d523",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "a68a566d-11be-4280-ba87-670e1245f40e",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:42:45.228474Z"
+      },
+      {
+        "id": "22ebf769-bddc-44e7-a854-2e4d771de5db",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "a4b636ef-cd3e-4861-b8f8-d8e08c84ad29",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:54:17.430591Z"
+      },
+      {
+        "id": "db770355-a514-4c55-bf37-c32652a4694a",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "59449f41-4800-42b5-a04d-17a9b953cf2b",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T08:58:51.902804Z"
+      },
+      {
+        "id": "88fd5eef-12ae-4f13-a65a-74144ed6d227",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "3d455b03-a305-4c3a-9b78-f901b4ff068a",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T09:02:42.969565Z"
+      },
+      {
+        "id": "e7b76bb1-4cee-4426-8f82-356993c7da47",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "e224aad6-03ea-4830-ae30-0b6c01493971",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T09:17:41.662453Z"
+      },
+      {
+        "id": "a7a8a127-78cf-46c4-913e-7f5cb9c911eb",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "246f7ce9-7739-4ae3-91fc-e6309789801b",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T09:22:47.561872Z"
+      },
+      {
+        "id": "f7386cfb-fc3f-4468-ba26-0f89e626903f",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "3a20a96e-4817-4308-85df-dfc6a05813ba",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T09:39:32.266349Z"
+      },
+      {
+        "id": "757b4f6b-80a7-482a-97ec-b13ea9d159e3",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "author_email": "aoshuang99@gmail.com",
+        "annotations": {
+          "workers/triggered_by": "deployment"
+        },
+        "versions": [
+          {
+            "version_id": "239cec24-c364-4dde-be6a-5e1961669997",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-23T10:26:00.456622Z"
+      }
+    ]
+  },
+  "secrets": {
+    "command": "wrangler secret list --json",
+    "names": []
+  },
+  "versions": {
+    "command": "wrangler versions list --json",
+    "parsed": [
+      {
+        "id": "5e09f501-7d5e-4fc3-8507-76afb55766e4",
+        "number": 39,
+        "metadata": {
+          "created_on": "2026-11-23T05:52:54.124854Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "fcb95e47-8a96-4046-9aed-b80be48ddae4",
+        "number": 40,
+        "metadata": {
+          "created_on": "2026-11-23T08:29:31.279331Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "a68a566d-11be-4280-ba87-670e1245f40e",
+        "number": 41,
+        "metadata": {
+          "created_on": "2026-11-23T08:42:41.055487Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "a4b636ef-cd3e-4861-b8f8-d8e08c84ad29",
+        "number": 42,
+        "metadata": {
+          "created_on": "2026-11-23T08:54:13.322805Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "59449f41-4800-42b5-a04d-17a9b953cf2b",
+        "number": 43,
+        "metadata": {
+          "created_on": "2026-11-23T08:58:47.426771Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "3d455b03-a305-4c3a-9b78-f901b4ff068a",
+        "number": 44,
+        "metadata": {
+          "created_on": "2026-11-23T09:02:38.412496Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "e224aad6-03ea-4830-ae30-0b6c01493971",
+        "number": 45,
+        "metadata": {
+          "created_on": "2026-11-23T09:17:36.971318Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "246f7ce9-7739-4ae3-91fc-e6309789801b",
+        "number": 46,
+        "metadata": {
+          "created_on": "2026-11-23T09:22:43.575748Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "3a20a96e-4817-4308-85df-dfc6a05813ba",
+        "number": 47,
+        "metadata": {
+          "created_on": "2026-11-23T09:39:28.368197Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      },
+      {
+        "id": "239cec24-c364-4dde-be6a-5e1961669997",
+        "number": 48,
+        "metadata": {
+          "created_on": "2026-11-23T10:25:56.154754Z",
+          "source": "wrangler",
+          "author_id": "2aa1d53f6ad5542ae6d4c9e6132218dd",
+          "author_email": "aoshuang99@gmail.com",
+          "has_preview": true
+        },
+        "annotations": {
+          "workers/triggered_by": "version_upload"
+        }
+      }
+    ]
+  },
+  "endpoints": [
+    {
+      "name": "home",
+      "path": "/",
+      "status": 200,
+      "ok": true,
+      "cfRay": "a5ef83cec927dc9f-SEA",
+      "contentType": "text/html; charset=utf-8",
+      "location": "",
+      "ms": 1504,
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" class=\"h-full antialiased twtqoG_variable fiRzrW_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" href=\"/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"preload\" href=\"/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2r8ydsnn0nu4-.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2oihc_-4ldrwd.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_ne"
+    },
+    {
+      "name": "register",
+      "path": "/register",
+      "status": 200,
+      "ok": true,
+      "cfRay": "a5ef83d7bf99dc9f-SEA",
+      "contentType": "text/html; charset=utf-8",
+      "location": "",
+      "ms": 110,
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" class=\"h-full antialiased twtqoG_variable fiRzrW_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" href=\"/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"preload\" href=\"/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2r8ydsnn0nu4-.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2oihc_-4ldrwd.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_ne"
+    },
+    {
+      "name": "product",
+      "path": "/product",
+      "status": 200,
+      "ok": true,
+      "cfRay": "a5ef83d86918dc9f-SEA",
+      "contentType": "text/html; charset=utf-8",
+      "location": "",
+      "ms": 117,
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" class=\"h-full antialiased twtqoG_variable fiRzrW_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" href=\"/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"preload\" href=\"/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2r8ydsnn0nu4-.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2oihc_-4ldrwd.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_ne"
+    },
+    {
+      "name": "solutions",
+      "path": "/solutions",
+      "status": 200,
+      "ok": true,
+      "cfRay": "a5ef83d92aabdc9f-SEA",
+      "contentType": "text/html; charset=utf-8",
+      "location": "",
+      "ms": 94,
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" class=\"h-full antialiased twtqoG_variable fiRzrW_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" href=\"/_next/static/media/bc8ed407dc77c57a-s.p.1hey5yyym6mz_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"preload\" href=\"/_next/static/media/c0680f1bdb3a2e90-s.p.1gsd1jahc5dg_.woff2\" as=\"font\" crossorigin=\"\" type=\"font/woff2\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2r8ydsnn0nu4-.css\" data-precedence=\"next\"/><link rel=\"stylesheet\" href=\"/_next/static/chunks/2oihc_-4ldrwd.css\" data-precedence=\"next\"/><link rel=\"preload\" as=\"script\" fetchPriority=\"low\" href=\"/_ne"
+    },
+    {
+      "name": "health",
+      "path": "/api/health",
+      "status": 503,
+      "ok": false,
+      "cfRay": "a5ef83d9bc10dc9f-SEA",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 132,
+      "bodySnippet": "{\"status\":\"unhealthy\",\"error\":\"Failed to load external module @prisma/adapter-libsql-54387eee42c9c9c0: Error: Neon: unsupported Linux architecture: \",\"timestamp\":\"2026-11-23T10:33:19.639Z\",\"cache\":{\"hits\":0,\"misses\":0,\"hitRate\":0},\"redis\":{\"backend\":\"memory\",\"configured\":false,\"degraded\":false,\"degradedForMs\":0,\"degradedReason\":\"\",\"degradeCount\":0},\"botModule\":{\"enabled\":false,\"enabledSource\":\"default\",\"tickIntervalMs\":60000,\"maxActionsPerTick\":50,\"minActionIntervalMs\":30000,\"speedMultiplier\":1},\"version\":\"0.1.0\",\"commit\":\"9c6b741\",\"builtAt\":\"2026-11-23T10:24:23.627Z\",\"commitSource\":\"env\"}"
+    },
+    {
+      "name": "invite-lookup-invalid",
+      "path": "/api/invites/lookup?code=INV-0000000000000000",
+      "status": 500,
+      "ok": false,
+      "cfRay": "a5ef83daae27861e-SEA",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 1125,
+      "bodySnippet": "{\"error\":{\"code\":\"INTERNAL\",\"message\":\"查询失败\"}}"
+    },
+    {
+      "name": "plans-read",
+      "path": "/api/payments/dodo/plans",
+      "status": 200,
+      "ok": true,
+      "cfRay": "a5ef83e19ea0dc9f-SEA",
+      "contentType": "application/json",
+      "location": "",
+      "ms": 73,
+      "bodySnippet": "{\"ok\":true,\"provider\":\"dodo\",\"pricingPublished\":false,\"reason\":\"pricing_approval_pending\",\"plans\":[]}"
+    }
+  ],
+  "tail": {
+    "exitCode": "SIGTERM",
+    "events": [
+      {
+        "outcome": "ok",
+        "scriptName": "lokfeel-preview",
+        "eventTime": 1795430004994,
+        "requestId": "",
+        "url": "https://lokfeel-preview.aoshuang99.workers.dev/",
+        "method": "GET",
+        "statusCode": "",
+        "exceptions": [],
+        "logs": []
+      },
+      {
+        "outcome": "ok",
+        "scriptName": "lokfeel-preview",
+        "eventTime": 1795430005695,
+        "requestId": "",
+        "url": "https://lokfeel-preview.aoshuang99.workers.dev/product",
+        "method": "GET",
+        "statusCode": "",
+        "exceptions": [],
+        "logs": []
+      },
+      {
+        "outcome": "ok",
+        "scriptName": "lokfeel-preview",
+        "eventTime": 1795430006960,
+        "requestId": "",
+        "url": "https://lokfeel-preview.aoshuang99.workers.dev/api/payments/dodo/plans",
+        "method": "GET",
+        "statusCode": "",
+        "exceptions": [],
+        "logs": []
+      }
+    ],
+    "exceptionEvents": [],
+    "firstException": null,
+    "stderrSnippet": "",
+    "elapsedMs": 12296
+  },
+  "verdict": "FAIL"
+}
