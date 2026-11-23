@@ -124,6 +124,58 @@ function listDeployments(worker) {
   }
 }
 
+function listSecrets(worker) {
+  try {
+    const raw = execFileSync('npx', ['wrangler', 'secret', 'list', '--name', worker, '--format', 'json'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      maxBuffer: 8 * 1024 * 1024,
+      timeout: 30000,
+      killSignal: 'SIGKILL',
+    })
+    let parsed = null
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      parsed = { parseError: true, rawSnippet: truncate(redact(raw), 2000) }
+    }
+    // 只保留名称/类型/时间，绝不保留值（secret list 本身也不返回值）。
+    return {
+      command: 'wrangler secret list --json',
+      names: Array.isArray(parsed) ? parsed.map((item) => ({ name: item?.name, type: item?.type })) : parsed,
+    }
+  } catch (error) {
+    return {
+      command: 'wrangler secret list --json',
+      error: truncate(redact(error?.stderr || error?.message || String(error)), 1200),
+    }
+  }
+}
+
+function listVersions(worker) {
+  try {
+    const raw = execFileSync('npx', ['wrangler', 'versions', 'list', '--name', worker, '--json'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      maxBuffer: 8 * 1024 * 1024,
+      timeout: 30000,
+      killSignal: 'SIGKILL',
+    })
+    let parsed = null
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      parsed = { parseError: true, rawSnippet: truncate(redact(raw), 2000) }
+    }
+    return { command: 'wrangler versions list --json', parsed }
+  } catch (error) {
+    return {
+      command: 'wrangler versions list --json',
+      error: truncate(redact(error?.stderr || error?.message || String(error)), 1200),
+    }
+  }
+}
+
 function summarizeTailLine(line) {
   const raw = line.trim()
   if (!raw.startsWith('{')) return { parse: 'not-json', raw: truncate(redact(raw), 800) }
@@ -153,7 +205,7 @@ function summarizeTailLine(line) {
 async function captureTail(base, worker, endpoints) {
   return new Promise((resolve) => {
     let settled = false
-    const child = spawn('npx', ['wrangler', 'tail', worker, '--format', 'json', '--status', 'error'], {
+    const child = spawn('npx', ['wrangler', 'tail', worker, '--format', 'json', '--sampling-rate', '1'], {
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
@@ -241,6 +293,8 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true })
   const version = wranglerVersion()
   const deployments = listDeployments(WORKER)
+  const secrets = listSecrets(WORKER)
+  const versions = listVersions(WORKER)
   const endpoints = []
   for (const endpoint of REQUESTS) {
     endpoints.push(await fetchEndpoint(BASE, endpoint))
@@ -256,6 +310,8 @@ async function main() {
     expectedSha: EXPECTED_SHA,
     wranglerVersion: version,
     deployments,
+    secrets,
+    versions,
     endpoints,
     tail,
     verdict: any500 || health?.status !== 200 ? 'FAIL' : 'PASS',
