@@ -3,7 +3,29 @@
 - 分支：`release/webchat-minimal-b50e53e` @ `77bbb222b117537249777f4c5f2e6a5277cfc5ad`
 - 性质：`b50e53e`（生产基线）+ S0 支付 fail-closed 10 文件，**零迁移、零新表、零配置常量依赖**
 - 目标站点：Netlify `lokfeel-app.netlify.app`（site id `a2ca9da4-17c0-47fb-a59a-4dad715102b3`），Node.js 22（netlify.toml 已配）
-- 状态：**待 W1 隔离 DB**。本文件是可一键执行的 runbook，不是已完成的部署。
+- 状态：**部署未成功；W2 = FAIL（工具链阻断 + W1 资源阻断）**。本文件是可一键执行的 runbook，不是已完成的部署。
+
+## 部署尝试实录（2026-11-24 18:50–19:08 CST，Owner 明确要求「仍部署，如实标 FAIL」）
+按 Owner 指示实际尝试把方案 A 最小树部署到 Staging，穷尽四条路径，全部失败，**未产生任何部署、未污染生产**：
+
+| 路径 | 命令/动作 | 结果 |
+| --- | --- | --- |
+| 1. Netlify API 关联 git 仓库 | `PUT /api/v1/sites/{id}` 三种 build_settings/repo body 变体（nested-repo / top-level / installation_id） | HTTP 200/422；回读 `build_settings={}`，repo 关联**未持久化**（Netlify 需 OAuth app 交互流程，PAT 无法完成）。站点仍空。 |
+| 2. 本地构建 + CLI 部署 | `netlify deploy --site {id} --alias staging --build`（main worktree，Option A 分支，trap 恢复） | CLI `Unauthorized: could not retrieve project`（PAT 可列站点但 CLI 无法解析项目）。 |
+| 3. CLI 用 `--team` / `--site-name` | 同上加 `--team aoshuang99` / `--site-name lokfeel-app` | `--team` 只允许建站；`--site-name` 试图**新建**站点 → 401。均未部署。 |
+| 4. 本地 `next build` 产出可上传物 | 生产基线 worktree `next build` | ① worktree node_modules 是符号链接 → Turbopack `Could not find next/package.json`；② 硬链接拷贝 1.7G 被沙箱 exit137 中断；③ 改 `turbopack.root` 指向真工作树 → `distDirRoot must stay inside project root` panic。沙箱无法产出构建物。 |
+
+**净结果**：Staging `https://lokfeel-app.netlify.app/` 仍 **404（空站，无部署）**；生产 `https://app.lokfeel.com/api/health` 仍 **200 healthy（未被触碰）**；仓库分支已复位到 `rc/p03-preview-runtime-audit-20261123@f6e8388`，远端 main `cad717e`、Option A 分支 `77bbb222` 均未变。
+
+**诚实判定**：W2 = **FAIL**（两条独立阻断叠加）：
+- 工具链阻断：PAT 无法经 Netlify CLI 部署现有站点；沙箱无法本地构建 Next.js 产物。
+- 资源阻断（W1）：即使部署成功，无隔离 DB ⇒ health `db.user.count()` 必 503 ⇒ 按上线令仍不得标 Staging PASS。
+
+**下一步（Owner 侧二选一）**：
+- (a) 提供具有 Staging 站点部署权限的 Netlify 凭据/或有 OAuth 授权的 CI，使 `netlify deploy` 可用；并给隔离 DB（W1）——然后按 §1–§3 一次部署。
+- (b) 直接在 Netlify UI 把 `a2ca9da4` 关联到 GitHub `release/webchat-minimal-b50e53e` 分支、注入 W1 DB env，让 Netlify 云构建自动部署（绕开本机沙箱限制）。
+
+本轮**未**伪造 PASS、未用本地 dev 冒充部署、未碰生产 DB/凭据、未扣款。
 
 ## 0. 前置（唯一阻断，Owner 侧）
 

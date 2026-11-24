@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | **支付止损** | **PASS（候选）/ NO_GO（部署）** | 生产实测仍 `b50e53e`：`charging=true`、plans `checkoutReady=true`、公开 `$89/$199/$449` ⇒ **止损未生效**。零迁移热修复候选 `77bbb222`（审批引用 `230a21b`，代码零差异），Fresh 复验 4 suites/14 tests PASS（含 Provider create=0 负例）。CI `44875441463` 唯一失败=Dependency audit（存量 CVE 时间漂移，非本补丁）。审批包 `S0_APPROVAL_PACKAGE.md`。**未部署**：待 Owner 精确 SHA 批准 + Reviewer + CVE 决策。Provider 生产零新增结账证据：全程未发 checkout POST（符合安全验证边界）。 |
 | **隔离数据库** | **BLOCKED_RESOURCE** | 无隔离 libSQL 端点。Turso `lokfeelboss` 欠费（403），token 下仅生产库；本地 DB URL 全指向生产。唯一资源请求见 `RESOURCE_REQUEST_W1.md`（不显示密钥）。不再探索临时 tunnel/WASM。 |
-| **Staging** | **CODE_READY / BLOCKED_RESOURCE（部署）** | 最小树发布分支 + W2 Runbook 就绪；候选站点 `lokfeel-app.netlify.app`（id `a2ca9da4`）可用但缺 DB，未部署。runner 对空站点实测 FAIL，未冒充。固定 URL / Health 200 / 运行时 SHA 对齐待 W1。 |
+| **Staging** | **FAIL（部署尝试未成功）** | 按 Owner「仍部署、如实标 FAIL」指示实际尝试四条部署路径全部失败（PAT 无法经 CLI 部署现有站点/API repo 关联不持久/本地 next build 受沙箱 exit137 与 Turbopack 限制）；Staging URL `https://lokfeel-app.netlify.app/` 仍 **404 空站**，生产仍 200 未触碰。叠加 W1 无 DB（health 必 503）。详见 `W2_STAGING_DEPLOY_RUNBOOK.md` 部署实录。下一步需 Owner 提供有部署权限的 Netlify 凭据或 Netlify UI 关联分支+注入 DB。 |
 | **真人社交** | **BLOCKED_RESOURCE**（依赖 W2） | 无部署态 Staging ⇒ A/B 双账号邀请→接受→关系→20/20 消息→重启持久性无法执行。DB 对账无。核心路径数据依赖分析已完成（`MIGRATION_IMPACT_ANALYSIS.md` §2：不依赖 3 新表）；W3/W4 runner 已就绪，收到 W1 即可跑。 |
 | **产品体验** | **BLOCKED_RESOURCE**（依赖 W2） | 八页真实浏览器验收需在 Staging 执行；本地截图不重复。runner 已挂接八页审计脚本，无部署态证据。 |
 | **生产发布** | **NO_GO** | 无 Staging 成果、无迁移演练、无人类 Reviewer、CI 因存量 CVE 未全绿、无 Owner 精确 SHA 批准。未部署、未迁移、未改凭据。回滚方案见 S0 审批包 §5。 |
