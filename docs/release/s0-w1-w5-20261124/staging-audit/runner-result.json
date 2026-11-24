@@ -1,0 +1,47 @@
+{
+  "verdict": "FAIL",
+  "base": "https://lokfeel-app.netlify.app",
+  "expectCommit": "77bbb222",
+  "allowWrites": false,
+  "checkedAt": "2026-11-24T10:44:11.381Z",
+  "checks": {
+    "health": {
+      "status": 404,
+      "statusText": null,
+      "commit": null,
+      "dbLatency": null
+    },
+    "paymentGate": {
+      "status": 404,
+      "pricingPublished": null,
+      "plansCount": null,
+      "pass": false
+    },
+    "invalidInvite": {
+      "status": 404,
+      "pass": true
+    }
+  },
+  "delegated": [
+    {
+      "script": "scripts/qa/p03-preview-runtime-audit.mjs",
+      "present": true,
+      "executedByRunner": false
+    },
+    {
+      "script": "scripts/qa/p01-friend-invite-loop.mjs",
+      "present": true,
+      "executedByRunner": false
+    },
+    {
+      "script": "scripts/qa/v256-two-browser-chat-e2e-full.mjs",
+      "present": true,
+      "executedByRunner": false
+    }
+  ],
+  "notes": [
+    "health 未达 healthy/200，或 DB 延迟非数值：{\"status\":404,\"statusText\":null,\"commit\":null,\"dbLatency\":null}",
+    "支付门未 fail-closed：{\"status\":404,\"pricingPublished\":null,\"plansCount\":null,\"pass\":false}"
+  ],
+  "summary": "存在未通过的只读门禁，Staging 不得标记 PASS。"
+}

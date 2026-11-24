@@ -62,6 +62,14 @@ docs/v25.6/ga-closure/evidence/GA02_HOTFIX_CANDIDATE.json
 ```
 RED 侧证明：`b50e53e` 中 `src/config/pricing-gate.ts` ABSENT ⇒ 旧代码无法表达 Owner 开关，新测试在基线树必然 RED。
 
+### 方案 A 全量回归（本轮 2026-11-24 Fresh）
+```
+命令：cd /private/tmp/lokfeel-hotfix-b50e53e (HEAD=77bbb222) && \
+  env -u NODE_OPTIONS node_modules/.bin/jest --runInBand
+结果：Test Suites: 150 passed, 150 total / Tests: 2760 passed, 2760 total / exit 0 / 130.6s
+```
+说明：这是**整个方案 A 最小树**的全量回归，非仅 S0 四个测试文件，证明该树整体发布质量。tsc 本机受 exit-137（OOM，仓库已知环境限制）无法完成；但 CI run `44875441463`（同代码 `230a21b`）的 Typecheck/Lint/Build/Migration/E2E 均绿，未以本地失败覆盖 CI 事实，也未以 CI 绿掩盖存量 CVE 红灯。
+
 ## 4. CI 状态（诚实披露）
 
 - CI run `44875441463`（SHA `230a21b`）：conclusion = **failure**。
